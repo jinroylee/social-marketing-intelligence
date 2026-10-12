@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ingestion module · Code architecture</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18263a;
+      --muted: #52627a;
+      --line: #dce4ee;
+      --paper: #ffffff;
+      --page: #f3f6fa;
+      --source: #ad5614;
+      --source-bg: #fff1df;
+      --shared: #145e8b;
+      --shared-bg: #e6f3fb;
+      --data: #436740;
+      --data-bg: #ebf6e8;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    a { color: #135d88; text-underline-offset: 3px; }
+    a:hover { color: #0a3f60; }
+    main { width: min(1160px, calc(100% - 40px)); margin: 36px auto 72px; }
+    .hero { border-radius: 24px; background: linear-gradient(135deg, #172d49, #245577); color: #fff; padding: 36px 40px; box-shadow: 0 14px 34px #233e641b; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: .76rem; font-weight: 800; opacity: .8; }
+    h1 { font-size: clamp(2rem, 4vw, 3rem); line-height: 1.12; letter-spacing: -.035em; margin: 12px 0; }
+    .hero p { margin: 0; max-width: 68ch; color: #dbeaf5; }
+    h2 { font-size: 1.4rem; letter-spacing: -.02em; margin: 0 0 8px; }
+    h3 { font-size: 1.05rem; margin: 8px 0; }
+    p { margin: 0 0 12px; }
+    code { font: .91em/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+    .section { margin-top: 32px; }
+    .section-lead { color: var(--muted); margin-bottom: 17px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+    .tag { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 5px 11px; font-weight: 750; font-size: .8rem; }
+    .tag::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .tag.source { color: var(--source); background: var(--source-bg); }
+    .tag.shared { color: var(--shared); background: var(--shared-bg); }
+    .tag.data { color: var(--data); background: var(--data-bg); }
+    .flow-wrap { overflow-x: auto; padding: 4px 2px 18px; }
+    .flow { display: grid; grid-template-columns: repeat(6, minmax(160px, 1fr)); gap: 17px; min-width: 1045px; }
+    .step { position: relative; min-height: 205px; padding: 17px; background: var(--paper); border: 1px solid var(--line); border-top: 4px solid var(--shared); border-radius: 16px; box-shadow: 0 5px 15px #2638530a; }
+    .step.source-step { border-top-color: var(--source); }
+    .step.data-step { border-top-color: var(--data); }
+    .step + .step::before { content: "→"; position: absolute; left: -21px; top: 79px; color: #8192a9; font-size: 1.35rem; font-weight: 700; }
+    .step-num { color: var(--muted); font-size: .76rem; font-weight: 800; letter-spacing: .06em; }
+    .step p { color: var(--muted); font-size: .9rem; margin: 0; }
+    .step a { font-size: .82rem; font-weight: 700; }
+    .step .code-link { margin-top: 13px; }
+    .note { padding: 16px 19px; border-radius: 14px; background: #e9f1f8; color: #294963; border-left: 4px solid #5e9ec6; }
+    .two-col { display: grid; grid-template-columns: 1.1fr .9fr; gap: 18px; }
+    .panel { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 22px; }
+    .source-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+    .source-box { border-radius: 13px; background: var(--source-bg); color: #723910; padding: 13px; border: 1px solid #f3d6b4; }
+    .source-box strong { display: block; }
+    .merge { border-radius: 13px; background: var(--data-bg); border: 1px solid #cbe3c6; padding: 14px; color: #294c2e; }
+    .merge strong { display: block; margin-bottom: 5px; }
+    .tiny { color: var(--muted); font-size: .88rem; }
+    .replay { color: #fff; background: #1d3450; border-radius: 18px; padding: 23px; }
+    .replay h2 { color: #fff; }
+    .replay p { color: #d7e5f0; }
+    .replay-line { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 16px 0 5px; }
+    .replay-line span { padding: 8px 12px; background: #36536e; border-radius: 10px; font-weight: 700; font-size: .88rem; }
+    .replay-line b { color: #99cae6; }
+    .file-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .file-grid a { display: block; font-weight: 750; margin-bottom: 5px; }
+    .file-grid p { color: var(--muted); margin: 0; font-size: .9rem; }
+    .foot { margin-top: 24px; color: var(--muted); font-size: .9rem; }
+    @media (max-width: 760px) {
+      main { width: min(100% - 24px, 1160px); margin-top: 12px; }
+      .hero { padding: 27px 23px; border-radius: 17px; }
+      .two-col, .file-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Social Marketing Intelligence · local slice</div>
+      <h1>How ingestion works</h1>
+      <p>One runner coordinates the work. Collectors and mappers vary by source; evidence storage and canonical rules are shared.</p>
+    </header>
+
+    <section class="section" aria-labelledby="flow-title">
+      <h2 id="flow-title">From input to usable evidence</h2>
+      <p class="section-lead">Read left to right. The colored top edge shows which code changes when a new source is added.</p>
+      <div class="legend" aria-label="Module types">
+        <span class="tag source">Source specific</span>
+        <span class="tag shared">Shared logic</span>
+        <span class="tag data">Stored data</span>
+      </div>
+      <div class="flow-wrap" role="region" aria-label="Ingestion flow; scroll horizontally on narrow screens" tabindex="0">
+        <div class="flow">
+          <article class="step">
+            <div class="step-num">01 · ENTRY</div><h3>CLI + runner</h3>
+            <p><code>ingest(manifest)</code> starts a bounded run and chooses the registered adapter.</p>
+            <div class="code-link"><a href="../src/smi_ingestion/runner.py">runner.py</a></div>
+          </article>
+          <article class="step source-step">
+            <div class="step-num">02 · ACQUIRE</div><h3>Collector</h3>
+            <p><code>collect(request, checkpoint, limits)</code> returns source shaped bytes and a next checkpoint.</p>
+            <div class="code-link"><a href="../src/smi_ingestion/adapters/local.py">local.py</a> · <a href="../src/smi_ingestion/adapters/tiktok_oembed.py">tiktok_oembed.py</a></div>
+          </article>
+          <article class="step data-step">
+            <div class="step-num">03 · PRESERVE</div><h3>Raw observation</h3>
+            <p>Permitted bytes go to a file. For non-retained responses, PostgreSQL keeps only source and operational provenance.</p>
+            <div class="code-link"><a href="../src/smi_ingestion/evidence.py">evidence.py</a></div>
+          </article>
+          <article class="step source-step">
+            <div class="step-num">04 · INTERPRET</div><h3>Mapper</h3>
+            <p><code>normalize(raw, bytes)</code> validates source data and emits only candidates permitted by that route's policy.</p>
+            <div class="code-link"><a href="../src/smi_ingestion/adapters/registry.py">registry.py</a></div>
+          </article>
+          <article class="step">
+            <div class="step-num">05 · APPLY</div><h3>Canonical writer</h3>
+            <p>A transaction matches stable IDs and records versioned assertions without duplicate replay.</p>
+            <div class="code-link"><a href="../src/smi_ingestion/canonical.py">canonical.py</a></div>
+          </article>
+          <article class="step data-step">
+            <div class="step-num">06 · USE</div><h3>Canonical view</h3>
+            <p>Readers see current values, conflicts, metric history, and provenance permitted by source policy.</p>
+            <div class="code-link"><a href="../src/smi_ingestion/schema.sql">schema.sql</a></div>
+          </article>
+        </div>
+      </div>
+      <p class="note"><strong>The seam:</strong> a new source implements a collector and mapper, then registers them. The runner and writer keep the same contracts for existing account, content, and metric concepts.</p>
+    </section>
+
+    <section class="section two-col" aria-label="Identity and replay details">
+      <div class="panel">
+        <h2>One post, two observations</h2>
+        <p class="section-lead">The current example uses two deliberately synthetic inputs.</p>
+        <div class="source-list">
+          <div class="source-box"><strong>API shaped JSON</strong><span>Views: 1,000<br><a href="../src/smi_ingestion/adapters/json_fixture.py">JSON mapper</a></span></div>
+          <div class="source-box"><strong>Saved HTML</strong><span>Views: 1,050<br><a href="../src/smi_ingestion/adapters/html_fixture.py">HTML mapper</a></span></div>
+        </div>
+        <div class="merge"><strong>Same canonical content ID</strong><code>(tiktok, fixture:public, content, fixture-post-1)</code><br><span class="tiny">The source observations and their dated metrics remain separate.</span></div>
+      </div>
+      <div class="replay">
+        <h2>Replay skips collection</h2>
+        <p>A mapper can process retained raw bytes again after a mapping change. Repeating the same mapping version has no additional canonical effect.</p>
+        <div class="replay-line" aria-label="Replay path"><span>Saved raw bytes</span><b>→</b><span>Mapper</span><b>→</b><span>Canonical writer</span></div>
+        <p class="tiny" style="color:#c9d9e7">The collector is absent from this path. Source retention policy can disable replay.</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="code-title">
+      <h2 id="code-title">Code map</h2>
+      <div class="file-grid">
+        <div class="panel"><a href="../src/smi_ingestion/contracts.py">contracts.py</a><p>Shared data types and collector/mapper interfaces.</p></div>
+        <div class="panel"><a href="../src/smi_ingestion/runner.py">runner.py</a><p>Limits, resume, replay, partial failures, and run reports.</p></div>
+        <div class="panel"><a href="../src/smi_ingestion/evidence.py">evidence.py</a><p>Raw payload integrity, checkpoints, expiry, and revocation.</p></div>
+        <div class="panel"><a href="../src/smi_ingestion/adapters/registry.py">adapters/registry.py</a><p>Explicit source registration; no format branching in the runner.</p></div>
+        <div class="panel"><a href="../src/smi_ingestion/adapters/tiktok_oembed.py">adapters/tiktok_oembed.py</a><p>Bounded live URL checks; returned TikTok content stays transient.</p></div>
+        <div class="panel"><a href="../src/smi_ingestion/canonical.py">canonical.py</a><p>Identity matching, derivation history, and evidence aware reads.</p></div>
+        <div class="panel"><a href="../src/smi_ingestion/cli.py">cli.py</a><p>Commands for ingest, inspect, resume, replay, and evidence policy actions.</p></div>
+      </div>
+      <p class="foot">The two fixtures produce synthetic canonical evidence. The live TikTok oEmbed adapter resolves supplied URLs and records status, but writes no returned title, author, embed, account, post, or performance fact to the canonical dataset.</p>
+    </section>
+  </main>
+</body>
+</html>

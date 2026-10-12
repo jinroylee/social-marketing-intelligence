@@ -1,0 +1,258 @@
+{
+  "started_at": "2026-10-12T09:27:01.885728+00:00",
+  "profile_url": "https://www.tiktok.com/@maronayannyan",
+  "requested_posts": 10,
+  "http_requests": [
+    {
+      "path": "/datasets/v3/scrape",
+      "method": "POST",
+      "query": {
+        "dataset_id": "gd_l1villgoiiidt09ci",
+        "format": "json",
+        "include_errors": "true"
+      },
+      "http_status": 200,
+      "elapsed_seconds": 17.28,
+      "response_bytes": 21974,
+      "json_type": "list",
+      "rows": 1,
+      "row_fields": [
+        "account_id",
+        "awg_engagement_rate",
+        "bio_link",
+        "biography",
+        "category",
+        "comment_engagement_rate",
+        "comment_setting",
+        "create_time",
+        "digg_count",
+        "followers",
+        "following",
+        "ftc",
+        "id",
+        "input",
+        "is_ad_virtual",
+        "is_commerce_user",
+        "is_private",
+        "is_verified",
+        "like_count",
+        "like_engagement_rate",
+        "likes",
+        "nickname",
+        "open_favorite",
+        "pinned_posts",
+        "predicted_lang",
+        "profile_pic_url",
+        "profile_pic_url_hd",
+        "relation",
+        "secu_id",
+        "signature",
+        "timestamp",
+        "top_posts_data",
+        "top_videos",
+        "url",
+        "videos_count"
+      ],
+      "error_rows": 0
+    },
+    {
+      "path": "/datasets/v3/scrape",
+      "method": "POST",
+      "query": {
+        "dataset_id": "gd_m7n5v2gq296pex2f5m",
+        "format": "json",
+        "include_errors": "true"
+      },
+      "http_status": 200,
+      "elapsed_seconds": 25.12,
+      "response_bytes": 40211,
+      "json_type": "list",
+      "rows": 10,
+      "row_fields": [
+        "account_id",
+        "carousel_images",
+        "cdn_url",
+        "collect_count",
+        "comment_count",
+        "create_time",
+        "description",
+        "digg_count",
+        "hashtags",
+        "input",
+        "is_verified",
+        "music",
+        "offical_item",
+        "original_item",
+        "original_sound",
+        "play_count",
+        "post_id",
+        "post_type",
+        "preview_image",
+        "profile_avatar",
+        "profile_biography",
+        "profile_followers",
+        "profile_id",
+        "profile_url",
+        "profile_username",
+        "ratio",
+        "region",
+        "secu_id",
+        "share_count",
+        "shortcode",
+        "tagged_user",
+        "timestamp",
+        "tt_chain_token",
+        "url",
+        "video_duration",
+        "video_url",
+        "width"
+      ],
+      "error_rows": 0
+    }
+  ],
+  "billing": "Charges and free-credit usage not established by this HTTP check.",
+  "ingestion": {
+    "run_id": "2675fea2-b175-478e-a1bd-41e501d5bb7f",
+    "status": "completed",
+    "coverage": "complete_for_requested_input",
+    "observations": 2,
+    "applied": 2,
+    "quarantined": 0,
+    "unresolved": 1,
+    "missing_fields": [
+      {
+        "field": "author_account",
+        "state": "unavailable",
+        "count": 10
+      },
+      {
+        "field": "metric:share_count",
+        "state": "not_returned",
+        "count": 1
+      }
+    ],
+    "latest_captured_at": "2026-10-12T09:27:44.426702+00:00",
+    "pending": 0,
+    "bytes_used": 62185,
+    "records_used": 2,
+    "requests_used": 2,
+    "source_results": [
+      {
+        "reference": "https://www.tiktok.com/@maronayannyan",
+        "captured_at": "2026-10-12T09:27:19.222836+00:00",
+        "outcome": "resolved",
+        "mapping_status": "applied",
+        "http_status": 200,
+        "provider_error_code": null,
+        "attempts": 1,
+        "dataset_kind": "profile",
+        "request_phase": "scrape",
+        "row_count": 1,
+        "error_rows": 0,
+        "posts_observed": null,
+        "unavailable_fields": []
+      },
+      {
+        "reference": "https://www.tiktok.com/@maronayannyan",
+        "captured_at": "2026-10-12T09:27:44.426702+00:00",
+        "outcome": "resolved",
+        "mapping_status": "applied",
+        "http_status": 200,
+        "provider_error_code": null,
+        "attempts": 1,
+        "dataset_kind": "posts",
+        "request_phase": "scrape",
+        "row_count": 10,
+        "error_rows": 0,
+        "posts_observed": null,
+        "unavailable_fields": []
+      }
+    ],
+    "limits": {
+      "max_bytes": 1048576,
+      "max_pages": 10,
+      "max_records": 100,
+      "max_requests": 12
+    },
+    "issues": []
+  },
+  "mapped_entities_with_fields": [
+    {
+      "kind": "content",
+      "count": 10
+    }
+  ],
+  "mapped_metric_observations": 49,
+  "finished_at": "2026-10-12T09:27:44.565592+00:00",
+  "post_replay_ingestion": {
+    "run_id": "2675fea2-b175-478e-a1bd-41e501d5bb7f",
+    "status": "completed",
+    "coverage": "complete_for_requested_input",
+    "observations": 2,
+    "applied": 2,
+    "quarantined": 0,
+    "unresolved": 0,
+    "missing_fields": [
+      {
+        "field": "metric:share_count",
+        "state": "not_returned",
+        "count": 1
+      }
+    ],
+    "latest_captured_at": "2026-10-12T09:27:44.426702+00:00",
+    "pending": 0,
+    "bytes_used": 62185,
+    "records_used": 2,
+    "requests_used": 2,
+    "source_results": [
+      {
+        "reference": "https://www.tiktok.com/@maronayannyan",
+        "captured_at": "2026-10-12T09:27:19.222836+00:00",
+        "outcome": "resolved",
+        "mapping_status": "applied",
+        "http_status": 200,
+        "provider_error_code": null,
+        "attempts": 1,
+        "dataset_kind": "profile",
+        "request_phase": "scrape",
+        "row_count": 1,
+        "error_rows": 0,
+        "posts_observed": null,
+        "unavailable_fields": []
+      },
+      {
+        "reference": "https://www.tiktok.com/@maronayannyan",
+        "captured_at": "2026-10-12T09:27:44.426702+00:00",
+        "outcome": "resolved",
+        "mapping_status": "applied",
+        "http_status": 200,
+        "provider_error_code": null,
+        "attempts": 1,
+        "dataset_kind": "posts",
+        "request_phase": "scrape",
+        "row_count": 10,
+        "error_rows": 0,
+        "posts_observed": null,
+        "unavailable_fields": []
+      }
+    ],
+    "limits": {
+      "max_bytes": 1048576,
+      "max_pages": 10,
+      "max_records": 100,
+      "max_requests": 12
+    },
+    "issues": []
+  },
+  "verification": {
+    "mapper_version": "v2",
+    "account_id": "7467857949575971848",
+    "profiles": 1,
+    "posts": 10,
+    "author_links": 10,
+    "active_metric_observations": 53,
+    "network_requests_during_replay": 0,
+    "missing_share_counts": 1,
+    "tests_passed": 70
+  }
+}

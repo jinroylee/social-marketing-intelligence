@@ -1,0 +1,15 @@
+{
+  "adapter": "fixture-html",
+  "provider_id": "synthetic-html",
+  "format_version": "v1",
+  "synthetic": true,
+  "captured_at": "2026-09-11T12:00:00Z",
+  "policy": {
+    "context_id": "synthetic-demo",
+    "can_process": true,
+    "can_retain": true,
+    "can_display": true,
+    "expires_at": null
+  },
+  "items": [{"path": "post.html", "reference": "synthetic://post/fixture-post-1"}]
+}

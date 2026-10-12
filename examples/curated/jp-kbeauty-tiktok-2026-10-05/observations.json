@@ -1,0 +1,621 @@
+{
+  "dataset_id": "jp-kbeauty-tiktok-public-video-sample-2026-10-05",
+  "dataset_type": "curated_real_world_snapshot",
+  "synthetic": false,
+  "description": "Point-in-time public TikTok video observations selected for offline local development; not a creator shortlist or representative market sample.",
+  "collection_runs": [
+    "2dbce447-7190-47fa-9442-a650f33102cf",
+    "f23ffc6d-82f0-4ebb-9991-4abfdeb3a20d",
+    "758cb9df-c176-4f6d-8950-038809243c36"
+  ],
+  "records": [
+    {
+      "platform": "tiktok",
+      "post_id": "7549049550934166804",
+      "url": "https://www.tiktok.com/@guga9791/video/7549049550934166804",
+      "author": {
+        "platform_id": "6819904612390634498",
+        "handle": "guga9791"
+      },
+      "published_at": "2025-09-12T04:07:52+00:00",
+      "captured_at": "2026-10-05T04:15:22.231871+00:00",
+      "caption": "お久しぶりの投稿になってしまいました🙇💦 今日は私が最近プライベートで使って良かったものご紹介させてください✨ APRILSKINのヒーロークッション（21）使ったんだけど本当にこれ肌にピタッと密着してヨレにくいし、落ち方も綺麗だったの！仕事柄マスクをするからマスクをする部分はどうしてもやれるけどそれでもすごくファンで綺麗に残ってて最近で1番感動したクッション！！ もう一つは、カロテンパックパットなんだけど、普段トナーパットはサラサラ系を好むんだけど、とろみがあっても全然べたつかないの！！これはすごい！！5分貼るだけで、肌の保湿andクーリングをかなえてくれるすぐれものでした！！メガ割最終日是非みなさんご検討ください！ #APRILSKIN#ヒーロークッション#カロテンパックパッド #pr",
+      "metrics": {
+        "views": 1875,
+        "likes": 27,
+        "comments": 1,
+        "shares": 0
+      },
+      "curation": {
+        "brand": "APRILSKIN",
+        "product_context": "Hero Cushion",
+        "relation_to_pilot": "target_product",
+        "caption_has_pr_marker": true,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "667cfbff-d5d4-4217-9b3d-21fb802fe980",
+        "run_id": "2dbce447-7190-47fa-9442-a650f33102cf"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7510195709270854919",
+      "url": "https://www.tiktok.com/@barikonnnitiwa/video/7510195709270854919",
+      "author": {
+        "platform_id": "7424098016460178450",
+        "handle": "barikonnnitiwa"
+      },
+      "published_at": "2025-05-30T11:15:05+00:00",
+      "captured_at": "2026-10-05T04:15:23.145044+00:00",
+      "caption": "ｶﾞﾁｯｶﾞﾁにリアルにこの組み合わせは、個人的に久々の1軍入り確定です‼️  #PR#エイプリルスキン#Aprilskin#ヒーロークッション#クッションファンデー#ファンデーション#パックパッド#えらみ#酸素休憩ナシ #メイク ",
+      "metrics": {
+        "views": 528900,
+        "likes": 4652,
+        "comments": 34,
+        "shares": 44
+      },
+      "curation": {
+        "brand": "APRILSKIN",
+        "product_context": "Hero Cushion",
+        "relation_to_pilot": "target_product",
+        "caption_has_pr_marker": true,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "e0e161c6-d08f-49dc-a296-04b3f131db3c",
+        "run_id": "2dbce447-7190-47fa-9442-a650f33102cf"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7530927153643375880",
+      "url": "https://www.tiktok.com/@milk__tea.com_/video/7530927153643375880",
+      "author": {
+        "platform_id": "6567640554154246146",
+        "handle": "milk__tea.com_"
+      },
+      "published_at": "2025-07-25T08:03:40+00:00",
+      "captured_at": "2026-10-05T04:15:23.926610+00:00",
+      "caption": "夏のメイク崩れに悩んでる子必見❕☀️💦 Aprilskinのヒーロークッションがまさにヒーローすぎた🤦🏻🪄 　　 そしてカロテンのパックパッドは大好きすぎてリアルに毎日使ってるからもうすぐ3箱目突入（ ;  ; ）💭 　　 クッションファンデはとにかく毛穴落ち・汗・皮脂に強くて天才なんだよ。。🤦🏻✨💭 　　 塗る時のコツは、一度にカバーしようとせずに、よく蓋の裏でオフしてから少量を薄くレイヤーさせる方法がより崩れにくくておすすめだよ❕🕺🏾 　　 どんな肌タイプでも自然に仕上がるのがおすすめポイントらしくて、気になる方はぜひぜひQoo10チェックしてみてねん📑💬 　　 どっちの商品も大人気で、3,000とか4,000件とかレビュー集まっててめちゃ参考になった❕❕ 　　 #PR #エイプリルスキン #ヒーロークッション #クッションファンデ #トナーパッド #韓国スキンケア #韓国コスメ #スキンケア #メイク #makeup #fyp ",
+      "metrics": {
+        "views": 43500,
+        "likes": 880,
+        "comments": 7,
+        "shares": 8
+      },
+      "curation": {
+        "brand": "APRILSKIN",
+        "product_context": "Hero Cushion",
+        "relation_to_pilot": "target_product",
+        "caption_has_pr_marker": true,
+        "caption_has_qoo10_marker": true,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "b458d314-f2b4-4367-a35d-7bb1e11149f2",
+        "run_id": "2dbce447-7190-47fa-9442-a650f33102cf"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7677835480108436757",
+      "url": "https://www.tiktok.com/@llc9q_/video/7677835480108436757",
+      "author": {
+        "platform_id": "6939728413091513346",
+        "handle": "llc9q_"
+      },
+      "published_at": "2026-08-25T05:23:09+00:00",
+      "captured_at": "2026-10-05T04:15:24.490124+00:00",
+      "caption": "最強肌であーっつい夏を一緒に乗り越えよう( *¯ ꒳¯*)🩵🩵💕#エイプリルスキン #ヒーロークッション #カロテンパックパッド #pr ",
+      "metrics": {
+        "views": 49400,
+        "likes": 1759,
+        "comments": 9,
+        "shares": 8
+      },
+      "curation": {
+        "brand": "APRILSKIN",
+        "product_context": "Hero Cushion",
+        "relation_to_pilot": "target_product",
+        "caption_has_pr_marker": true,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "e5650533-1636-45aa-a1c8-0c92f1c6fc8d",
+        "run_id": "2dbce447-7190-47fa-9442-a650f33102cf"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7632620458235530504",
+      "url": "https://www.tiktok.com/@maronayannyan/video/7632620458235530504",
+      "author": {
+        "platform_id": "7467857949575971848",
+        "handle": "maronayannyan"
+      },
+      "published_at": "2026-04-25T09:05:41+00:00",
+      "captured_at": "2026-10-05T04:15:25.223034+00:00",
+      "caption": "何度もリピありと紹介してるヒーロークッション❤️‍🔥 特に真夏に大活躍するから今のうちにゲットしてね！ #PR #エイプリルスキン #ヒーロークッション  #Qoo10",
+      "metrics": {
+        "views": 454200,
+        "likes": 8086,
+        "comments": 87,
+        "shares": 158
+      },
+      "curation": {
+        "brand": "APRILSKIN",
+        "product_context": "Hero Cushion",
+        "relation_to_pilot": "target_product",
+        "caption_has_pr_marker": true,
+        "caption_has_qoo10_marker": true,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "9b7987e1-362c-4e26-be68-0f0f13c7d33c",
+        "run_id": "2dbce447-7190-47fa-9442-a650f33102cf"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7460693547314859284",
+      "url": "https://www.tiktok.com/@vdyli/video/7460693547314859284",
+      "author": {
+        "platform_id": "6766583988721533953",
+        "handle": "vdyli"
+      },
+      "published_at": "2025-01-17T01:41:41+00:00",
+      "captured_at": "2026-10-05T04:15:25.995684+00:00",
+      "caption": "やっぱりすごい〜 #エイプリルスキン #クッション #ファンデーション #ファンデーション検証 #aprilskin #ヒーロークッション ",
+      "metrics": {
+        "views": 817600,
+        "likes": 13500,
+        "comments": 63,
+        "shares": 109
+      },
+      "curation": {
+        "brand": "APRILSKIN",
+        "product_context": "Hero Cushion",
+        "relation_to_pilot": "target_product",
+        "caption_has_pr_marker": false,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "521913be-2ed6-4f3a-ab02-df987e182b55",
+        "run_id": "2dbce447-7190-47fa-9442-a650f33102cf"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7692020060726086933",
+      "url": "https://www.tiktok.com/@highheelshighhopes/video/7692020060726086933",
+      "author": {
+        "platform_id": "6831753033774089217",
+        "handle": "highheelshighhopes"
+      },
+      "published_at": "2026-10-02T10:46:28+00:00",
+      "captured_at": "2026-10-05T04:15:26.610493+00:00",
+      "caption": "✨❄️雪肌ツヤ肌❄️✨@APRILSKIN #マジックスノークッション #エイプリルスキン #pr ",
+      "metrics": {
+        "views": 77300,
+        "likes": 3489,
+        "comments": 23,
+        "shares": 19
+      },
+      "curation": {
+        "brand": "APRILSKIN",
+        "product_context": "Magic Snow Cushion",
+        "relation_to_pilot": "same_brand_adjacent_product",
+        "caption_has_pr_marker": true,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "a44768b2-4598-4a3e-a3ac-88b1c8e73508",
+        "run_id": "2dbce447-7190-47fa-9442-a650f33102cf"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7399547112448363777",
+      "url": "https://www.tiktok.com/@tirtir.official/video/7399547112448363777",
+      "author": {
+        "platform_id": "7121598715014841345",
+        "handle": "tirtir.official"
+      },
+      "published_at": "2024-08-05T07:02:09+00:00",
+      "captured_at": "2026-10-05T04:15:35.189969+00:00",
+      "caption": "Hey Japan!💕 We're SO excited to announce that we are finally presenting our 30 different shades of Mask Fit Red Cushion in Japan for everyone and anyone!! 🤩✨ Check out ALL 30 SHADES at 📍Ginza Loft 📍Shibuya Loft 📍Sendai Loft 📍MEGA Don Guijote #tirtir #redcushion #cushionfoundation #koreanmakeup #koreanbeauty #kmakeup #kbeauty #japan #tokyo #koreancushion #amazonfinds #amazonmusthaves #ドンキホーテ #ロフト #ティルティル ",
+      "metrics": {
+        "views": 214600,
+        "likes": 3425,
+        "comments": 96,
+        "shares": 233
+      },
+      "curation": {
+        "brand": "TIRTIR",
+        "product_context": "Mask Fit Red Cushion",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": false,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "3ae43bec-e6b2-4872-8f13-ee56ff74a46c",
+        "run_id": "f23ffc6d-82f0-4ebb-9991-4abfdeb3a20d"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7301998579592301825",
+      "url": "https://www.tiktok.com/@tirtir.official/video/7301998579592301825",
+      "author": {
+        "platform_id": "7121598715014841345",
+        "handle": "tirtir.official"
+      },
+      "published_at": "2023-11-16T10:03:55+00:00",
+      "captured_at": "2026-10-05T04:15:35.958397+00:00",
+      "caption": "Literally everywhere! 📍 @cosme, harajuku 📍 LOFT, Shibuya 📍 Mega don quixote, Shibuya #tirtir #tirtirbeauty #maskfitredcushion #tirtirmaskfitredcushion #cushionfoundation #japan #tirtirクッションファンデ #ティルティル #韓国コスメ",
+      "metrics": {
+        "views": 170400,
+        "likes": 1130,
+        "comments": 22,
+        "shares": 412
+      },
+      "curation": {
+        "brand": "TIRTIR",
+        "product_context": "Mask Fit Red Cushion",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": false,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "65ce2eda-67a6-45a8-a9ed-a89e165613ab",
+        "run_id": "f23ffc6d-82f0-4ebb-9991-4abfdeb3a20d"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7315425852026653983",
+      "url": "https://www.tiktok.com/@ghoul.in.japan/video/7315425852026653983",
+      "author": {
+        "platform_id": "6855184494845756422",
+        "handle": "ghoul.in.japan"
+      },
+      "published_at": "2023-12-22T14:29:00+00:00",
+      "captured_at": "2026-10-05T04:15:36.658574+00:00",
+      "caption": "tirtir is so popular in japan, it’s literally everywhere. and it should be! thank you so much tirtir ! ! #PR #tirtirクッションファンデ #tirtir #kbeauty #koreanskincare #japanlife ",
+      "metrics": {
+        "views": 228300,
+        "likes": 20800,
+        "comments": 132,
+        "shares": 221
+      },
+      "curation": {
+        "brand": "TIRTIR",
+        "product_context": "cushion foundation",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": true,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "311cb9e2-6707-46ee-886c-1701195733a8",
+        "run_id": "f23ffc6d-82f0-4ebb-9991-4abfdeb3a20d"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7413323520521866514",
+      "url": "https://www.tiktok.com/@kiki_makeupjunkie/video/7413323520521866514",
+      "author": {
+        "platform_id": "6775889201490756609",
+        "handle": "kiki_makeupjunkie"
+      },
+      "published_at": "2024-09-11T10:01:33+00:00",
+      "captured_at": "2026-10-05T04:15:37.472201+00:00",
+      "caption": "@HERA のブラッククッション検証！✨みんなこれ使ったことある？？😳✨#クッションファンデ　#heraファンデ　#ファンデーション　",
+      "metrics": {
+        "views": 184700,
+        "likes": 2437,
+        "comments": 25,
+        "shares": 53
+      },
+      "curation": {
+        "brand": "HERA",
+        "product_context": "Black Cushion",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": false,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "c0f766c6-23ae-452c-8123-966e417b56d9",
+        "run_id": "f23ffc6d-82f0-4ebb-9991-4abfdeb3a20d"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7265227915514727698",
+      "url": "https://www.tiktok.com/@maquia.magazine/video/7265227915514727698",
+      "author": {
+        "platform_id": "7026770694994347010",
+        "handle": "maquia.magazine"
+      },
+      "published_at": "2023-08-09T07:54:58+00:00",
+      "captured_at": "2026-10-05T04:15:38.177274+00:00",
+      "caption": "人気韓国コスメブランドHERAが、遂に日本上陸🖤 名品『#ブラッククッション 』に加え、人気アイテムの日本限定カラーも発売に🫶🏻🤍早速動画をチェック！ #ヘラ #ヘラクッションファンデ #ヘラリップ #heraリップ #クッションファンデ #リップ #韓国コスメ #韓国メイク #韓コス #限定カラー #限定コスメ #コスメ #コスメ紹介 #マキア #美容 ",
+      "metrics": {
+        "views": 13100,
+        "likes": 94,
+        "comments": 1,
+        "shares": 0
+      },
+      "curation": {
+        "brand": "HERA",
+        "product_context": "Black Cushion",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": false,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "dbe93e23-6bf1-4b88-87a5-5779f3173bb0",
+        "run_id": "f23ffc6d-82f0-4ebb-9991-4abfdeb3a20d"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7447832065195773191",
+      "url": "https://www.tiktok.com/@kiki_makeupjunkie/video/7447832065195773191",
+      "author": {
+        "platform_id": "6775889201490756609",
+        "handle": "kiki_makeupjunkie"
+      },
+      "published_at": "2024-12-13T09:52:17+00:00",
+      "captured_at": "2026-10-05T04:15:39.066201+00:00",
+      "caption": "「何のファンデ使ってるの？」って聞かれる時毎回これ使ってる時なの！😳✨流石にみんなにもシェアしなきゃと思って紹介💋使ったことある人ー？🙋‍♀️ #ファンデーション　#クッションファンデーション #hera #herablackcushion ",
+      "metrics": {
+        "views": 1400000,
+        "likes": 21300,
+        "comments": 186,
+        "shares": 263
+      },
+      "curation": {
+        "brand": "HERA",
+        "product_context": "Black Cushion",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": false,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "5851034d-2ba5-405e-8d5a-168727222a0d",
+        "run_id": "f23ffc6d-82f0-4ebb-9991-4abfdeb3a20d"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7482006383374699783",
+      "url": "https://www.tiktok.com/@ick5555/video/7482006383374699783",
+      "author": {
+        "platform_id": "6833252021723694085",
+        "handle": "ick5555"
+      },
+      "published_at": "2025-03-15T12:06:05+00:00",
+      "captured_at": "2026-10-05T04:15:48.682371+00:00",
+      "caption": "その写真フィルター何？って聞かれたけど実はノンフィルターだった時のクッションファンデーション#pr #メガ割 #クリオ #韓国コスメ #CLIO #クッションファンデ @클리오 찐 ",
+      "metrics": {
+        "views": 236000,
+        "likes": 4429,
+        "comments": 29,
+        "shares": 38
+      },
+      "curation": {
+        "brand": "CLIO",
+        "product_context": "cushion foundation",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": true,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "fa9938e9-ff74-46c0-b828-a207b0e03152",
+        "run_id": "758cb9df-c176-4f6d-8950-038809243c36"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7543976828915010834",
+      "url": "https://www.tiktok.com/@zutti_tok/video/7543976828915010834",
+      "author": {
+        "platform_id": "6539102591526846466",
+        "handle": "zutti_tok"
+      },
+      "published_at": "2025-08-29T12:03:04+00:00",
+      "captured_at": "2026-10-05T04:15:49.286228+00:00",
+      "caption": "セミマットな優しい艶感が好きになった #PR  #CLIO  #キルカバーメッシュグロウエッセンシャルクッション #キルカバーファンウェアクッション  #オールデイカバークッション　",
+      "metrics": {
+        "views": 495400,
+        "likes": 6198,
+        "comments": 60,
+        "shares": 51
+      },
+      "curation": {
+        "brand": "CLIO",
+        "product_context": "cushion foundation",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": true,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "1a75638b-b9d0-4bf9-b139-9cb2468fa02d",
+        "run_id": "758cb9df-c176-4f6d-8950-038809243c36"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7690923116675026196",
+      "url": "https://www.tiktok.com/@miuhouse66/video/7690923116675026196",
+      "author": {
+        "platform_id": "7667132161497777168",
+        "handle": "miuhouse66"
+      },
+      "published_at": "2026-09-29T11:49:48+00:00",
+      "captured_at": "2026-10-05T04:15:50.020263+00:00",
+      "caption": "クッションファンデを探している人、これ見て#wakemake #クッションファンデ #韓国コスメ ",
+      "metrics": {
+        "views": 137,
+        "likes": 2,
+        "comments": 0,
+        "shares": 0
+      },
+      "curation": {
+        "brand": "WAKEMAKE",
+        "product_context": "cushion foundation",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": false,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "6d63db7f-abf9-49be-ad74-e422637a67a7",
+        "run_id": "758cb9df-c176-4f6d-8950-038809243c36"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7486442947219819794",
+      "url": "https://www.tiktok.com/@fuuji__/video/7486442947219819794",
+      "author": {
+        "platform_id": "6568671692825149442",
+        "handle": "fuuji__"
+      },
+      "published_at": "2025-03-27T11:02:15+00:00",
+      "captured_at": "2026-10-05T04:15:50.798291+00:00",
+      "caption": "あのwakemakeが待望の日本上陸！ 毛穴隠しの達人クッションファンデ発見しちゃった AmazonスマイルSALE 新生活 FINALでお得にゲットできるから3/28 9:00〜4/1 23:59までに ぜひゲットして試してみてね🫶🏼 #PR #wakemake #ウォーターグロウコーティングバーム　#クッションファンデ大冒険 #13個目",
+      "metrics": {
+        "views": 220500,
+        "likes": 4386,
+        "comments": 48,
+        "shares": 51
+      },
+      "curation": {
+        "brand": "WAKEMAKE",
+        "product_context": "cushion foundation",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": true,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "5cda649b-e9db-4b60-aacc-86b911980c5e",
+        "run_id": "758cb9df-c176-4f6d-8950-038809243c36"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7674951156996558088",
+      "url": "https://www.tiktok.com/@menkyochan/video/7674951156996558088",
+      "author": {
+        "platform_id": "6642614553112264705",
+        "handle": "menkyochan"
+      },
+      "published_at": "2026-08-17T10:50:25+00:00",
+      "captured_at": "2026-10-05T04:15:51.399081+00:00",
+      "caption": "【正直レビュー】wakemakeのクッションファンデーション‼️#ファンデーション#クッションファンデーション#wakemake#ウェイクメイク#ファンデ",
+      "metrics": {
+        "views": 576600,
+        "likes": 14500,
+        "comments": 79,
+        "shares": 43
+      },
+      "curation": {
+        "brand": "WAKEMAKE",
+        "product_context": "cushion foundation",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": false,
+        "caption_has_qoo10_marker": false,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "7cf0d1a9-0361-41dc-baf5-7734670301d1",
+        "run_id": "758cb9df-c176-4f6d-8950-038809243c36"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "7673382838577712391",
+      "url": "https://www.tiktok.com/@kkkkkkarin00/video/7673382838577712391",
+      "author": {
+        "platform_id": "6686992503961781250",
+        "handle": "kkkkkkarin00"
+      },
+      "published_at": "2026-08-13T10:00:00+00:00",
+      "captured_at": "2026-10-05T04:15:52.268339+00:00",
+      "caption": "#PR #fwee  このファンデはまじ推せる🫶🏻 #Qoo10 #下地 #クッションファンデ",
+      "metrics": {
+        "views": 1500000,
+        "likes": 10100,
+        "comments": 19,
+        "shares": 52
+      },
+      "curation": {
+        "brand": "fwee",
+        "product_context": "cushion foundation",
+        "relation_to_pilot": "other_brand_cushion",
+        "caption_has_pr_marker": true,
+        "caption_has_qoo10_marker": true,
+        "japanese_script_in_caption": true
+      },
+      "provenance": {
+        "adapter": "tiktok-web",
+        "provider": "tiktok-web-public-page",
+        "source_observation_id": "cffdd737-68aa-44c9-9094-337657f831d3",
+        "run_id": "758cb9df-c176-4f6d-8950-038809243c36"
+      }
+    }
+  ]
+}

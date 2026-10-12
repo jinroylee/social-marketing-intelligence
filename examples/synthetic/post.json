@@ -1,0 +1,10 @@
+{
+  "account": {"id": "fixture-account-1", "handle": "synthetic_creator"},
+  "video": {
+    "id": "fixture-post-1",
+    "author_id": "fixture-account-1",
+    "caption": "Synthetic cushion sample",
+    "published_at": "2026-09-01T12:00:00Z",
+    "metrics": {"views": 1000}
+  }
+}

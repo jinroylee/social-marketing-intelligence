@@ -1,0 +1,22 @@
+[project]
+name = "smi-ingestion"
+version = "0.1.0"
+description = "Local, source-independent social evidence ingestion"
+requires-python = ">=3.12"
+dependencies = ["psycopg[binary]>=3.2,<4"]
+
+[project.scripts]
+smi-ingest = "smi_ingestion.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = ["pytest>=8,<10"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/smi_ingestion"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype: APRILSKIN creator decision brief</title>
+  <style>
+    :root { color-scheme: light; font-family: ui-sans-serif, system-ui, sans-serif; color: #202722; background: #f3f5ef; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 2rem clamp(1rem, 4vw, 3rem) 5rem; }
+    main { max-width: 1180px; margin: auto; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(1.8rem, 3vw, 2.6rem); line-height: 1.1; }
+    h2 { font-size: 1.15rem; margin-bottom: .7rem; }
+    h3 { font-size: 1rem; margin-bottom: .35rem; }
+    .intro { max-width: 850px; line-height: 1.5; }
+    .banner { background: #fff3d7; border: 1px solid #d9b75d; border-radius: 12px; padding: .75rem 1rem; margin: 1rem 0 1.5rem; font-weight: 600; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(290px, .8fr); gap: 1rem; }
+    .stack { display: grid; gap: 1rem; }
+    .panel { background: #fff; border: 1px solid #dbe2d8; border-radius: 14px; padding: 1.1rem; box-shadow: 0 2px 8px #25392a0b; }
+    .muted { color: #5d685e; font-size: .88rem; }
+    .small { font-size: .9rem; }
+    .row { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+    .pill { display: inline-block; border-radius: 999px; padding: .2rem .55rem; font-size: .74rem; font-weight: 700; background: #e5efe6; color: #23462b; white-space: nowrap; }
+    .pill.unknown { background: #fff0d7; color: #765013; }
+    .pill.review { background: #e9e8f6; color: #3b387b; }
+    .pill.synthetic { background: #ffe8df; color: #8d381e; }
+    .candidate { border-top: 1px solid #e6ebe4; padding: .85rem 0; }
+    .candidate:last-child { padding-bottom: 0; }
+    .facts { display: flex; gap: .35rem; flex-wrap: wrap; margin: .5rem 0; }
+    .facts span { background: #f1f4ef; border-radius: 6px; padding: .2rem .4rem; font-size: .78rem; }
+    .item { border-left: 3px solid #99b5a1; padding-left: .7rem; margin: .55rem 0; }
+    .item.derived { border-color: #8ba6c4; }
+    .item.unknown { border-color: #d7a447; }
+    .item.review { border-color: #968dc3; }
+    button { border: 1px solid #315c3d; border-radius: 8px; background: #315c3d; color: white; padding: .45rem .65rem; font: inherit; font-size: .82rem; cursor: pointer; }
+    button.secondary { color: #315c3d; background: white; }
+    button:hover { filter: brightness(.91); }
+    button:focus-visible { outline: 3px solid #bfa547; outline-offset: 2px; }
+    .buttons { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .status { border-radius: 9px; padding: .55rem .7rem; background: #e9f3ea; margin-bottom: .8rem; }
+    .status.blocked { background: #fff0d7; }
+    .tabs { display: flex; gap: .35rem; flex-wrap: wrap; margin-bottom: .65rem; }
+    .tabs button[aria-selected="true"] { background: #233e2b; }
+    ol { padding-left: 1.4rem; margin-bottom: 0; }
+    li { margin-bottom: .5rem; }
+    li.done { color: #587a61; }
+    li.current { font-weight: 700; }
+    .note { font-size: .8rem; color: #667269; }
+    @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } body { padding-bottom: 2rem; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="pill synthetic">THROWAWAY PROTOTYPE · ALL EXAMPLES SYNTHETIC</span>
+    <h1>APRILSKIN Hero Cushion · Japan creator decision brief</h1>
+    <p class="intro">Accepted workflow: market monitoring informs the marketer and shared knowledge independently. The marketer starts a campaign from a brief; automation then prepares candidates and evidence for review. Explore either feature without requiring the other. The buttons manually simulate the operations. No agent runs here, and nothing is connected to the database.</p>
+  </header>
+  <div class="banner">Prototype data only. Creator A, B, and C and the signal below are fictional. No Japan audience share, fee, conversion performance, or causal sales effect is established.</div>
+
+  <div class="grid">
+    <div class="stack">
+      <section class="panel" aria-labelledby="signal-title">
+        <div class="row"><h2 id="signal-title">Market monitoring · investigate an insight</h2><span class="pill synthetic">Synthetic observation</span></div>
+        <p><strong>Mock signal:</strong> mentions of cushion finish appear more often in a sampled set of Japanese-language TikTok posts this week.</p>
+        <div class="item"><strong>Observed in mock source</strong><br><span class="small">14 of 40 sampled posts versus 6 of 40 in the prior sample · evidence IDs S-01 and S-02 · captured 30 Sep 2026.</span></div>
+        <div class="item derived"><strong>Derived interpretation</strong><br><span class="small">A product-message angle may be timely. The sample does not estimate the whole market or sales demand.</span></div>
+        <div class="item unknown"><strong>Unknown</strong><br><span class="small">Platform-wide coverage and the authors' audience locations.</span></div>
+        <div class="item derived"><strong>Insight for the marketer</strong><br><span class="small">Finish demonstrations may be an angle to investigate. This insight can inform the marketer and shared knowledge; it does not create a campaign or select creators.</span></div>
+        <p class="muted">Monitoring is an independent feature. A marketer may refer to its insights when writing a later campaign brief.</p>
+        <p id="signal-state" class="muted"></p>
+      </section>
+
+      <section class="panel" aria-labelledby="creator-title">
+        <div class="row"><h2 id="creator-title">Campaign planning · compare and save creators</h2><span class="pill review">Marketer initiates</span></div>
+        <p><strong>Example campaign brief:</strong> APRILSKIN Hero Cushion · target market Japan · sales objective · marketer-chosen criterion: cushion finish demonstrations.</p>
+        <p class="muted">Start the campaign from this brief to simulate creator review. Automation would retrieve candidates, collect evidence, and draft comparisons; the marketer would review, change, and confirm the selection. The fixed mock candidates are displayed for illustration.</p>
+        <p id="campaign-state" class="muted"></p>
+        <div id="candidates"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="decision-title">
+        <div class="row"><h2 id="decision-title">Campaign planning · record the decision</h2><span id="decision-pill" class="pill"></span></div>
+        <div id="decision-state"></div>
+        <p class="note">In this demo, saving only marks the current in-memory selection; reloading clears it. In the proposed product, saving would preserve a version of this campaign's candidate set, reasons, evidence references, unknowns, and reviewer details so it can be reopened and revised.</p>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="panel" aria-labelledby="actions-title">
+        <h2 id="actions-title">Free play</h2>
+        <p class="muted">These buttons simulate operations, including work the product would automate. Try them in any order. A blocked action explains what the brief still needs.</p>
+        <div id="feedback" class="status" role="status"></div>
+        <div id="actions" class="buttons"></div>
+      </section>
+      <section class="panel" aria-labelledby="walkthrough-title">
+        <h2 id="walkthrough-title">Guided walkthroughs</h2>
+        <div id="tabs" class="tabs" role="tablist"></div>
+        <p id="scenario-description" class="small"></p>
+        <ol id="steps"></ol>
+      </section>
+      <section class="panel" aria-labelledby="legend-title">
+        <h2 id="legend-title">Evidence language</h2>
+        <div class="item"><strong>Observed</strong><br><span class="small">A source-returned value with an evidence ID and capture time.</span></div>
+        <div class="item derived"><strong>Derived</strong><br><span class="small">A judgment tied to a method or explicit reasoning.</span></div>
+        <div class="item unknown"><strong>Unknown</strong><br><span class="small">Missing evidence remains visible; it is never filled by a guess.</span></div>
+        <div class="item review"><strong>Review request</strong><br><span class="small">A named human check that has not yet happened.</span></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+  // Portable, pure decision-state prototype. UI code below only dispatches actions.
+  const creatorFacts = {
+    A: { label: 'Creator A · discovered', source: 'Mock TikTok account TA-101', posts: '10 recent posts', counts: '4 public count types', fit: 'Potential fit for the finish-demonstration angle', connection: 'Mock posts P-A2 and P-A6 show cushion finish demonstrations; their author is a candidate for this content angle.', unknown: 'Japan audience share, fee, and sales performance', evidence: 'P-A1 … P-A10' },
+    B: { label: 'Creator B · already monitored', source: 'Mock TikTok account TB-202', posts: '4 recent posts', counts: 'Some public counts missing', fit: 'Exploratory style fit', connection: 'The marketer already monitors this account. Its retrieved posts do not establish fit for the finish angle; further investigation is needed.', unknown: 'Audience, fee, and missing post history', evidence: 'P-B1 … P-B4' },
+    C: { label: 'Creator C · already monitored', source: 'Marketer supplied reference only', posts: 'No retrieved posts', counts: 'No counts', fit: 'No fit judgment yet', connection: 'Included as a marketer-supplied lead. There is no retrieved content evidence connecting it to the angle.', unknown: 'All performance and audience evidence', evidence: 'R-C1 only' }
+  };
+
+  function initialState() {
+    return { signalReviewed: false, campaignStarted: false, reviewed: [], selected: [], reasons: {}, shortlistSaved: false,
+      measurementPlan: false, assumptionRecorded: false, japaneseReviewRequested: false,
+      packageReady: false, message: 'Explore market monitoring, or start a campaign from the example brief. Monitoring does not start a campaign.' };
+  }
+
+  function reduce(state, action) {
+    const next = { ...state, reviewed: [...state.reviewed], selected: [...state.selected], reasons: { ...state.reasons } };
+    const block = message => ({ ...next, message: `Blocked: ${message}` });
+    if (action.type === 'reset') return initialState();
+    if (action.type === 'inspect_signal') {
+      next.signalReviewed = true;
+      next.message = 'Monitoring insight inspected. Its sample and coverage limit remain attached; campaign decisions are unchanged.';
+      return next;
+    }
+    if (action.type === 'start_campaign') {
+      next.campaignStarted = true;
+      next.message = 'The marketer initiated a campaign from the example brief. Candidates can now be reviewed independently of monitoring.';
+      return next;
+    }
+    if (!state.campaignStarted) return block('start a campaign from its brief before reviewing creators or recording campaign decisions.');
+    if (action.type === 'review_creator') {
+      if (!next.reviewed.includes(action.id)) next.reviewed.push(action.id);
+      next.message = `${creatorFacts[action.id].label} evidence opened; unknowns remain visible.`;
+    }
+    if (action.type === 'add_creator') {
+      if (!state.reviewed.includes(action.id)) return block('open that creator’s evidence first.');
+      if (!next.selected.includes(action.id)) next.selected.push(action.id);
+      next.shortlistSaved = false; next.packageReady = false;
+      next.message = `${creatorFacts[action.id].label} added as a candidate, pending a reason.`;
+    }
+    if (action.type === 'reason') {
+      if (!state.selected.includes(action.id)) return block('add that candidate before recording a reason.');
+      next.reasons[action.id] = action.id === 'A'
+        ? 'Mock posts P-A2 and P-A6 demonstrate cushion finish, matching the proposed angle; audience, fee, and sales performance remain unknown.'
+        : action.id === 'B'
+          ? 'Exploratory style fit only; four posts are insufficient for a performance comparison.'
+          : 'Marketer-nominated for investigation; no performance claim yet.';
+      next.shortlistSaved = false; next.packageReady = false;
+      next.message = 'Reason recorded with its evidence limitation.';
+    }
+    if (action.type === 'save_shortlist') {
+      if (!state.selected.length) return block('select at least one creator.');
+      if (state.selected.some(id => !state.reasons[id])) return block('every selected creator needs a reason and limitation.');
+      next.shortlistSaved = true; next.message = 'Review candidate set recorded in demo memory. No database write occurred; reloading clears it.';
+    }
+    if (action.type === 'measurement') {
+      next.measurementPlan = true;
+      next.message = 'Measurement plan recorded: tagged links and attributed orders; incremental sales are not claimed.';
+    }
+    if (action.type === 'assumption') {
+      next.assumptionRecorded = true;
+      next.message = 'Assumption recorded: Japanese-language content is relevant to the brief, while audience country is unknown.';
+    }
+    if (action.type === 'request_review') {
+      next.japaneseReviewRequested = true;
+      next.message = 'Japanese-language claim and caption review requested from the brand marketer.';
+    }
+    if (action.type === 'package') {
+      if (!state.shortlistSaved) return block('save the shortlist first.');
+      if (!state.measurementPlan) return block('record a measurement plan.');
+      if (!state.assumptionRecorded) return block('record the audience assumption.');
+      if (!state.japaneseReviewRequested) return block('request Japanese-language review.');
+      next.packageReady = true;
+      next.message = 'Review package ready. The marketer still decides whether to proceed.';
+    }
+    return next;
+  }
+
+  const actions = [
+    ['Inspect signal', { type: 'inspect_signal' }],
+    ['Open Creator A evidence', { type: 'review_creator', id: 'A' }],
+    ['Open Creator B evidence', { type: 'review_creator', id: 'B' }],
+    ['Open Creator C evidence', { type: 'review_creator', id: 'C' }],
+    ['Add Creator A', { type: 'add_creator', id: 'A' }],
+    ['Add Creator B', { type: 'add_creator', id: 'B' }],
+    ['Add Creator C', { type: 'add_creator', id: 'C' }],
+    ['Explain Creator A', { type: 'reason', id: 'A' }],
+    ['Explain Creator B', { type: 'reason', id: 'B' }],
+    ['Explain Creator C', { type: 'reason', id: 'C' }],
+    ['Save shortlist · demo only', { type: 'save_shortlist' }],
+    ['Record measurement plan', { type: 'measurement' }],
+    ['Record audience assumption', { type: 'assumption' }],
+    ['Request Japanese review', { type: 'request_review' }],
+    ['Prepare review package', { type: 'package' }],
+    ['Reset', { type: 'reset' }],
+    ['Start campaign from brief', { type: 'start_campaign' }]
+  ];
+  const scenarios = [
+    { name: 'Monitoring only', description: 'Inspect the insight. The campaign remains unstarted and no creator selection or shortlist is created.', steps: [0] },
+    { name: 'Campaign without monitoring', description: 'The marketer starts from a campaign brief and reviews a candidate without inspecting any signal. The candidate still needs its own evidence and reason.', steps: [16,1,4,7,10,11,12,13,14] },
+    { name: 'Insight then human campaign start', description: 'Inspect market monitoring, then explicitly start a campaign as the marketer. The second action initiates campaign planning; the insight does not trigger it.', steps: [0,16,1,4,7,10,11,12,13,14] },
+    { name: 'Partial creator evidence', description: 'Creator B has only four mock posts. The brief can still save B for exploratory review, while the gap stays explicit and no performance comparison is implied.', steps: [16,2,5,8,10,11,12,13,14] },
+    { name: 'Try to skip evidence', description: 'Try saving before starting a campaign and selecting before reviewing evidence. Each missing prerequisite remains visible.', steps: [10,14,4,16,4,1,4,10,7,10,14] }
+  ];
+
+  let state = initialState();
+  let scenarioIndex = 0;
+  let stepIndex = 0;
+
+  function dispatch(action, guided = false) {
+    state = reduce(state, action);
+    if (guided) stepIndex += 1;
+    render();
+  }
+
+  function render() {
+    document.getElementById('signal-state').textContent = state.signalReviewed ? 'Monitoring insight inspected independently.' : 'Monitoring insight not yet inspected.';
+    document.getElementById('campaign-state').textContent = state.campaignStarted ? 'Campaign started by the marketer. Candidate review is available.' : 'Campaign not started. Monitoring does not initiate it.';
+    document.getElementById('candidates').innerHTML = Object.entries(creatorFacts).map(([id, fact]) => `
+      <article class="candidate">
+        <div class="row"><h3>${fact.label}</h3><span class="pill ${state.selected.includes(id) ? '' : 'unknown'}">${state.selected.includes(id) ? 'On shortlist' : 'Not selected'}</span></div>
+        <div class="facts"><span>${fact.source}</span><span>${fact.posts}</span><span>${fact.counts}</span></div>
+        <div class="item"><strong>Observed in mock source:</strong> ${fact.evidence}</div>
+        <div class="item derived"><strong>Derived:</strong> ${fact.fit}</div>
+        <div class="item derived"><strong>Connection to the brief:</strong> ${fact.connection}</div>
+        <div class="item unknown"><strong>Unknown:</strong> ${fact.unknown}</div>
+        <p class="small"><strong>Evidence opened:</strong> ${state.reviewed.includes(id) ? 'Yes' : 'No'} · <strong>Saved reason:</strong> ${state.reasons[id] || 'None'}</p>
+      </article>`).join('');
+    const pill = document.getElementById('decision-pill');
+    pill.textContent = state.packageReady ? 'Ready for marketer review' : state.campaignStarted ? 'Draft' : 'No campaign started';
+    pill.className = `pill ${state.packageReady ? 'review' : 'unknown'}`;
+    document.getElementById('decision-state').innerHTML = `
+      <p><strong>Selected:</strong> ${state.selected.map(id => creatorFacts[id].label).join(', ') || 'None'} · <strong>Shortlist recorded in demo memory:</strong> ${state.shortlistSaved ? 'Yes' : 'No'}</p>
+      <div class="item"><strong>Brief and evidence basis</strong><br><span class="small">${state.campaignStarted ? 'Human-initiated Hero Cushion sales campaign targeting Japan; finish demonstrations are a criterion in the brief.' : 'No campaign initiated; the example brief has not been activated.'} ${state.reviewed.length} creator evidence set(s) opened. Monitoring is a separate feature.</span></div>
+      <div class="item derived"><strong>Measurement plan</strong><br><span class="small">${state.measurementPlan ? 'Use tagged creator links, campaign dates, and attributed orders under a stated 7-day last-click rule. Compare descriptive outcomes; no incrementality estimate.' : 'Not recorded.'}</span></div>
+      <div class="item unknown"><strong>Assumption and unknown</strong><br><span class="small">${state.assumptionRecorded ? 'Japanese-language relevance is assumed for exploration; audience country, fees, and creator sales effects remain unknown.' : 'Audience assumption not recorded.'}</span></div>
+      <div class="item review"><strong>Human review request</strong><br><span class="small">${state.japaneseReviewRequested ? 'Brand marketer to review Japanese captions and claims before using the shortlist.' : 'Not requested.'}</span></div>
+      <p class="note">Preparing this package is an internal record. It does not contact creators or approve spend.</p>`;
+    const feedback = document.getElementById('feedback');
+    feedback.textContent = state.message;
+    feedback.className = `status ${state.message.startsWith('Blocked:') ? 'blocked' : ''}`;
+    document.getElementById('actions').innerHTML = actions.map(([label], index) => `<button class="${index === 15 ? 'secondary' : ''}" data-action="${index}">${label}</button>`).join('');
+    document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => dispatch(actions[Number(button.dataset.action)][1])));
+    document.getElementById('tabs').innerHTML = scenarios.map((scenario, index) => `<button role="tab" aria-selected="${index === scenarioIndex}" data-scenario="${index}">${scenario.name}</button>`).join('');
+    document.querySelectorAll('[data-scenario]').forEach(button => button.addEventListener('click', () => { scenarioIndex = Number(button.dataset.scenario); stepIndex = 0; state = initialState(); render(); }));
+    const active = scenarios[scenarioIndex];
+    document.getElementById('scenario-description').textContent = active.description;
+    document.getElementById('steps').innerHTML = active.steps.map((actionIndex, index) => `<li class="${index < stepIndex ? 'done' : index === stepIndex ? 'current' : ''}"><button class="secondary" data-step="${index}" ${index !== stepIndex ? 'disabled' : ''}>${actions[actionIndex][0]}</button></li>`).join('');
+    document.querySelectorAll('[data-step]').forEach(button => button.addEventListener('click', () => dispatch(actions[active.steps[Number(button.dataset.step)]][1], true)));
+  }
+  render();
+</script>
+</body>
+</html>
