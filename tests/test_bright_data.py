@@ -431,7 +431,7 @@ def test_transport_enforces_bytes_without_exposing_credential(monkeypatch):
         def read(self, size):
             return b"x" * size
 
-    monkeypatch.setattr("smi_ingestion.adapters.bright_data._open_no_redirect", lambda request, timeout: Response())
+    monkeypatch.setattr("smi_ingestion.adapters.bright_data.open_no_redirect", lambda request, timeout: Response())
     with pytest.raises(EvidenceError, match="response_too_large") as captured:
         BrightDataTransport().fetch(_DATASETS["profile"], PROFILE, 10, "SECRET_SENTINEL", 10)
     assert "SECRET_SENTINEL" not in str(captured.value)
@@ -465,7 +465,7 @@ def test_transport_uses_documented_dataset_and_post_count_without_leaking_token(
         observed["timeout"] = timeout
         return Response()
 
-    monkeypatch.setattr("smi_ingestion.adapters.bright_data._open_no_redirect", fake_open)
+    monkeypatch.setattr("smi_ingestion.adapters.bright_data.open_no_redirect", fake_open)
     result = BrightDataTransport().fetch(_DATASETS["posts"], PROFILE, 7, "SECRET_SENTINEL", 100)
     request = observed["request"]
     assert result == BrightDataHTTPResponse(200, b"[]")

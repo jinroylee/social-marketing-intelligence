@@ -9,9 +9,11 @@ CREATE TABLE IF NOT EXISTS ingestion_runs (
     requests_used INTEGER NOT NULL DEFAULT 0,
     records_used INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'running',
+    input_complete BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE ingestion_runs ADD COLUMN IF NOT EXISTS requests_used INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE ingestion_runs ADD COLUMN IF NOT EXISTS input_complete BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE TABLE IF NOT EXISTS source_observations (
     id UUID PRIMARY KEY,

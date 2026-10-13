@@ -238,6 +238,41 @@ def test_ten_ids_with_missing_counts_or_wrong_author_are_not_comparison_grade():
     assert any(candidate.reason == "author_identity_mismatch" for candidate in mapped.unresolved)
 
 
+def test_invalid_profile_rows_preserve_original_source_indices():
+    scope = _scope(_profile_page(1, permalinks=True).body)
+    scope["webapp.user-post"]["itemList"].insert(0, None)
+    draft = TikTokWebCollector(FakeTransport(_page(scope)), lambda: CAPTURED).collect(
+        {"references": [PROFILE]}, {}, RunLimits()
+    ).items[0]
+    mapped = TikTokWebMapper().normalize(_observe(draft), draft.payload)
+    caption = next(field for field in mapped.fields if field.field == "caption")
+    assert caption.locator == "$.webapp.user-post.itemList[1].desc"
+    assert all(metric.locator.startswith("$.webapp.user-post.itemList[1].")
+               for metric in mapped.metrics)
+
+
+@pytest.mark.parametrize("invalid", [False, True])
+def test_missing_or_invalid_web_fields_are_reported(stack, tmp_path, invalid):
+    _, _, runner, registry = stack
+    item = _item()
+    for container, name in ((item, "desc"), (item, "createTime"), (item["stats"], "shareCount")):
+        if invalid:
+            container[name] = []
+        else:
+            container.pop(name)
+    registry._adapters["tiktok-web"] = (
+        TikTokWebCollector(FakeTransport(_video_page(item)), lambda: CAPTURED), TikTokWebMapper(),
+    )
+    manifest = tmp_path / "web.json"
+    manifest.write_text(json.dumps({"adapter": "tiktok-web", "references": [VIDEO]}))
+    result = runner.ingest(manifest)
+    assert result["status"] == "partial"
+    assert result["missing_fields"] == [
+        {"field": field, "state": "unavailable" if invalid else "not_returned", "count": 1}
+        for field in ("caption", "metric:shares", "published_at")
+    ]
+
+
 def test_ten_posts_without_urls_or_with_duplicate_ids_do_not_resolve():
     without_urls = _profile_page(10)
     assert _classify(_reference(PROFILE), without_urls) == ("partial_result", 10)
@@ -301,10 +336,10 @@ def test_transport_enforces_response_byte_limit_and_redirect(monkeypatch):
         def read(self, size):
             return b"x" * size
 
-    monkeypatch.setattr("smi_ingestion.adapters.tiktok_web.urlopen", lambda request, timeout: Response())
+    monkeypatch.setattr("smi_ingestion.adapters.tiktok_web.open_no_redirect", lambda request, timeout: Response())
     with pytest.raises(EvidenceError, match="response_too_large"):
         TikTokWebTransport().fetch(PROFILE, 10)
-    monkeypatch.setattr("smi_ingestion.adapters.tiktok_web.urlopen", lambda request, timeout: Response(VIDEO))
+    monkeypatch.setattr("smi_ingestion.adapters.tiktok_web.open_no_redirect", lambda request, timeout: Response(VIDEO))
     with pytest.raises(EvidenceError, match="unexpected_source_redirect"):
         TikTokWebTransport().fetch(PROFILE, 10)
 

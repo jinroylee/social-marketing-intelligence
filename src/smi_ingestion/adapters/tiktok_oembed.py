@@ -10,7 +10,9 @@ from html.parser import HTMLParser
 from typing import Any, Callable
 from urllib.error import HTTPError, URLError
 from urllib.parse import unquote, urlencode, urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import Request
+
+from .http import open_no_redirect
 
 from ..contracts import (
     CollectedBatch, NormalizedBatch, ObservationDraft, RawObservation, RunLimits,
@@ -72,7 +74,7 @@ class TikTokOEmbedTransport:
             "Accept": "application/json", "User-Agent": "smi-ingestion/0.1",
         })
         try:
-            with urlopen(request, timeout=self.timeout_seconds) as response:
+            with open_no_redirect(request, timeout=self.timeout_seconds) as response:
                 final = urlsplit(response.geturl())
                 if final.scheme != "https" or final.hostname != "www.tiktok.com" or final.path != "/oembed":
                     raise EvidenceError("unexpected_source_redirect")

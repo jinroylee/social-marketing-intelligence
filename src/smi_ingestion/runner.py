@@ -47,7 +47,6 @@ class IngestionRunner:
             _, mapper = self.registry.resolve(observation.adapter_id)
             batch = mapper.normalize(observation, payload)
             self.writer.apply(observation.id, batch, f"{observation.adapter_id}:{mapper.version}")
-            self.evidence.mark(observation.id, "applied")
         except (EvidenceError, ValueError, KeyError, UnicodeError, json.JSONDecodeError) as error:
             code = error.code if isinstance(error, EvidenceError) else "normalization_failed"
             self.evidence.issue(observation.run_id, observation.id, code, code)
@@ -139,9 +138,10 @@ class IngestionRunner:
         if digest != run["manifest_hash"]:
             raise EvidenceError("input_changed")
         collector, _ = self.registry.resolve(run["adapter_id"])
+        self.writer.reconcile_applied(run_id)
         for observation in self.evidence.pending(run_id):
             self._process(observation)
-        if run["status"] == "completed":
+        if run["status"] == "completed" or run["input_complete"]:
             return self._report(run_id, True)
         completed_input = False
         while True:
@@ -172,7 +172,9 @@ class IngestionRunner:
                 break
             for draft in batch.items:
                 try:
-                    observation = self.evidence.save(run_id, run["records_used"], draft, batch.next_checkpoint)
+                    observation = self.evidence.save(
+                        run_id, run["records_used"], draft, batch.next_checkpoint, complete=batch.complete
+                    )
                 except EvidenceError as error:
                     self.evidence.issue(run_id, None, error.code, error.code)
                     return self._report(run_id, False)
@@ -191,6 +193,4 @@ class IngestionRunner:
         _, mapper = self.registry.resolve(observation.adapter_id)
         batch = mapper.normalize(observation, payload)
         result = self.writer.apply(observation.id, batch, f"{observation.adapter_id}:{mapper.version}")
-        if result["status"] == "applied":
-            self.evidence.mark(observation.id, "applied")
         return {"observation_id": observation_id, **result}

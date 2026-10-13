@@ -1,7 +1,7 @@
 """Bounded Bright Data TikTok profile and recent-post collection for a local prototype.
 
-The provider's response shape and Japan coverage require a live sample. This adapter
-accepts only supplied profile URLs and never retries a paid scrape request.
+One live profile/posts sample informed the current mapper; broader coverage remains
+unverified. This adapter accepts supplied profile URLs and never retries a paid scrape.
 """
 
 from __future__ import annotations
@@ -14,7 +14,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
-from urllib.request import HTTPRedirectHandler, Request, build_opener
+from urllib.request import Request
+
+from .http import open_no_redirect
 
 from ..contracts import (
     CollectedBatch, ExternalKey, FieldCandidate, MetricCandidate, NormalizedBatch,
@@ -78,16 +80,6 @@ def _provider_error_code(body: bytes) -> str | None:
     return value if isinstance(value, str) and _ERROR_CODE.fullmatch(value) else None
 
 
-class _RejectRedirects(HTTPRedirectHandler):
-    def redirect_request(self, request, fp, code, message, headers, newurl):
-        # Bearer credentials must never be forwarded to a redirected host.
-        return None
-
-
-def _open_no_redirect(request: Request, timeout: int):
-    return build_opener(_RejectRedirects()).open(request, timeout=timeout)
-
-
 class BrightDataTransport:
     """Make one fixed-endpoint scrape POST, bounding response time and body size."""
 
@@ -106,7 +98,7 @@ class BrightDataTransport:
             "User-Agent": "smi-ingestion/0.1",
         })
         try:
-            with _open_no_redirect(request, timeout=timeout) as response:
+            with open_no_redirect(request, timeout=timeout) as response:
                 final = urlsplit(response.geturl())
                 if (final.scheme != "https" or final.hostname != "api.brightdata.com"
                         or final.path != path):

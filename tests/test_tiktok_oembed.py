@@ -98,7 +98,7 @@ def test_transport_rejects_response_beyond_its_byte_limit(monkeypatch):
             return b"x" * size
 
     monkeypatch.setattr(
-        "smi_ingestion.adapters.tiktok_oembed.urlopen",
+        "smi_ingestion.adapters.tiktok_oembed.open_no_redirect",
         lambda request, timeout: OversizedResponse(),
     )
     with pytest.raises(EvidenceError, match="response_too_large"):

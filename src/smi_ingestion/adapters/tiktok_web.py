@@ -14,7 +14,9 @@ from html.parser import HTMLParser
 from typing import Any, Callable
 from urllib.error import HTTPError, URLError
 from urllib.parse import unquote, urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import Request
+
+from .http import open_no_redirect
 
 from ..contracts import (
     CollectedBatch, ExternalKey, FieldCandidate, MetricCandidate, NormalizedBatch,
@@ -102,7 +104,7 @@ class TikTokWebTransport:
             "Accept": "text/html", "User-Agent": "smi-ingestion/0.1",
         })
         try:
-            with urlopen(request, timeout=self.timeout_seconds) as response:
+            with open_no_redirect(request, timeout=self.timeout_seconds) as response:
                 # A redirect to a login, CDN, or different creator is not the
                 # page the caller asked to inspect.
                 if _reference(response.geturl()).original != reference_url:
@@ -168,13 +170,13 @@ def _post_permalink(item: dict[str, Any], post_id: str) -> str | None:
     return _returned_permalink(returned_url, post_id)
 
 
-def _posts(scope: dict[str, Any]) -> list[dict[str, Any]]:
+def _posts(scope: dict[str, Any]) -> list[tuple[int, dict[str, Any]]]:
     """Read only the observed embedded profile post list, never infer one."""
     block = scope.get("webapp.user-post")
     if not isinstance(block, dict):
         return []
     items = block.get("itemList")
-    return [item for item in items if isinstance(item, dict)] if isinstance(items, list) else []
+    return [(index, item) for index, item in enumerate(items) if isinstance(item, dict)] if isinstance(items, list) else []
 
 
 def _classify(reference: SourceReference, response: WebHTTPResponse | None) -> tuple[str, int]:
@@ -222,7 +224,7 @@ def _classify(reference: SourceReference, response: WebHTTPResponse | None) -> t
         return "unavailable_or_private", 0
     if not isinstance(user, dict) or not isinstance(user.get("id"), str):
         return "partial_result", 0
-    posts = _posts(scope)
+    posts = [item for _, item in _posts(scope)]
     identified = {
         post["id"] for post in posts
         if isinstance(post.get("id"), str) and _VIDEO_ID.fullmatch(post["id"])
@@ -344,7 +346,7 @@ class TikTokWebCollector:
 class TikTokWebMapper:
     """Map corroborated embedded IDs and visible public counts into source-specific evidence."""
 
-    version = "v1"
+    version = "v2"
     supported_format = "embedded-html-v1"
 
     def normalize(self, observation: RawObservation, payload: bytes) -> NormalizedBatch:
@@ -364,7 +366,7 @@ class TikTokWebMapper:
             item = item_info.get("itemStruct") if isinstance(item_info, dict) else None
             if not isinstance(item, dict) or item.get("id") != observation.reference.native_id_hint:
                 raise ValueError("video_id_mismatch")
-            return _normalize_items(observation, (item,), None)
+            return _normalize_items(observation, ((0, item),), None)
         detail = scope.get("webapp.user-detail")
         info = detail.get("userInfo") if isinstance(detail, dict) else None
         user = info.get("user") if isinstance(info, dict) else None
@@ -376,7 +378,7 @@ class TikTokWebMapper:
 
 
 def _normalize_items(
-    observation: RawObservation, items: tuple[dict[str, Any], ...], user: dict[str, Any] | None,
+    observation: RawObservation, items: tuple[tuple[int, dict[str, Any]], ...], user: dict[str, Any] | None,
 ) -> NormalizedBatch:
     namespace = "web:public"
     entities: list[ExternalKey] = []
@@ -393,7 +395,7 @@ def _normalize_items(
             fields.append(FieldCandidate(account, "handle", "observed", handle, "$.webapp.user-detail.userInfo.user.uniqueId"))
     else:
         account = None
-    for index, item in enumerate(items):
+    for index, item in items:
         locator = (
             "$.webapp.video-detail.itemInfo.itemStruct"
             if observation.reference.resource_kind == "video"
@@ -429,10 +431,20 @@ def _normalize_items(
         caption = item.get("desc")
         if isinstance(caption, str):
             fields.append(FieldCandidate(post, "caption", "observed", caption, locator + ".desc"))
+        else:
+            fields.append(FieldCandidate(
+                post, "caption", "unavailable" if "desc" in item else "not_returned", None,
+                locator + ".desc", "invalid_source_value" if "desc" in item else None,
+            ))
         timestamp = item.get("createTime")
         if _valid_timestamp(timestamp):
             published_at = datetime.fromtimestamp(int(timestamp), tz=timezone.utc).isoformat()
             fields.append(FieldCandidate(post, "published_at", "observed", published_at, locator + ".createTime"))
+        else:
+            fields.append(FieldCandidate(
+                post, "published_at", "unavailable" if "createTime" in item else "not_returned", None,
+                locator + ".createTime", "invalid_source_value" if "createTime" in item else None,
+            ))
         if observation.reference.resource_kind == "video":
             fields.append(FieldCandidate(post, "url", "observed", observation.reference.original, "$.requested_reference"))
         else:
@@ -442,15 +454,20 @@ def _normalize_items(
                 locator + (".shareUrl" if item.get("shareUrl") is not None else ".shareInfo.shareUrl"),
             ))
         stats = item.get("stats")
-        if isinstance(stats, dict):
-            for native_name, definition in _POST_METRICS.items():
-                value = stats.get(native_name)
-                if _is_nonnegative_count(value):
-                    metrics.append(MetricCandidate(
-                        post, f"tiktok.web.{definition}.v1", native_name, value,
-                        str(value), "exact", "count", observation.captured_at,
-                        locator + ".stats." + native_name,
-                    ))
+        for native_name, definition in _POST_METRICS.items():
+            value = stats.get(native_name) if isinstance(stats, dict) else None
+            if _is_nonnegative_count(value):
+                metrics.append(MetricCandidate(
+                    post, f"tiktok.web.{definition}.v1", native_name, value,
+                    str(value), "exact", "count", observation.captured_at,
+                    locator + ".stats." + native_name,
+                ))
+            else:
+                invalid = native_name in stats if isinstance(stats, dict) else "stats" in item
+                fields.append(FieldCandidate(
+                    post, f"metric:{definition}", "unavailable" if invalid else "not_returned", None,
+                    locator + ".stats." + native_name, "invalid_source_value" if invalid else None,
+                ))
     if observation.reference.resource_kind == "profile" and observation.coverage.get("outcome") == "partial_result":
         reason = (
             "insufficient_recent_posts" if observation.coverage.get("posts_observed", 0) < 10

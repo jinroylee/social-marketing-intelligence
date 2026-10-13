@@ -241,6 +241,84 @@ def test_explicit_removal_suppresses_older_source_assertion(stack, tmp_path):
     assert field["value"] is None
 
 
+def test_removal_from_another_provider_stays_conflicted(stack, tmp_path):
+    db, _, runner, _ = stack
+    runner.ingest(_manifest(tmp_path))
+    data = json.loads((tmp_path / "post.json").read_text())
+    data["video"].pop("caption")
+    data["video"]["caption_state"] = "removed"
+    (tmp_path / "post.json").write_text(json.dumps(data))
+    runner.ingest(_manifest(tmp_path, provider="synthetic-second-source"))
+    field = CanonicalReader(db).entity(POST, True)["fields"]["caption"]
+    assert field["state"] == "conflict"
+    assert field["value"] is None
+    assert len(field["provenance"]) == 2
+
+
+def test_resume_final_capture_at_limit_without_collecting_again(stack, monkeypatch):
+    db, evidence, runner, registry = stack
+    path = EXAMPLES / "json-manifest.json"
+    manifest, digest = runner._manifest(path)
+    run_id = evidence.start_run(path, digest, "fixture-json", RunLimits(max_records=1))
+    collector, _ = registry.resolve("fixture-json")
+    batch = collector.collect(manifest, {}, RunLimits())
+    evidence.save(run_id, 0, batch.items[0], batch.next_checkpoint, complete=batch.complete)
+
+    def unexpected_collect(*args):
+        pytest.fail("A durably saved final capture must not be collected again")
+
+    monkeypatch.setattr(collector, "collect", unexpected_collect)
+    result = runner.resume(run_id)
+    assert result["status"] == "completed"
+    assert result["coverage"] == "complete_for_requested_input"
+    assert result["applied"] == 1
+    assert result["issues"] == []
+    assert len(CanonicalReader(db).metrics(POST, True)) == 1
+
+
+@pytest.mark.parametrize("legacy_pending_marker", [False, True])
+def test_committed_transient_derivation_survives_interrupted_run(stack, tmp_path, legacy_pending_marker):
+    db, evidence, runner, registry = stack
+    path = _manifest(tmp_path, policy={
+        "context_id": "transient-test", "can_process": True,
+        "can_retain": False, "can_display": True,
+    })
+    manifest, digest = runner._manifest(path)
+    run_id = evidence.start_run(path, digest, "fixture-json", RunLimits())
+    collector, mapper = registry.resolve("fixture-json")
+    batch = collector.collect(manifest, {}, RunLimits())
+    draft = batch.items[0]
+    observation = evidence.save(run_id, 0, draft, batch.next_checkpoint)
+    runner.writer.apply(observation.id, mapper.normalize(observation, draft.payload),
+                        f"fixture-json:{mapper.version}")
+    assert evidence.pending(run_id) == []
+    if legacy_pending_marker:
+        with db.connect() as connection:
+            connection.execute("UPDATE source_observations SET status='pending' WHERE id=%s", (observation.id,))
+    # Simulate termination after the canonical transaction, before runner completion.
+    result = runner.resume(run_id)
+    assert result["status"] == "completed"
+    assert result["applied"] == 1
+    assert result["quarantined"] == 0
+    assert result["issues"] == []
+    assert len(CanonicalReader(db).metrics(POST, True)) == 1
+
+
+def test_schema_upgrade_preserves_existing_run(stack):
+    db, evidence, runner, _ = stack
+    result = runner.ingest(EXAMPLES / "json-manifest.json")
+    before = evidence.run(result["run_id"])
+    with db.connect() as connection:
+        connection.execute("ALTER TABLE ingestion_runs DROP COLUMN input_complete")
+    db.migrate()
+    db.migrate()
+    after = evidence.run(result["run_id"])
+    assert after["checkpoint"] == before["checkpoint"]
+    assert after["records_used"] == before["records_used"]
+    assert after["input_complete"] is False
+    assert runner.resume(result["run_id"])["status"] == "completed"
+
+
 def test_malformed_second_item_preserves_first_and_reports_partial(stack, tmp_path):
     db, _, runner, _ = stack
     (tmp_path / "bad.json").write_text("not-json")

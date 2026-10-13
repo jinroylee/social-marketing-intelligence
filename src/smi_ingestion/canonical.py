@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import uuid
 from collections import defaultdict
 from datetime import datetime
@@ -22,6 +23,16 @@ def _key_params(key: ExternalKey, synthetic: bool) -> tuple[Any, ...]:
 class CanonicalWriter:
     def __init__(self, db: Database):
         self.db = db
+
+    def reconcile_applied(self, run_id: str) -> None:
+        """Recover pending status left by older, separately committed canonical writes."""
+        with self.db.connect() as connection:
+            connection.execute(
+                "UPDATE source_observations o SET status='applied' "
+                "WHERE o.run_id=%s AND o.status='pending' AND EXISTS "
+                "(SELECT 1 FROM derivations d WHERE d.observation_id=o.id AND d.active=TRUE)",
+                (run_id,)
+            )
 
     @staticmethod
     def _entity_id(connection, key: ExternalKey, synthetic: bool) -> str:
@@ -50,6 +61,7 @@ class CanonicalWriter:
         self, observation_id: str, batch: NormalizedBatch, mapper_key: str,
         policy_version: str = "canonical-v1"
     ) -> dict[str, Any]:
+        """Atomically apply one mapper/policy derivation and mark its observation applied."""
         with self.db.connect() as connection:
             observation = connection.execute(
                 "SELECT * FROM source_observations WHERE id=%s FOR UPDATE", (observation_id,)
@@ -63,6 +75,9 @@ class CanonicalWriter:
                 (observation_id, mapper_key, policy_version)
             ).fetchone()
             if existing:
+                connection.execute(
+                    "UPDATE source_observations SET status='applied' WHERE id=%s", (observation_id,)
+                )
                 return {"status": "duplicate", "entities": 0, "fields": 0, "metrics": 0}
             connection.execute(
                 "UPDATE derivations SET active=FALSE WHERE observation_id=%s AND active=TRUE",
@@ -103,6 +118,11 @@ class CanonicalWriter:
                     "VALUES (%s,%s,%s,%s,%s)",
                     (str(uuid.uuid4()), derivation_id, unresolved.kind, unresolved.locator, unresolved.reason)
                 )
+            # Transient payloads cannot be read again after a crash. Their
+            # completion marker must commit with the facts it describes.
+            connection.execute(
+                "UPDATE source_observations SET status='applied' WHERE id=%s", (observation_id,)
+            )
             return {
                 "status": "applied", "entities": len(entity_ids),
                 "fields": len(batch.fields), "metrics": len(batch.metrics),
@@ -152,26 +172,24 @@ class CanonicalReader:
                 if row["state"] in {"observed", "removed"}:
                     by_provider[row["provider_id"]].append(row)
             selected = []
-            conflict = False
             for provider_rows in by_provider.values():
                 known_source_times = [row["source_as_of"] is not None for row in provider_rows]
                 # Mixed time semantics cannot safely be ordered by import or capture time.
                 if any(known_source_times) and not all(known_source_times):
                     selected.extend(provider_rows)
-                    conflict |= len({repr(row["value"]) for row in provider_rows}) > 1
                 else:
                     timestamp = (lambda row: row["source_as_of"]) if all(known_source_times) else (lambda row: row["captured_at"])
                     if any(timestamp(row) is None for row in provider_rows):
                         selected.extend(provider_rows)
-                        conflict |= len({repr(row["value"]) for row in provider_rows}) > 1
                     else:
                         latest = max(timestamp(row) for row in provider_rows)
                         current = [row for row in provider_rows if timestamp(row) == latest]
                         selected.extend(current)
-                        conflict |= len({repr(row["value"]) for row in current}) > 1
             observed = [row for row in selected if row["state"] == "observed"]
-            unique_values = {repr(row["value"]) for row in observed}
-            conflict |= len(unique_values) > 1
+            # A removal competes with an observed value just as another value
+            # does. JSON object key order does not change an assertion's value.
+            conflict = len({(row["state"], json.dumps(row["value"], sort_keys=True))
+                            for row in selected}) > 1
             provenance = [
                 {"observation_id": str(row["observation_id"]), "provider": row["provider_id"],
                  "source_reference": row["reference"],

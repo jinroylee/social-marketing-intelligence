@@ -105,7 +105,9 @@ class EvidenceStore:
             ).fetchall()
         return [_observation(row) for row in rows]
 
-    def save(self, run_id: str, item_index: int, draft: ObservationDraft, checkpoint: dict[str, Any]) -> RawObservation:
+    def save(self, run_id: str, item_index: int, draft: ObservationDraft,
+             checkpoint: dict[str, Any], *, complete: bool = False) -> RawObservation:
+        """Commit an observation, its fetch checkpoint, and input completion together."""
         if not _allowed(draft.policy, "process"):
             raise EvidenceError("processing_not_permitted")
         if draft.request_attempts < 1:
@@ -152,9 +154,9 @@ class EvidenceStore:
                      str(path) if path else None, Jsonb(draft.coverage))
                 ).fetchone()
                 connection.execute(
-                    "UPDATE ingestion_runs SET checkpoint=%s, records_used=records_used+1, "
+                    "UPDATE ingestion_runs SET checkpoint=%s, input_complete=%s, records_used=records_used+1, "
                     "bytes_used=bytes_used+%s,requests_used=requests_used+%s WHERE id=%s",
-                    (Jsonb(checkpoint), len(draft.payload), draft.request_attempts, run_id)
+                    (Jsonb(checkpoint), complete, len(draft.payload), draft.request_attempts, run_id)
                 )
             return _observation(row)
         except Exception:

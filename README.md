@@ -1,6 +1,6 @@
 # Social Marketing Intelligence: local ingestion slice
 
-This repository contains a local source-to-canonical ingestion foundation. Two **synthetic** formats exercise retained evidence, mapping, and canonical writes. A live TikTok oEmbed adapter resolves supplied public URLs without retaining TikTok-returned content. Experimental Bright Data and direct-web adapters are separate source routes for the local creator-evidence prototype; neither has yet passed a live ten-post creator comparison check. The fixture data is not evidence about a real creator.
+This repository contains a local source-to-canonical ingestion foundation. Two **synthetic** formats exercise retained evidence, mapping, and canonical writes. A live TikTok oEmbed adapter resolves supplied public URLs without retaining TikTok-returned content. Experimental Bright Data and direct-web adapters are separate source routes for the local creator-evidence prototype. A [2026-10-12 Bright Data check](.scratch/brightdata-source-readiness/api-retry-2026-10-12.md) ingested one profile and ten posts; repeat captures, broader creator coverage, and measured costs remain unverified. The fixture data is not evidence about a real creator.
 
 For a visual code tour, open the [HTML architecture guide](docs/ingestion-architecture.html). The approved design and broader pilot context are in [the wayfinder map](.scratch/beauty-intelligence-pilot/map.md) and [source-to-canonical design](.scratch/beauty-intelligence-pilot/source-to-canonical-design.md).
 
@@ -19,6 +19,8 @@ uv run pytest -q
 ```
 
 The two fixture ingests create **one** canonical content identity with two source observations. The inspected content shows each field's source and two dated `synthetic.views.v1` measurements. Without `--include-synthetic`, inspection hides fixture evidence. The supplied real TikTok URL was separately resolved through TikTok oEmbed; its response was not mixed with the synthetic examples or written as canonical creator evidence.
+
+Run `uv run smi-ingest migrate` when updating an existing database. The migration adds a durable input-completion flag while preserving existing runs and evidence. Newly saved final captures can resume at their request/record limit without another collector call; canonical application and its completion marker commit together.
 
 An ingest result includes a `run_id`, `status`, requested-input coverage, counts, missing fields, unresolved identities, latest source capture time, limits, and sanitized issues. `complete_for_requested_input` means the provided manifest was processed; it makes no claim about platform-wide coverage. A partial run uses exit code 2.
 
@@ -51,14 +53,14 @@ The fixed `tiktok-oembed-reference-only` policy passes the response transiently 
 
 The Bright Data and direct-web adapters use separate manifests and preserve separate source provenance. The blank `BRIGHTDATA_API_TOKEN` entry in `.env.example` is a placeholder for Bright Data's API credential; the TikTok sandbox client key and secret cannot authenticate that provider. Do not paste actual key values into a manifest or commit them. With no Bright Data token, its adapter stops before any provider request. A live Bright Data call may consume account credits, so configure the provider's free tier or a hard spend cap first.
 
-The local `.env` now has a Bright Data token, but two bounded profile calls for the supplied creator returned HTTP 400. A later direct API request returned `Customer is not active`, so account access remains unresolved. They produced no Bright Data creator rows. **Pause further Bright Data scrape calls** until the account is active and free-balance details are checked; the command below is for use after that issue is resolved.
+Earlier Bright Data attempts returned HTTP 400 and `Customer is not active`. The [2026-10-12 retry](.scratch/brightdata-source-readiness/api-retry-2026-10-12.md) subsequently succeeded with two HTTP 200 scrape requests, one profile and ten posts. Offline replay corrected the live identity-field mapping and produced ten source-supported author links. Charges and remaining free credits were not established by that check. The following commands perform new live collection.
 
 ```bash
 uv run smi-ingest ingest examples/live/tiktok-web-manifest.json --max-requests 2
 uv run --env-file .env smi-ingest ingest examples/live/brightdata-tiktok-manifest.json --max-requests 12
 ```
 
-The web example uses the supplied profile and video references. A successful HTTP response can still be a bot challenge; the collector reports challenge and partial results explicitly. A persistent local run mapped the supplied video's post ID, caption, date, URL, and four public engagement counts; its profile fetch was challenged. No ten-post comparison has passed. Direct-web collection uses at most ten HTTP attempts per run, including one transient retry per reference, with an eight-second and 1 MiB response cap; it retains derived evidence but not raw page HTML.
+The web example uses the supplied profile and video references. A successful HTTP response can still be a bot challenge; the collector reports challenge and partial results explicitly. A persistent local run mapped the supplied video's post ID, caption, date, URL, and four public engagement counts; its profile fetch was challenged. Direct-web profile history remains unverified. Direct-web collection uses at most ten HTTP attempts per run, including one transient retry per reference, with an eight-second and 1 MiB response cap; it retains derived evidence but not raw page HTML. All source transports reject redirects before following them, so redirect hops cannot escape request accounting.
 
 Inspect that real post in the local database with:
 
@@ -66,9 +68,9 @@ Inspect that real post in the local database with:
 uv run --env-file .env smi-ingest inspect tiktok web:public content 7632620458235530504
 ```
 
-Bright Data uses at most two paid scrape requests per creator, up to three creators and ten requested posts each. A scrape can return a pending snapshot; if the CLI reports `partial` with `pending_snapshot` or `snapshot_running`, run `uv run --env-file .env smi-ingest resume RUN_ID` later (at least 30 seconds after `snapshot_running`) rather than starting a new ingest. The collector resumes with bounded progress and snapshot reads and never retries a paid scrape automatically. Its local policy retains successful provider responses for replay. Bright Data has documented profile and recent-post APIs, but no successful Japan sample is available in this workspace yet. Synthetic adapter tests verify parsing and bounds only. The [live sample ticket](.scratch/beauty-intelligence-pilot/issues/21-validate-bright-data-live-sample.md) and [fallback decision](.scratch/beauty-intelligence-pilot/issues/20-decide-tiktok-source-fallback-policy.md) remain open; these commands currently run routes separately and do not automatically choose between them.
+Bright Data uses at most two paid scrape requests per creator, up to three creators and ten requested posts each. A scrape can return a pending snapshot; if the CLI reports `partial` with `pending_snapshot` or `snapshot_running`, run `uv run --env-file .env smi-ingest resume RUN_ID` later (at least 30 seconds after `snapshot_running`) rather than starting a new ingest. The collector resumes with bounded progress and snapshot reads and never retries a paid scrape automatically. Its local policy retains successful provider responses for replay. The successful one-creator sample establishes API access and ingestion, while completeness of latest-post history, two additional creators, repeat captures, costs, and a measured fallback policy remain later source-readiness work. The [planning map](.scratch/beauty-intelligence-pilot/map.md) is resolved with those limits recorded. These commands run routes separately and do not automatically choose between them.
 
-For downstream work while Bright Data is unavailable, use the [curated Japanese K-beauty TikTok sample](examples/curated/jp-kbeauty-tiktok-2026-10-05/README.md). It includes a portable offline JSON snapshot of 19 real public video observations and three manifests that were successfully ingested through the direct-web adapter. The snapshot is a selected development sample with source URLs and capture times, not complete creator histories or Japan-audience evidence.
+For reproducible downstream work, use the [curated Japanese K-beauty TikTok sample](examples/curated/jp-kbeauty-tiktok-2026-10-05/README.md). It includes a portable offline JSON snapshot of 19 real public video observations and three manifests that were successfully ingested through the direct-web adapter. The snapshot is a selected development sample with source URLs and capture times, not complete creator histories or Japan-audience evidence.
 
 ## Add a source
 
