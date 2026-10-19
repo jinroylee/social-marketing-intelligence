@@ -34,10 +34,13 @@ def detail(task):
     content = f'<h1>Offline acquisition task</h1><p>{e(task["task_id"])}</p><p><a href="/tasks">All tasks</a></p>'
     content += f'<p>Status: {e(task["status"])} · Outcome: {e(task["outcome"] or "Pending")}</p>'
     content += '<p>Synthetic development inputs. Retrieved material becomes usable only after ingestion and publication. No usable update does not establish market absence.</p>'
-    for label, item in (('Origin', task['origin']), ('Initiator', task['initiator']), ('Submitted', task['submitted_at']),
+    for label, item in (('Workspace', task['workspace_id']), ('Origin', task['origin']), ('Proposal approval', task['proposal_approval']), ('Initiator', task['initiator']), ('Submitted', task['submitted_at']),
                         ('Scope version', task['scope_version']), ('Immutable scope', task['scope']), ('Limits', task['limits']),
                         ('Attempt limit', task['attempt_limit']), ('Coverage', task['coverage']), ('Failure', task['failure']), ('Attempts', task['attempts'])):
         content += f'<p>{e(label)}: {e(json.dumps(item, ensure_ascii=False))}</p>'
+    if task['proposal_approval']:
+        proposal_id = task['proposal_approval']['proposal_id']
+        content += f'<p><a href="/proposals/{e(proposal_id)}">Exact approved proposal</a></p>'
     for publication_id in task['publication_ids']:
         content += f'<p><a href="/knowledge/publications/{e(publication_id)}?include_synthetic=yes">Publication {e(publication_id)}</a></p>'
     return content

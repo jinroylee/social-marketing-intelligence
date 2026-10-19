@@ -4,7 +4,7 @@
 
 **Blocked by:** 04: Run one authorized offline acquisition task.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 

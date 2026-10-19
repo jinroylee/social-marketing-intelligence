@@ -469,7 +469,7 @@ Monitoring has no campaign foreign key. Its scope and insight heads preserve ind
 
 ## Product domain model
 
-This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, advanced acquisition authority/recovery, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams above describe implemented tables.
+This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, scheduled acquisition authority/recovery, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams above describe implemented tables.
 
 ```mermaid
 erDiagram
@@ -502,10 +502,36 @@ An optional Creator association carries its own evidence, role and applicable in
 erDiagram
     campaigns ||--o{ acquisition_tasks : authorizes
     campaign_briefs ||--o{ acquisition_tasks : pins
+    enrichment_proposals ||--o| enrichment_approvals : receives
+    enrichment_approvals o|--o| acquisition_tasks : authorizes_assistant
     acquisition_tasks ||--o{ acquisition_attempts : executes
     ingestion_runs ||--o| acquisition_attempts : records
     acquisition_tasks ||--o{ acquisition_task_publications : produces
     knowledge_publications ||--o{ acquisition_task_publications : makes_usable
+    enrichment_proposals {
+        uuid id PK
+        text workspace_id
+        text request_id
+        text scope_digest
+        jsonb scope
+        text scope_version
+        jsonb limits
+        text manifest_path
+        text manifest_hash
+        text proposer_id
+        text proposer_kind
+        timestamptz created_at
+    }
+    enrichment_approvals {
+        uuid id PK
+        uuid proposal_id FK
+        text workspace_id
+        text request_id
+        text scope_digest
+        text approver_id
+        text approver_kind
+        timestamptz approved_at
+    }
     acquisition_tasks {
         uuid id PK
         text workspace_id
@@ -514,6 +540,7 @@ erDiagram
         text origin
         uuid campaign_id FK
         uuid brief_id FK
+        uuid approval_id FK
         text initiator_id
         text initiator_kind
         text scope_version
@@ -547,18 +574,16 @@ erDiagram
     }
 ```
 
-Task admission persists its campaign/brief/configuration basis and resource limits before returning. Workspace/request identity binds the full scope and initiator. Only server-established campaign origin and a synthetic fixture-json route are installed. Attempts retain exact run IDs and actual automation producers; task/publication links retain usable committed outcomes separately from raw collection. Task data copies no source wording. Current-policy publication reads remain responsible for values. Publication support's source-owned `content_version` fingerprint compares capture/mapping/selection identity across new run UUIDs without copying payloads; denied or superseded support does not suppress a newly usable publication. See [the task contract](tasks.md) for installed lifecycle and recovery limits.
+Task admission persists its campaign/brief or exact proposal/approval basis, configuration and resource limits before returning. Proposal IDs identify immutable supplied revisions; each pins purpose, refresh/fill/expansion intent, subject/search and input scope, route/configuration and limits. Approval records the configured human, exact digest and request identity; one proposal permits at most one approval and one approval at most one task. The origin-basis constraint requires campaign plus brief for campaign tasks, or approval with no campaign/brief for assistant tasks. The migration preserves original campaign-only rows. Workspace/request identity binds the full scope and initiator. Only server-established campaign/assistant origins and a synthetic fixture-json route are installed. Actor roles come from trusted server configuration, separately from submitted identity metadata. Attempts retain exact run IDs and actual automation producers; task/publication links retain usable committed outcomes separately from raw collection. Task data copies no source wording. Current-policy publication reads remain responsible for values. Publication support's source-owned `content_version` fingerprint compares capture/mapping/selection identity across new run UUIDs without copying payloads; denied or superseded support does not suppress a newly usable publication. See [the task contract](tasks.md) for installed lifecycle and recovery limits.
 
 ## Accepted future operational records
 
-These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication, exact query results and one campaign-authorized offline task/attempt path. The broader operational relationships below remain conceptual.
+These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication, exact query results and campaign and exactly approved assistant offline task/attempt paths. The broader operational relationships below remain conceptual.
 
 ```mermaid
 erDiagram
     KeywordSubscription o|--o{ AcquisitionTask : schedules
     CoverageAssessment o|--o{ AcquisitionTask : requests
-    EnrichmentProposal ||--o| TaskApproval : receives
-    TaskApproval o|--o| AcquisitionTask : authorizes_assistant_submission
     AcquisitionTask ||--o{ AcquisitionAttempt : executes
     AcquisitionAttempt ||--o{ SourceObservation : captures
     AcquisitionTask ||--o{ KnowledgePublication : produces

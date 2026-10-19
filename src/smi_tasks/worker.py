@@ -62,7 +62,7 @@ class OfflineTaskWorker:
             row = connection.execute('SELECT * FROM acquisition_tasks WHERE id=%s AND workspace_id=%s FOR UPDATE', (task_id, self.workspace_id)).fetchone()
             if row['status'] != 'queued':
                 raise EvidenceError('task_execution_incomplete')
-            if row['origin'] != 'campaign' or row['scope']['route'] != 'fixture-json':
+            if row['origin'] not in {'campaign', 'assistant'} or row['scope']['route'] != 'fixture-json':
                 raise EvidenceError('unsupported_task_origin_or_route')
             run_id = self.evidence.start_run(Path(row['manifest_path']), row['manifest_hash'], 'fixture-json', RunLimits(**row['limits']), connection=connection, workspace_id=self.workspace_id)
             attempt_id = str(uuid.uuid4())

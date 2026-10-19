@@ -99,7 +99,7 @@ The browser sends a form to [`ReviewApp`](../src/smi_review/app.py). That applic
 
 | Screen or control | Friendly meaning | Main code and stored records |
 | --- | --- | --- |
-| **Offline task submit / detail** | Submit configured synthetic work for an exact current campaign brief, then inspect counts, failure/no-update meanings and exact publications after restart. | [`AcquisitionTasks` / `OfflineTaskWorker`](../src/smi_tasks/__init__.py); three task tables, existing ingestion/publication owners |
+| **Offline task submit / detail** | Submit configured synthetic work for an exact current campaign brief or reviewed proposal/human approval, then reopen exact scope, actors and outcomes. | [`AcquisitionTasks` / `OfflineTaskWorker`](../src/smi_tasks/__init__.py); five task/proposal/approval tables, existing ingestion/publication owners |
 | **Campaign workspace** (`/`) | Your saved campaigns and the available fixed input collections. “Loaded evidence” is sample coverage, not a complete market database. | [`views.home`](../src/smi_review/views.py); campaign, evidence-set and catalog listing interfaces |
 | **Create / revise brief** | State brand/products, objective, target market, platforms and selection criteria. The catalog supplies reference names and aliases. Optional commercial details may remain unknown. | `views.brief_form`; [`CampaignStore`](../src/smi_campaigns/store.py); `campaigns`, `campaign_briefs` |
 | **Selection criterion** | A named requirement or preference with an evidence type, expected value, inclusion/exclusion rule and unknown handling. Free-text labels express your intent; the current rules do not understand arbitrary prose. | [`Brief` / `Criterion`](../src/smi_campaigns/contracts.py); brief document |
@@ -151,13 +151,15 @@ Owner: [`smi_ingestion`](../src/smi_ingestion/schema.sql), including [`evidence_
 | `evidence_sets` | One named, immutable dataset registration: manifest, byte digest, local import run and actor/time. | The 19-post sample dataset. |
 | `evidence_set_members` | One ordered dataset member, pinning its local observation and derivation plus original source IDs. | Member 0 binds O1/D1 to the original exported observation reference. |
 
-### Offline task admission and outcomes — 3 tables
+### Offline task admission and outcomes — 5 tables
 
 Owner: [`smi_tasks`](../src/smi_tasks/schema.sql); [public task contract](tasks.md).
 
 | Table | What one row stores | Example |
 | --- | --- | --- |
-| `acquisition_tasks` | A workspace/request-bound campaign task, exact brief/configuration scope, initiator, hard limits, phase, outcome and sanitized coverage/failure. | Accepted now, executed separately through the local synthetic route. |
+| `enrichment_proposals` | An immutable supplied revision with purpose, refresh/fill/expansion intent, subject/search and input scope, exact route/limits digest and proposer. | Save a proposal without submitting acquisition. |
+| `enrichment_approvals` | One configured human's exact workspace/revision/digest approval and original retry identity. | Approval A authorizes at most one task for proposal P. |
+| `acquisition_tasks` | A workspace/request-bound campaign or approved assistant task, exact brief/approval/configuration scope, initiator, hard limits, phase, outcome and sanitized coverage/failure. | Accepted now, executed separately through the local synthetic route. |
 | `acquisition_attempts` | One attributable worker attempt, exact ingestion run and observed phases/times. | Worker A ingested one observation, then published one usable member. |
 | `acquisition_task_publications` | One task's exact committed usable publication link. | Task T produced publication P; fetch-only input produces no such link. |
 
@@ -236,8 +238,8 @@ read fixed evidence -> apply caption rules -> build comparison or summary -> sav
 
 There is no embedded LLM call, translation model, model-driven tool selection, autonomous research loop or scheduled monitoring job. The application's `local-rule-preparation` actor has kind `automation` so attribution and write permissions are explicit; that label does not imply an AI agent. The coding assistant developing this repository is separate from the running application.
 
-The accepted target adds current-KB model assessment/ranking, automatically saved shortlists, approved assistant enrichment, advanced shared scheduled/on-demand workers, X anomaly alerts and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. These are not present capabilities. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
+The accepted target adds current-KB model assessment/ranking, automatically saved shortlists, conversational assistant proposals/answers, advanced shared scheduled/on-demand workers, X anomaly alerts and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. The direct supplied-proposal approval and offline task path is present; those broader capabilities remain future work. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
 
 Marketer evaluation is a human assessment of whether the findings and decisions are useful. It is not a runtime agent or a database workflow that can manufacture its own answers. The procedure is in [quality review](evaluation.md); execution records belong in `.scratch/`.
 
-For a first reading, follow the real post through capture → source field → product interpretation → comparison → human decision. Then use the table dictionary to inspect the supporting records. You do not need to memorize all 39 tables to understand the product.
+For a first reading, follow the real post through capture → source field → product interpretation → comparison → human decision. Then use the table dictionary to inspect the supporting records. You do not need to memorize all tables to understand the product.

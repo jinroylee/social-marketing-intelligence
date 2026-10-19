@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from smi_campaigns import CampaignStore
+from smi_tasks import TaskAuthority
 from smi_ingestion.evidence_sets import ActorContext
 from smi_knowledge import Catalog, KnowledgeQueries, KnowledgeStore, QueryScope
 from test_campaigns import BRIEF, CATALOG_PATH
@@ -11,7 +12,7 @@ HUMAN = ActorContext('local', 'task-marketer', 'human')
 WORKER = ActorContext('local', 'offline-task-worker', 'automation')
 
 
-def setup_task(stack, tmp_path, *, payload=None, items=None, policy=None):
+def setup_task(stack, tmp_path, *, payload=None, items=None, policy=None, legacy_schema=False):
     from smi_tasks import AcquisitionTasks, OfflineRoute
 
     db, evidence, _, _ = stack
@@ -31,8 +32,13 @@ def setup_task(stack, tmp_path, *, payload=None, items=None, policy=None):
         'policy': policy or {'context_id': 'offline', 'can_process': True, 'can_retain': True, 'can_display': True},
         'items': items if items is not None else [{'path': 'account.json', 'reference': 'synthetic://account/offline-account'}],
     }))
-    tasks = AcquisitionTasks(db, route=OfflineRoute(manifest))
-    tasks.migrate()
+    tasks = AcquisitionTasks(db, route=OfflineRoute(manifest), authority=TaskAuthority.for_human(HUMAN.actor_id))
+    if legacy_schema:
+        from pathlib import Path
+        with db.connect() as connection:
+            connection.execute((Path(__file__).with_name("fixtures") / "acquisition-v1.sql").read_text())
+    else:
+        tasks.migrate()
     return tasks, campaign, evidence, manifest
 
 
@@ -83,6 +89,8 @@ def test_identical_retry_is_one_task_and_scope_or_actor_reuse_conflicts_before_w
     from smi_tasks import AcquisitionTasks
 
     tasks, campaign, _, manifest = setup_task(stack, tmp_path)
+    tasks = AcquisitionTasks(tasks.db, route=tasks.route, authority=TaskAuthority(
+        campaign_humans=frozenset({HUMAN.actor_id}), campaign_automations=frozenset({WORKER.actor_id})))
     with ThreadPoolExecutor(max_workers=2) as executor:
         accepted = list(executor.map(lambda _: submit(tasks, campaign), range(2)))
     assert accepted[0]['task_id'] == accepted[1]['task_id']
@@ -96,7 +104,7 @@ def test_identical_retry_is_one_task_and_scope_or_actor_reuse_conflicts_before_w
     with pytest.raises(EvidenceError, match='acquisition_task_not_found'):
         AcquisitionTasks(tasks.db, 'foreign').read(accepted[0]['task_id'], foreign)
     with pytest.raises(EvidenceError, match='campaign_not_found'):
-        AcquisitionTasks(tasks.db, 'foreign', route=tasks.route).submit_campaign(
+        AcquisitionTasks(tasks.db, 'foreign', route=tasks.route, authority=TaskAuthority.for_human(foreign.actor_id)).submit_campaign(
             campaign['campaign_id'], foreign, brief_id=campaign['brief_id'], purpose='Foreign', request_id='foreign')
     manifest.write_text(manifest.read_text() + '\n')
     with pytest.raises(EvidenceError, match='task_request_conflict'):
@@ -118,7 +126,7 @@ def test_changed_manifest_and_live_route_cannot_dispatch_live_work(stack, tmp_pa
     body['items'] = [{'reference': 'https://www.tiktok.com/@live'}]
     manifest.write_text(json.dumps(body))
     with pytest.raises(EvidenceError, match='unsupported_task_route'):
-        AcquisitionTasks(tasks.db, route=OfflineRoute(manifest)).submit_campaign(
+        AcquisitionTasks(tasks.db, route=OfflineRoute(manifest), authority=TaskAuthority.for_human(HUMAN.actor_id)).submit_campaign(
             campaign['campaign_id'], HUMAN, brief_id=campaign['brief_id'], purpose='Live', request_id='live')
     failed = OfflineTaskWorker(tasks.db, evidence.root).run_one(accepted['task_id'], WORKER)
     assert failed['outcome'] == 'failure'
@@ -259,7 +267,7 @@ def test_fixed_limits_stop_worker_without_publishing_incomplete_input(stack, tmp
         {'path': 'account.json', 'reference': 'synthetic://account/first'},
         {'path': 'account.json', 'reference': 'synthetic://account/second'},
     ])
-    tasks = AcquisitionTasks(tasks.db, route=OfflineRoute(manifest, limits=RunLimits(1, 1, 1, 1000)))
+    tasks = AcquisitionTasks(tasks.db, route=OfflineRoute(manifest, limits=RunLimits(1, 1, 1, 1000)), authority=tasks.authority)
     accepted = submit(tasks, campaign)
     limited = OfflineTaskWorker(tasks.db, evidence.root).run_one(accepted['task_id'], WORKER)
     assert limited['outcome'] == 'failure'
@@ -307,7 +315,7 @@ def test_identity_free_and_process_denied_inputs_cannot_become_published_support
     body = json.loads(manifest.read_text())
     body['policy']['can_process'] = False
     manifest.write_text(json.dumps(body))
-    denied = AcquisitionTasks(tasks.db, route=OfflineRoute(manifest))
+    denied = AcquisitionTasks(tasks.db, route=OfflineRoute(manifest), authority=TaskAuthority.for_human(HUMAN.actor_id))
     failed = OfflineTaskWorker(tasks.db, evidence.root).run_one(submit(denied, campaign, request_id='denied')['task_id'], WORKER)
     assert failed['outcome'] == 'failure'
     assert failed['failure'] == {'phase': 'ingestion', 'code': 'processing_not_permitted'}
@@ -327,8 +335,276 @@ def test_unchanged_detection_uses_current_policy_and_separate_capture_versions(s
     body = json.loads(manifest.read_text())
     body['captured_at'] = '2026-10-02T00:00:00Z'
     manifest.write_text(json.dumps(body))
-    later_tasks = AcquisitionTasks(tasks.db, route=OfflineRoute(manifest))
+    later_tasks = AcquisitionTasks(tasks.db, route=OfflineRoute(manifest), authority=TaskAuthority.for_human(HUMAN.actor_id))
     later = OfflineTaskWorker(tasks.db, evidence.root).run_one(submit(later_tasks, campaign, request_id='new-capture')['task_id'], WORKER)
     assert later['outcome'] == 'usable_update'
     assert later['coverage']['unchanged_members'] == 0
     assert later['publication_ids'] != renewed['publication_ids']
+
+
+def test_campaign_origin_requires_operator_authority_not_an_automation_actor_label(stack, tmp_path):
+    import pytest
+    from smi_ingestion.evidence import EvidenceError
+    from smi_tasks import AcquisitionTasks
+
+    tasks, campaign, _, _ = setup_task(stack, tmp_path)
+    with pytest.raises(EvidenceError, match='campaign_task_authority_required'):
+        submit(tasks, campaign, actor=WORKER)
+    unconfigured = AcquisitionTasks(tasks.db, route=tasks.route)
+    with pytest.raises(EvidenceError, match='campaign_task_authority_required'):
+        submit(unconfigured, campaign)
+    assistant = ActorContext('local', 'assistant', 'automation')
+    configured = AcquisitionTasks(tasks.db, route=tasks.route, authority=TaskAuthority(
+        campaign_automations=frozenset({'campaign-coverage-service'})))
+    with pytest.raises(EvidenceError, match='campaign_task_authority_required'):
+        submit(configured, campaign, actor=assistant)
+    campaign_worker = ActorContext('local', 'campaign-coverage-service', 'automation')
+    accepted = submit(configured, campaign, actor=campaign_worker)
+    assert configured.read(accepted['task_id'], HUMAN)['initiator'] == {
+        'actor_id': 'campaign-coverage-service', 'kind': 'automation'}
+    assert len(tasks.list(HUMAN)) == 1
+
+
+def test_saved_proposal_exact_human_approval_submits_one_durable_offline_task(stack, tmp_path):
+    from smi_tasks import AcquisitionTasks, EnrichmentProposal, OfflineTaskWorker
+
+    tasks, _, evidence, _ = setup_task(stack, tmp_path)
+    assistant = ActorContext('local', 'knowledge-assistant', 'automation')
+    proposal = tasks.save_proposal(EnrichmentProposal(
+        purpose='Fill missing independent creator evidence', intent='expansion',
+        subject_ids=('creator:outside-schedule',), search_queries=('unregistered creator topic',)),
+        assistant, request_id='proposal')
+    assert tasks.list(HUMAN) == []
+    reopened = AcquisitionTasks(tasks.db).read_proposal(proposal['proposal_id'], HUMAN)
+    assert reopened['workspace_id'] == 'local'
+    assert reopened['proposer'] == {'actor_id': 'knowledge-assistant', 'kind': 'automation'}
+    assert reopened['scope']['intent'] == 'expansion'
+    assert reopened['scope']['purpose'] == 'Fill missing independent creator evidence'
+    assert reopened['scope']['subject_ids'] == ['creator:outside-schedule']
+    assert reopened['scope']['search_queries'] == ['unregistered creator topic']
+    assert reopened['approval'] is None
+    approval = tasks.approve_proposal(proposal['proposal_id'], HUMAN,
+        scope_digest=reopened['scope_digest'], request_id='human-approval')
+    accepted = tasks.submit_approved(proposal['proposal_id'], assistant, approval_id=approval['approval_id'],
+        scope_digest=reopened['scope_digest'], request_id='submit-approved')
+    queued = AcquisitionTasks(tasks.db).read(accepted['task_id'], HUMAN)
+    assert queued['origin'] == 'assistant'
+    assert queued['scope'] == reopened['scope']
+    assert queued['initiator'] == {'actor_id': 'knowledge-assistant', 'kind': 'automation'}
+    assert queued['proposal_approval']['approver'] == {'actor_id': 'task-marketer', 'kind': 'human'}
+    assert queued['proposal_approval']['proposal_id'] == proposal['proposal_id']
+    assert queued['proposal_approval']['scope_digest'] == reopened['scope_digest']
+    assert AcquisitionTasks(tasks.db).read_proposal(proposal['proposal_id'], HUMAN)['approval']['task_id'] == accepted['task_id']
+    completed = OfflineTaskWorker(tasks.db, evidence.root).run_one(accepted['task_id'], WORKER)
+    assert completed['outcome'] == 'usable_update'
+    assert completed['limits']['max_records'] == 10
+
+
+def test_proposal_approval_rejects_missing_changed_foreign_and_unconfigured_human_authority(stack, tmp_path):
+    from dataclasses import replace
+    import uuid
+    import pytest
+    from smi_ingestion.evidence import EvidenceError
+    from smi_tasks import AcquisitionTasks, EnrichmentProposal
+
+    tasks, _, _, manifest = setup_task(stack, tmp_path)
+    scope = EnrichmentProposal('Refresh known account evidence', 'refresh', ('account:known',))
+    saved = tasks.save_proposal(scope, WORKER, request_id='scope')
+    proposal_id = saved['proposal_id']
+    digest = tasks.read_proposal(proposal_id, HUMAN)['scope_digest']
+    assert tasks.save_proposal(scope, WORKER, request_id='scope') == {'status': 'duplicate', 'proposal_id': proposal_id}
+    with pytest.raises(EvidenceError, match='proposal_request_conflict'):
+        tasks.save_proposal(replace(scope, subject_ids=('account:known', 'account:other')), WORKER, request_id='scope')
+    for actor in (WORKER, ActorContext('local', WORKER.actor_id, 'human'), ActorContext('local', 'unconfigured-human', 'human')):
+        with pytest.raises(EvidenceError, match='proposal_human_approval_required'):
+            tasks.approve_proposal(proposal_id, actor, scope_digest=digest, request_id='forged')
+    with pytest.raises(EvidenceError, match='proposal_human_approval_required'):
+        AcquisitionTasks(tasks.db).approve_proposal(proposal_id, HUMAN, scope_digest=digest, request_id='unconfigured')
+    with pytest.raises(EvidenceError, match='proposal_scope_conflict'):
+        tasks.approve_proposal(proposal_id, HUMAN, scope_digest='changed', request_id='changed')
+    with pytest.raises(EvidenceError, match='proposal_approval_required'):
+        tasks.submit_approved(proposal_id, WORKER, approval_id=str(uuid.uuid4()), scope_digest=digest, request_id='missing')
+    approval = tasks.approve_proposal(proposal_id, HUMAN, scope_digest=digest, request_id='approval')
+    broader = tasks.save_proposal(replace(scope, search_queries=('broader topic',)), WORKER, request_id='broader')
+    for other_id, other_digest in ((proposal_id, 'changed'), (broader['proposal_id'], digest)):
+        with pytest.raises(EvidenceError, match='proposal_scope_conflict'):
+            tasks.submit_approved(other_id, WORKER, approval_id=approval['approval_id'], scope_digest=other_digest, request_id='changed')
+    foreign = ActorContext('foreign', 'human', 'human')
+    with pytest.raises(EvidenceError, match='workspace_access_denied'):
+        tasks.approve_proposal(proposal_id, foreign, scope_digest=digest, request_id='foreign')
+    with pytest.raises(EvidenceError, match='enrichment_proposal_not_found'):
+        AcquisitionTasks(tasks.db, 'foreign').read_proposal(proposal_id, foreign)
+    with pytest.raises(EvidenceError, match='proposal_approval_required'):
+        AcquisitionTasks(tasks.db, 'foreign').submit_approved(proposal_id, foreign, approval_id=approval['approval_id'], scope_digest=digest, request_id='foreign')
+    manifest.write_text(manifest.read_text() + '\n')
+    with pytest.raises(EvidenceError, match='proposal_input_changed'):
+        tasks.submit_approved(proposal_id, WORKER, approval_id=approval['approval_id'], scope_digest=digest, request_id='changed-input')
+    assert tasks.list(HUMAN) == []
+    assert tasks.read_proposal(proposal_id, HUMAN)['approval']['task_id'] is None
+
+
+def test_concurrent_approval_and_submission_retries_cannot_mint_another_task(stack, tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    import pytest
+    from smi_ingestion.evidence import EvidenceError
+    from smi_tasks import AcquisitionTasks, EnrichmentProposal
+
+    tasks, _, _, _ = setup_task(stack, tmp_path)
+    saved = tasks.save_proposal(EnrichmentProposal('Fill subject gaps', 'fill', search_queries=('new topic',)), WORKER, request_id='proposal')
+    proposal_id = saved['proposal_id']
+    digest = tasks.read_proposal(proposal_id, HUMAN)['scope_digest']
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        approvals = list(pool.map(lambda _: tasks.approve_proposal(proposal_id, HUMAN, scope_digest=digest, request_id='approval'), range(2)))
+    assert approvals[0]['approval_id'] == approvals[1]['approval_id']
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        submissions = list(pool.map(lambda i: tasks.submit_approved(proposal_id, WORKER, approval_id=approvals[0]['approval_id'],
+            scope_digest=digest, request_id='submit'), range(2)))
+    assert submissions[0]['task_id'] == submissions[1]['task_id']
+    assert sorted(s['status'] for s in submissions) == ['accepted', 'duplicate']
+    assert len(tasks.list(HUMAN)) == 1
+    assert AcquisitionTasks(tasks.db).submit_approved(proposal_id, WORKER, approval_id=approvals[0]['approval_id'],
+        scope_digest=digest, request_id='submit')['task_id'] == submissions[0]['task_id']
+    with pytest.raises(EvidenceError, match='approval_request_conflict'):
+        tasks.approve_proposal(proposal_id, HUMAN, scope_digest=digest, request_id='alternate-approval')
+    with pytest.raises(EvidenceError, match='task_request_conflict'):
+        tasks.submit_approved(proposal_id, WORKER, approval_id=approvals[0]['approval_id'], scope_digest=digest, request_id='alternate-submission')
+    with pytest.raises(EvidenceError, match='task_request_conflict'):
+        tasks.submit_approved(proposal_id, HUMAN, approval_id=approvals[0]['approval_id'], scope_digest=digest, request_id='other-initiator')
+
+
+def test_local_supplied_proposal_requires_exact_review_and_reopens_approval_after_restart(stack, tmp_path):
+    from smi_review import ReviewApp
+    from test_review import form, request, running
+
+    tasks, _, _, _ = setup_task(stack, tmp_path)
+    with running(ReviewApp(tasks.db, actor_id='configured-approver', offline_route=tasks.route)) as url:
+        status, _, page = request(url, path='/proposals/new')
+        assert status == 200
+        supplied = form(page, '/proposals')
+        supplied.update(purpose=['<script>Fill missing knowledge</script>'], intent=['expansion'],
+                        subject_ids=['account:outside-schedule'], search_queries=['new unregistered topic'])
+        assert request(url, 'POST', '/proposals', {**supplied, 'origin': 'campaign'})[0] == 422
+        status, headers, _ = request(url, 'POST', '/proposals', supplied)
+        assert status == 303
+        proposal_path = headers['Location']
+        status, _, review = request(url, path=proposal_path)
+        assert status == 200
+        for expected in ('local', 'expansion', 'account:outside-schedule', 'new unregistered topic', '&lt;script&gt;Fill missing knowledge&lt;/script&gt;'):
+            assert expected in review
+        assert '<script>Fill missing knowledge</script>' not in review
+        assert tasks.list(HUMAN) == []
+        approval_action = proposal_path + '/approve'
+        approval = form(review, approval_action)
+        assert request(url, 'POST', approval_action, approval)[0] == 422
+        approval['reviewed'] = ['yes']
+        for forged in ({'origin': 'campaign'}, {'origin': 'schedule'}, {'actor_kind': 'human'}, {'actor_id': 'someone'}, {'approved': 'yes'}, {'purpose': 'Broader'}, {'search_queries': 'anything'}):
+            assert request(url, 'POST', approval_action, {**approval, **forged})[0] == 422
+        assert request(url, 'POST', approval_action, {**approval, 'scope_digest': 'changed'})[0] == 409
+        assert request(url, 'POST', approval_action, {**approval, 'csrf': 'forged'})[0] == 422
+        assert request(url, 'POST', approval_action, approval, headers={'Origin': 'http://foreign.invalid'})[0] == 403
+        status, headers, _ = request(url, 'POST', approval_action, approval)
+        assert status == 303
+        task_path = headers['Location']
+        assert request(url, 'POST', approval_action, approval)[1]['Location'] == task_path
+    with running(ReviewApp(tasks.db)) as url:
+        status, _, reopened = request(url, path=proposal_path)
+        assert status == 200
+        assert 'configured-approver' in reopened
+        assert task_path in reopened
+        status, _, task_page = request(url, path=task_path)
+        assert status == 200
+        assert 'configured-approver' in task_page
+        assert proposal_path in task_page
+        assert 'new unregistered topic' in task_page
+        assert request(url, path='/proposals')[0] == 200
+
+
+def test_operator_saves_reviews_approves_and_submits_exact_proposal_in_separate_processes(stack, tmp_path):
+    from test_cli import _cli
+
+    tasks, _, evidence, manifest = setup_task(stack, tmp_path)
+    proposal_file = tmp_path / 'supplied-proposal.json'
+    proposal_file.write_text(json.dumps({'purpose': 'Refresh specific account evidence', 'intent': 'refresh',
+                                        'subject_ids': ['account:known'], 'search_queries': []}))
+    saved = _cli(tasks.db, evidence.root, 'save-proposal', str(proposal_file), '--request-id', 'cli-proposal',
+                 '--offline-manifest', str(manifest), '--actor', 'supplied-assistant')
+    assert saved.returncode == 0, saved.stdout + saved.stderr
+    proposal_id = json.loads(saved.stdout)['proposal_id']
+    inspected = _cli(tasks.db, evidence.root, 'inspect-proposal', proposal_id)
+    assert inspected.returncode == 0, inspected.stdout + inspected.stderr
+    digest = json.loads(inspected.stdout)['scope_digest']
+    missing_action = _cli(tasks.db, evidence.root, 'approve-proposal', proposal_id, '--scope-digest', digest,
+                          '--request-id', 'cli-approval', '--actor', 'cli-human')
+    assert missing_action.returncode != 0
+    assert tasks.read_proposal(proposal_id, HUMAN)['approval'] is None
+    approved = _cli(tasks.db, evidence.root, 'approve-proposal', proposal_id, '--scope-digest', digest,
+                    '--request-id', 'cli-approval', '--actor', 'cli-human', '--approve-exact-scope')
+    assert approved.returncode == 0, approved.stdout + approved.stderr
+    approval_id = json.loads(approved.stdout)['approval_id']
+    submitted = _cli(tasks.db, evidence.root, 'submit-approved-task', proposal_id, '--approval-id', approval_id,
+                     '--scope-digest', digest, '--request-id', 'cli-submission', '--actor', 'supplied-assistant')
+    assert submitted.returncode == 0, submitted.stdout + submitted.stderr
+    task_id = json.loads(submitted.stdout)['task_id']
+    executed = _cli(tasks.db, evidence.root, 'run-offline-task', task_id)
+    assert executed.returncode == 0, executed.stdout + executed.stderr
+    task = json.loads(executed.stdout)
+    assert task['outcome'] == 'usable_update'
+    assert task['proposal_approval']['approver']['actor_id'] == 'cli-human'
+    assert task['initiator'] == {'actor_id': 'supplied-assistant', 'kind': 'automation'}
+    assert task['scope']['intent'] == 'refresh'
+    proposal_file.write_text(json.dumps({'purpose': 'Do anything', 'intent': 'expansion',
+                                        'search_queries': ['everything'], 'approved': True, 'origin': 'campaign'}))
+    forged = _cli(tasks.db, evidence.root, 'save-proposal', str(proposal_file), '--request-id', 'forged',
+                  '--offline-manifest', str(manifest))
+    assert forged.returncode != 0
+    assert len(tasks.list_proposals(HUMAN)) == 1
+
+
+def test_campaign_only_database_upgrades_without_changing_existing_task_basis(stack, tmp_path):
+    from smi_tasks import EnrichmentProposal, OfflineTaskWorker
+
+    tasks, campaign, evidence, _ = setup_task(stack, tmp_path, legacy_schema=True)
+    existing = submit(tasks, campaign)
+    tasks.migrate()
+    tasks.migrate()
+    reopened = tasks.read(existing['task_id'], HUMAN)
+    assert reopened['origin'] == 'campaign'
+    assert reopened['scope']['brief_id'] == campaign['brief_id']
+    assert reopened['initiator'] == {'actor_id': 'task-marketer', 'kind': 'human'}
+    assert reopened['proposal_approval'] is None
+    assert reopened['status'] == 'queued'
+    assert submit(tasks, campaign)['task_id'] == existing['task_id']
+    proposal = tasks.save_proposal(EnrichmentProposal('Fill new gaps', 'fill', ('account:new',)), WORKER, request_id='new-proposal')
+    view = tasks.read_proposal(proposal['proposal_id'], HUMAN)
+    approved = tasks.approve_proposal(proposal['proposal_id'], HUMAN, scope_digest=view['scope_digest'], request_id='approval')
+    assistant_task = tasks.submit_approved(proposal['proposal_id'], WORKER, approval_id=approved['approval_id'],
+        scope_digest=view['scope_digest'], request_id='assistant-task')
+    assert tasks.read(assistant_task['task_id'], HUMAN)['origin'] == 'assistant'
+    assert OfflineTaskWorker(tasks.db, evidence.root).run_one(existing['task_id'], WORKER)['outcome'] == 'usable_update'
+
+
+def test_approval_only_restart_reuses_original_human_action_to_finish_submission(stack, tmp_path):
+    from smi_review import ReviewApp
+    from smi_tasks import EnrichmentProposal
+    from test_review import form, request, running
+
+    tasks, _, _, _ = setup_task(stack, tmp_path)
+    saved = tasks.save_proposal(EnrichmentProposal('Fill account gaps', 'fill', ('account:one',)), WORKER, request_id='proposal')
+    proposal_id = saved['proposal_id']
+    scope = tasks.read_proposal(proposal_id, HUMAN)
+    approved = tasks.approve_proposal(proposal_id, HUMAN, scope_digest=scope['scope_digest'], request_id='original-human-action')
+    assert tasks.list(HUMAN) == []
+    with running(ReviewApp(tasks.db, actor_id=HUMAN.actor_id)) as url:
+        path = f'/proposals/{proposal_id}'
+        status, _, page = request(url, path=path)
+        assert status == 200
+        retry = form(page, path + '/approve')
+        assert retry['request_id'] == ['original-human-action']
+        retry['reviewed'] = ['yes']
+        status, headers, _ = request(url, 'POST', path + '/approve', retry)
+        assert status == 303
+        assert request(url, 'POST', path + '/approve', retry)[1]['Location'] == headers['Location']
+    reopened = tasks.read_proposal(proposal_id, HUMAN)
+    assert reopened['approval']['approval_id'] == approved['approval_id']
+    assert reopened['approval']['approver'] == {'actor_id': 'task-marketer', 'kind': 'human'}
+    assert len(tasks.list(HUMAN)) == 1

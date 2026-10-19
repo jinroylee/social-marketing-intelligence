@@ -18,9 +18,9 @@ from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore
 from smi_monitoring import MonitoringStore
-from smi_tasks import AcquisitionTasks, OfflineRoute
+from smi_tasks import AcquisitionTasks, EnrichmentProposal, OfflineRoute, TaskAuthority
 
-from . import monitoring_views, planning_views, publication_views, query_views, task_views, views
+from . import monitoring_views, planning_views, proposal_views, publication_views, query_views, task_views, views
 from .forms import identifier, one
 
 
@@ -95,7 +95,7 @@ class ReviewApp:
         self.evidence = EvidenceSetReader(db, workspace_id)
         self.monitoring = MonitoringStore(db, workspace_id)
         self.planning = CampaignPlanning(db, workspace_id)
-        self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route)
+        self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, authority=TaskAuthority.for_human(actor_id))
         self.csrf = secrets.token_urlsafe(32)
 
     def page(self, title: str, content: str, status: int = 200) -> Response:
@@ -192,6 +192,13 @@ class ReviewApp:
             return self.page("Action needs attention", views.error_message(code), status)
 
     def _get(self, path, query):
+        if path == "/proposals":
+            return self.page("Enrichment proposals", proposal_views.index(self.tasks.list_proposals(self.actor)))
+        if path == "/proposals/new":
+            return self.page("Supply enrichment proposal", proposal_views.supplied_form(self.csrf, self.tasks.route))
+        match = re.fullmatch(r"/proposals/([^/]+)", path)
+        if match:
+            return self.page("Review enrichment proposal", proposal_views.detail(self.tasks.read_proposal(identifier(match[1]), self.actor), self.csrf))
         if path == "/tasks":
             return self.page("Acquisition tasks", task_views.index(self.tasks.list(self.actor)))
         match = re.fullmatch(r"/tasks/([^/]+)", path)
@@ -266,6 +273,25 @@ class ReviewApp:
         if not secrets.compare_digest(one(form, "csrf").encode(), self.csrf.encode()):
             raise EvidenceError("invalid_form")
         request_id = one(form, "request_id")
+        if path == "/proposals":
+            if not form.keys() <= {"csrf", "request_id", "purpose", "intent", "subject_ids", "search_queries"}:
+                raise EvidenceError("invalid_form")
+            proposal = EnrichmentProposal(one(form, "purpose"), one(form, "intent"),
+                tuple(v.strip() for v in one(form, "subject_ids").splitlines() if v.strip()),
+                tuple(v.strip() for v in one(form, "search_queries").splitlines() if v.strip()))
+            saved = self.tasks.save_proposal(proposal, self.actor, request_id=request_id)
+            return Response(303, location=f"/proposals/{saved['proposal_id']}")
+        match = re.fullmatch(r"/proposals/([^/]+)/approve", path)
+        if match:
+            if not form.keys() <= {"csrf", "request_id", "scope_digest", "reviewed"}:
+                raise EvidenceError("invalid_form")
+            if one(form, "reviewed") != "yes":
+                raise EvidenceError("proposal_human_approval_required")
+            proposal_id = identifier(match[1])
+            approval = self.tasks.approve_proposal(proposal_id, self.actor, scope_digest=one(form, "scope_digest"), request_id=request_id)
+            submitted = self.tasks.submit_approved(proposal_id, self.actor, approval_id=approval['approval_id'],
+                scope_digest=one(form, "scope_digest"), request_id=request_id)
+            return Response(303, location=f"/tasks/{submitted['task_id']}")
         match = re.fullmatch(r"/campaigns/([^/]+)/tasks", path)
         if match:
             if not form.keys() <= {"csrf", "request_id", "brief_id", "purpose"}:

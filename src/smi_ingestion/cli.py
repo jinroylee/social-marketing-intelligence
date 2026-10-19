@@ -12,7 +12,7 @@ import psycopg
 from smi_knowledge import Catalog, KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
 from smi_campaigns import Brief, CampaignStore, Selection
 from smi_monitoring import MonitoringStore
-from smi_tasks import AcquisitionTasks, OfflineRoute, OfflineTaskWorker
+from smi_tasks import AcquisitionTasks, EnrichmentProposal, OfflineRoute, OfflineTaskWorker, TaskAuthority
 
 from .adapters.registry import default_registry
 from .canonical import CanonicalReader, CanonicalWriter
@@ -141,6 +141,27 @@ def main(argv: list[str] | None = None) -> int:
     task_inspect = commands.add_parser("inspect-task", help="Reopen durable phase/outcome, exact runs and publication links")
     task_inspect.add_argument("task_id")
     task_inspect.add_argument("--actor", default="local-marketer")
+    proposal_save = commands.add_parser("save-proposal", help="Save a supplied immutable proposal without approving or submitting work")
+    proposal_save.add_argument("proposal", type=Path)
+    proposal_save.add_argument("--offline-manifest", type=Path, required=True)
+    proposal_save.add_argument("--offline-route-version", default="offline-fixture-v1")
+    proposal_save.add_argument("--request-id", required=True)
+    proposal_save.add_argument("--actor", default="local-assistant")
+    proposal_inspect = commands.add_parser("inspect-proposal", help="Review exact proposal scope, limits and human approval")
+    proposal_inspect.add_argument("proposal_id")
+    proposal_inspect.add_argument("--actor", default="local-marketer")
+    proposal_approve = commands.add_parser("approve-proposal", help="Record an explicit operator human approval of the reviewed scope digest")
+    proposal_approve.add_argument("proposal_id")
+    proposal_approve.add_argument("--scope-digest", required=True)
+    proposal_approve.add_argument("--request-id", required=True)
+    proposal_approve.add_argument("--approve-exact-scope", action="store_true", required=True)
+    proposal_approve.add_argument("--actor", default="local-marketer")
+    proposal_submit = commands.add_parser("submit-approved-task", help="Acknowledge only exact saved human-approved scope")
+    proposal_submit.add_argument("proposal_id")
+    proposal_submit.add_argument("--approval-id", required=True)
+    proposal_submit.add_argument("--scope-digest", required=True)
+    proposal_submit.add_argument("--request-id", required=True)
+    proposal_submit.add_argument("--actor", default="local-assistant")
     args = parser.parse_args(argv)
     try:
         db = Database(args.dsn, args.schema)
@@ -151,11 +172,27 @@ def main(argv: list[str] | None = None) -> int:
             MonitoringStore(db).migrate()
             AcquisitionTasks(db).migrate()
             result = {"status": "migrated"}
+        elif args.command in {"save-proposal", "inspect-proposal", "approve-proposal", "submit-approved-task"}:
+            route = OfflineRoute(args.offline_manifest, args.offline_route_version) if args.command == "save-proposal" else None
+            authority = TaskAuthority.for_human(args.actor) if args.command == "approve-proposal" else TaskAuthority()
+            tasks = AcquisitionTasks(db, route=route, authority=authority)
+            kind = "automation" if args.command in {"save-proposal", "submit-approved-task"} else "human"
+            actor = ActorContext("local", args.actor, kind)
+            if args.command == "save-proposal":
+                proposal = EnrichmentProposal.from_document(json.loads(args.proposal.read_text()))
+                result = tasks.save_proposal(proposal, actor, request_id=args.request_id)
+            elif args.command == "inspect-proposal":
+                result = tasks.read_proposal(args.proposal_id, actor)
+            elif args.command == "approve-proposal":
+                result = tasks.approve_proposal(args.proposal_id, actor, scope_digest=args.scope_digest, request_id=args.request_id)
+            else:
+                result = tasks.submit_approved(args.proposal_id, actor, approval_id=args.approval_id,
+                                               scope_digest=args.scope_digest, request_id=args.request_id)
         elif args.command in {"submit-campaign-task", "run-offline-task", "inspect-task"}:
             if args.command == "run-offline-task":
                 result = OfflineTaskWorker(db, args.evidence_dir).run_one(args.task_id, ActorContext("local", args.worker_id, "automation"))
             elif args.command == "submit-campaign-task":
-                tasks = AcquisitionTasks(db, route=OfflineRoute(args.offline_manifest, args.offline_route_version))
+                tasks = AcquisitionTasks(db, route=OfflineRoute(args.offline_manifest, args.offline_route_version), authority=TaskAuthority.for_human(args.actor))
                 result = tasks.submit_campaign(args.campaign_id, ActorContext("local", args.actor, "human"),
                                                brief_id=args.brief_id, purpose=args.purpose, request_id=args.request_id)
             else:

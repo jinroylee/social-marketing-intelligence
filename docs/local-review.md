@@ -67,6 +67,9 @@ HTTP boundary errors explain that the request was not saved and provide **Open c
 
 | Route | Purpose |
 | --- | --- |
+| `GET /proposals`, `GET /proposals/new`, `POST /proposals`, `GET /proposals/{id}` | Supply and reopen an immutable purpose/intent/subject/search/configuration scope before acquisition |
+| `POST /proposals/{id}/approve` | Explicit named human exact-scope approval and retry-safe task acknowledgment |
+| `GET /tasks`, `GET /tasks/{id}`, `GET /campaigns/{id}/tasks/new`, `POST /campaigns/{id}/tasks` | Durable task status, exact scope/approval/attribution and configured campaign submission |
 | `GET /knowledge/search`, `POST /knowledge/search`, `GET /knowledge/results/{id}` | Bounded knowledge query and exact saved support under current display policy |
 | `GET /knowledge/publications`, `GET /knowledge/publications/{id}` | Committed publication metadata and exact permitted support |
 | `GET /` | Workspace campaign heads and loaded input metadata |
@@ -97,4 +100,9 @@ An X alert surface shows recent-window findings, existing-KB context, detection/
 
 Start with `smi-review --offline-manifest examples/synthetic/json-manifest.json` to configure the only supported task route: local synthetic fixture JSON. A campaign links `/campaigns/CAMPAIGN_ID/tasks/new`; the form displays exact current brief, configured references, digest and limits. `POST /campaigns/CAMPAIGN_ID/tasks` accepts purpose/request identity/current brief only. The server constructs its named human actor and campaign origin; supplied origin, actor, approval or collector fields are rejected. Existing Origin/Host/CSRF protection applies. Submission redirects immediately to `/tasks/TASK_ID` without fetching.
 
-`/tasks` lists at most 100 newest workspace tasks. Details survive restart without configured route access and distinguish queued/collecting/ingesting/publishing phases, usable update, no usable update and failure, with actual counts, worker/run IDs and synthetic publication links. Run `smi-ingest run-offline-task TASK_ID` separately to execute at most one admitted task. Published source values reopen through current policy; task pages hold no copied source text. Assistant approval, recovery/partial completion, notifications and spending are subsequent work. See [the owning task contract](tasks.md).
+`/tasks` lists at most 100 newest workspace tasks. Details survive restart without configured route access and distinguish queued/collecting/ingesting/publishing phases, usable update, no usable update and failure, with actual counts, worker/run IDs and synthetic publication links. Run `smi-ingest run-offline-task TASK_ID` separately to execute at most one admitted task. Published source values reopen through current policy; task pages hold no copied source text. Recovery/partial completion, notifications and spending are subsequent work. See [the owning task contract](tasks.md).
+
+
+**Proposals** opens the supplied-proposal list and form. Saving purpose, refresh/fill/expansion intent and subject/search fields commits an immutable revision with the configured fixture route, exact references and limits; it submits no task. `/proposals/ID` visibly reopens workspace, proposer, scope digest and bounds. Search scope can extend outside scheduled keywords; the fixture route still executes supplied references rather than query discovery.
+
+The approval POST accepts only CSRF/request identity, the displayed scope digest and an explicit checked `reviewed=yes` action. The server's named human must have its configured approver role; model text or submitted origin/actor/scope fields grant no authority. Approval and task commit separately with safe identical retries; an approval-only restart keeps the original request identity so the human can finish submission. A saved approval cannot mint a second task using a new request ID. Proposal/task pages retain exact attribution and bidirectional links after restart with no route configuration. Materially different scope requires a new proposal and approval. Conversation generation remains future work.

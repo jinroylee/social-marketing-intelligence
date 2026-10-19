@@ -63,7 +63,7 @@ uv run smi-ingest search-knowledge --text APRILSKIN --platform tiktok --max-age-
 uv run smi-ingest inspect-query RESULT_ID
 ```
 
-The browser’s **Knowledge search** link provides the same bounded filters, capture-age freshness, unknowns and saved result. New searches require process permission plus their output-purpose permission; reopening applies current read policy without changing membership. At most 100 recent publications and 100 support members are included, with scan/result truncation explicit. Semantic search and ranking remain future work; one bounded [campaign-authorized offline task](docs/tasks.md) is installed. See the [query contract](docs/knowledge.md#bounded-current-knowledge-queries).
+The browser’s **Knowledge search** link provides the same bounded filters, capture-age freshness, unknowns and saved result. New searches require process permission plus their output-purpose permission; reopening applies current read policy without changing membership. At most 100 recent publications and 100 support members are included, with scan/result truncation explicit. Semantic search and ranking remain future work; bounded [campaign and approved-proposal offline tasks](docs/tasks.md) is installed. See the [query contract](docs/knowledge.md#bounded-current-knowledge-queries).
 
 ## Offline acquisition tasks
 
@@ -75,7 +75,7 @@ uv run smi-ingest inspect-task TASK_ID
 uv run smi-ingest run-offline-task TASK_ID --worker-id local-offline-task-worker
 ```
 
-Start the browser with `smi-review --offline-manifest examples/synthetic/json-manifest.json` to expose the campaign submission form. **Tasks** reopens exact scope, actors, limits, runs and publication outcomes after restart. This path is fixture-json-only; live acquisition, assistant approval, recovery, notifications and costs remain separate work. See [the task contract](docs/tasks.md).
+Start the browser with `smi-review --offline-manifest examples/synthetic/json-manifest.json` to expose the campaign submission form. **Tasks** reopens exact scope, actors, limits, runs and publication outcomes after restart. The **Proposals** form saves supplied purpose, refresh/fill/expansion intent and subject/search scope for exact named-human approval before one task is submitted. Proposal/task pages retain scope, approval and attribution after restart. CLI `save-proposal`, `inspect-proposal`, `approve-proposal --approve-exact-scope` and `submit-approved-task` provide the same separated actions. This path is fixture-json-only; conversation generation, live acquisition, recovery, notifications and costs remain separate work. See [the task contract](docs/tasks.md).
 
 ## Campaign persistence
 

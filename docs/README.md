@@ -12,7 +12,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Evidence sets](evidence-sets.md) | Offline import, provenance, immutable membership, actor context and policy-aware reads |
 | [Shared knowledge](knowledge.md) | Brand/Product references, caption interpretations, dependency cleanup and translation-assisted review packets |
 | [Source integrations](source-integrations.md) | Implemented route capabilities, retained verification evidence and remaining discovery/readiness work |
-| [Offline acquisition tasks](tasks.md) | Campaign-authorized durable submission, bounded synthetic worker and exact outcomes |
+| [Offline acquisition tasks](tasks.md) | Campaign and exact approved-proposal durable submission, bounded synthetic worker and exact outcomes |
 | [Campaign decisions](campaigns.md) | Current versioned campaign workflow and future ranked recommendations with automatic shortlist persistence |
 | [Independent monitoring](monitoring.md) | Investigation scopes, literal snapshot findings, counts and policy-aware history |
 | [Measurement and feedback](planning.md) | Proposed campaign plans and human decision-note revisions |

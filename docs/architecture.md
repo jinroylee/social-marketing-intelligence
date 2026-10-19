@@ -21,7 +21,7 @@ These are module boundaries within one Python application and PostgreSQL instanc
 
 | Owner | Responsibilities | Implementation coverage |
 | --- | --- | --- |
-| Offline acquisition tasks | Campaign-bound durable admission, immutable route/scope/limits, attempts, phases and exact run/publication outcomes | Implemented in `smi_tasks` for synthetic fixture JSON only; recovery, assistant/scheduled authority, notifications and costs remain future work |
+| Offline acquisition tasks | Campaign-role admission, immutable supplied proposals, exact human approval, route/scope/limits, attempts, phases and run/publication outcomes | Implemented in `smi_tasks` for synthetic fixture JSON only; recovery, scheduled authority, notifications and costs remain future work |
 | Acquisition and canonical evidence | Collection, source policy, observations, stable account/content identity, field assertions, metrics and replay | Implemented in `smi_ingestion` |
 | Exact ingested support | Bounded selection and purpose-aware reads of observation/derivation/assertion/metric IDs, including fresh runs | Implemented in `smi_ingestion.support` |
 | Frozen evidence sets | Validated snapshot import, fixed member/derivation bindings, lineage and workspace/purpose-aware reads | Implemented in `smi_ingestion.evidence_sets` |
@@ -32,11 +32,13 @@ These are module boundaries within one Python application and PostgreSQL instanc
 
 ## Offline task orchestration
 
-`smi_tasks` composes `CampaignStore`, `IngestionRunner`, `IngestedEvidence` and `KnowledgePublications` through their public interfaces. Submission establishes campaign origin from an exact existing current brief, commits immutable route/configuration digest, actor, scope and limits, then returns a queued task ID without collecting. The bounded worker persists an attempt/run link and actual automation producer, uses a fixture-json-only registry, rejects changed manifests and records collected versus ingested versus published counts. Source-free task metadata survives restart. Empty or unchanged currently published captures yield no usable update; raw fetch or mapping failure cannot declare a knowledge benefit. Terminal retries reuse the original outcome. See [the task contract](tasks.md).
+`smi_tasks` composes `CampaignStore`, `IngestionRunner`, `IngestedEvidence` and `KnowledgePublications` through their public interfaces. Server-configured identity roles separately authorize campaign humans/services and proposal approvers. Arbitrary assistant automation cannot obtain campaign authority by choosing that operation. Campaign submission establishes origin from an exact existing current brief; assistant submission requires an immutable supplied proposal and its exact attributable human approval. Admission commits immutable route/configuration digest, actor, scope and limits, then returns a queued task ID without collecting. The bounded worker persists an attempt/run link and actual automation producer, uses a fixture-json-only registry, rejects changed manifests and records collected versus ingested versus published counts. Source-free task metadata survives restart. Empty or unchanged currently published captures yield no usable update; raw fetch or mapping failure cannot declare a knowledge benefit. Terminal retries reuse the original outcome. See [the task contract](tasks.md).
 
 ```mermaid
 flowchart LR
-    Campaign[Existing campaign and exact brief] --> Task[Durable queued offline task]
+    Campaign[Configured campaign actor and exact brief] --> Task[Durable queued offline task]
+    Proposal[Immutable supplied proposal revision] --> Approval[Configured human approves exact scope digest]
+    Approval --> Task
     Task --> Attempt[Bounded attempt and ingestion run]
     Attempt --> Runner[Existing ingestion runner: fixture-json only]
     Runner --> Support[Exact ingested support]
@@ -46,7 +48,7 @@ flowchart LR
     Publication --> Detail
 ```
 
-The first task slice has one attempt and explicit incomplete-execution state; crash recovery, partial publication, competing workers, assistant approval, notification delivery and spending remain separate extensions.
+The first task slice has one attempt and explicit incomplete-execution state; crash recovery, partial publication, competing workers, notification delivery and spending remain separate extensions.
 
 ## Acquisition and persistence
 
@@ -93,7 +95,7 @@ The current local actor boundary is an in-process contract. The CLI runs as a na
 
 The rules identify literal mentions and markers. Their output distinguishes product-family references, unresolved stance and script evidence from audience or sales claims. A translation-assisted packet carries original captions and supported spans, with translation and reviewer fields explicitly pending.
 
-`KnowledgePublications` owns atomic availability of a bounded support selection. It validates exact source IDs and optional existing interpretation IDs through their owners, records the actual producer, method, publication time and coverage, and commits all membership together. Workspace/request identity serializes retries and conflicts on changed payloads. Reads reopen the exact selection under current permissions and derivation health; publication stores no additional source text. Imported datasets and prior publications stay immutable. Durable acquisition tasks remain a separate future workflow.
+`KnowledgePublications` owns atomic availability of a bounded support selection. It validates exact source IDs and optional existing interpretation IDs through their owners, records the actual producer, method, publication time and coverage, and commits all membership together. Workspace/request identity serializes retries and conflicts on changed payloads. Reads reopen the exact selection under current permissions and derivation health; publication stores no additional source text. Imported datasets and prior publications stay immutable. Durable acquisition tasks compose publication through the separate task owner.
 
 `KnowledgeQueries` selects at most 100 members from at most 100 recent committed publications through public publication reads. New computation requires process permission plus its output-purpose permission; reopening applies its requested read purpose to exact saved support. The query owner persists source-free manifests with actual observation/derivation/assertion/metric/interpretation IDs, method/publication versions, producer and original coverage. New publications cannot rewrite saved membership. Capture-age freshness requires an explicit threshold and remains separate from permission/derivation health; truncated scope and unknowns remain visible. See the [query contract](knowledge.md#bounded-current-knowledge-queries). General semantic search, graph traversal and ranking remain future work.
 
@@ -109,7 +111,7 @@ The deterministic method reports criterion states and coverage rather than unive
 
 `smi_review` composes public stores into escaped server-rendered forms and policy-aware evidence panels. Its standard-library HTTP server binds to loopback. A configured named human starts/revises briefs and saves/confirms shortlists; a distinct automation context prepares the rule-based knowledge/comparison. Request IDs and expected versions pass through to the domain stores, which own validation and transactions.
 
-The browser can create a brief, prepare/review a comparison, save a draft, explicitly confirm and reopen exact historical revisions after server restarts. Dataset/catalog/campaign listing interfaces provide navigation without bypassing evidence ownership. Original permitted captions, exact support spans, source/date lineage, provisional judgments and unknowns remain visible. Current-policy withdrawal withholds source-dependent form contents as well as saved explanations. See [local review](local-review.md).
+The browser can save/review a supplied immutable enrichment proposal, approve its exact scope and submit its single offline task. It can create a brief, prepare/review a comparison, save a draft, explicitly confirm and reopen exact historical revisions after server restarts. Dataset/catalog/campaign listing interfaces provide navigation without bypassing evidence ownership. Original permitted captions, exact support spans, source/date lineage, provisional judgments and unknowns remain visible. Current-policy withdrawal withholds source-dependent form contents as well as saved explanations. See [local review](local-review.md).
 
 Same-origin form/Host checks and CSRF tokens protect local writes; the server constructs actor identity and serves only bundled assets. Browser state is not durable. Independent investigations, campaign planning, bounded knowledge search/results and committed publication list/detail pages use the same boundary. Publication details withhold denied and superseded source text while retaining permitted IDs and attribution. Language and marketer usefulness require actual review rather than technical checks.
 

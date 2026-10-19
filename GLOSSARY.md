@@ -56,7 +56,10 @@ A provisional comparison of candidate accounts against an exact campaign brief a
 A saved version of a campaign's recommended or curated candidate accounts, their ordering where applicable, and the decision basis. Its automated or human authorship and any optional human review remain explicit; later changes create a successor revision.
 
 **Enrichment proposal**:
-An assistant's proposed acquisition of missing, stale or incomplete knowledge, with a stated purpose and scope. It requires user approval before becoming a submitted enrichment task.
+An assistant's proposed acquisition of missing, stale or incomplete knowledge, with a stated purpose, refresh/fill/expansion intent and subject/search scope. An immutable saved revision identifies the exact scope and resource limits a human can approve. It requires attributable human approval before becoming a submitted enrichment task.
+
+**Enrichment approval**:
+An attributable human action authorizing one exact saved proposal revision and scope in its workspace. It is distinct from generated text, proposal creation and task submission; a single approval authorizes at most one logical task.
 
 **Enrichment task**:
 A scoped acquisition of additional evidence for the shared knowledge, initiated by a configured schedule, campaign coverage need or approved assistant proposal. Its completion distinguishes retrieved material from knowledge actually made available for use.
