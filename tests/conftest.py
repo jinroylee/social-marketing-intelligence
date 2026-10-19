@@ -9,7 +9,7 @@ import pytest
 from psycopg import sql
 
 from smi_ingestion.adapters.registry import default_registry
-from smi_ingestion.canonical import CanonicalReader, CanonicalWriter
+from smi_ingestion.canonical import CanonicalWriter
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceStore
 from smi_ingestion.runner import IngestionRunner

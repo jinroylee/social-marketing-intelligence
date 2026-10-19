@@ -1,0 +1,9 @@
+{
+  "format_version": "tiktok-caption-snapshot-v1",
+  "dataset_id": "jp-kbeauty-tiktok-public-video-sample-2026-10-05",
+  "snapshot": "observations.json",
+  "sha256": "86d5ef8d706266cf256b45683ddb0565a09687f118dbda396f45374ba1f935e8",
+  "namespace": "web:public",
+  "expected_posts": 19,
+  "expected_accounts": 17
+}

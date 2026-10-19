@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from collections import defaultdict
-from datetime import datetime
+from contextlib import nullcontext
 from decimal import Decimal
 from typing import Any
 
@@ -12,7 +12,7 @@ from psycopg.types.json import Jsonb
 
 from .contracts import ExternalKey, NormalizedBatch
 from .db import Database
-from .evidence import EvidenceError, _allowed, _policy_from_json
+from .evidence import EvidenceError, policy_allows, policy_from_json
 
 
 def _key_params(key: ExternalKey, synthetic: bool) -> tuple[Any, ...]:
@@ -48,22 +48,24 @@ class CanonicalWriter:
 
     def apply(
         self, observation_id: str, batch: NormalizedBatch, mapper_key: str,
-        policy_version: str = "canonical-v1"
+        policy_version: str = "canonical-v1", *, connection=None,
     ) -> dict[str, Any]:
-        with self.db.connect() as connection:
+        """Apply a mapping atomically, optionally inside the caller's transaction."""
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             observation = connection.execute(
                 "SELECT * FROM source_observations WHERE id=%s FOR UPDATE", (observation_id,)
             ).fetchone()
             if observation is None:
                 raise EvidenceError("observation_not_found")
-            if not _allowed(_policy_from_json(observation["policy"]), "process"):
+            if not policy_allows(policy_from_json(observation["policy"]), "process"):
                 raise EvidenceError("processing_not_permitted")
             existing = connection.execute(
                 "SELECT id FROM derivations WHERE observation_id=%s AND mapper_key=%s AND policy_version=%s",
                 (observation_id, mapper_key, policy_version)
             ).fetchone()
             if existing:
-                return {"status": "duplicate", "entities": 0, "fields": 0, "metrics": 0}
+                return {"status": "duplicate", "derivation_id": str(existing["id"]),
+                        "entities": 0, "fields": 0, "metrics": 0}
             connection.execute(
                 "UPDATE derivations SET active=FALSE WHERE observation_id=%s AND active=TRUE",
                 (observation_id,)
@@ -104,7 +106,7 @@ class CanonicalWriter:
                     (str(uuid.uuid4()), derivation_id, unresolved.kind, unresolved.locator, unresolved.reason)
                 )
             return {
-                "status": "applied", "entities": len(entity_ids),
+                "status": "applied", "derivation_id": derivation_id, "entities": len(entity_ids),
                 "fields": len(batch.fields), "metrics": len(batch.metrics),
                 "unresolved": len(batch.unresolved)
             }
@@ -124,7 +126,7 @@ class CanonicalReader:
 
     @staticmethod
     def _visible(row: dict[str, Any]) -> bool:
-        return _allowed(_policy_from_json(row["policy"]), "display")
+        return policy_allows(policy_from_json(row["policy"]), "display")
 
     def entity(self, key: ExternalKey, include_synthetic: bool = False) -> dict[str, Any] | None:
         with self.db.connect() as connection:

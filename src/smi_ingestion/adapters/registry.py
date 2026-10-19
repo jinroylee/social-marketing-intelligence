@@ -5,6 +5,7 @@ from .bright_data import BrightDataTikTokCollector, BrightDataTikTokMapper
 from .html_fixture import HtmlFixtureMapper
 from .json_fixture import JsonFixtureMapper
 from .local import LocalFileCollector
+from .snapshot import SnapshotImportOnlyCollector, SnapshotMapper
 from .tiktok_oembed import TikTokOEmbedCollector, TikTokOEmbedMapper
 from .tiktok_web import TikTokWebCollector, TikTokWebMapper
 
@@ -32,4 +33,5 @@ def default_registry() -> AdapterRegistry:
     registry.register("tiktok-oembed", TikTokOEmbedCollector(), TikTokOEmbedMapper())
     registry.register("brightdata-tiktok", BrightDataTikTokCollector(), BrightDataTikTokMapper())
     registry.register("tiktok-web", TikTokWebCollector(), TikTokWebMapper())
+    registry.register("snapshot-json", SnapshotImportOnlyCollector(), SnapshotMapper())
     return registry

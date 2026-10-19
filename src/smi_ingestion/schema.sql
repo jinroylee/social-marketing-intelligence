@@ -112,3 +112,32 @@ CREATE TABLE IF NOT EXISTS unresolved_candidates (
 
 CREATE INDEX IF NOT EXISTS observation_run_status ON source_observations(run_id, status);
 CREATE INDEX IF NOT EXISTS identity_entity ON external_identities(entity_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS derivation_observation ON derivations(id, observation_id);
+
+CREATE TABLE IF NOT EXISTS evidence_sets (
+    workspace_id TEXT NOT NULL,
+    dataset_id TEXT NOT NULL,
+    digest TEXT NOT NULL,
+    manifest JSONB NOT NULL,
+    run_id UUID NOT NULL UNIQUE REFERENCES ingestion_runs(id),
+    synthetic BOOLEAN NOT NULL,
+    importer_version TEXT NOT NULL,
+    imported_by TEXT NOT NULL,
+    imported_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (workspace_id, dataset_id)
+);
+
+CREATE TABLE IF NOT EXISTS evidence_set_members (
+    workspace_id TEXT NOT NULL,
+    dataset_id TEXT NOT NULL,
+    position INTEGER NOT NULL CHECK (position >= 0),
+    origin_observation_id UUID NOT NULL,
+    origin_run_id UUID NOT NULL,
+    observation_id UUID NOT NULL UNIQUE REFERENCES source_observations(id),
+    derivation_id UUID NOT NULL,
+    PRIMARY KEY (workspace_id, dataset_id, position),
+    UNIQUE (workspace_id, dataset_id, origin_observation_id),
+    FOREIGN KEY (workspace_id, dataset_id) REFERENCES evidence_sets(workspace_id, dataset_id),
+    FOREIGN KEY (derivation_id, observation_id) REFERENCES derivations(id, observation_id)
+);

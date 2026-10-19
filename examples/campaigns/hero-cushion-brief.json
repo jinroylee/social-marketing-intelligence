@@ -1,0 +1,16 @@
+{
+  "catalog_id": "beauty-caption-lexicon-v1",
+  "brand_id": "aprilskin",
+  "product_ids": ["aprilskin-hero-cushion"],
+  "objective": "Investigate candidate accounts for Hero Cushion sales in Japan",
+  "target_market": "JP",
+  "platforms": ["tiktok"],
+  "criteria": [
+    {"id": "product-fit", "label": "Hero Cushion family mentioned in supplied captions", "kind": "product_mention", "value": "aprilskin-hero-cushion"},
+    {"id": "script-fit", "label": "Japanese-script evidence in supplied captions", "kind": "script_evidence", "value": "kana"},
+    {"id": "audience-fit", "label": "Japan audience geography", "kind": "audience_geography", "value": "JP", "unknown_handling": "acknowledge"}
+  ],
+  "known_accounts": [
+    {"platform": "tiktok", "namespace": "web:public", "kind": "account", "native_id": "6819904612390634498"}
+  ]
+}

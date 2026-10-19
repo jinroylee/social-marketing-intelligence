@@ -7,6 +7,12 @@ Shared language for evidence-backed market investigation and creator campaign de
 **Brand**:
 The commercial identity under which products are marketed. A brand is distinct from the company that owns or operates it.
 
+**Product**:
+A marketed item or product family associated with a brand. A reference to the family does not establish an exact version, listing, variant or shade.
+
+**Caption interpretation**:
+A derived claim about a reference or meaning in observed caption text, with supporting evidence and review status. A literal mention does not by itself establish the author's stance or verify the claim being discussed.
+
 **Target market**:
 The geographic market a campaign intends to address. It is distinct from a product's origin, a post's language, and the measured location of a creator's audience.
 
@@ -32,7 +38,10 @@ A marketer-defined statement of the brand/product scope, objective, target marke
 A person, group, or organization that creates content, distinct from any particular platform account. Accounts are linked to a creator through corroborated evidence or a recorded marketer correction.
 
 **Creator shortlist**:
-A campaign's selected candidate platform accounts, optionally associated with corroborated creator identities, with the available evidence and reasons for considering each. Inclusion does not mean the creator has agreed to participate or has been contracted.
+A saved campaign-specific collection of recommended or curated platform accounts, optionally associated with corroborated creator identities, with supporting reasons and evidence. It may be saved automatically without human review or approval; inclusion does not mean the creator has agreed to participate or has been contracted.
+
+**Ranked recommendation**:
+An ordered set of candidate accounts assessed against a campaign's criteria, with its ranking basis, supporting evidence and explicit gaps. It can be saved automatically as a shortlist; optional human curation remains a separate judgment.
 
 **Creator discovery**:
 Finding candidate creators who are not already in the marketer's working set for a campaign. Discovery produces candidates for evaluation; it does not establish their suitability or availability.
@@ -41,10 +50,31 @@ Finding candidate creators who are not already in the marketer's working set for
 Evaluating candidate creators against the same campaign needs using their available evidence and explicit unknowns. The candidates may come from discovery or the marketer's existing working set.
 
 **Comparison draft**:
-A provisional comparison of candidate accounts against an exact campaign brief and evidence set, with supported judgments, reasons, and unknowns. Preparing it does not confirm the selected shortlist.
+A provisional comparison of candidate accounts against an exact campaign brief and identified evidence, with supported judgments, reasons and unknowns. Its interpretations do not become human-reviewed facts merely because the result is saved.
 
 **Shortlist revision**:
-A saved version of a campaign's selected candidate accounts and decision basis. A confirmed revision records the marketer's selection and its supporting evidence; later changes create a successor revision.
+A saved version of a campaign's recommended or curated candidate accounts, their ordering where applicable, and the decision basis. Its automated or human authorship and any optional human review remain explicit; later changes create a successor revision.
+
+**Enrichment proposal**:
+An assistant's proposed acquisition of missing, stale or incomplete knowledge, with a stated purpose and scope. It requires user approval before becoming a submitted enrichment task.
+
+**Enrichment task**:
+A scoped acquisition of additional evidence for the shared knowledge, initiated by a configured schedule, campaign coverage need or approved assistant proposal. Its completion distinguishes retrieved material from knowledge actually made available for use.
+
+**Knowledge publication**:
+A versioned availability of ingested evidence and supported interpretations for knowledge-base queries. It identifies the source support and transformations that make an update usable.
+
+**Monitoring observation**:
+A recent source observation used for timely monitoring and anomaly detection. It can support an alert without every observed post becoming a fully modeled knowledge-base entity.
+
+**Anomaly alert**:
+A retained notification of a significant quantitative or semantic anomaly, with its evidence, comparison context, method and uncertainty. It does not itself authorize further external research or campaign creation.
+
+**Measurement plan**:
+A descriptive proposal for measuring a campaign's objective, with intended outcome definitions, sources, periods, matching and attribution assumptions, and known gaps. It is distinct from observed results and does not establish causal lift.
+
+**Decision note**:
+Attributable human feedback, assumptions or learning attached to a campaign and relevant shortlist revision. Its author-supplied statements remain distinct from independently observed evidence.
 
 **Platform account**:
 An identity on a particular source platform under which content and account metrics are observed. It is distinct from the creator associated with it and from its mutable display name or handle.

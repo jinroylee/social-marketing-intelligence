@@ -1,0 +1,26 @@
+{
+  "catalog_id": "beauty-caption-lexicon-v1",
+  "version": "v1",
+  "brands": [
+    {"id": "aprilskin", "name": "APRILSKIN", "aliases": ["APRILSKIN", "エイプリルスキン"]},
+    {"id": "tirtir", "name": "TIRTIR", "aliases": ["TIRTIR", "ティルティル"]},
+    {"id": "hera", "name": "HERA", "aliases": ["HERA", "ヘラ"]},
+    {"id": "clio", "name": "CLIO", "aliases": ["CLIO", "クリオ"]},
+    {"id": "wakemake", "name": "WAKEMAKE", "aliases": ["WAKEMAKE", "ウェイクメイク"]},
+    {"id": "fwee", "name": "fwee", "aliases": ["fwee"]}
+  ],
+  "products": [
+    {"id": "aprilskin-hero-cushion", "brand_id": "aprilskin", "name": "Hero Cushion", "specificity": "family", "aliases": ["ヒーロークッション", "Hero Cushion"]},
+    {"id": "aprilskin-magic-snow-cushion", "brand_id": "aprilskin", "name": "Magic Snow Cushion", "specificity": "family", "aliases": ["マジックスノークッション"]},
+    {"id": "tirtir-mask-fit-red-cushion", "brand_id": "tirtir", "name": "Mask Fit Red Cushion", "specificity": "family", "aliases": ["Mask Fit Red Cushion", "maskfitredcushion", "tirtirmaskfitredcushion", "redcushion"]},
+    {"id": "hera-black-cushion", "brand_id": "hera", "name": "Black Cushion", "specificity": "family", "aliases": ["ブラッククッション", "herablackcushion"]},
+    {"id": "clio-mesh-glow-essential", "brand_id": "clio", "name": "キルカバーメッシュグロウエッセンシャルクッション", "specificity": "family", "aliases": ["キルカバーメッシュグロウエッセンシャルクッション"]},
+    {"id": "clio-founwear", "brand_id": "clio", "name": "キルカバーファンウェアクッション", "specificity": "family", "aliases": ["キルカバーファンウェアクッション"]},
+    {"id": "clio-all-day-cover", "brand_id": "clio", "name": "オールデイカバークッション", "specificity": "family", "aliases": ["オールデイカバークッション"]}
+  ],
+  "topics": [
+    {"id": "cushion-foundation", "name": "Cushion foundation mention", "aliases": ["クッション", "cushion", "cushionfoundation", "koreancushion"]},
+    {"id": "durability", "name": "Durability-related wording", "aliases": ["ヨレ", "崩れ"]},
+    {"id": "coverage", "name": "Coverage-related wording", "aliases": ["カバー", "毛穴"]}
+  ]
+}

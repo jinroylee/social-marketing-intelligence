@@ -4,6 +4,16 @@
 
 The JSON file is the stable offline input for ontology, retrieval, and agent experiments. Each record carries a direct source URL, platform post and author IDs, handle, publication and capture times, public caption, and the four public engagement counts actually returned by TikTok. The `curation` object contains simple development labels: brand/product context assigned from the visible post, literal `#PR` and `Qoo10` marker checks, and a Japanese-script check. Those labels are **not** proof of paid sponsorship, audience location, campaign participation, product sales, or market performance. Counts are a point-in-time observation, not a longitudinal series.
 
+Use `snapshot-manifest.json` to import this exact sample into a fresh database without source calls:
+
+```bash
+uv run smi-ingest migrate
+uv run smi-ingest import-snapshot examples/curated/jp-kbeauty-tiktok-2026-10-05/snapshot-manifest.json
+uv run smi-ingest inspect-set jp-kbeauty-tiktok-public-video-sample-2026-10-05
+```
+
+The manifest pins the export digest and expected membership. Import preserves original observation/run references and capture times while creating local bindings; repeat import is idempotent. See the [product evidence-set contract](../../../docs/evidence-sets.md).
+
 The sample is hand-selected and spans posts from 2023 through 2026. It is suitable for testing parsing, provenance, evidence-backed summaries, and missing-data behavior. It is not a representative Japan-market sample, a recent-post history for any creator, or a basis for ranking creator performance. Profile follower counts, audience geography, impressions, conversions, sales, and the contents of the videos themselves are absent. The snapshot does not contain media files or raw page HTML.
 
 The three manifests are the live source inputs that produced this snapshot. All three completed with one HTTP 200 per selected video, 19 applied observations, zero quarantines and zero unresolved identities. The local canonical database now contains these records under `tiktok / web:public`. The completed run IDs are included in `observations.json`. To collect a **new** snapshot from the same URLs after a database reset or on another date, run:

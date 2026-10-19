@@ -6,6 +6,7 @@ import hashlib
 import os
 import time
 import uuid
+from contextlib import nullcontext
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,7 +39,8 @@ def _policy_json(policy: SourcePolicy) -> dict[str, Any]:
     return result
 
 
-def _policy_from_json(data: dict[str, Any]) -> SourcePolicy:
+def policy_from_json(data: dict[str, Any]) -> SourcePolicy:
+    """Restore a stored source policy, including its current withdrawal state."""
     return SourcePolicy(
         context_id=data["context_id"],
         can_process=data["can_process"],
@@ -49,7 +51,10 @@ def _policy_from_json(data: dict[str, Any]) -> SourcePolicy:
     )
 
 
-def _allowed(policy: SourcePolicy, action: str) -> bool:
+def policy_allows(policy: SourcePolicy, action: str) -> bool:
+    """Check process, display or retention permission at the current time."""
+    if action not in {"process", "display", "retain"}:
+        raise ValueError("invalid_policy_action")
     return (
         not policy.revoked
         and (policy.expires_at is None or policy.expires_at > datetime.now(timezone.utc))
@@ -68,7 +73,7 @@ def _observation(row: dict[str, Any]) -> RawObservation:
         ),
         media_type=row["media_type"], captured_at=row["captured_at"],
         source_as_of=row["source_as_of"], ingested_at=row["ingested_at"],
-        policy=_policy_from_json(row["policy"]), synthetic=row["synthetic"],
+        policy=policy_from_json(row["policy"]), synthetic=row["synthetic"],
         payload_hash=row["payload_hash"], payload_path=row["payload_path"],
         coverage=row["coverage"]
     )
@@ -80,9 +85,13 @@ class EvidenceStore:
         self.root = root.resolve()
         self.root.mkdir(parents=True, exist_ok=True)
 
-    def start_run(self, manifest_path: Path, digest: str, adapter_id: str, limits: RunLimits) -> str:
+    def start_run(
+        self, manifest_path: Path, digest: str, adapter_id: str, limits: RunLimits,
+        *, connection=None,
+    ) -> str:
+        """Record acquisition context, optionally in a caller-owned transaction."""
         run_id = str(uuid.uuid4())
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             connection.execute(
                 "INSERT INTO ingestion_runs(id, manifest_path, manifest_hash, adapter_id, limits) "
                 "VALUES (%s, %s, %s, %s, %s)",
@@ -105,13 +114,17 @@ class EvidenceStore:
             ).fetchall()
         return [_observation(row) for row in rows]
 
-    def save(self, run_id: str, item_index: int, draft: ObservationDraft, checkpoint: dict[str, Any]) -> RawObservation:
-        if not _allowed(draft.policy, "process"):
+    def save(
+        self, run_id: str, item_index: int, draft: ObservationDraft,
+        checkpoint: dict[str, Any], *, connection=None,
+    ) -> RawObservation:
+        """Store evidence; callers rolling back an outer transaction clean its payload files."""
+        if not policy_allows(draft.policy, "process"):
             raise EvidenceError("processing_not_permitted")
         if draft.request_attempts < 1:
             raise EvidenceError("invalid_request_attempts")
-        with self.db.connect() as connection:
-            existing = connection.execute(
+        with nullcontext(connection) if connection is not None else self.db.connect() as lookup:
+            existing = lookup.execute(
                 "SELECT * FROM source_observations WHERE run_id=%s AND item_index=%s",
                 (run_id, item_index)
             ).fetchone()
@@ -129,7 +142,7 @@ class EvidenceStore:
                 os.fsync(output.fileno())
             os.replace(temporary, path)
         try:
-            with self.db.connect() as connection:
+            with nullcontext(connection) if connection is not None else self.db.connect() as connection:
                 run = connection.execute(
                     "SELECT limits,requests_used FROM ingestion_runs WHERE id=%s FOR UPDATE", (run_id,)
                 ).fetchone()
@@ -171,7 +184,7 @@ class EvidenceStore:
 
     def load(self, observation_id: str) -> tuple[RawObservation, bytes]:
         observation = self.get(observation_id)
-        if not _allowed(observation.policy, "process"):
+        if not policy_allows(observation.policy, "process"):
             raise EvidenceError("evidence_unavailable")
         if observation.payload_path is None:
             raise EvidenceError("replay_unavailable")

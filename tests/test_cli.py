@@ -5,8 +5,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-from smi_ingestion.canonical import CanonicalReader
-from smi_ingestion.contracts import ExternalKey
 
 
 EXAMPLES = Path(__file__).parents[1] / "examples" / "synthetic"
