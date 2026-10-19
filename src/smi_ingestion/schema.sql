@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS ingestion_runs (
     id UUID PRIMARY KEY,
+    workspace_id TEXT NOT NULL DEFAULT 'local',
     manifest_path TEXT NOT NULL,
     manifest_hash TEXT NOT NULL,
     adapter_id TEXT NOT NULL,
@@ -12,6 +13,7 @@ CREATE TABLE IF NOT EXISTS ingestion_runs (
     input_complete BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE ingestion_runs ADD COLUMN IF NOT EXISTS workspace_id TEXT NOT NULL DEFAULT 'local';
 ALTER TABLE ingestion_runs ADD COLUMN IF NOT EXISTS requests_used INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE ingestion_runs ADD COLUMN IF NOT EXISTS input_complete BOOLEAN NOT NULL DEFAULT FALSE;
 
@@ -143,3 +145,6 @@ CREATE TABLE IF NOT EXISTS evidence_set_members (
     FOREIGN KEY (workspace_id, dataset_id) REFERENCES evidence_sets(workspace_id, dataset_id),
     FOREIGN KEY (derivation_id, observation_id) REFERENCES derivations(id, observation_id)
 );
+
+-- Imported runs already have an explicit workspace owner. Preserve it on upgrade.
+UPDATE ingestion_runs r SET workspace_id=s.workspace_id FROM evidence_sets s WHERE s.run_id=r.id AND r.workspace_id<>s.workspace_id;

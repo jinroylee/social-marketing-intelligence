@@ -4,6 +4,12 @@
 
 This document describes the current local browser, including its human-only shortlist saves. The [target operational UI](functional-requirements.md) will add automatically saved ranked recommendations without human review/approval, an enrichment assistant, tasks/notifications, X alerts and graph/lineage explorers. Those routes and controls do not exist yet.
 
+## Knowledge publications
+
+The main navigation links `/knowledge/publications`, which lists only committed, nonsynthetic publications in the local workspace. `/knowledge/publications/PUBLICATION_ID` reopens the exact selected observations, derivations, assertion/metric IDs and optional existing caption interpretations. It shows actual producer, publication/source times, mapper and interpretation versions, original coverage, current support health and unknown fields. Denied or superseded support displays metadata without source text; later publications do not replace this historical selection.
+
+Publication is an explicit trusted operation through `KnowledgePublications.publish` or the `smi-ingest publish-knowledge` CLI described in the [knowledge contract](knowledge.md#explicit-knowledge-publication). Reading a detail page does not acquire evidence or publish anything. Existing form protections and actor boundaries apply unchanged.
+
 ## Run the application
 
 Start PostgreSQL and load the offline inputs once:

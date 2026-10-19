@@ -76,3 +76,37 @@ CREATE TABLE IF NOT EXISTS knowledge_assertions (
     recorded_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS knowledge_assertion_support ON knowledge_assertions(observation_id);
+
+CREATE TABLE IF NOT EXISTS knowledge_publications (
+    id UUID PRIMARY KEY,
+    workspace_id TEXT NOT NULL,
+    request_id TEXT NOT NULL,
+    request_digest TEXT NOT NULL,
+    method_version TEXT NOT NULL,
+    producer_id TEXT NOT NULL,
+    synthetic BOOLEAN NOT NULL DEFAULT FALSE,
+    producer_kind TEXT NOT NULL CHECK (producer_kind IN ('human','automation')),
+    coverage JSONB NOT NULL,
+    published_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (workspace_id, request_id)
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_publication_support (
+    publication_id UUID NOT NULL REFERENCES knowledge_publications(id),
+    position INTEGER NOT NULL,
+    observation_id UUID NOT NULL REFERENCES source_observations(id),
+    derivation_id UUID NOT NULL,
+    assertion_ids UUID[] NOT NULL,
+    metric_ids UUID[] NOT NULL,
+    PRIMARY KEY (publication_id, position),
+    UNIQUE (publication_id, observation_id),
+    FOREIGN KEY (derivation_id, observation_id) REFERENCES derivations(id, observation_id)
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_publication_interpretations (
+    publication_id UUID NOT NULL REFERENCES knowledge_publications(id),
+    position INTEGER NOT NULL,
+    interpretation_id UUID NOT NULL REFERENCES knowledge_assertions(id),
+    PRIMARY KEY (publication_id, position),
+    UNIQUE (publication_id, interpretation_id)
+);

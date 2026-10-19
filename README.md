@@ -45,6 +45,17 @@ Use the returned `run_id`. The rules identify literal mentions, kana script, top
 
 For an explicit new preparation after permissions recover, add `--request-id refresh-1` (or another new ID). Reuse that ID for retries; earlier runs retain their original results.
 
+## Publish ingested knowledge
+
+Publication is explicit and separate from fetching or interpretation preparation:
+
+```bash
+uv run smi-ingest publish-knowledge INGESTION_RUN_ID --request-id publication-1 --observation-id OBSERVATION_ID
+uv run smi-ingest inspect-publication PUBLICATION_ID
+```
+
+The selection may come from a fresh ingestion or a frozen import. Repeat `--observation-id` to choose a subset, or omit it to select the bounded run; add `--interpretation-id` for an existing supported caption interpretation. The CLI records its named human operator, while workers use their actual automation context. The browser's **Knowledge** link reopens exact committed support under current policy. See the [publication contract](docs/knowledge.md#explicit-knowledge-publication); general KB search and acquisition tasks remain future work.
+
 ## Campaign persistence
 
 Use the [sample brief](examples/campaigns/hero-cushion-brief.json) after preparing knowledge. `start-campaign`, `prepare-comparison` and `save-shortlist` persist exact revisions in PostgreSQL; `inspect-campaign`, `inspect-comparison` and `inspect-shortlist` reopen them. Saves require request IDs, shortlist saves require an expected version, and `--confirm` records a human-confirmed revision. The [campaign contract](docs/campaigns.md) describes the commands, selection JSON and evidence/unknown requirements.

@@ -1,6 +1,6 @@
 # Shared knowledge
 
-Own Brand/Product references, immutable extraction catalogs and evidence-backed caption interpretations. Public entry points are `KnowledgeStore` and `Catalog`. Read input through `EvidenceSetReader`; ingestion continues to own observations and source assertions.
+Own Brand/Product references, immutable extraction catalogs and evidence-backed caption interpretations. Public entry points are `KnowledgeStore`, `KnowledgePublications` and `Catalog`. Interpretations read frozen input through `EvidenceSetReader`; publications use ingestion-owned `IngestedEvidence`; ingestion continues to own observations and source assertions.
 
 Catalog names/aliases are attributable human configuration, distinct from source observations and development curation. Caption rules return typed provisional interpretations with exact Unicode character offsets, source assertion IDs and method versions. A matching alias supports a mention at the catalog's specificity, not efficacy, audience geography or sales.
 

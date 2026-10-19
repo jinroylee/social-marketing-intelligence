@@ -16,10 +16,10 @@ from smi_ingestion.contracts import ExternalKey
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
-from smi_knowledge import KnowledgeStore
+from smi_knowledge import KnowledgePublications, KnowledgeStore
 from smi_monitoring import MonitoringStore
 
-from . import monitoring_views, planning_views, views
+from . import monitoring_views, planning_views, publication_views, views
 from .forms import identifier, one
 
 
@@ -89,6 +89,7 @@ class ReviewApp:
         self.worker = ActorContext(workspace_id, "local-rule-preparation", "automation")
         self.campaigns = CampaignStore(db, workspace_id)
         self.knowledge = KnowledgeStore(db, workspace_id)
+        self.publications = KnowledgePublications(db, workspace_id)
         self.evidence = EvidenceSetReader(db, workspace_id)
         self.monitoring = MonitoringStore(db, workspace_id)
         self.planning = CampaignPlanning(db, workspace_id)
@@ -186,6 +187,11 @@ class ReviewApp:
             return self.page("Action needs attention", views.error_message(code), status)
 
     def _get(self, path, query):
+        if path == "/knowledge/publications":
+            return self.page("Knowledge publications", publication_views.index(self.publications.list(self.actor)))
+        match = re.fullmatch(r"/knowledge/publications/([^/]+)", path)
+        if match:
+            return self.page("Knowledge publication", publication_views.detail(self.publications.read(identifier(match[1]), self.actor)))
         if path == "/investigations":
             return self.page("Market investigations", monitoring_views.index(self.monitoring.list_investigations(self.actor)))
         if path == "/investigations/new":

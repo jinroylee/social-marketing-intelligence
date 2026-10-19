@@ -23,6 +23,7 @@ erDiagram
 
     ingestion_runs {
         uuid id PK
+        text workspace_id
         text adapter_id
         text manifest_hash
         jsonb checkpoint
@@ -138,10 +139,40 @@ erDiagram
     knowledge_catalogs ||--o{ knowledge_runs : configures
     evidence_sets ||--o{ knowledge_runs : supports
     knowledge_runs ||--o{ knowledge_assertions : produces
+    knowledge_publications ||--|{ knowledge_publication_support : pins
+    source_observations ||--o{ knowledge_publication_support : governs
+    derivations ||--o{ knowledge_publication_support : freezes
+    knowledge_publications ||--o{ knowledge_publication_interpretations : includes
+    knowledge_assertions ||--o{ knowledge_publication_interpretations : interprets
     canonical_entities ||--o{ knowledge_assertions : interpreted_by
     field_assertions ||--o{ knowledge_assertions : supports
     source_observations ||--o{ knowledge_assertions : governs
 
+    knowledge_publications {
+        uuid id PK
+        text workspace_id
+        text request_id
+        text request_digest
+        text method_version
+        text producer_id
+        text producer_kind
+        boolean synthetic
+        jsonb coverage
+        timestamptz published_at
+    }
+    knowledge_publication_support {
+        uuid publication_id PK, FK
+        int position PK
+        uuid observation_id FK
+        uuid derivation_id FK
+        uuid_array assertion_ids
+        uuid_array metric_ids
+    }
+    knowledge_publication_interpretations {
+        uuid publication_id PK, FK
+        int position PK
+        uuid interpretation_id FK
+    }
     knowledge_brands {
         text workspace_id PK
         text brand_id PK
@@ -191,6 +222,8 @@ erDiagram
         timestamptz recorded_at
     }
 ```
+
+Publication membership pins exact observation/derivation/assertion/metric IDs and existing interpretation IDs, independent of frozen datasets. Assertion/metric arrays are validated against their nominated derivation by the ingestion public interface before the publication transaction commits. Publications retain ordered membership, producer, method and original coverage; current reads apply source policy without copying source text. The workspace/request identity binds the payload and producer. Ingestion run workspace ownership scopes both fresh and imported support; upgrades preserve imported workspace context.
 
 Catalog documents pin human-configured aliases and product specificity. Business reference IDs persist across catalog revisions. Run identity includes workspace, frozen dataset, catalog, method version and preparation request ID. An explicit new request creates a fresh run under unchanged semantic configuration; retries retain the original run. Each interpretation points to its exact source caption assertion and observation; source policy controls its permitted use and retained copies. Withdrawal purges values/excerpts while retaining support metadata. A separate semantic-review/correction lifecycle remains future work.
 
@@ -403,7 +436,7 @@ Monitoring has no campaign foreign key. Its scope and insight heads preserve ind
 
 ## Product domain model
 
-This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, acquisition tasks/publications, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams above describe implemented tables.
+This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, acquisition tasks, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams above describe implemented tables.
 
 ```mermaid
 erDiagram
@@ -432,7 +465,7 @@ An optional Creator association carries its own evidence, role and applicable in
 
 ## Accepted future operational records
 
-These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above remain the implemented 31-table schema.
+These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication; task/attempt and query-result records remain conceptual.
 
 ```mermaid
 erDiagram

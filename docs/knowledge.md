@@ -1,8 +1,8 @@
 # Shared knowledge contract
 
-[`smi_knowledge`](../src/smi_knowledge/__init__.py) owns Brand/Product references, versioned interpretation catalogs and provisional caption interpretations. It consumes the public frozen evidence-set interface and leaves source observations unchanged.
+[`smi_knowledge`](../src/smi_knowledge/__init__.py) owns Brand/Product references, versioned interpretation catalogs and provisional caption interpretations. Interpretation preparation consumes the public frozen evidence-set interface; explicit knowledge publication consumes exact ingested support through `IngestedEvidence`. Both leave source observations unchanged.
 
-This is the implemented dataset-bound contract. The [operational target](functional-requirements.md) requires a current-KB query/publication interface and an agentic assistant; neither is supplied by the current rule extractor.
+The implemented contract includes dataset-bound caption preparation and explicit publication by identity. Current-KB search and an agentic assistant remain [operational targets](functional-requirements.md).
 
 ## Business references and catalog
 
@@ -44,6 +44,20 @@ Literal mentions do not establish use, endorsement, product efficacy, audience g
 
 The method performs no model or platform calls and treats captions as data. It does not read credentials, execute caption instructions or generate universal account scores. A future extraction method can use the same support envelope after its references, value types and semantic quality are evaluated.
 
+## Explicit knowledge publication
+
+`KnowledgePublications.publish(support, actor, request_id=..., interpretation_ids=(), include_synthetic=False)` makes one bounded selection of already-ingested support available. `support` is an ordered tuple of ingestion-owned `SupportReference` values: exact observation, derivation, assertion and metric IDs. It accepts fresh ingestions as well as imported observations, without creating or extending an evidence set. An account with source-backed stable identity can be published while profile and interpretation attributes remain unknown. References without ingested assertions are rejected; callers cannot submit arbitrary interpretation values or turn a literal caption mention into an efficacy/audience fact.
+
+`IngestedEvidence.select_run(run_id, actor)` supplies up to 100 applied observation references with their current exact assertions and metrics. Public callers can select a subset or construct a reference to narrower assertion/metric membership. Each reference supports at most 1,000 assertion/metric IDs. Publication validates every identity and its owning workspace, current derivation and process permission. Optional interpretation IDs must identify existing supported caption interpretations whose exact source assertion is in the selection. Their catalog, method, basis, provisional review state and producer remain attributable to their original knowledge run.
+
+All publication rows and membership commit in one transaction. The ingestion and knowledge owners hold support locks through commit, serializing policy withdrawal or derivation changes against publication. Any invalid member rejects the complete request. A workspace/request ID binds the ordered support, interpretation selection, publication method version, synthetic mode and actual producer. Identical concurrent retries return one publication; changing that payload or producer returns `publication_request_conflict`. Retrying a withdrawn publication preserves its identity without republishing denied text.
+
+`KnowledgePublications.list(actor)` returns committed, source-content-free publication metadata. `read(publication_id, actor, purpose="display")` reopens the exact membership, producer, publication method/time, original coverage and current support counts. Members retain capture/source-as-of/ingestion times, source publication assertions and mapper/policy versions; knowledge publication time never refreshes an old capture. Process and display reads apply their own permissions. Denied members expose IDs and support health only; superseded members keep their old IDs and require review rather than borrowing a new derivation. Synthetic publications are excluded unless explicitly enabled for development.
+
+Publication stores IDs and count metadata, with no extra source text copies. Selected interpretations remain governed by `KnowledgeStore.read_interpretations`, which reads identities across existing runs, rechecks dependencies under caller-owned transactions, and purges values/excerpts after retention withdrawal. Permission restoration and publication retries do not reconstruct purged interpretations. Source-only publication does not require retention permission for an additional copy because it creates none; source-owner canonical values retain their existing separately documented lifecycle. Frozen evidence membership and prior publication support remain unchanged when another publication is added.
+
+Operators can use `smi-ingest publish-knowledge RUN_ID --request-id ID`, optionally repeating `--observation-id` to select a bounded subset and `--interpretation-id` to include existing claims. `inspect-publication PUBLICATION_ID` reopens it. Both use a named local human actor; workers use the trusted Python interface with their actual automation context. The local browser links committed publications at `/knowledge/publications` and exact details at `/knowledge/publications/PUBLICATION_ID`. Search, task submission and acquisition are separate operations.
+
 ## Accepted future current-KB and assistant boundary
 
 Current-KB queries search published, permitted evidence and interpretations across acquisitions, rather than one manually selected imported dataset. Publication records the transformations/methods and exact source support that make an update usable. Freshness policies consider relevant source/capture times and attribute needs; active derivations or allowed permissions alone do not establish age freshness. Query results pin their actual input membership and versions for stable explanations while current source policy remains authoritative.
@@ -52,7 +66,7 @@ An account with stable identity and at least one permitted ingested source obser
 
 The agentic assistant answers free-form questions from existing KB knowledge. It proposes scoped refresh/fill/expansion tasks when needed, requires explicit user approval for every assistant-origin enrichment submission, and can use approved scopes beyond scheduled keywords. Server-side approval is bound to the actual task; no tool/caller-origin claim can bypass it. Pure KB reads and automated shortlist saving do not need this enrichment approval.
 
-Approved work uses asynchronous acquisition followed by ingestion, normalization and KB publication. A newly fetched tool response cannot directly support an answer or be used before the publication gate. Acknowledgment/status and completion notification distinguish fetch success from usable KB updates; updated knowledge is available to later queries. Existing knowledge preparation and source-policy reconciliation are foundations, not implementations of this task/publication lifecycle.
+Approved work uses asynchronous acquisition followed by ingestion, normalization and KB publication. A newly fetched tool response cannot directly support an answer or be used before the publication gate. Acknowledgment/status and completion notification distinguish fetch success from usable KB updates; updated knowledge is available to later queries. Existing knowledge preparation, explicit publication and source-policy reconciliation are foundations; durable task execution and completion reporting remain future work.
 
 ## Persistence and source policy
 
@@ -86,6 +100,8 @@ uv run smi-ingest register-catalog examples/catalogs/beauty-v1.json
 uv run smi-ingest prepare-knowledge jp-kbeauty-tiktok-public-video-sample-2026-10-05 beauty-caption-lexicon-v1
 uv run smi-ingest prepare-knowledge jp-kbeauty-tiktok-public-video-sample-2026-10-05 beauty-caption-lexicon-v1 --request-id refresh-1
 uv run smi-ingest inspect-knowledge RUN_ID
+uv run smi-ingest publish-knowledge INGESTION_RUN_ID --request-id publication-1 --observation-id OBSERVATION_ID
+uv run smi-ingest inspect-publication PUBLICATION_ID
 uv run smi-ingest review-packet RUN_ID
 uv run smi-ingest reconcile-knowledge jp-kbeauty-tiktok-public-video-sample-2026-10-05
 ```

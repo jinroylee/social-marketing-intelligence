@@ -87,15 +87,15 @@ class EvidenceStore:
 
     def start_run(
         self, manifest_path: Path, digest: str, adapter_id: str, limits: RunLimits,
-        *, connection=None,
+        *, connection=None, workspace_id: str = "local",
     ) -> str:
         """Record acquisition context, optionally in a caller-owned transaction."""
         run_id = str(uuid.uuid4())
         with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             connection.execute(
-                "INSERT INTO ingestion_runs(id, manifest_path, manifest_hash, adapter_id, limits) "
-                "VALUES (%s, %s, %s, %s, %s)",
-                (run_id, str(manifest_path.resolve()), digest, adapter_id, Jsonb(asdict(limits)))
+                "INSERT INTO ingestion_runs(id, workspace_id, manifest_path, manifest_hash, adapter_id, limits) "
+                "VALUES (%s, %s, %s, %s, %s, %s)",
+                (run_id, workspace_id, str(manifest_path.resolve()), digest, adapter_id, Jsonb(asdict(limits)))
             )
         return run_id
 

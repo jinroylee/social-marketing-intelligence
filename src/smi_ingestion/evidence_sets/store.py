@@ -60,7 +60,7 @@ class SnapshotImporter:
                 total = len(snapshot.records)
                 limits = RunLimits(total, total, total, 16 * 1024 * 1024)
                 run_id = self.evidence.start_run(
-                    manifest_path, manifest["sha256"], "snapshot-json", limits, connection=connection,
+                    manifest_path, manifest["sha256"], "snapshot-json", limits, connection=connection, workspace_id=self.workspace_id,
                 )
                 connection.execute(
                     "INSERT INTO evidence_sets(workspace_id,dataset_id,digest,manifest,run_id,"

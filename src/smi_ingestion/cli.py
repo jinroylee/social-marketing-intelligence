@@ -9,7 +9,7 @@ from pathlib import Path
 
 import psycopg
 
-from smi_knowledge import Catalog, KnowledgeStore
+from smi_knowledge import Catalog, KnowledgePublications, KnowledgeStore
 from smi_campaigns import Brief, CampaignStore, Selection
 from smi_monitoring import MonitoringStore
 
@@ -20,6 +20,7 @@ from .db import Database
 from .evidence import EvidenceError, EvidenceStore
 from .evidence_sets import ActorContext, EvidenceSetReader, SnapshotImporter
 from .runner import IngestionRunner
+from .support import IngestedEvidence
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -70,6 +71,17 @@ def main(argv: list[str] | None = None) -> int:
         knowledge.add_argument("run_id")
         knowledge.add_argument("--actor", default="local-builder")
         knowledge.add_argument("--include-synthetic", action="store_true")
+    publication = commands.add_parser("publish-knowledge", help="Publish a bounded selection of ingested run support")
+    publication.add_argument("run_id")
+    publication.add_argument("--request-id", required=True)
+    publication.add_argument("--observation-id", action="append", default=[])
+    publication.add_argument("--interpretation-id", action="append", default=[])
+    publication.add_argument("--actor", default="local-builder")
+    publication.add_argument("--include-synthetic", action="store_true")
+    inspect_publication = commands.add_parser("inspect-publication")
+    inspect_publication.add_argument("publication_id")
+    inspect_publication.add_argument("--actor", default="local-builder")
+    inspect_publication.add_argument("--include-synthetic", action="store_true")
     cleanup = commands.add_parser("reconcile-knowledge", help="Purge retained knowledge copies after source policy withdrawal")
     cleanup.add_argument("dataset_id")
     cleanup.add_argument("--actor", default="local-builder")
@@ -108,6 +120,20 @@ def main(argv: list[str] | None = None) -> int:
             CampaignStore(db).migrate()
             MonitoringStore(db).migrate()
             result = {"status": "migrated"}
+        elif args.command in {"publish-knowledge", "inspect-publication"}:
+            publications = KnowledgePublications(db)
+            actor = ActorContext("local", args.actor, "human")
+            if args.command == "publish-knowledge":
+                support = IngestedEvidence(db).select_run(args.run_id, actor, include_synthetic=args.include_synthetic)
+                if args.observation_id:
+                    requested = set(args.observation_id)
+                    if not requested <= {r.observation_id for r in support}:
+                        raise EvidenceError("publication_observation_not_in_run")
+                    support = tuple(r for r in support if r.observation_id in requested)
+                result = publications.publish(support, actor, request_id=args.request_id,
+                                              interpretation_ids=tuple(args.interpretation_id), include_synthetic=args.include_synthetic)
+            else:
+                result = publications.read(args.publication_id, actor, include_synthetic=args.include_synthetic)
         elif args.command in {"start-campaign", "revise-brief", "prepare-comparison", "save-shortlist",
                               "inspect-campaign", "inspect-comparison", "inspect-shortlist"}:
             campaigns = CampaignStore(db)

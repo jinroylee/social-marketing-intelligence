@@ -108,6 +108,7 @@ The browser sends a form to [`ReviewApp`](../src/smi_review/app.py). That applic
 | **Human inclusion reason / cite relevance support / acknowledge unknowns** | Record why you selected an account, what supports that reason and what you still do not know. Checking an unknown box acknowledges a gap; it does not resolve it. | `views.comparison_page`; `CampaignStore.save_shortlist`; `shortlist_selections` |
 | **Save draft / confirm shortlist** | Save working choices, or explicitly record your reviewed exploratory selection. Confirmation is an internal decision, not creator consent or campaign execution. | `shortlist_revisions`, `shortlist_selections` |
 | **Saved shortlist / successor revision** | Reopen the exact saved membership and reviewer. A later edit creates another revision. Current evidence availability is checked when reopening. | `views.shortlist_page`; `CampaignStore.read_shortlist` |
+| **Knowledge publications** | Reopen committed bounded selections, exact support and current unavailable/superseded states. Publish explicitly through the operator CLI. | [`publication_views`](../src/smi_review/publication_views.py), [`KnowledgePublications`](../src/smi_knowledge/publications/store.py) |
 | **Investigations / create investigation** | Ask a standalone question about selected brands/products/topics, with optional publication dates. Intended market describes the question, not proven audience location. Selected references match with OR. | [`monitoring_views`](../src/smi_review/monitoring_views.py), [`MonitoringStore`](../src/smi_monitoring/store.py); investigations and scope revisions |
 | **Prepare rule-based insight / snapshot insight** | Count literal reference and PR/Qoo10 support within matching sample posts. “Snapshot” means a bounded answer, not continuous monitoring or a market trend. A required caption language is currently not assessable by script rules. | [`build_summary`](../src/smi_monitoring/summary.py); `insight_revisions`, `insight_findings`, `insight_support` |
 | **Measurement plans and decision notes** | Propose what would be measured and record human feedback. Plans require a saved shortlist associated with the current brief; even an empty/deferred shortlist is valid. Notes can reference historical shortlists. | [`planning_views`](../src/smi_review/planning_views.py), [`CampaignPlanning`](../src/smi_campaigns/planning/store.py); plan, note and note-support tables |
@@ -126,7 +127,7 @@ The UI does not currently expose a general database browser, ingestion dashboard
 
 ## Table dictionary
 
-There are 31 implemented tables. Most are supporting records for evidence, versions and explanations, not separate user workflows. JSONB columns hold structured documents such as a brief or candidate judgment; UUID references connect those documents to their exact sources.
+There are 34 implemented tables. Most are supporting records for evidence, versions and explanations, not separate user workflows. JSONB columns hold structured documents such as a brief or candidate judgment; UUID references connect those documents to their exact sources.
 
 The examples below describe row shapes. Campaign and investigation examples are illustrative; loading the sample alone does not create them. Full columns and relationships are in the [physical ERD](data-model.md) and linked SQL.
 
@@ -136,7 +137,7 @@ Owner: [`smi_ingestion`](../src/smi_ingestion/schema.sql), including [`evidence_
 
 | Table | What one row stores | Example |
 | --- | --- | --- |
-| `ingestion_runs` | One acquisition/import job: adapter, input manifest, limits, resource use, checkpoint and status. | The offline job that imports all 19 sample observations. Its local run differs from the export's original collection runs. |
+| `ingestion_runs` | One workspace-owned acquisition/import job: adapter, input manifest, limits, resource use, checkpoint and status. | The offline job that imports all 19 sample observations. Its local run differs from the export's original collection runs. |
 | `source_observations` | One captured source response or imported record, with acquisition lineage, times, policy, payload hash/path and coverage. | O1: the captured `guga9791` post record. |
 | `ingestion_issues` | A reported problem associated with a run and optionally an observation. | An adapter failure code and sanitized message. |
 | `canonical_entities` | A stable internal UUID for an account or a content item. It does not hold a complete mutable profile. | A1 is an account; P1 is its post. There is no implemented Creator/person entity here. |
@@ -148,7 +149,7 @@ Owner: [`smi_ingestion`](../src/smi_ingestion/schema.sql), including [`evidence_
 | `evidence_sets` | One named, immutable dataset registration: manifest, byte digest, local import run and actor/time. | The 19-post sample dataset. |
 | `evidence_set_members` | One ordered dataset member, pinning its local observation and derivation plus original source IDs. | Member 0 binds O1/D1 to the original exported observation reference. |
 
-### Shared business vocabulary and interpretations — 5 tables
+### Shared business vocabulary, interpretations and publication — 8 tables
 
 Owner: [`smi_knowledge`](../src/smi_knowledge/schema.sql).
 
@@ -159,6 +160,9 @@ Owner: [`smi_knowledge`](../src/smi_knowledge/schema.sql).
 | `knowledge_catalogs` | An immutable configuration document containing brand/product/topic references and aliases, with its digest and recorder. | `beauty-caption-lexicon-v1` maps `ヒーロークッション` to the Hero Cushion family. Topics are in this document; no separate topic table exists. |
 | `knowledge_runs` | One preparation against an exact dataset, catalog, method and request identity, including coverage and recorder/time. | K1 ran `caption-literal-rules-v1` over the sample using the beauty catalog. |
 | `knowledge_assertions` | One derived typed interpretation with a source caption assertion, exact character span, value, provisional review status and support state. | “Span `[66,75)` is a family-level Hero Cushion mention,” supported by P1's caption. |
+| `knowledge_publications` | One committed bounded selection, with workspace/request identity, method, actual producer, coverage and publication time. | A source-only update can publish an ingested account while profile attributes remain unknown. |
+| `knowledge_publication_support` | One ordered exact observation/derivation and its selected assertion/metric IDs. | Publication member 0 pins O1/D1 without extending its frozen dataset. |
+| `knowledge_publication_interpretations` | One selected existing interpretation ID in publication order. | A provisional caption mention is usable with its exact original source dependency. |
 
 These tables are shared vocabulary and supported interpretations. They are not a vector database, an LLM's memory or an agent's internal reasoning log.
 
@@ -202,7 +206,7 @@ Support tables answer “what does this explanation depend on?” They let the s
 
 ## Versions and timestamps without the jargon
 
-- A **capture time** says when the source was observed. A **publication time** says when the post was published. An **import time** says when the local application recorded the export. Importing an old post today does not make it a new post or a fresh measurement.
+- A **capture time** says when the source was observed. A **publication time** says when the post was published. An **import time** says when the local application recorded the export. A **knowledge publication time** says when an exact ingested selection became available; it does not refresh a source capture. Importing an old post today does not make it a new post or a fresh measurement.
 - A **derivation version** identifies how a source observation was normalized. A **knowledge run** identifies how its caption was interpreted using a catalog/method. A **brief revision** identifies which human question was asked. A **shortlist revision** identifies a saved set of recommendations or selections and its producer; currently that producer is human. These are different histories.
 - A **digest** is a fingerprint used to detect changed bytes or changed request/configuration content. It is not a relevance score.
 - A **request ID** lets a retried save/preparation return its existing result instead of accidentally creating another one. An **expected version** makes an outdated form fail visibly rather than overwrite newer work.

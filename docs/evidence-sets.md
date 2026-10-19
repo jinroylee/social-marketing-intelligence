@@ -4,6 +4,12 @@ The public interface is [`smi_ingestion.evidence_sets`](../src/smi_ingestion/evi
 
 The [target current-KB workflows](functional-requirements.md) do not remove this fixed-input contract. Future retrieval searches current published knowledge and pins the exact observations/assertions/method versions supporting each result. It must define that retrieval-result support interface explicitly rather than treat this snapshot importer as an existing KB-wide query or mutate an imported set when new posts arrive. Source-policy checks continue to apply to both generated and human-authored results.
 
+## Exact ingested support
+
+The source-independent [`smi_ingestion.support`](../src/smi_ingestion/support/__init__.py) interface reads fresh ingestions and imported observations by exact IDs. `IngestedEvidence.select_run` selects applied current derivations; `read` validates explicit `SupportReference` observation/derivation/assertion/metric membership and returns process/display policy-filtered support. Caller-owned transactions retain source/derivation locks through dependent commits. It does not register a dataset or change frozen membership. Knowledge publication uses this interface; frozen pilot consumers continue to use `EvidenceSetReader`.
+
+Ingestion runs carry a trusted `workspace_id`, defaulting to `local` for existing callers. `EvidenceStore.start_run(..., workspace_id=...)` establishes it; snapshot import supplies its configured workspace. Migration preserves imported run workspace ownership. Run ownership is separate from source/canonical entity identity and does not authenticate a network caller.
+
 ## Import
 
 ```python

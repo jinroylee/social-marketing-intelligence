@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any, Literal
 
@@ -214,6 +215,60 @@ class KnowledgeStore:
                 "method_version": run["method_version"], "request_id": run["request_id"], "recorded_by": run["recorded_by"],
                 "recorded_at": run["recorded_at"].isoformat(), "preparation_coverage": run["coverage"],
                 "current_coverage": source["coverage"], "interpretations": output}
+
+    def read_interpretations(
+        self, interpretation_ids: tuple[str, ...], actor: ActorContext, *,
+        purpose: Literal["display", "process"] = "display", include_synthetic: bool = False, connection=None,
+    ) -> list[dict[str, Any]]:
+        """Read exact interpretation identities and reconcile their original dependencies.
+
+        A caller-owned transaction holds support and assertion locks through a
+        dependent publication commit. No interpretation values are copied there.
+        """
+        actor.require_workspace(self.workspace_id)
+        if purpose not in {"display", "process"}:
+            raise EvidenceError("invalid_evidence_purpose")
+        if len(interpretation_ids) > 1000 or len(set(interpretation_ids)) != len(interpretation_ids):
+            raise EvidenceError("invalid_interpretation_selection")
+        if not interpretation_ids:
+            return []
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
+            rows = connection.execute(
+                "SELECT a.*,r.dataset_id,r.catalog_id,r.method_version,r.recorded_by,r.request_id "
+                "FROM knowledge_assertions a JOIN knowledge_runs r ON r.id=a.run_id "
+                "WHERE r.workspace_id=%s AND a.id=ANY(%s::uuid[]) ORDER BY a.id FOR UPDATE OF a",
+                (self.workspace_id, list(interpretation_ids)),
+            ).fetchall()
+            if len(rows) != len(interpretation_ids):
+                raise EvidenceError("knowledge_interpretation_not_found")
+            sources, statuses = {}, {}
+            for dataset_id in sorted({r["dataset_id"] for r in rows}):
+                statuses[dataset_id] = self.evidence.statuses(dataset_id, actor, include_synthetic=include_synthetic, connection=connection)
+                sources[dataset_id] = {m["observation_id"]: m for m in self.evidence.read(
+                    dataset_id, actor, purpose=purpose, include_synthetic=include_synthetic)["members"]}
+            output = {}
+            for row in rows:
+                observation_id = str(row["observation_id"])
+                state = statuses[row["dataset_id"]][observation_id]
+                member = sources[row["dataset_id"]][observation_id]
+                item = {"id": str(row["id"]), "subject_id": str(row["subject_id"]), "run_id": str(row["run_id"]),
+                        "source_assertion_id": str(row["source_assertion_id"]), "observation_id": observation_id,
+                        "catalog_id": row["catalog_id"], "method_version": row["method_version"],
+                        "recorded_by": row["recorded_by"], "recorded_at": row["recorded_at"].isoformat()}
+                if not state["can_retain"]:
+                    connection.execute("UPDATE knowledge_assertions SET value=NULL,excerpt=NULL,support_state='withdrawn' WHERE id=%s", (row["id"],))
+                if not state["can_retain"] or row["support_state"] == "withdrawn" or member["availability"] != "available":
+                    item.update(state="unavailable", reason="source_support_withdrawn_or_denied")
+                elif not state["current"]:
+                    item.update(state="review_required", reason="source_support_superseded")
+                else:
+                    item.update(state="supported", predicate=row["predicate"], value=row["value"], basis=row["basis"],
+                                span={"start": row["span_start"], "end": row["span_end"], "text": row["excerpt"]},
+                                review_status=row["review_status"], source_reference=member["source_reference"],
+                                captured_at=member["captured_at"],
+                                published_at=next((a["value"] for a in member["assertions"] if a["field"] == "published_at" and a["state"] == "observed"), None))
+                output[item["id"]] = item
+        return [output[identity] for identity in interpretation_ids]
 
     def review_packet(self, run_id: str, actor: ActorContext, *, include_synthetic: bool = False) -> dict[str, Any]:
         """Generate a policy-checked review packet; translations and human labels begin pending."""
