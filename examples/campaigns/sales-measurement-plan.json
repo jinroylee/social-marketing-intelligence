@@ -1,0 +1,14 @@
+{
+  "objective": "Describe how a Hero Cushion sales campaign could be measured.",
+  "outcome_definition": "Proposed matched orders and returns-adjusted revenue, if actual seller records become available.",
+  "product_ids": ["aprilskin-hero-cushion"],
+  "intended_source": "Proposed seller order export; access is not established.",
+  "source_owner": null,
+  "listing": null,
+  "currency": null,
+  "period": null,
+  "baseline": null,
+  "matching_approach": "Propose linking account-specific tagged links/codes to a campaign and eligible orders; identifiers are not yet available.",
+  "attribution_assumptions": null,
+  "gaps": ["Outcome data access is unverified.", "No agreed attribution rule/window or baseline.", "Missing order identifiers, overlapping touches and returns handling need review."]
+}

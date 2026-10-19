@@ -1,0 +1,12 @@
+{
+  "catalog_id": "beauty-caption-lexicon-v1",
+  "question": "Which Hero Cushion mentions and commerce markers appear in these selected captions?",
+  "market_context": "JP",
+  "platforms": ["tiktok"],
+  "brand_ids": [],
+  "product_ids": ["aprilskin-hero-cushion"],
+  "topic_ids": [],
+  "caption_language": null,
+  "publication_from": null,
+  "publication_to": null
+}

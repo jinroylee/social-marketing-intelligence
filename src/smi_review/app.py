@@ -1,0 +1,316 @@
+"""Application routes composing public stores, without owning decision rules."""
+
+from __future__ import annotations
+
+import re
+import secrets
+from dataclasses import dataclass
+from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
+
+import psycopg
+
+from smi_campaigns import Brief, CampaignStore, Criterion, Selection
+from smi_campaigns.planning import CampaignPlanning, DecisionNote, MeasurementPlan
+from smi_ingestion.contracts import ExternalKey
+from smi_ingestion.db import Database
+from smi_ingestion.evidence import EvidenceError
+from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
+from smi_knowledge import KnowledgeStore
+from smi_monitoring import MonitoringStore
+
+from . import monitoring_views, planning_views, views
+from .forms import identifier, one
+
+
+@dataclass(frozen=True)
+class Response:
+    """A rendered page, fixed asset or redirect for the HTTP boundary."""
+
+    status: int
+    body: bytes = b""
+    content_type: str = "text/html; charset=utf-8"
+    location: str | None = None
+
+
+def brief_from_form(form: dict[str, list[str]]) -> Brief:
+    """Parse explicit human fields; actor and confirmation fields are rejected."""
+    count = int(one(form, "criterion_count"))
+    if not 1 <= count <= 30:
+        raise EvidenceError("invalid_brief.criteria")
+    allowed = {"csrf", "request_id", "expected_version", "criterion_count", "catalog_id", "brand_id", "product_ids",
+               "objective", "target_market", "platforms", "known_accounts", "publication_from", "publication_to",
+               "campaign_dates", "budget", "currency", "audience_detail"}
+    columns = {"id", "label", "kind", "value", "required", "operator", "unknown_handling"}
+    allowed.update(f"criterion_{i}_{column}" for i in range(count) for column in columns)
+    if not form.keys() <= allowed:
+        raise EvidenceError("invalid_form")
+    criteria = tuple(Criterion(
+        one(form, f"criterion_{i}_id"), one(form, f"criterion_{i}_label"), one(form, f"criterion_{i}_kind"),
+        one(form, f"criterion_{i}_value").strip() or None, one(form, f"criterion_{i}_required") == "yes",
+        one(form, f"criterion_{i}_operator"), one(form, f"criterion_{i}_unknown_handling"),
+    ) for i in range(count))
+    accounts = []
+    for line in one(form, "known_accounts").splitlines():
+        if not line.strip():
+            continue
+        parts = line.split()
+        if len(parts) != 3:
+            raise EvidenceError("invalid_brief.known_account")
+        accounts.append(ExternalKey(parts[0], parts[1], "account", parts[2]))
+    return Brief(one(form, "catalog_id"), one(form, "brand_id"), tuple(form.get("product_ids", [])),
+                 one(form, "objective"), one(form, "target_market"),
+                 tuple(p.strip() for p in one(form, "platforms").split(",") if p.strip()), criteria, tuple(accounts),
+                 {key: one(form, key).strip() or None for key in ("campaign_dates", "budget", "currency", "audience_detail")},
+                 one(form, "publication_from").strip() or None, one(form, "publication_to").strip() or None)
+
+
+def selections_from_form(form: dict[str, list[str]]) -> tuple[Selection, ...]:
+    """Parse selected candidates and their individually cited/acknowledged review inputs."""
+    allowed = {"csrf", "request_id", "expected_version", "selected", "action", "reviewed"}
+    for key in form:
+        if key in allowed:
+            continue
+        prefix, separator, suffix = key.partition("_")
+        if not separator or prefix not in {"reason", "support", "unknown"}:
+            raise EvidenceError("invalid_form")
+        identifier(suffix)
+    return tuple(Selection(identifier(cid), one(form, f"reason_{cid}").strip() or None,
+                           tuple(form.get(f"support_{cid}", [])), tuple(form.get(f"unknown_{cid}", [])))
+                 for cid in form.get("selected", []))
+
+
+class ReviewApp:
+    """One trusted local marketer's browser application; all saves go through domain stores."""
+
+    def __init__(self, db: Database, actor_id: str = "local-marketer", workspace_id: str = "local"):
+        self.actor = ActorContext(workspace_id, actor_id, "human")
+        self.actor.require_workspace(workspace_id)
+        self.worker = ActorContext(workspace_id, "local-rule-preparation", "automation")
+        self.campaigns = CampaignStore(db, workspace_id)
+        self.knowledge = KnowledgeStore(db, workspace_id)
+        self.evidence = EvidenceSetReader(db, workspace_id)
+        self.monitoring = MonitoringStore(db, workspace_id)
+        self.planning = CampaignPlanning(db, workspace_id)
+        self.csrf = secrets.token_urlsafe(32)
+
+    def page(self, title: str, content: str, status: int = 200) -> Response:
+        return Response(status, views.page(title, content, self.actor.actor_id).encode())
+
+    def _campaign(self, campaign_id: str):
+        campaign = self.campaigns.read_campaign(campaign_id, self.actor)
+        return campaign, campaign["briefs"][-1]
+
+    def _brief_page(self, campaign_id: str | None, query, submitted=None, error=None, status=200):
+        campaign, current = self._campaign(campaign_id) if campaign_id else (None, None)
+        catalogs = self.knowledge.list_catalogs(self.actor)
+        catalog_id = one(submitted, "catalog_id") if submitted else one(query, "catalog_id", current["document"]["catalog_id"] if current else "")
+        if not catalog_id and catalogs:
+            catalog_id = catalogs[0]["catalog_id"]
+        if not catalog_id:
+            return self.page("Create a brief", views.empty_inputs(), status)
+        catalog = self.knowledge.catalog(catalog_id, self.actor).document
+        return self.page("Revise brief" if campaign else "Create a brief",
+                         views.brief_form(catalog, catalogs, self.csrf, campaign, current, submitted, error), status)
+
+    def _comparison_page(self, comparison_id, query, submitted=None, error=None, status=200):
+        comparison = self.campaigns.read_comparison(comparison_id, self.actor)
+        campaign, _ = self._campaign(comparison["campaign_id"])
+        brief = next(b for b in campaign["briefs"] if b["id"] == comparison["brief_id"])
+        source = self.evidence.read(comparison["dataset_id"], self.actor)
+        previous = None
+        if one(query, "shortlist_id"):
+            previous = self.campaigns.read_shortlist(identifier(one(query, "shortlist_id")), self.actor)
+            if previous["comparison_id"] != comparison_id:
+                raise EvidenceError("selection_not_in_comparison")
+        return self.page("Review comparison", views.comparison_page(comparison, campaign, brief, source, self.csrf,
+                                                                    previous, submitted, error), status)
+
+    def _scope_page(self, investigation_id, query, submitted=None, error=None, status=200):
+        investigation = self.monitoring.read_investigation(investigation_id, self.actor) if investigation_id else None
+        current = investigation["scopes"][-1] if investigation else None
+        catalogs = self.knowledge.list_catalogs(self.actor)
+        catalog_id = one(submitted, "catalog_id") if submitted else one(query, "catalog_id", current["document"]["catalog_id"] if current else "")
+        if not catalog_id and catalogs:
+            catalog_id = catalogs[0]["catalog_id"]
+        if not catalog_id:
+            return self.page("Create investigation", views.empty_inputs(), status)
+        catalog = self.knowledge.catalog(catalog_id, self.actor).document
+        return self.page("Investigation scope", monitoring_views.scope_form(catalog, catalogs, self.csrf, investigation, current, submitted, error), status)
+
+    def _planning_page(self, campaign_id, submitted=None, kind=None, error=None, status=200):
+        campaign, current = self._campaign(campaign_id)
+        records = self.planning.read(campaign_id, self.actor)
+        if submitted is not None and kind == "note":
+            try:
+                selected = self.campaigns.read_shortlist(identifier(one(submitted, "shortlist_id")), self.actor)
+                if selected["campaign_id"] != campaign_id or selected["review_required"]:
+                    submitted = {**submitted, "text": [""]}
+            except (EvidenceError, ValueError):
+                submitted = {**submitted, "text": [""]}
+        return self.page("Measurement and learning", planning_views.planning_page(campaign, current, records, self.csrf, submitted, kind, error), status)
+
+    def handle(self, method: str, target: str, form: dict[str, list[str]] | None = None) -> Response:
+        """Route validated requests; surface sanitized errors and preserve recoverable edits."""
+        parsed = urlsplit(target)
+        path, query = parsed.path, parse_qs(parsed.query, keep_blank_values=True)
+        try:
+            if method == "GET":
+                return self._get(path, query)
+            if method == "POST" and form is not None:
+                return self._post(path, form)
+            return self.page("Request unavailable", views.error_message("invalid_form"), 405)
+        except (EvidenceError, ValueError, psycopg.Error) as error:
+            code = error.code if isinstance(error, EvidenceError) else "database_unavailable" if isinstance(error, psycopg.Error) else "invalid_form"
+            status = 503 if isinstance(error, psycopg.Error) else 404 if code.endswith("not_found") else 409 if "conflict" in code else 422
+            if method == "POST" and form is not None and not isinstance(error, psycopg.Error):
+                try:
+                    if path == "/campaigns":
+                        return self._brief_page(None, {}, form, code, status)
+                    match = re.fullmatch(r"/campaigns/([^/]+)/briefs", path)
+                    if match:
+                        return self._brief_page(identifier(match[1]), {}, form, code, status)
+                    match = re.fullmatch(r"/comparisons/([^/]+)/shortlists", path)
+                    if match:
+                        return self._comparison_page(identifier(match[1]), {}, form, code, status)
+                    if path == "/investigations":
+                        return self._scope_page(None, {}, form, code, status)
+                    match = re.fullmatch(r"/investigations/([^/]+)/scopes", path)
+                    if match:
+                        return self._scope_page(identifier(match[1]), {}, form, code, status)
+                    match = re.fullmatch(r"/campaigns/([^/]+)/(plans|notes)", path)
+                    if match:
+                        return self._planning_page(identifier(match[1]), form, "plan" if match[2] == "plans" else "note", code, status)
+                except (EvidenceError, ValueError, psycopg.Error):
+                    pass
+            return self.page("Action needs attention", views.error_message(code), status)
+
+    def _get(self, path, query):
+        if path == "/investigations":
+            return self.page("Market investigations", monitoring_views.index(self.monitoring.list_investigations(self.actor)))
+        if path == "/investigations/new":
+            return self._scope_page(None, query)
+        match = re.fullmatch(r"/investigations/([^/]+)(/edit)?", path)
+        if match:
+            investigation_id = identifier(match[1])
+            if match[2]:
+                return self._scope_page(investigation_id, query)
+            investigation = self.monitoring.read_investigation(investigation_id, self.actor)
+            return self.page("Investigation", monitoring_views.investigation_page(investigation, self.evidence.list_sets(self.actor), self.csrf))
+        match = re.fullmatch(r"/insights/([^/]+)", path)
+        if match:
+            insight = self.monitoring.read_insight(identifier(match[1]), self.actor)
+            investigation = self.monitoring.read_investigation(insight["investigation_id"], self.actor)
+            scope = next(s for s in investigation["scopes"] if s["id"] == insight["scope_id"])
+            source = self.evidence.read(insight["dataset_id"], self.actor)
+            return self.page("Snapshot insight", monitoring_views.insight_page(insight, scope, source))
+        match = re.fullmatch(r"/campaigns/([^/]+)/planning", path)
+        if match:
+            return self._planning_page(identifier(match[1]))
+        if path in {"/static/review.css", "/static/review.js"}:
+            asset = Path(__file__).with_name("static") / path.rsplit("/", 1)[1]
+            return Response(200, asset.read_bytes(), "text/css; charset=utf-8" if path.endswith(".css") else "text/javascript; charset=utf-8")
+        if path == "/":
+            return self.page("Campaign workspace", views.home(self.campaigns.list_campaigns(self.actor),
+                                                              self.evidence.list_sets(self.actor), self.knowledge.list_catalogs(self.actor)))
+        if path == "/campaigns/new":
+            return self._brief_page(None, query)
+        match = re.fullmatch(r"/campaigns/([^/]+)(/edit)?", path)
+        if match:
+            campaign_id = identifier(match[1])
+            if match[2]:
+                return self._brief_page(campaign_id, query)
+            campaign, current = self._campaign(campaign_id)
+            return self.page("Campaign", views.campaign_page(campaign, current, self.evidence.list_sets(self.actor), self.csrf))
+        match = re.fullmatch(r"/comparisons/([^/]+)", path)
+        if match:
+            return self._comparison_page(identifier(match[1]), query)
+        match = re.fullmatch(r"/shortlists/([^/]+)", path)
+        if match:
+            shortlist = self.campaigns.read_shortlist(identifier(match[1]), self.actor)
+            campaign, _ = self._campaign(shortlist["campaign_id"])
+            brief = next(b for b in campaign["briefs"] if b["id"] == shortlist["brief_id"])
+            comparison = self.campaigns.read_comparison(shortlist["comparison_id"], self.actor)
+            source = self.evidence.read(comparison["dataset_id"], self.actor)
+            return self.page("Saved shortlist", views.shortlist_page(shortlist, brief, comparison, source))
+        raise EvidenceError("record_not_found")
+
+    def _post(self, path, form):
+        if not secrets.compare_digest(one(form, "csrf").encode(), self.csrf.encode()):
+            raise EvidenceError("invalid_form")
+        request_id = one(form, "request_id")
+        if path == "/investigations" or re.fullmatch(r"/investigations/[^/]+/scopes", path):
+            scope = monitoring_views.scope_from_form(form)
+            if path == "/investigations":
+                result = self.monitoring.start(scope, self.actor, request_id=request_id)
+                investigation_id = result["investigation_id"]
+            else:
+                investigation_id = identifier(path.split("/")[2])
+                self.monitoring.revise_scope(investigation_id, scope, self.actor, expected_version=int(one(form, "expected_version")), request_id=request_id)
+            return Response(303, location=f"/investigations/{investigation_id}")
+        match = re.fullmatch(r"/investigations/([^/]+)/insights", path)
+        if match:
+            if not form.keys() <= {"csrf", "request_id", "scope_id", "dataset_id", "expected_version"}:
+                raise EvidenceError("invalid_form")
+            investigation_id, scope_id = identifier(match[1]), identifier(one(form, "scope_id"))
+            investigation = self.monitoring.read_investigation(investigation_id, self.actor)
+            scope = next((s for s in investigation["scopes"] if s["id"] == scope_id), None)
+            if scope is None:
+                raise EvidenceError("investigation_scope_not_found")
+            run = self.knowledge.prepare(one(form, "dataset_id"), scope["document"]["catalog_id"], self.worker, request_id=f"monitoring:{request_id}")
+            prepared = self.monitoring.prepare_insight(investigation_id, scope_id, run["run_id"], self.worker,
+                                                       expected_version=int(one(form, "expected_version")), request_id=request_id)
+            return Response(303, location=f"/insights/{prepared['insight_id']}")
+        match = re.fullmatch(r"/campaigns/([^/]+)/(plans|notes)", path)
+        if match:
+            campaign_id, shortlist_id = identifier(match[1]), identifier(one(form, "shortlist_id"))
+            context = {"csrf", "request_id", "expected_version", "shortlist_id", "brief_id"}
+            if match[2] == "plans":
+                if not form.keys() <= context | MeasurementPlan.__dataclass_fields__.keys():
+                    raise EvidenceError("invalid_form")
+                fields = {key: one(form, key).strip() or None for key in MeasurementPlan.__dataclass_fields__ if key not in {"product_ids", "gaps"}}
+                fields.update(product_ids=[s.strip() for s in one(form, "product_ids").split(",") if s.strip()],
+                              gaps=[s.strip() for s in one(form, "gaps").splitlines() if s.strip()])
+                self.planning.save_plan(campaign_id, identifier(one(form, "brief_id")), shortlist_id, MeasurementPlan.from_document(fields), self.actor,
+                                        expected_version=int(one(form, "expected_version")), request_id=request_id)
+            else:
+                if not form.keys() <= context | {"text"}:
+                    raise EvidenceError("invalid_form")
+                self.planning.add_note(campaign_id, shortlist_id, DecisionNote(one(form, "text")), self.actor,
+                                       expected_version=int(one(form, "expected_version")), request_id=request_id)
+            return Response(303, location=f"/campaigns/{campaign_id}/planning")
+        if path == "/campaigns":
+            created = self.campaigns.start(brief_from_form(form), self.actor, request_id=request_id)
+            return Response(303, location=f"/campaigns/{created['campaign_id']}")
+        match = re.fullmatch(r"/campaigns/([^/]+)/briefs", path)
+        if match:
+            campaign_id = identifier(match[1])
+            self.campaigns.revise_brief(campaign_id, brief_from_form(form), self.actor,
+                                        expected_version=int(one(form, "expected_version")), request_id=request_id)
+            return Response(303, location=f"/campaigns/{campaign_id}")
+        match = re.fullmatch(r"/campaigns/([^/]+)/comparisons", path)
+        if match:
+            if not form.keys() <= {"csrf", "request_id", "brief_id", "dataset_id"}:
+                raise EvidenceError("invalid_form")
+            campaign_id = identifier(match[1])
+            campaign, _ = self._campaign(campaign_id)
+            brief_id = identifier(one(form, "brief_id"))
+            brief = next((b for b in campaign["briefs"] if b["id"] == brief_id), None)
+            if brief is None:
+                raise EvidenceError("campaign_brief_not_found")
+            run = self.knowledge.prepare(one(form, "dataset_id"), brief["document"]["catalog_id"], self.worker,
+                                         request_id=f"review:{request_id}")
+            prepared = self.campaigns.prepare_comparison(campaign_id, brief_id, run["run_id"], self.worker, request_id=request_id)
+            return Response(303, location=f"/comparisons/{prepared['comparison_id']}")
+        match = re.fullmatch(r"/comparisons/([^/]+)/shortlists", path)
+        if match:
+            action = one(form, "action")
+            if action not in {"draft", "confirm"}:
+                raise EvidenceError("invalid_form")
+            if action == "confirm" and one(form, "reviewed") != "yes":
+                raise EvidenceError("human_review_acknowledgement_required")
+            result = self.campaigns.save_shortlist(identifier(match[1]), selections_from_form(form), self.actor,
+                                                    confirmed=action == "confirm", expected_version=int(one(form, "expected_version")),
+                                                    request_id=request_id)
+            return Response(303, location=f"/shortlists/{result['shortlist_id']}")
+        raise EvidenceError("record_not_found")

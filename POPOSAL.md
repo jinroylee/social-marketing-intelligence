@@ -6,6 +6,8 @@ Build a shared intelligence foundation for brand and agency marketers who now as
 
 Beauty in South Korea and Japan is the first domain in which to prove the platform. One multilingual core model and one system serve both markets. Beauty concepts and market-specific labels, channels, taxonomies, and effective-dated policies extend that core without redefining it.
 
+The [functional requirements](FR.md) and [operational contract](docs/functional-requirements.md) define the target workflows below. The current local application implements a fixed-sample evidence and decision foundation; agentic research, ranking, automatic shortlist saving, workers, X alerts and explorer interfaces remain implementation work.
+
 ## 2. Connected decision loops
 
 | Loop | Decisions supported |
@@ -14,7 +16,17 @@ Beauty in South Korea and Japan is the first domain in which to prove the platfo
 | **Creator and Campaign Decision Support** | Which creators satisfy a brief, why, and which shortlist or portfolio scenarios fit the objective, audience, budget, and risk constraints? |
 | **Measurement and Learning** | What happened, what can be attributed under a stated rule, what incremental effect can be estimated, and what should be tested next? |
 
-Agentic Research provides a permission-filtered interface across all three loops for searching, comparing, investigating, and explaining evidence. The first integrated product provides beauty listening, creator shortlisting, campaign measurement planning, and a learning record over the same knowledge foundation. Market monitoring operates independently and keeps marketers and the shared knowledge current. A marketer initiates campaign planning and creator selection from a campaign brief; monitoring insights may inform that brief, but detecting a signal does not automatically initiate a campaign or create its shortlist.
+Agentic Research provides a permission-filtered interface across all three loops for searching, comparing, investigating, and explaining evidence. The operational product connects campaign recommendations, a knowledge assistant and independent X monitoring over shared evidence. Campaign measurement planning and a learning record remain supported; actual outcome ingestion, attribution and causal measurement are longer-term capabilities. A marketer initiates a campaign from a brief; detecting a monitoring signal does not automatically initiate a campaign.
+
+### Operational flows and application surfaces
+
+- **Campaign recommendations:** interpret structured/natural-language criteria, search the current KB, and apply rules plus LLM assessment to produce ranked, evidence-backed recommendations. Save the ranked recommendation as a shortlist automatically; human review or approval is not a prerequisite. Stable platform identity and one permitted ingested supporting observation admit a candidate even if profile information is incomplete. Assess candidate quantity, relevance and freshness; automatically queue additional discovery when coverage is insufficient. Notify after usable KB updates and offer explicit regeneration, preserving existing saved results.
+- **Knowledge assistant:** answer free-form questions from existing KB knowledge. Propose enrichment for stale, missing or incomplete evidence and require user approval before submitting each assistant-origin task. Approval can cover searches beyond the registered keywords. Execute asynchronously through ingestion and KB publication; newly fetched material cannot directly become an answer or be used before ingestion. Return acknowledgment/status and completion notification for later queries.
+- **Independent X monitoring:** periodically collect recent posts for configured topics, detect quantitative and semantic anomalies, and investigate them using existing KB context without additional external searches. Use a lightweight recent-observation path rather than fully modeling every fetched post; retain bounded monitoring evidence and alert history, selectively promoting useful material to the KB. Notify users with concise explanations and source support.
+- **Knowledge graph explorer:** provide interactive entity/relationship search, filtering, traversal, details and evidence over governed KB read models. Graph-inspired navigation does not require a graph database.
+- **Pipeline and lineage view:** expose jobs/tasks, status/failures, source provenance, transformations and KB update history through linked operational records.
+
+Scheduled discovery registers at most ten keywords per workspace. The initial configurable daily allowance is fifty unique eligible new posts total across those keywords, prioritized by recency, engagement and trend evidence. On-demand campaign discovery and approved assistant enrichment share the acquisition pipeline; the scheduled keyword list does not limit approved on-demand scope. Progressive acquisition combines broad discovery with selective supplementary routes and stops when further information is not worth its cost or operational bounds are reached. Structured submission/status operations enforce origin-specific approval and spending rules server-side, whether called through internal endpoints or agent tools.
 
 ## 3. Intelligence and evidence
 
@@ -22,7 +34,7 @@ Listening combines retrieval across permitted text, image, audio, and video obse
 
 Measurement has three levels: descriptive performance and attribution; randomized user or geographic lift where feasible; and quasi-experiments or calibrated marketing-mix modeling when the data and assumptions support them. Attribution allocates observed outcomes under a rule and does not establish incremental effect. Every consequential result states its decision, observed population, market and source coverage, time window, metric and method versions, evidence, uncertainty, freshness, and limits. Korean and Japanese language models and beauty-specific classifiers require local evaluation. These principles follow communication evaluation and social measurement guidance from [AMEC](https://amecorg.com/amecframework/home/framework/introduction/) and the [Media Rating Council](https://mediaratingcouncil.org/sites/default/files/News/General-Announcements/MRC%20Social%20Measurement%20Guidelines%20v1.0%20Final.pdf).
 
-Deterministic services own metric definitions, joins, constraints, and reproducible calculations. Statistical models support retrieval, extraction, classification, ranking, anomaly detection, and causal estimation under explicit assumptions. LLMs support natural-language criteria, investigation, and evidence-grounded explanation. Routine analysis runs without approval; review gates apply to ambiguity, sensitive claims, material consequences, or significant resource use.
+Deterministic services own metric definitions, joins, constraints, and reproducible calculations. Statistical models support retrieval, extraction, classification, ranking, anomaly detection, and causal estimation under explicit assumptions. LLMs support natural-language criteria, investigation, and evidence-grounded explanation. Routine KB analysis and ranked-shortlist persistence do not require human approval. Human curation is optional and remains separately attributable; saving an automated result cannot imply human review or verified claims. Assistant-origin external enrichment always requires its scoped approval. Scheduled and campaign-coverage acquisition use their separately configured authorization; spending ceilings and source constraints apply independently.
 
 ## 4. Operational Ontology
 
@@ -57,11 +69,19 @@ flowchart LR
     C --> T[Ontology contract]
     P --> T
     T --> A[Applications and agents]
+    X[Recent X collection] --> M[Bounded monitoring observations]
+    M --> D[Lightweight anomaly detection]
+    C --> K[Existing KB context]
+    D --> K
+    K --> H[Evidence-backed alerts and history]
+    M -->|selected promotion| O
 ```
 
 Independent acquisition routes can be enabled or combined according to source policy, configuration, cost, quotas, freshness, and available resources. APIs, customer-authorized integrations, licensed feeds, partnerships, customer data, and permitted web collection all contribute observations. Each route records its access method, allowed uses, coverage, timestamps, and retention rules. A versioned rule resolves conflicting facts by field and context, weighing source authority, freshness, and quality. Official APIs take priority for facts they authoritatively report; sampled search and web results can add evidence without implying complete coverage.
 
-Canonical state is authoritative. Versioned changes propagate idempotently to rebuildable projections with bounded staleness; reconciliation detects missed updates and source corrections. Revocation and deletion propagate through retained observations, canonical fields, indexes, analytical extracts, and rebuilds. Tenant permissions, source rights, provenance, and coverage remain attached to product results.
+Canonical state is authoritative for KB queries, campaign recommendations and assistant answers. X detection may use its own bounded recent observations before full KB publication; these observations and pinned alert support do not become authoritative general KB facts merely by triggering an alert. Anomaly investigation reads existing KB context without launching further searches. Versioned KB changes propagate idempotently to rebuildable projections with bounded staleness; reconciliation detects missed updates and source corrections. Revocation and deletion must propagate through retained observations, canonical fields, indexes, analytical extracts, monitoring/alert copies and rebuilds. Tenant permissions, source rights, provenance, and coverage remain attached to product results.
+
+Where actual spending can be derived reliably, record attributed usage/charges and enforce configured ceilings across jobs and tools. Costs that cannot be derived remain clearly labeled forecasts. Track meter/rate versions, currency, accounting period and in-flight commitments; reconcile actual charges without double-counting retries. A strict pre-call limit requires bounded charges or a provider-side cap; delayed billing limitations remain visible. Request/record bounds and expected-value stopping are separate from monetary ceilings. Ceiling amounts are configuration, not assumed provider prices, and the approximate all-in operating target is not proof that a particular workload fits it.
 
 ## 6. Starting technologies and growth
 
@@ -74,4 +94,4 @@ Canonical state is authoritative. Versioned changes propagate idempotently to re
 | Analytics and intelligence | Parquet and DuckDB; versioned Python/SQL methods and managed inference | A warehouse or specialized model serving when workload, latency, or cost benchmarks justify it |
 | Operations | Code-native quality checks, source and projection health metrics, tenant authorization, secrets management, and OpenTelemetry | Dedicated quality or governance tools when ownership and policy operations outgrow the founding team's workflow |
 
-Every specialized store remains a rebuildable projection or supporting service. The first delivery goal is a trusted intelligence loop with visible coverage, freshness, evidence, and measurement limits. Detailed methods and sources are recorded in the [social-marketing](.scratch/proposal-research/research/01-social-marketing-methods.md), [ontology](.scratch/proposal-research/research/02-operational-ontology.md), and [data-architecture](.scratch/proposal-research/research/03-data-and-technology-architecture.md) research notes.
+Every specialized store remains a rebuildable projection or supporting service. The first delivery goal is a trusted intelligence loop with visible coverage, freshness, evidence, and measurement limits. The maintained [architecture](docs/architecture.md), [data model](docs/data-model.md), [functional requirements](docs/functional-requirements.md), [source integrations](docs/source-integrations.md) and [quality review contract](docs/evaluation.md) define the implementation and validation boundaries.
