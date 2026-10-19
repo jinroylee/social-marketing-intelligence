@@ -17,3 +17,6 @@
 - Test PostgreSQL is reachable. Published exactly ten local ready-for-agent tickets and recorded tracker/domain/triage instructions.
 - Existing uncommitted specification and draft artifacts are preserved in the setup commit so fresh worktrees receive their source pointers.
 - Setup committed as a2187ff. Dispatched ticket 01 in fresh worktree /tmp/smi-operational-ticket-01 with approved TDD seams and offline dependency resolution.
+- Ticket 01 implementation `11bc6cbe9c25fde9443b2785dbf5482b2ae18c0a` fast-forward integrated after verifying the clean integration worktree and branch ancestry.
+- Integrated `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **209 tests in 132.74 seconds**. Marked ticket 01 resolved with every acceptance criterion checked and recorded the implementation/check evidence.
+- Ticket 02 remains pending and has not started. No push, PR, real external/provider/model call, runtime edit by the merger, or worktree cleanup occurred.
