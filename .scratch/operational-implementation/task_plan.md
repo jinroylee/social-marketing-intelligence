@@ -6,11 +6,11 @@ Implement approved tickets 01–10 sequentially in fresh implementer worktrees, 
 
 ## Next Step
 
-Implement ticket 05 in a fresh worktree, then merge and validate before advancing.
+Await dispatch of pending ticket 06 in a fresh implementer worktree based on the verified integration tip. Ticket 05 is integrated and resolved; ticket 06 has not started.
 
 ## Current Phase
 
-Phase 8 — ticket 05 pending after successful ticket 04 integration; execute tickets 01–10 sequentially within the approved boundaries and local tracker setup.
+Phase 9 — ticket 06 pending after successful ticket 05 integration; execute tickets 01–10 sequentially within the approved boundaries and local tracker setup.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -80,9 +80,9 @@ Implemented in a fresh worktree and fast-forward integrated as `a27b433cdac2ba1d
 
 ### Phase 8 — Implement ticket 05
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer worktree, TDD, documented interfaces/schema, local commit, merger integration, shared check, then local ticket resolution.
+Implemented in a fresh worktree and fast-forward integrated as `7ba1c46fe1b355afb6f2e42e703e0079fc359f3d`. The integration worktree passed `UV_OFFLINE=1 uv run --locked python tools/check.py`, including **256 tests in 148.43 seconds**. All acceptance criteria are checked and local ticket 05 is resolved.
 
 ### Phase 9 — Implement ticket 06
 

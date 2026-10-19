@@ -29,3 +29,6 @@
 - Ticket 04 implementation `a27b433cdac2ba1d23fe409bb0f15aff65f82b4c` fast-forward integrated after verifying the clean integration worktree and branch ancestry.
 - Integrated `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **248 tests in 132.96 seconds**. Marked ticket 04 resolved with every acceptance criterion checked and recorded the implementation/check evidence.
 - Ticket 05 remains pending and has not started. The merger changed only tracker/planning status after integration; no push, PR, provider/model call or worktree cleanup occurred.
+- Ticket 05 implementation `7ba1c46fe1b355afb6f2e42e703e0079fc359f3d` fast-forward integrated after verifying the clean integration worktree and branch ancestry.
+- Integrated `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **256 tests in 148.43 seconds**. Marked ticket 05 resolved with every acceptance criterion checked and recorded the implementation/check evidence.
+- Ticket 06 remains pending and has not started. The merger changed only tracker/planning status after integration; no push, PR, provider/model call or worktree cleanup occurred.
