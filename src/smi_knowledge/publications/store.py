@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
+from contextlib import nullcontext
 from dataclasses import asdict
 from typing import Any, Literal
 
@@ -76,18 +77,21 @@ class KnowledgePublications:
                                    (publication_id, position, identity))
         return {'status': 'published', 'publication_id': publication_id}
 
-    def list(self, actor: ActorContext, *, include_synthetic: bool = False) -> list[dict[str, Any]]:
+    def list(self, actor: ActorContext, *, include_synthetic: bool = False, limit: int | None = None, newest_first: bool = False, connection=None) -> list[dict[str, Any]]:
         """List committed publication metadata within the trusted actor's workspace."""
         actor.require_workspace(self.workspace_id)
-        with self.db.connect() as connection:
-            rows = connection.execute('SELECT id,published_at,producer_id,producer_kind,coverage FROM knowledge_publications WHERE workspace_id=%s AND (NOT synthetic OR %s) ORDER BY published_at,id', (self.workspace_id, include_synthetic)).fetchall()
+        if limit is not None and (type(limit) is not int or not 1 <= limit <= 1000):
+            raise EvidenceError('invalid_publication_limit')
+        order = 'published_at DESC,id DESC' if newest_first else 'published_at,id'
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
+            rows = connection.execute('SELECT id,published_at,producer_id,producer_kind,coverage FROM knowledge_publications WHERE workspace_id=%s AND (NOT synthetic OR %s) ORDER BY ' + order + ' LIMIT %s', (self.workspace_id, include_synthetic, limit)).fetchall()
         return [{'publication_id': str(row['id']), 'published_at': row['published_at'].isoformat(),
                  'producer': {'actor_id': row['producer_id'], 'kind': row['producer_kind']}, 'coverage': row['coverage']} for row in rows]
 
-    def read(self, publication_id: str, actor: ActorContext, *, purpose: Literal['display', 'process'] = 'display', include_synthetic: bool = False) -> dict[str, Any]:
+    def read(self, publication_id: str, actor: ActorContext, *, purpose: Literal['display', 'process'] = 'display', include_synthetic: bool = False, connection=None) -> dict[str, Any]:
         """Reopen committed membership under current policy without replacing support."""
         actor.require_workspace(self.workspace_id)
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             row = connection.execute('SELECT * FROM knowledge_publications WHERE id=%s AND workspace_id=%s', (publication_id, self.workspace_id)).fetchone()
             if row is None:
                 raise EvidenceError('knowledge_publication_not_found')

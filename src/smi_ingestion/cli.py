@@ -9,7 +9,7 @@ from pathlib import Path
 
 import psycopg
 
-from smi_knowledge import Catalog, KnowledgePublications, KnowledgeStore
+from smi_knowledge import Catalog, KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
 from smi_campaigns import Brief, CampaignStore, Selection
 from smi_monitoring import MonitoringStore
 
@@ -82,6 +82,21 @@ def main(argv: list[str] | None = None) -> int:
     inspect_publication.add_argument("publication_id")
     inspect_publication.add_argument("--actor", default="local-builder")
     inspect_publication.add_argument("--include-synthetic", action="store_true")
+    search = commands.add_parser("search-knowledge", help="Search committed permitted knowledge and preserve exact support")
+    search.add_argument("--text", default="")
+    search.add_argument("--platform", action="append", default=[])
+    search.add_argument("--subject-id", action="append", default=[])
+    search.add_argument("--captured-from")
+    search.add_argument("--captured-to")
+    search.add_argument("--max-age-seconds", type=int)
+    search.add_argument("--limit", type=int, default=100)
+    search.add_argument("--request-id", required=True)
+    inspect_query = commands.add_parser("inspect-query", help="Reopen an exact knowledge query result under current policy")
+    inspect_query.add_argument("result_id")
+    for query_command in (search, inspect_query):
+        query_command.add_argument("--actor", default="local-builder")
+        query_command.add_argument("--purpose", choices=["display", "process"], default="display")
+        query_command.add_argument("--include-synthetic", action="store_true")
     cleanup = commands.add_parser("reconcile-knowledge", help="Purge retained knowledge copies after source policy withdrawal")
     cleanup.add_argument("dataset_id")
     cleanup.add_argument("--actor", default="local-builder")
@@ -120,6 +135,16 @@ def main(argv: list[str] | None = None) -> int:
             CampaignStore(db).migrate()
             MonitoringStore(db).migrate()
             result = {"status": "migrated"}
+        elif args.command in {"search-knowledge", "inspect-query"}:
+            queries = KnowledgeQueries(db)
+            actor = ActorContext("local", args.actor, "human")
+            if args.command == "search-knowledge":
+                scope = QueryScope(text=args.text, platforms=tuple(args.platform), subject_ids=tuple(args.subject_id),
+                                   captured_from=args.captured_from, captured_to=args.captured_to,
+                                   max_age_seconds=args.max_age_seconds, limit=args.limit)
+                result = queries.search(scope, actor, request_id=args.request_id, purpose=args.purpose, include_synthetic=args.include_synthetic)
+            else:
+                result = queries.read(args.result_id, actor, purpose=args.purpose, include_synthetic=args.include_synthetic)
         elif args.command in {"publish-knowledge", "inspect-publication"}:
             publications = KnowledgePublications(db)
             actor = ActorContext("local", args.actor, "human")

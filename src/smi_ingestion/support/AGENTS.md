@@ -2,7 +2,7 @@
 
 Own workspace-scoped selection and reads of exact observation, derivation, assertion and metric identities through `IngestedEvidence` and immutable `SupportReference`. Sources can come from fresh ingestion or frozen imports. Ingestion runs carry the workspace owner; actor context comes from the trusted caller.
 
-Keep source values with ingestion. Validate every selected assertion/metric against the nominated derivation and observation. Read pinned IDs, preserve missing states, and evaluate the requested process/display purpose independently. Synthetic support requires explicit development visibility.
+Keep source values with ingestion. Validate every selected assertion/metric against the nominated derivation and observation. Return stable subject identities for assertions and metrics so consumers can filter metric-only support through this public interface. Read pinned IDs, preserve missing states, and evaluate the requested process/display purpose independently. Synthetic support requires explicit development visibility.
 
 A caller-owned transaction retains source/derivation share locks through dependent commits. Return denied support as metadata-only tombstones and superseded derivations as review-required. Consumers own their retained copies and must reconcile them under source retention policy.
 

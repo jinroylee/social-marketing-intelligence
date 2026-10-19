@@ -54,7 +54,16 @@ uv run smi-ingest publish-knowledge INGESTION_RUN_ID --request-id publication-1 
 uv run smi-ingest inspect-publication PUBLICATION_ID
 ```
 
-The selection may come from a fresh ingestion or a frozen import. Repeat `--observation-id` to choose a subset, or omit it to select the bounded run; add `--interpretation-id` for an existing supported caption interpretation. The CLI records its named human operator, while workers use their actual automation context. The browser's **Knowledge** link reopens exact committed support under current policy. See the [publication contract](docs/knowledge.md#explicit-knowledge-publication); general KB search and acquisition tasks remain future work.
+The selection may come from a fresh ingestion or a frozen import. Repeat `--observation-id` to choose a subset, or omit it to select the bounded run; add `--interpretation-id` for an existing supported caption interpretation. The CLI records its named human operator, while workers use their actual automation context. The browser's **Knowledge** link reopens exact committed support under current policy. See the [publication contract](docs/knowledge.md#explicit-knowledge-publication).
+
+Search committed permitted knowledge and reopen the exact saved support:
+
+```bash
+uv run smi-ingest search-knowledge --text APRILSKIN --platform tiktok --max-age-seconds 604800 --request-id search-1
+uv run smi-ingest inspect-query RESULT_ID
+```
+
+The browser’s **Knowledge search** link provides the same bounded filters, capture-age freshness, unknowns and saved result. New searches require process permission plus their output-purpose permission; reopening applies current read policy without changing membership. At most 100 recent publications and 100 support members are included, with scan/result truncation explicit. Semantic search, ranking and acquisition tasks remain future work. See the [query contract](docs/knowledge.md#bounded-current-knowledge-queries).
 
 ## Campaign persistence
 

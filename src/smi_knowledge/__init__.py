@@ -4,4 +4,6 @@ from .catalog import Catalog
 from .store import KnowledgeStore
 from .publications import KnowledgePublications
 
-__all__ = ["Catalog", "KnowledgeStore", "KnowledgePublications"]
+from .queries import KnowledgeQueries, QueryScope
+
+__all__ = ["Catalog", "KnowledgeStore", "KnowledgePublications", "KnowledgeQueries", "QueryScope"]

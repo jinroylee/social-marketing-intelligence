@@ -139,6 +139,10 @@ erDiagram
     knowledge_catalogs ||--o{ knowledge_runs : configures
     evidence_sets ||--o{ knowledge_runs : supports
     knowledge_runs ||--o{ knowledge_assertions : produces
+    knowledge_query_results ||--o{ knowledge_query_members : preserves
+    knowledge_publications ||--o{ knowledge_query_members : supplies
+    source_observations ||--o{ knowledge_query_members : governs
+    derivations ||--o{ knowledge_query_members : freezes
     knowledge_publications ||--|{ knowledge_publication_support : pins
     source_observations ||--o{ knowledge_publication_support : governs
     derivations ||--o{ knowledge_publication_support : freezes
@@ -148,6 +152,32 @@ erDiagram
     field_assertions ||--o{ knowledge_assertions : supports
     source_observations ||--o{ knowledge_assertions : governs
 
+    knowledge_query_results {
+        uuid id PK
+        text workspace_id
+        text request_id
+        text request_digest
+        text method_version
+        jsonb query_scope
+        text purpose
+        boolean synthetic
+        text producer_id
+        text producer_kind
+        jsonb coverage
+        jsonb unknowns
+        timestamptz queried_at
+    }
+    knowledge_query_members {
+        uuid result_id PK, FK
+        int position PK
+        uuid publication_id FK
+        uuid observation_id FK
+        uuid derivation_id FK
+        uuid_array assertion_ids
+        uuid_array metric_ids
+        uuid_array interpretation_ids
+        jsonb versions
+    }
     knowledge_publications {
         uuid id PK
         text workspace_id
@@ -224,6 +254,8 @@ erDiagram
 ```
 
 Publication membership pins exact observation/derivation/assertion/metric IDs and existing interpretation IDs, independent of frozen datasets. Assertion/metric arrays are validated against their nominated derivation by the ingestion public interface before the publication transaction commits. Publications retain ordered membership, producer, method and original coverage; current reads apply source policy without copying source text. The workspace/request identity binds the payload and producer. Ingestion run workspace ownership scopes both fresh and imported support; upgrades preserve imported workspace context.
+
+Query results preserve the actual bounded selection rather than only the query text. Their member rows retain exact source/interpretation IDs and source-free method, publication and freshness metadata; values are re-read through the publication owner under current policy. The public owner validates all membership against immutable publications, and source/derivation locks remain held until result commit. Workspace/request identity binds scope, purpose, synthetic mode, method and producer. New publications and withdrawal cannot rewrite prior membership or original coverage; current availability, supersession and age are separate read attributes. Query storage holds no raw source fact or interpretation-value copy.
 
 Catalog documents pin human-configured aliases and product specificity. Business reference IDs persist across catalog revisions. Run identity includes workspace, frozen dataset, catalog, method version and preparation request ID. An explicit new request creates a fresh run under unchanged semantic configuration; retries retain the original run. Each interpretation points to its exact source caption assertion and observation; source policy controls its permitted use and retained copies. Withdrawal purges values/excerpts while retaining support metadata. A separate semantic-review/correction lifecycle remains future work.
 
@@ -465,7 +497,7 @@ An optional Creator association carries its own evidence, role and applicable in
 
 ## Accepted future operational records
 
-These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication; task/attempt and query-result records remain conceptual.
+These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication and exact query results; task/attempt records remain conceptual.
 
 ```mermaid
 erDiagram

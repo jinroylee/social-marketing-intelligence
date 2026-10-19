@@ -22,7 +22,13 @@ def detail(publication):
     content += f'<p>Published {e(publication["published_at"])} by {e(publication["producer"]["actor_id"])} ({e(publication["producer"]["kind"])})<br>Method: {e(publication["method_version"])}</p>'
     content += f'<p>Original coverage: {e(json.dumps(publication["coverage"]))}<br>Current support: {e(json.dumps(publication["current_coverage"]))}</p>'
     content += '<p>Publication time does not renew source capture time. Unknown profile and interpretation attributes remain unknown.</p>'
-    for member in publication['members']:
+    return content + support(publication['members'], publication['interpretations'])
+
+
+def support(members, interpretations):
+    """Render governed source details shared by publication and pinned-result pages."""
+    content = ''
+    for member in members:
         content += f'<section class="panel"><h2>Observation {e(member["observation_id"])}</h2><p>Derivation {e(member["derivation_id"])}</p>'
         content += f'<p>Assertion IDs: {e(", ".join(member["assertion_ids"]))}<br>Metric IDs: {e(", ".join(member["metric_ids"]))}</p>'
         if member['availability'] != 'available':
@@ -40,9 +46,9 @@ def detail(publication):
             content += f'<p>{e(metric["definition"])}: {e(metric["value"])} · {e(metric["measured_at"] or "Unknown")}<br>{e(metric["metric_id"])}</p>'
         content += '</section>'
     content += '<h2>Caption interpretations</h2>'
-    if not publication['interpretations']:
+    if not interpretations:
         content += '<p>Unknown — no caption interpretations were published.</p>'
-    for claim in publication['interpretations']:
+    for claim in interpretations:
         content += f'<section class="panel"><h3>{e(claim["id"])}</h3><p>Run {e(claim["run_id"])} · {e(claim["method_version"])} · catalog {e(claim["catalog_id"])}</p>'
         if claim['state'] == 'supported':
             content += f'<p>{e(claim["predicate"])}: {e(json.dumps(claim["value"], ensure_ascii=False))}<br>{e(claim["span"]["text"])} · {e(claim["review_status"])} · {e(claim["basis"])}</p>'

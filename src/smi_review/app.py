@@ -16,10 +16,10 @@ from smi_ingestion.contracts import ExternalKey
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
-from smi_knowledge import KnowledgePublications, KnowledgeStore
+from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore
 from smi_monitoring import MonitoringStore
 
-from . import monitoring_views, planning_views, publication_views, views
+from . import monitoring_views, planning_views, publication_views, query_views, views
 from .forms import identifier, one
 
 
@@ -90,6 +90,7 @@ class ReviewApp:
         self.campaigns = CampaignStore(db, workspace_id)
         self.knowledge = KnowledgeStore(db, workspace_id)
         self.publications = KnowledgePublications(db, workspace_id)
+        self.queries = KnowledgeQueries(db, workspace_id)
         self.evidence = EvidenceSetReader(db, workspace_id)
         self.monitoring = MonitoringStore(db, workspace_id)
         self.planning = CampaignPlanning(db, workspace_id)
@@ -166,6 +167,8 @@ class ReviewApp:
             status = 503 if isinstance(error, psycopg.Error) else 404 if code.endswith("not_found") else 409 if "conflict" in code else 422
             if method == "POST" and form is not None and not isinstance(error, psycopg.Error):
                 try:
+                    if path == "/knowledge/search":
+                        return self.page("Search current knowledge", query_views.search_form(self.csrf, form, code), status)
                     if path == "/campaigns":
                         return self._brief_page(None, {}, form, code, status)
                     match = re.fullmatch(r"/campaigns/([^/]+)/briefs", path)
@@ -187,6 +190,13 @@ class ReviewApp:
             return self.page("Action needs attention", views.error_message(code), status)
 
     def _get(self, path, query):
+        if path == "/knowledge/search":
+            return self.page("Search current knowledge", query_views.search_form(self.csrf))
+        match = re.fullmatch(r"/knowledge/results/([^/]+)", path)
+        if match:
+            include_synthetic = one(query, "include_synthetic") == "yes"
+            return self.page("Saved knowledge search", query_views.detail(
+                self.queries.read(identifier(match[1]), self.actor, include_synthetic=include_synthetic), include_synthetic=include_synthetic))
         if path == "/knowledge/publications":
             return self.page("Knowledge publications", publication_views.index(self.publications.list(self.actor)))
         match = re.fullmatch(r"/knowledge/publications/([^/]+)", path)
@@ -245,6 +255,11 @@ class ReviewApp:
         if not secrets.compare_digest(one(form, "csrf").encode(), self.csrf.encode()):
             raise EvidenceError("invalid_form")
         request_id = one(form, "request_id")
+        if path == "/knowledge/search":
+            include_synthetic = one(form, "include_synthetic") == "yes"
+            result = self.queries.search(query_views.scope_from_form(form), self.actor, request_id=request_id, include_synthetic=include_synthetic)
+            suffix = "?include_synthetic=yes" if include_synthetic else ""
+            return Response(303, location=f"/knowledge/results/{result['result_id']}{suffix}")
         if path == "/investigations" or re.fullmatch(r"/investigations/[^/]+/scopes", path):
             scope = monitoring_views.scope_from_form(form)
             if path == "/investigations":

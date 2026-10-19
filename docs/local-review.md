@@ -4,6 +4,12 @@
 
 This document describes the current local browser, including its human-only shortlist saves. The [target operational UI](functional-requirements.md) will add automatically saved ranked recommendations without human review/approval, an enrichment assistant, tasks/notifications, X alerts and graph/lineage explorers. Those routes and controls do not exist yet.
 
+## Knowledge search
+
+The navigation links `GET /knowledge/search`, a bounded literal query form with text, platform, subject UUID and capture-time filters, an optional freshness threshold and a 1–100 member limit. **Search and preserve result** submits a same-origin CSRF-protected `POST /knowledge/search`, then redirects to `GET /knowledge/results/RESULT_ID`. New computation requires process permission and display permission through `KnowledgeQueries`; the browser supplies neither actor identity nor process authority. No external research or approval is triggered.
+
+A result page reopens exact actual support after restart and shows its producer, query method, original scope/coverage, publication and source versions, individual missing fields and current health. Capture-age freshness remains separate from withdrawal/supersession. Results show both publication-scan and result truncation, with an explicit incomplete-market-coverage limit. Later publications can appear in a new search while an old result keeps its membership. Denied/superseded sources display IDs and status without source text. Synthetic inputs require the explicit development checkbox and `?include_synthetic=yes` on reopening. See the [query contract](knowledge.md#bounded-current-knowledge-queries) for limits and filter semantics.
+
 ## Knowledge publications
 
 The main navigation links `/knowledge/publications`, which lists only committed, nonsynthetic publications in the local workspace. `/knowledge/publications/PUBLICATION_ID` reopens the exact selected observations, derivations, assertion/metric IDs and optional existing caption interpretations. It shows actual producer, publication/source times, mapper and interpretation versions, original coverage, current support health and unknown fields. Denied or superseded support displays metadata without source text; later publications do not replace this historical selection.
@@ -61,6 +67,8 @@ HTTP boundary errors explain that the request was not saved and provide **Open c
 
 | Route | Purpose |
 | --- | --- |
+| `GET /knowledge/search`, `POST /knowledge/search`, `GET /knowledge/results/{id}` | Bounded knowledge query and exact saved support under current display policy |
+| `GET /knowledge/publications`, `GET /knowledge/publications/{id}` | Committed publication metadata and exact permitted support |
 | `GET /` | Workspace campaign heads and loaded input metadata |
 | `GET /campaigns/new`, `POST /campaigns` | Human brief form and campaign start |
 | `GET /campaigns/{id}`, `GET /campaigns/{id}/edit`, `POST /campaigns/{id}/briefs` | Current brief, history and successor brief |

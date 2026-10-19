@@ -2,7 +2,7 @@
 
 [`smi_knowledge`](../src/smi_knowledge/__init__.py) owns Brand/Product references, versioned interpretation catalogs and provisional caption interpretations. Interpretation preparation consumes the public frozen evidence-set interface; explicit knowledge publication consumes exact ingested support through `IngestedEvidence`. Both leave source observations unchanged.
 
-The implemented contract includes dataset-bound caption preparation and explicit publication by identity. Current-KB search and an agentic assistant remain [operational targets](functional-requirements.md).
+The implemented contract includes dataset-bound caption preparation, explicit publication by identity and bounded current-KB literal queries with pinned results. An agentic assistant and semantic retrieval remain [operational targets](functional-requirements.md).
 
 ## Business references and catalog
 
@@ -52,15 +52,15 @@ The method performs no model or platform calls and treats captions as data. It d
 
 All publication rows and membership commit in one transaction. The ingestion and knowledge owners hold support locks through commit, serializing policy withdrawal or derivation changes against publication. Any invalid member rejects the complete request. A workspace/request ID binds the ordered support, interpretation selection, publication method version, synthetic mode and actual producer. Identical concurrent retries return one publication; changing that payload or producer returns `publication_request_conflict`. Retrying a withdrawn publication preserves its identity without republishing denied text.
 
-`KnowledgePublications.list(actor)` returns committed, source-content-free publication metadata. `read(publication_id, actor, purpose="display")` reopens the exact membership, producer, publication method/time, original coverage and current support counts. Members retain capture/source-as-of/ingestion times, source publication assertions and mapper/policy versions; knowledge publication time never refreshes an old capture. Process and display reads apply their own permissions. Denied members expose IDs and support health only; superseded members keep their old IDs and require review rather than borrowing a new derivation. Synthetic publications are excluded unless explicitly enabled for development.
+`KnowledgePublications.list(actor, limit=None, newest_first=False)` returns committed, source-content-free publication metadata. `read(publication_id, actor, purpose="display")` reopens the exact membership, producer, publication method/time, original coverage and current support counts. Members retain capture/source-as-of/ingestion times, source publication assertions and mapper/policy versions; knowledge publication time never refreshes an old capture. Process and display reads apply their own permissions. Denied members expose IDs and support health only; superseded members keep their old IDs and require review rather than borrowing a new derivation. Synthetic publications are excluded unless explicitly enabled for development. List/read accept a caller-owned `connection`; source/derivation locks remain held through the dependent transaction commit. A supplied list limit is bounded from 1 to 1,000.
 
 Publication stores IDs and count metadata, with no extra source text copies. Selected interpretations remain governed by `KnowledgeStore.read_interpretations`, which reads identities across existing runs, rechecks dependencies under caller-owned transactions, and purges values/excerpts after retention withdrawal. Permission restoration and publication retries do not reconstruct purged interpretations. Source-only publication does not require retention permission for an additional copy because it creates none; source-owner canonical values retain their existing separately documented lifecycle. Frozen evidence membership and prior publication support remain unchanged when another publication is added.
 
 Operators can use `smi-ingest publish-knowledge RUN_ID --request-id ID`, optionally repeating `--observation-id` to select a bounded subset and `--interpretation-id` to include existing claims. `inspect-publication PUBLICATION_ID` reopens it. Both use a named local human actor; workers use the trusted Python interface with their actual automation context. The local browser links committed publications at `/knowledge/publications` and exact details at `/knowledge/publications/PUBLICATION_ID`. Search, task submission and acquisition are separate operations.
 
-## Accepted future current-KB and assistant boundary
+## Accepted future assistant and recommendation boundary
 
-Current-KB queries search published, permitted evidence and interpretations across acquisitions, rather than one manually selected imported dataset. Publication records the transformations/methods and exact source support that make an update usable. Freshness policies consider relevant source/capture times and attribute needs; active derivations or allowed permissions alone do not establish age freshness. Query results pin their actual input membership and versions for stable explanations while current source policy remains authoritative.
+The bounded query implementation below supplies exact published support across acquisitions. Future assistant answers and recommendations must retain that actual membership and current policy contract while adding their own versioned methods and attribute-specific coverage profiles.
 
 An account with stable identity and at least one permitted ingested source observation may be recommended despite incomplete profile information. Missing attributes remain unknown and may justify enrichment, rather than silently becoming zero or a claim of a complete history.
 
@@ -92,6 +92,22 @@ Translations and human judgments begin empty, with status `pending_translation_a
 
 The packet is generated on demand with source display/retention checks. The application stores no cached packet file. Any operator-saved export is an external copy requiring its own retention handling.
 
+## Bounded current knowledge queries
+
+`KnowledgeQueries(db, workspace_id="local").search(QueryScope(...), actor, request_id=..., purpose="display", include_synthetic=False)` searches committed publications and returns a durable `result_id` with the actual selected support manifest. It requires no acquisition or enrichment approval and performs no external I/O. New filter computation requires current **process** permission and current permission for the requested output purpose. A display grant alone cannot authorize a new search; `purpose="process"` permits downstream computation without granting display rights.
+
+`QueryScope` accepts a case-insensitive literal `text` of at most 500 characters, at most ten exact `platforms`, at most twenty canonical `subject_ids`, optional timezone-aware `captured_from` (inclusive) and `captured_to` (exclusive) timestamps, an optional nonnegative `max_age_seconds` (at most `2**53 - 1`), and `limit` from 1 to 100. Filters combine at observation-member scope; empty filters admit the bounded published scope, including source-backed accounts with incomplete profiles. Text matches individual observed assertion values, native identities or supported published interpretation values. It does not join separate fields into invented text or match missing-state placeholders. This is deterministic filtering, with no relevance ranking, semantic/vector search or graph traversal.
+
+Queries examine at most the **100 newest committed publications** visible under the workspace and synthetic mode, in publication-time/ID order, and retain at most `limit` distinct support bundles in publication/member order. An exact duplicate observation/derivation/assertion/metric/interpretation bundle contributes once, using its newest publication. New observations of the same account remain distinct evidence. This is a bounded publication sample, not an account count, a search of every KB record or complete market research. `coverage` reports publications scanned, publication and result truncation independently, matched member counts, process/output-policy exclusions, superseded support and selected freshness states. `unknowns` always declares `not_complete_market_coverage`; zero matches additionally declares `no_matching_permitted_published_support`. Per-member unknowns include nonobserved assertion states, source-declared missing fields, unknown source-as-of time and absent published interpretations. Permission-denied source values never participate in filtering or returned text.
+
+Freshness uses **source capture time** and the caller's explicit threshold; no threshold returns `not_assessed`. Missing/future capture time returns an explicit unknown. Source-as-of, ingestion time, source-publication assertions, derivation time and knowledge-publication time retain their separate meanings. Source permission (`availability`) and derivation health (`support_status`) are independent of age. Stale but otherwise permitted current support remains searchable and is labeled stale. New searches exclude unavailable and superseded support.
+
+The atomic manifest stores ordered publication, observation, derivation, assertion, metric and interpretation IDs, mapper/policy versions, interpretation run/catalog/method versions, publication method/time/producer and original freshness assessment. It stores no source values, captions or interpretation excerpts. Public publication reads join the query transaction and hold the source/derivation locks through the manifest commit. Workspace/request identity binds scope, purpose, synthetic mode, method and actual producer; an identical concurrent retry reopens one result, while a changed request conflicts. Caller-generated automation actors remain automation authors; no human endorsement is inferred.
+
+`read(result_id, actor, purpose="display", include_synthetic=False)` reopens the saved selection through the publication owner under the current requested read permission. It never reruns the query. Original coverage, versions, order, times and producer stay fixed; `current_coverage` reports unavailable/superseded members, and each permitted member receives a current capture-age assessment. A later publication may appear in a new query but cannot alter an old manifest. A historical display result can remain readable after process permission is removed if display is still allowed; a process reopen applies process permission. Withdrawal returns metadata-only source tombstones and governed interpretation tombstones. Synthetic support is excluded by default and requires explicit development visibility on both search and reopen. Retention-dependent interpretation cleanup remains owned by `KnowledgeStore`.
+
+The local browser exposes `/knowledge/search` and `/knowledge/results/RESULT_ID`; the CLI exposes `search-knowledge` and `inspect-query`. These surfaces use the same public operations, preserve the named local human actor and display only current permitted source text. Technical checks do not establish language quality, semantic usefulness or complete coverage.
+
 ## Local commands
 
 ```bash
@@ -102,6 +118,8 @@ uv run smi-ingest prepare-knowledge jp-kbeauty-tiktok-public-video-sample-2026-1
 uv run smi-ingest inspect-knowledge RUN_ID
 uv run smi-ingest publish-knowledge INGESTION_RUN_ID --request-id publication-1 --observation-id OBSERVATION_ID
 uv run smi-ingest inspect-publication PUBLICATION_ID
+uv run smi-ingest search-knowledge --text APRILSKIN --platform tiktok --max-age-seconds 604800 --request-id search-1
+uv run smi-ingest inspect-query RESULT_ID
 uv run smi-ingest review-packet RUN_ID
 uv run smi-ingest reconcile-knowledge jp-kbeauty-tiktok-public-video-sample-2026-10-05
 ```

@@ -110,3 +110,34 @@ CREATE TABLE IF NOT EXISTS knowledge_publication_interpretations (
     PRIMARY KEY (publication_id, position),
     UNIQUE (publication_id, interpretation_id)
 );
+
+CREATE TABLE IF NOT EXISTS knowledge_query_results (
+    id UUID PRIMARY KEY,
+    workspace_id TEXT NOT NULL,
+    request_id TEXT NOT NULL,
+    request_digest TEXT NOT NULL,
+    method_version TEXT NOT NULL,
+    query_scope JSONB NOT NULL,
+    purpose TEXT NOT NULL CHECK (purpose IN ('display','process')),
+    synthetic BOOLEAN NOT NULL,
+    producer_id TEXT NOT NULL,
+    producer_kind TEXT NOT NULL CHECK (producer_kind IN ('human','automation')),
+    coverage JSONB NOT NULL,
+    unknowns JSONB NOT NULL,
+    queried_at TIMESTAMPTZ NOT NULL,
+    UNIQUE (workspace_id, request_id)
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_query_members (
+    result_id UUID NOT NULL REFERENCES knowledge_query_results(id),
+    position INTEGER NOT NULL,
+    publication_id UUID NOT NULL REFERENCES knowledge_publications(id),
+    observation_id UUID NOT NULL REFERENCES source_observations(id),
+    derivation_id UUID NOT NULL,
+    assertion_ids UUID[] NOT NULL,
+    metric_ids UUID[] NOT NULL,
+    interpretation_ids UUID[] NOT NULL,
+    versions JSONB NOT NULL,
+    PRIMARY KEY (result_id, position),
+    FOREIGN KEY (derivation_id, observation_id) REFERENCES derivations(id, observation_id)
+);

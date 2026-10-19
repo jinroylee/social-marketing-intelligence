@@ -1,0 +1,49 @@
+# Ticket 03: search current knowledge and pin result support
+
+Status: implemented locally; ticket remains claimed for integration validation.
+
+## Behavior and public interfaces
+
+- `smi_knowledge.QueryScope(text="", platforms=(), subject_ids=(), captured_from=None, captured_to=None, max_age_seconds=None, limit=100)` defines bounded literal filters. Text is case-insensitive and matches individual observed values/native identities or supported published interpretation values. It cannot manufacture a match by joining unrelated fields. Platform and subject filters work for assertion-backed and metric-only support. Capture windows are timezone-aware, inclusive at the start and exclusive at the end.
+- `KnowledgeQueries(db, workspace_id="local").search(scope, actor, request_id=..., purpose="display", include_synthetic=False)` returns an inspectable durable `result_id`, actual ordered source/interpretation membership and versions, permitted source values, relevant dates, original coverage and explicit unknowns. Search reads committed publications through `KnowledgePublications`; it does not use adapter internals, ingestion tables, pending raw responses, copied raw fact stores or a frozen dataset as the current KB.
+- New search computation requires process permission plus permission for the requested output purpose. Public publication readers participate in the caller-owned query transaction, retaining source/derivation locks through manifest commit. Process-denied inputs cannot participate in new display searches. Source-only accounts remain eligible with source-declared missing profile fields and absent interpretations explicitly unknown.
+- At most 100 newest committed publications are examined, returning at most 100 selected support bundles (or the caller's smaller limit). Exact duplicate support/interpretation bundles contribute once using their newest publication. Coverage reports publication scan truncation, result truncation, process/output-policy exclusions, superseded support and selected age freshness. Every result declares incomplete market coverage; this is a bounded publication sample, not a full KB search or an account count.
+- Freshness uses source capture age and the caller's explicit threshold. An omitted threshold is `not_assessed`; missing/future capture time is unknown. Age remains independent from permission availability and derivation health. Ingestion, source publication, derivation and KB-publication dates keep their own meanings. Publishing an old capture cannot refresh it.
+- `KnowledgeQueries.read(result_id, actor, purpose="display", include_synthetic=False)` reopens exact historical membership through publication-owned public reads. The source-free manifest pins publication, observation, derivation, assertion, metric and interpretation IDs, mapper/policy methods, interpretation run/catalog/method versions, publication method/time/producer and original freshness assessment. Later publications do not change it; current coverage and freshness are returned separately. Unavailable/superseded support retains membership and indicators without substituting new support. Historical display reads can remain permitted after process permission is removed; process reopening applies process permission.
+- Workspace/request identity binds the immutable scope, output purpose, synthetic mode, query method and actual producer. Identical concurrent retries return one result; changed scope or producer conflicts. Synthetic inputs require explicit development selection on search and reopen; foreign workspaces cannot query or reopen local support.
+- `KnowledgePublications.list` now accepts bounded `limit`, `newest_first` and a caller-owned `connection`; `read` accepts a caller-owned connection. Existing default callers retain their ordering/behavior. `IngestedEvidence.read` now exposes stable subject identity on metrics as well as assertions, keeping metric-only filtering with its natural source owner.
+- Operator commands: `smi-ingest search-knowledge --text TEXT --platform PLATFORM --subject-id UUID --captured-from TIMESTAMP --captured-to TIMESTAMP --max-age-seconds SECONDS --limit N --request-id ID`, and `inspect-query RESULT_ID`. Both support explicit purpose/synthetic mode and named local human actors. Programmatic callers retain their actual human/automation context.
+- Local UI: `GET /knowledge/search`, same-origin/CSRF-protected `POST /knowledge/search`, and `GET /knowledge/results/RESULT_ID`. Search redirects to its durable result. Pages show filters, limits, source references/dates, actual manifest, methods, unknowns and separate freshness/current support; values are escaped and denied/superseded source text is withheld after restart. Synthetic reopening requires `?include_synthetic=yes`.
+
+## Red and green evidence
+
+The TDD skill was applied at the approved public-operation/HTTP seams with real isolated-schema PostgreSQL and simulated source inputs. No public seam approval pause was needed because the run's seams were already approved.
+
+1. Published-only source-only search: red on missing `KnowledgeQueries`/`QueryScope`; green with source-free exact manifests and publication-owned reads (**1 passed**).
+2. Subject/capture-window/freshness filtering: red on missing `subject_ids`; green with explicit bounded filters and source-capture age (**2 passed**).
+3. Local search and saved-result reopen: red on HTTP 404; green with escaped, server-bound search/result routes and restart/withdrawal checks (**5 passed**, including exact newer-publication and interpretation regressions).
+4. Operator commands: red on missing `search-knowledge`; green with separate-process query/reopen (**6 passed**).
+5. Process permission independent of display: red because a new display search reused display-only support; green after requiring current process permission plus output-purpose permission (**7 passed**). The old result's display reopening remains allowed when display permission survives.
+6. Source-declared unknown profile attributes: red because `fee`/`audience_geography` were absent from explicit unknowns; green with declared gaps and unknown source-as-of time (**9 passed**, including boundary regressions).
+7. Literal text boundaries: red because concatenated JSON values matched invented cross-field text; green with per-value literal matching (**10 passed**).
+8. Metric-only platform scope: red because public metric support lacked subject platform identity; green after extending the ingestion-owned reader and consuming that public identity (**12 passed**, including the explicit 100-publication truncation regression).
+
+Additional public-operation regressions verify source-only accounts, empty matching scopes, unpublished ingestions, exact interpretation versions and withdrawal tombstones, newer publications without historical membership changes, supersession, synthetic default exclusion/explicit visibility, foreign workspace isolation, concurrent identical retries, changed-producer/scope conflicts, invalid scopes, result caps, and actual publication-scan truncation. HTTP regression checks escaping, server-created producer context, durable restart/reopen and current source redaction.
+
+## Validation
+
+- `UV_OFFLINE=1 uv run --locked pytest -q tests/test_knowledge_queries.py tests/test_publications.py --tb=short --maxfail=1`: **26 passed**, 12.56 seconds (12 query and 14 publication tests).
+- `UV_OFFLINE=1 uv run --locked python tools/check.py`: **passed**, including Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **235 passed**, 125.85 seconds.
+- Final `UV_OFFLINE=1 uv run --locked python tools/check.py --static`: passed after final documentation alignment.
+- `git diff --check`: passed.
+- `UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-03-wheel`: passed. Archive inspection confirms the query package, shared knowledge migration and local search view are included.
+
+Product contracts, architecture, physical ERD/table dictionary, the README and current coverage documentation describe the installed behavior. The substantial query submodule has `AGENTS.md` and a relative `CLAUDE.md -> AGENTS.md`; owning ingestion/publication/review instructions were updated where their public interfaces changed. No new durable ADR was needed: the implementation follows canonical ownership and pinned-support/current-policy ADRs without reversing their trade-offs.
+
+## Following tickets and limits
+
+Later acquisition workers can publish fresh run support through ticket 02's public interface and observe it through a new `KnowledgeQueries.search` request. Later recommendations/answers can pin a returned `result_id` and actual manifest using `purpose="process"`; they must preserve their own method, rationale and decision lifecycle and recheck support for consequential writes. Reopening a query result never submits acquisition or requires enrichment approval.
+
+This slice provides bounded deterministic literal filtering and a durable actual-support result. General semantic/vector search, ranking, graph traversal, assistant generation, acquisition tasks and background work remain outside scope. Capture-age threshold examples are caller configuration, not universal attribute freshness policy. Source-owner canonical-value retention and synchronous interpretation cleanup keep their existing documented lifecycle; technical passing tests do not establish human language quality, marketer usefulness or complete market coverage.
+
+The integration tip remains `a28ea0a`, the branch base and an ancestor of this implementation; no advanced integration change required merging. All work is offline/local. No later ticket was claimed, no real external/provider/model call was made, and no push or PR occurred. No genuine external blocker remains. Integration validation and ticket resolution belong to the merger.

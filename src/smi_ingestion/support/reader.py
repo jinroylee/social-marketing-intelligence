@@ -109,8 +109,9 @@ class IngestedEvidence:
                     (reference.derivation_id, list(reference.assertion_ids)),
                 ).fetchall()
                 metrics = connection.execute(
-                    'SELECT id::text AS metric_id,entity_id::text AS subject_id,definition,native_name,value,raw_display,precision,unit,measured_at,'
-                    'source_locator AS locator FROM metric_observations WHERE derivation_id=%s AND id=ANY(%s::uuid[]) ORDER BY id',
+                    'SELECT m.id::text AS metric_id,m.entity_id::text AS subject_id,m.definition,m.native_name,m.value,m.raw_display,m.precision,m.unit,m.measured_at,'
+                    'm.source_locator AS locator,e.platform,e.namespace,e.kind,e.native_id FROM metric_observations m '
+                    'JOIN external_identities e ON e.entity_id=m.entity_id WHERE m.derivation_id=%s AND m.id=ANY(%s::uuid[]) ORDER BY m.id',
                     (reference.derivation_id, list(reference.metric_ids)),
                 ).fetchall()
                 if len(fields) != len(reference.assertion_ids) or len(metrics) != len(reference.metric_ids) or row['status'] != 'applied':
