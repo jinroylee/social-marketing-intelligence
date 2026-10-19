@@ -4,7 +4,7 @@
 
 **Blocked by:** 01: Restore ingestion completion and safe resume.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -23,4 +23,10 @@
 
 ## Implementation evidence
 
-Implemented on `smi/operational-ticket-02`; status remains claimed pending merge and integration checks. See [the implementation report](../reports/ticket-02.md) for public interfaces, red/green evidence and validation.
+Implemented on `smi/operational-ticket-02` and integrated after passing the shared checks. See [the implementation report](../reports/ticket-02.md) for public interfaces, red/green evidence and validation.
+
+## Completion
+
+- Implementation commit: `09f3d18d9a4195c8f14fd670e51c1b157a7f2ced`, fast-forward integrated into `integration/operational-tickets-01-10`.
+- Integrated verification: `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **223 tests in 128.48 seconds**.
+- All acceptance criteria are checked. Delivery remained offline and local, with real PostgreSQL and simulated external I/O; no push or PR occurred.
