@@ -2,7 +2,7 @@
 
 ## Implemented relational model
 
-The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql) and [monitoring](../src/smi_monitoring/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
+The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql) and [offline tasks](../src/smi_tasks/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
 
 ```mermaid
 erDiagram
@@ -197,6 +197,7 @@ erDiagram
         uuid derivation_id FK
         uuid_array assertion_ids
         uuid_array metric_ids
+        text content_version
     }
     knowledge_publication_interpretations {
         uuid publication_id PK, FK
@@ -468,7 +469,7 @@ Monitoring has no campaign foreign key. Its scope and insight heads preserve ind
 
 ## Product domain model
 
-This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, acquisition tasks, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams above describe implemented tables.
+This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, advanced acquisition authority/recovery, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams above describe implemented tables.
 
 ```mermaid
 erDiagram
@@ -495,9 +496,62 @@ Semantic assertions connect Brand/Product/topic interpretations to exact source 
 
 An optional Creator association carries its own evidence, role and applicable interval. An identity correction does not rewrite historical selected account IDs. Monitoring can produce an insight without any campaign, and a campaign can start without an insight.
 
+## Implemented offline task model
+
+```mermaid
+erDiagram
+    campaigns ||--o{ acquisition_tasks : authorizes
+    campaign_briefs ||--o{ acquisition_tasks : pins
+    acquisition_tasks ||--o{ acquisition_attempts : executes
+    ingestion_runs ||--o| acquisition_attempts : records
+    acquisition_tasks ||--o{ acquisition_task_publications : produces
+    knowledge_publications ||--o{ acquisition_task_publications : makes_usable
+    acquisition_tasks {
+        uuid id PK
+        text workspace_id
+        text request_id
+        text request_digest
+        text origin
+        uuid campaign_id FK
+        uuid brief_id FK
+        text initiator_id
+        text initiator_kind
+        text scope_version
+        jsonb scope
+        jsonb limits
+        int attempt_limit
+        text manifest_path
+        text manifest_hash
+        text status
+        text outcome
+        jsonb coverage
+        text failure_phase
+        text failure_code
+        timestamptz submitted_at
+        timestamptz finished_at
+    }
+    acquisition_attempts {
+        uuid id PK
+        uuid task_id FK
+        int number
+        uuid run_id FK
+        text producer_id
+        text producer_kind
+        jsonb phases
+        timestamptz started_at
+        timestamptz finished_at
+    }
+    acquisition_task_publications {
+        uuid task_id PK, FK
+        uuid publication_id PK, FK
+    }
+```
+
+Task admission persists its campaign/brief/configuration basis and resource limits before returning. Workspace/request identity binds the full scope and initiator. Only server-established campaign origin and a synthetic fixture-json route are installed. Attempts retain exact run IDs and actual automation producers; task/publication links retain usable committed outcomes separately from raw collection. Task data copies no source wording. Current-policy publication reads remain responsible for values. Publication support's source-owned `content_version` fingerprint compares capture/mapping/selection identity across new run UUIDs without copying payloads; denied or superseded support does not suppress a newly usable publication. See [the task contract](tasks.md) for installed lifecycle and recovery limits.
+
 ## Accepted future operational records
 
-These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication and exact query results; task/attempt records remain conceptual.
+These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication, exact query results and one campaign-authorized offline task/attempt path. The broader operational relationships below remain conceptual.
 
 ```mermaid
 erDiagram

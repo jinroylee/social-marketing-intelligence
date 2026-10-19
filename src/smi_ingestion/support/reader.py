@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import uuid
 from contextlib import nullcontext
 from dataclasses import asdict, dataclass
@@ -116,13 +118,22 @@ class IngestedEvidence:
                 ).fetchall()
                 if len(fields) != len(reference.assertion_ids) or len(metrics) != len(reference.metric_ids) or row['status'] != 'applied':
                     raise EvidenceError('invalid_support_reference')
+                # A capture/mapping/selection identity, independent of new run UUIDs.
+                # Keep the raw digest inside the source owner; consumers get only
+                # the one-way identity needed to compare already published support.
+                version = {'capture': [row[key] for key in (
+                    'adapter_id', 'provider_id', 'format_version', 'reference', 'payload_hash',
+                    'captured_at', 'source_as_of', 'synthetic', 'mapper_key', 'policy_version')],
+                    'fields': sorted((f['field'], f['locator'], f['platform'], f['namespace'], f['kind'], f['native_id']) for f in fields),
+                    'metrics': sorted((m['definition'], m['locator'], m['platform'], m['namespace'], m['kind'], m['native_id']) for m in metrics)}
+                content_version = hashlib.sha256(json.dumps(_json_value(version), sort_keys=True, default=str).encode()).hexdigest()
                 policy = policy_from_json(row['policy'])
                 member = {**asdict(reference), 'support_status': 'current' if row['active'] else 'superseded_review_required',
                           'availability': 'available' if policy_allows(policy, purpose) else 'unavailable'}
                 if member['availability'] == 'unavailable':
                     member['reason'] = 'source_policy_denied'
                 else:
-                    member.update(source_reference=row['reference'], run_id=str(row['run_id']), synthetic=row['synthetic'],
+                    member.update(content_version=content_version, source_reference=row['reference'], run_id=str(row['run_id']), synthetic=row['synthetic'],
                                   provider=row['provider_id'], adapter=row['adapter_id'], captured_at=row['captured_at'],
                                   source_as_of=row['source_as_of'], ingested_at=row['ingested_at'], coverage=row['coverage'],
                                   policy={f'can_{p}': policy_allows(policy, p) for p in ('process', 'display', 'retain')},

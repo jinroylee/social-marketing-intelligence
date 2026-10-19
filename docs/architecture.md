@@ -21,6 +21,7 @@ These are module boundaries within one Python application and PostgreSQL instanc
 
 | Owner | Responsibilities | Implementation coverage |
 | --- | --- | --- |
+| Offline acquisition tasks | Campaign-bound durable admission, immutable route/scope/limits, attempts, phases and exact run/publication outcomes | Implemented in `smi_tasks` for synthetic fixture JSON only; recovery, assistant/scheduled authority, notifications and costs remain future work |
 | Acquisition and canonical evidence | Collection, source policy, observations, stable account/content identity, field assertions, metrics and replay | Implemented in `smi_ingestion` |
 | Exact ingested support | Bounded selection and purpose-aware reads of observation/derivation/assertion/metric IDs, including fresh runs | Implemented in `smi_ingestion.support` |
 | Frozen evidence sets | Validated snapshot import, fixed member/derivation bindings, lineage and workspace/purpose-aware reads | Implemented in `smi_ingestion.evidence_sets` |
@@ -28,6 +29,24 @@ These are module boundaries within one Python application and PostgreSQL instanc
 | Market monitoring | Saved investigations and insight revisions with scoped findings | Implemented in `smi_monitoring`; repeated-capture trend analysis remains future work |
 | Campaign decisions | Briefs, comparisons, human shortlists, proposed measurement plans and decision notes | Implemented in `smi_campaigns` and `smi_campaigns.planning`; observed outcomes/attribution remain future work |
 | Review application | Independent investigation/campaign forms, evidence and uncertainty panels | Implemented in `smi_review`; translation/language and marketer evaluation require actual review |
+
+## Offline task orchestration
+
+`smi_tasks` composes `CampaignStore`, `IngestionRunner`, `IngestedEvidence` and `KnowledgePublications` through their public interfaces. Submission establishes campaign origin from an exact existing current brief, commits immutable route/configuration digest, actor, scope and limits, then returns a queued task ID without collecting. The bounded worker persists an attempt/run link and actual automation producer, uses a fixture-json-only registry, rejects changed manifests and records collected versus ingested versus published counts. Source-free task metadata survives restart. Empty or unchanged currently published captures yield no usable update; raw fetch or mapping failure cannot declare a knowledge benefit. Terminal retries reuse the original outcome. See [the task contract](tasks.md).
+
+```mermaid
+flowchart LR
+    Campaign[Existing campaign and exact brief] --> Task[Durable queued offline task]
+    Task --> Attempt[Bounded attempt and ingestion run]
+    Attempt --> Runner[Existing ingestion runner: fixture-json only]
+    Runner --> Support[Exact ingested support]
+    Support --> Publication[Knowledge publication]
+    Publication --> Query[Current KB queries]
+    Attempt --> Detail[Task phase, coverage and outcome]
+    Publication --> Detail
+```
+
+The first task slice has one attempt and explicit incomplete-execution state; crash recovery, partial publication, competing workers, assistant approval, notification delivery and spending remain separate extensions.
 
 ## Acquisition and persistence
 

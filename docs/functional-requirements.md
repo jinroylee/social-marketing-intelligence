@@ -8,10 +8,10 @@ This is the accepted target contract for the flows in [`FR.md`](../FR.md) and th
 | --- | --- | --- |
 | Campaign criteria and results | Typed criteria, free-text context, literal judgments, human-only saved selections over a chosen frozen dataset | Natural-language interpretation, current-KB retrieval, LLM assessment/ranking and automatically saved shortlist revisions |
 | Knowledge | Source identities/observations, business vocabulary, provisional span-supported caption interpretations, atomic publication, bounded literal current-KB queries and exact saved result manifests with explicit capture-age freshness | Semantic retrieval, attribute-specific freshness profiles, continuous acquisition and agentic question answering |
-| Acquisition | Bounded adapters for supplied TikTok references, snapshot import, replay/resume and canonical history | Query discovery, durable tasks/schedules, progressive acquisition and retrieval avoidance |
+| Acquisition | Bounded adapters for supplied TikTok references, snapshot import, replay/resume, canonical history and one durable campaign-authorized synthetic offline task | Query discovery, task recovery/advanced authority and schedules, progressive acquisition and retrieval avoidance |
 | Monitoring | Independent saved snapshot investigations with literal counts and source support | Recent X collection, quantitative/semantic anomaly methods, separate light evidence path and alerts |
 | Permissions | Trusted local human/automation actors, purpose-aware evidence reads and human-only shortlist writes | Task-specific enrichment approval and authority for automated shortlist persistence |
-| Visibility | Original-source panels, saved revision history, committed publication/search details and CLI run reports | Task status/notifications, knowledge graph explorer and pipeline/lineage view |
+| Visibility | Original-source panels, saved revision history, committed publication/search details, basic task phase/outcome/lineage and CLI run reports | Completion notifications, knowledge graph explorer and pipeline/lineage view |
 | Spending | Acquisition request/byte/record bounds; no monetary ledger or limiter | Actual-spend derivation, enforceable ceilings for metered costs and forecasts for the remainder |
 
 No A/B/C flow is implemented end to end. The physical tables and current interfaces remain those documented in [architecture](architecture.md), [data model](data-model.md) and the individual module contracts.

@@ -141,3 +141,6 @@ CREATE TABLE IF NOT EXISTS knowledge_query_members (
     PRIMARY KEY (result_id, position),
     FOREIGN KEY (derivation_id, observation_id) REFERENCES derivations(id, observation_id)
 );
+
+ALTER TABLE knowledge_publication_support ADD COLUMN IF NOT EXISTS content_version text;
+CREATE INDEX IF NOT EXISTS publication_support_content_version ON knowledge_publication_support(content_version);

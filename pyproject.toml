@@ -20,7 +20,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/smi_ingestion", "src/smi_knowledge", "src/smi_campaigns", "src/smi_monitoring", "src/smi_review"]
+packages = ["src/smi_ingestion", "src/smi_knowledge", "src/smi_campaigns", "src/smi_monitoring", "src/smi_review", "src/smi_tasks"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

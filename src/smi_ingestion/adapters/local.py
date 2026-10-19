@@ -30,7 +30,7 @@ class LocalFileCollector:
         if not manifest.get("synthetic"):
             raise EvidenceError("local_fixtures_must_be_synthetic")
         items = manifest.get("items")
-        if not isinstance(items, list) or not items:
+        if not isinstance(items, list):
             raise EvidenceError("empty_manifest")
         index = checkpoint.get("index", 0)
         if index >= len(items):

@@ -18,8 +18,9 @@ from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore
 from smi_monitoring import MonitoringStore
+from smi_tasks import AcquisitionTasks, OfflineRoute
 
-from . import monitoring_views, planning_views, publication_views, query_views, views
+from . import monitoring_views, planning_views, publication_views, query_views, task_views, views
 from .forms import identifier, one
 
 
@@ -83,7 +84,7 @@ def selections_from_form(form: dict[str, list[str]]) -> tuple[Selection, ...]:
 class ReviewApp:
     """One trusted local marketer's browser application; all saves go through domain stores."""
 
-    def __init__(self, db: Database, actor_id: str = "local-marketer", workspace_id: str = "local"):
+    def __init__(self, db: Database, actor_id: str = "local-marketer", workspace_id: str = "local", *, offline_route: OfflineRoute | None = None):
         self.actor = ActorContext(workspace_id, actor_id, "human")
         self.actor.require_workspace(workspace_id)
         self.worker = ActorContext(workspace_id, "local-rule-preparation", "automation")
@@ -94,6 +95,7 @@ class ReviewApp:
         self.evidence = EvidenceSetReader(db, workspace_id)
         self.monitoring = MonitoringStore(db, workspace_id)
         self.planning = CampaignPlanning(db, workspace_id)
+        self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route)
         self.csrf = secrets.token_urlsafe(32)
 
     def page(self, title: str, content: str, status: int = 200) -> Response:
@@ -190,6 +192,15 @@ class ReviewApp:
             return self.page("Action needs attention", views.error_message(code), status)
 
     def _get(self, path, query):
+        if path == "/tasks":
+            return self.page("Acquisition tasks", task_views.index(self.tasks.list(self.actor)))
+        match = re.fullmatch(r"/tasks/([^/]+)", path)
+        if match:
+            return self.page("Offline acquisition task", task_views.detail(self.tasks.read(identifier(match[1]), self.actor)))
+        match = re.fullmatch(r"/campaigns/([^/]+)/tasks/new", path)
+        if match:
+            campaign, brief = self._campaign(identifier(match[1]))
+            return self.page("Submit offline acquisition", task_views.submit_form(campaign, brief, self.csrf, self.tasks.route))
         if path == "/knowledge/search":
             return self.page("Search current knowledge", query_views.search_form(self.csrf))
         match = re.fullmatch(r"/knowledge/results/([^/]+)", path)
@@ -201,7 +212,7 @@ class ReviewApp:
             return self.page("Knowledge publications", publication_views.index(self.publications.list(self.actor)))
         match = re.fullmatch(r"/knowledge/publications/([^/]+)", path)
         if match:
-            return self.page("Knowledge publication", publication_views.detail(self.publications.read(identifier(match[1]), self.actor)))
+            return self.page("Knowledge publication", publication_views.detail(self.publications.read(identifier(match[1]), self.actor, include_synthetic=one(query, "include_synthetic") == "yes")))
         if path == "/investigations":
             return self.page("Market investigations", monitoring_views.index(self.monitoring.list_investigations(self.actor)))
         if path == "/investigations/new":
@@ -255,6 +266,13 @@ class ReviewApp:
         if not secrets.compare_digest(one(form, "csrf").encode(), self.csrf.encode()):
             raise EvidenceError("invalid_form")
         request_id = one(form, "request_id")
+        match = re.fullmatch(r"/campaigns/([^/]+)/tasks", path)
+        if match:
+            if not form.keys() <= {"csrf", "request_id", "brief_id", "purpose"}:
+                raise EvidenceError("invalid_form")
+            submitted = self.tasks.submit_campaign(identifier(match[1]), self.actor, brief_id=identifier(one(form, "brief_id")),
+                                                    purpose=one(form, "purpose"), request_id=request_id)
+            return Response(303, location=f"/tasks/{submitted['task_id']}")
         if path == "/knowledge/search":
             include_synthetic = one(form, "include_synthetic") == "yes"
             result = self.queries.search(query_views.scope_from_form(form), self.actor, request_id=request_id, include_synthetic=include_synthetic)

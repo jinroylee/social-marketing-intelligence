@@ -6,4 +6,6 @@ Publish from trusted human or automation actors. Persist the actual actor kind/i
 
 Public list/read operations can join a caller-owned transaction; source and derivation locks remain held through the caller’s dependent commit. List bounds and newest-first ordering support bounded query traversal. Reopen exact membership under the requested current policy. Preserve original publication coverage/time and expose current support health separately. A retry cannot repair purged interpretation copies or substitute newer source support. Source-only accounts may retain unknown profile/interpretation attributes.
 
+Use source-owned capture/mapping/selection content identities for `unpublished` comparisons. Require current process permission and current derivations on both sides; ingestion/publication time or new UUIDs alone cannot establish a usable task update. Preserve exact publication membership while lazily filling legacy identity metadata.
+
 Keep frozen datasets unchanged. Acquisition authority, current-KB search and consequential query-result pinning belong to their own workflows. Update the knowledge contract, physical ERD and local publication surface when changing this interface.

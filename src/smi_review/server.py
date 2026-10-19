@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import argparse
 import os
+from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs
 
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
+from smi_tasks import OfflineRoute
 
 from .app import Response, ReviewApp
 from .views import request_error
@@ -107,9 +109,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--actor", default="local-marketer")
     parser.add_argument("--dsn", default=os.environ.get("SMI_DATABASE_URL", "postgresql://smi:local_only_change_me@127.0.0.1:6543/smi"))
     parser.add_argument("--schema", default=os.environ.get("SMI_DATABASE_SCHEMA"))
+    parser.add_argument("--offline-manifest", type=Path, help="Configure the fixture-json-only synthetic task route")
+    parser.add_argument("--offline-route-version", default="offline-fixture-v1")
     args = parser.parse_args(argv)
     try:
-        app = ReviewApp(Database(args.dsn, args.schema), args.actor)
+        route = OfflineRoute(args.offline_manifest, args.offline_route_version) if args.offline_manifest else None
+        app = ReviewApp(Database(args.dsn, args.schema), args.actor, offline_route=route)
         with make_server(app, args.port) as server:
             print(f"Local campaign review: {server.url} · reviewer: {app.actor.actor_id}", flush=True)
             server.serve_forever()

@@ -12,6 +12,7 @@ import psycopg
 from smi_knowledge import Catalog, KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
 from smi_campaigns import Brief, CampaignStore, Selection
 from smi_monitoring import MonitoringStore
+from smi_tasks import AcquisitionTasks, OfflineRoute, OfflineTaskWorker
 
 from .adapters.registry import default_registry
 from .canonical import CanonicalReader, CanonicalWriter
@@ -126,6 +127,20 @@ def main(argv: list[str] | None = None) -> int:
         inspect_action.add_argument(field)
         inspect_action.add_argument("--actor", default="local-marketer")
         inspect_action.add_argument("--include-synthetic", action="store_true")
+    task_submit = commands.add_parser("submit-campaign-task", help="Acknowledge campaign-authorized synthetic offline acquisition")
+    task_submit.add_argument("campaign_id")
+    task_submit.add_argument("--brief-id", required=True)
+    task_submit.add_argument("--purpose", required=True)
+    task_submit.add_argument("--request-id", required=True)
+    task_submit.add_argument("--offline-manifest", type=Path, required=True)
+    task_submit.add_argument("--offline-route-version", default="offline-fixture-v1")
+    task_submit.add_argument("--actor", default="local-marketer")
+    task_run = commands.add_parser("run-offline-task", help="Execute at most one queued fixture-json task; live collectors are unavailable")
+    task_run.add_argument("task_id")
+    task_run.add_argument("--worker-id", default="local-offline-task-worker")
+    task_inspect = commands.add_parser("inspect-task", help="Reopen durable phase/outcome, exact runs and publication links")
+    task_inspect.add_argument("task_id")
+    task_inspect.add_argument("--actor", default="local-marketer")
     args = parser.parse_args(argv)
     try:
         db = Database(args.dsn, args.schema)
@@ -134,7 +149,17 @@ def main(argv: list[str] | None = None) -> int:
             KnowledgeStore(db).migrate()
             CampaignStore(db).migrate()
             MonitoringStore(db).migrate()
+            AcquisitionTasks(db).migrate()
             result = {"status": "migrated"}
+        elif args.command in {"submit-campaign-task", "run-offline-task", "inspect-task"}:
+            if args.command == "run-offline-task":
+                result = OfflineTaskWorker(db, args.evidence_dir).run_one(args.task_id, ActorContext("local", args.worker_id, "automation"))
+            elif args.command == "submit-campaign-task":
+                tasks = AcquisitionTasks(db, route=OfflineRoute(args.offline_manifest, args.offline_route_version))
+                result = tasks.submit_campaign(args.campaign_id, ActorContext("local", args.actor, "human"),
+                                               brief_id=args.brief_id, purpose=args.purpose, request_id=args.request_id)
+            else:
+                result = AcquisitionTasks(db).read(args.task_id, ActorContext("local", args.actor, "human"))
         elif args.command in {"search-knowledge", "inspect-query"}:
             queries = KnowledgeQueries(db)
             actor = ActorContext("local", args.actor, "human")
@@ -235,7 +260,7 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 result = {"status": "expired", "count": evidence.expire()}
         print(json.dumps(result, ensure_ascii=False, default=str))
-        return 2 if result.get("status") == "partial" else 0
+        return 1 if result.get("outcome") == "failure" else 2 if result.get("status") == "partial" else 0
     except (EvidenceError, ValueError, OSError, KeyError, psycopg.Error) as error:
         code = error.code if isinstance(error, EvidenceError) else "database_error" if isinstance(error, psycopg.Error) else "invalid_input"
         print(json.dumps({"status": "failed", "code": code}))

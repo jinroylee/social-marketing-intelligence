@@ -70,7 +70,7 @@ def page(title, content, actor_id) -> str:
     return f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{e(title)} · Social Marketing Intelligence</title><link rel="stylesheet" href="/static/review.css"><script defer src="/static/review.js"></script></head>
 <body><a class="skip" href="#main">Skip to content</a><header><a class="wordmark" href="/">SMI<span>Social Marketing Intelligence</span></a>
-<nav aria-label="Main"><a href="/">Campaigns</a><a href="/investigations">Investigations</a><a href="/knowledge/search">Knowledge search</a><a href="/knowledge/publications">Knowledge</a></nav><div class="operator">Local workspace<br><strong>Reviewer: {e(actor_id)}</strong></div></header>
+<nav aria-label="Main"><a href="/">Campaigns</a><a href="/investigations">Investigations</a><a href="/knowledge/search">Knowledge search</a><a href="/knowledge/publications">Knowledge</a><a href="/tasks">Tasks</a></nav><div class="operator">Local workspace<br><strong>Reviewer: {e(actor_id)}</strong></div></header>
 <main id="main">{content}</main><footer>Evidence supports internal planning. Caption interpretations and original-language nuance remain provisional.</footer></body></html>'''
 
 
@@ -201,6 +201,7 @@ def campaign_page(campaign, current, datasets, csrf) -> str:
     content += ('<p>No selection saved.</p>' if not campaign["shortlists"] else '') + '</section></div>'
     if len(campaign["briefs"]) > 1:
         content += '<details class="panel"><summary>Previous brief revisions</summary>' + ''.join(brief_summary(b) for b in reversed(campaign["briefs"][:-1])) + '</details>'
+    content += f'<p><a href="/campaigns/{e(campaign["campaign_id"])}/tasks/new">Submit offline acquisition</a></p>'
     return content
 
 

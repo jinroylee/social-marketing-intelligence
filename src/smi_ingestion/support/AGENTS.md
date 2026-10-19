@@ -4,6 +4,8 @@ Own workspace-scoped selection and reads of exact observation, derivation, asser
 
 Keep source values with ingestion. Validate every selected assertion/metric against the nominated derivation and observation. Return stable subject identities for assertions and metrics so consumers can filter metric-only support through this public interface. Read pinned IDs, preserve missing states, and evaluate the requested process/display purpose independently. Synthetic support requires explicit development visibility.
 
+Expose one-way capture/mapping/selection `content_version` only for permitted support. Keep payload hashes and identity construction with this source owner; equivalent new run UUIDs preserve content identity while later captures, methods or selected logical fields differ.
+
 A caller-owned transaction retains source/derivation share locks through dependent commits. Return denied support as metadata-only tombstones and superseded derivations as review-required. Consumers own their retained copies and must reconcile them under source retention policy.
 
 This interface does not publish knowledge, infer business attributes, or mutate imported evidence-set membership. Update the evidence contract, architecture and physical ERD when changing ownership, limits or transaction behavior.

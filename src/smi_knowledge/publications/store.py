@@ -69,13 +69,44 @@ class KnowledgePublications:
             )
             for position, reference in enumerate(support):
                 connection.execute(
-                    'INSERT INTO knowledge_publication_support(publication_id,position,observation_id,derivation_id,assertion_ids,metric_ids) VALUES (%s,%s,%s,%s,%s,%s)',
-                    (publication_id, position, reference.observation_id, reference.derivation_id, list(reference.assertion_ids), list(reference.metric_ids)),
+                    'INSERT INTO knowledge_publication_support(publication_id,position,observation_id,derivation_id,assertion_ids,metric_ids,content_version) VALUES (%s,%s,%s,%s,%s,%s,%s)',
+                    (publication_id, position, reference.observation_id, reference.derivation_id, list(reference.assertion_ids), list(reference.metric_ids), members[position]['content_version']),
                 )
             for position, identity in enumerate(interpretation_ids):
                 connection.execute('INSERT INTO knowledge_publication_interpretations(publication_id,position,interpretation_id) VALUES (%s,%s,%s)',
                                    (publication_id, position, identity))
         return {'status': 'published', 'publication_id': publication_id}
+
+    def unpublished(self, support: tuple[SupportReference, ...], actor: ActorContext, *, include_synthetic: bool = False) -> tuple[SupportReference, ...]:
+        """Select captures/mappings not already usable in a committed publication.
+
+        This compares source-owned capture identities, not entity counts or market
+        novelty. A later capture or mapping is distinct. Current process policy and
+        derivation health are required on both sides; withdrawn support cannot make
+        a newly permitted capture appear already usable.
+        """
+        actor.require_workspace(self.workspace_id)
+        if not support:
+            return ()
+        members = self.evidence.read(support, actor, purpose='process', include_synthetic=include_synthetic)
+        if any(m['availability'] != 'available' or m['support_status'] != 'current' for m in members):
+            raise EvidenceError('publication_support_unavailable')
+        versions = {m['content_version'] for m in members}
+        existing_versions = set()
+        with self.db.connect() as connection:
+            rows = connection.execute(
+                'SELECT s.* FROM knowledge_publication_support s JOIN knowledge_publications p ON p.id=s.publication_id '
+                'WHERE p.workspace_id=%s AND (NOT p.synthetic OR %s) AND (s.content_version=ANY(%s) OR s.content_version IS NULL)',
+                (self.workspace_id, include_synthetic, list(versions)),
+            ).fetchall()
+            for row in rows:
+                reference = SupportReference(str(row['observation_id']), str(row['derivation_id']), tuple(str(i) for i in row['assertion_ids']), tuple(str(i) for i in row['metric_ids']))
+                member = self.evidence.read((reference,), actor, purpose='process', include_synthetic=include_synthetic, connection=connection)[0]
+                if member['availability'] == 'available' and member['support_status'] == 'current':
+                    existing_versions.add(member['content_version'])
+                    if row['content_version'] is None:
+                        connection.execute('UPDATE knowledge_publication_support SET content_version=%s WHERE publication_id=%s AND position=%s', (member['content_version'], row['publication_id'], row['position']))
+        return tuple(reference for reference, member in zip(support, members) if member['content_version'] not in existing_versions)
 
     def list(self, actor: ActorContext, *, include_synthetic: bool = False, limit: int | None = None, newest_first: bool = False, connection=None) -> list[dict[str, Any]]:
         """List committed publication metadata within the trusted actor's workspace."""

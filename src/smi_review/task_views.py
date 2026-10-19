@@ -1,0 +1,43 @@
+"""Escaped local offline-task submission and source-free operational lineage."""
+
+import json
+import uuid
+from dataclasses import asdict
+
+from .views import e, hidden
+
+
+def index(tasks):
+    """List durable acknowledgments and their distinct terminal outcomes."""
+    content = '<h1>Acquisition tasks</h1><p>Submission accepts bounded work. Collection alone does not establish a usable knowledge update.</p>'
+    for task in tasks:
+        content += f'<p><a href="/tasks/{e(task["task_id"])}">{e(task["task_id"])}</a> · {e(task["status"])} · {e(task["outcome"] or "Pending")}</p>'
+    return content if tasks else content + '<p>No submitted tasks. Open a campaign to submit configured offline work.</p>'
+
+
+def submit_form(campaign, brief, csrf, route):
+    """Show trusted campaign/configuration scope before acknowledging work."""
+    content = f'<h1>Submit offline acquisition</h1><p>Campaign <a href="/campaigns/{e(campaign["campaign_id"])}">{e(campaign["campaign_id"])}</a> · brief version {e(brief["version"])}</p>'
+    if route is None:
+        return content + '<p>Offline task route is not configured. Ask the local operator to configure a synthetic fixture manifest.</p>'
+    _, digest, manifest = route.snapshot()
+    content += '<p>This synthetic development route performs local fixture reads only. A separate bounded worker executes the queued task.</p>'
+    content += f'<p>Route: fixture-json · configuration {e(route.version)} · manifest {e(digest)}</p>'
+    content += f'<p>Limits: {e(json.dumps(asdict(route.limits)))}</p><p>References: {e(json.dumps([i.get("reference", "") for i in manifest["items"]]))}</p>'
+    content += f'<form action="/campaigns/{e(campaign["campaign_id"])}/tasks" method="post">'
+    content += hidden('csrf', csrf) + hidden('request_id', str(uuid.uuid4())) + hidden('brief_id', brief['id'])
+    return content + '<label>Purpose<textarea name="purpose" required maxlength="1000">Fill campaign evidence coverage</textarea></label><button type="submit">Submit offline task</button></form>'
+
+
+def detail(task):
+    """Show exact attribution, phases, counts and permitted-publication navigation."""
+    content = f'<h1>Offline acquisition task</h1><p>{e(task["task_id"])}</p><p><a href="/tasks">All tasks</a></p>'
+    content += f'<p>Status: {e(task["status"])} · Outcome: {e(task["outcome"] or "Pending")}</p>'
+    content += '<p>Synthetic development inputs. Retrieved material becomes usable only after ingestion and publication. No usable update does not establish market absence.</p>'
+    for label, item in (('Origin', task['origin']), ('Initiator', task['initiator']), ('Submitted', task['submitted_at']),
+                        ('Scope version', task['scope_version']), ('Immutable scope', task['scope']), ('Limits', task['limits']),
+                        ('Attempt limit', task['attempt_limit']), ('Coverage', task['coverage']), ('Failure', task['failure']), ('Attempts', task['attempts'])):
+        content += f'<p>{e(label)}: {e(json.dumps(item, ensure_ascii=False))}</p>'
+    for publication_id in task['publication_ids']:
+        content += f'<p><a href="/knowledge/publications/{e(publication_id)}?include_synthetic=yes">Publication {e(publication_id)}</a></p>'
+    return content
