@@ -6,7 +6,7 @@ Implement approved tickets 01–10 sequentially in fresh implementer worktrees, 
 
 ## Next Step
 
-Commit the local tracker/spec setup, then dispatch ticket 01 in a fresh worktree from the integration branch.
+Await ticket 01 completion, merge its branch through the merger, and verify the shared checks before ticket 02.
 
 ## Current Phase
 
@@ -56,7 +56,7 @@ Starting commit: `6220fff49b5b8e982ef5a8d54b7c788e45b0f648`. Integration branch:
 
 ### Phase 4 — Implement ticket 01
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer worktree, TDD, documented interfaces/schema, local commit, merger integration, shared check, then local ticket resolution.
 

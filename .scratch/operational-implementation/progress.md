@@ -16,3 +16,4 @@
 - Starting commit is 6220fff49b5b8e982ef5a8d54b7c788e45b0f648; created integration/operational-tickets-01-10.
 - Test PostgreSQL is reachable. Published exactly ten local ready-for-agent tickets and recorded tracker/domain/triage instructions.
 - Existing uncommitted specification and draft artifacts are preserved in the setup commit so fresh worktrees receive their source pointers.
+- Setup committed as a2187ff. Dispatched ticket 01 in fresh worktree /tmp/smi-operational-ticket-01 with approved TDD seams and offline dependency resolution.
