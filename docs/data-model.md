@@ -26,6 +26,7 @@ erDiagram
         text adapter_id
         text manifest_hash
         jsonb checkpoint
+        boolean input_complete
         jsonb limits
         text status
     }

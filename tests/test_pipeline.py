@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -171,6 +172,7 @@ def test_resume_maps_durably_saved_observation_without_collecting_again(stack):
     collector, _ = registry.resolve("fixture-json")
     batch = collector.collect(manifest, {"index": 0}, RunLimits())
     evidence.save(run_id, 0, batch.items[0], batch.next_checkpoint)
+    assert evidence.run(run_id)["input_complete"] is False
     assert runner.resume(run_id)["status"] == "completed"
     assert CanonicalReader(db).metrics(POST, True)[0]["value"] == 1000
 
@@ -255,14 +257,18 @@ def test_removal_from_another_provider_stays_conflicted(stack, tmp_path):
     assert len(field["provenance"]) == 2
 
 
-def test_resume_final_capture_at_limit_without_collecting_again(stack, monkeypatch):
+@pytest.mark.parametrize("limits", [RunLimits(max_records=1), RunLimits(max_requests=1)], ids=["record", "request"])
+def test_resume_final_capture_at_limit_without_collecting_again(stack, monkeypatch, limits):
     db, evidence, runner, registry = stack
     path = EXAMPLES / "json-manifest.json"
-    manifest, digest = runner._manifest(path)
-    run_id = evidence.start_run(path, digest, "fixture-json", RunLimits(max_records=1))
+    manifest = json.loads(path.read_bytes())
+    manifest["_base"] = str(path.parent)
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    run_id = evidence.start_run(path, digest, "fixture-json", limits)
     collector, _ = registry.resolve("fixture-json")
     batch = collector.collect(manifest, {}, RunLimits())
-    evidence.save(run_id, 0, batch.items[0], batch.next_checkpoint, complete=batch.complete)
+    observation = evidence.save(run_id, 0, batch.items[0], batch.next_checkpoint, complete=batch.complete)
+    assert evidence.run(run_id)["input_complete"] is True
 
     def unexpected_collect(*args):
         pytest.fail("A durably saved final capture must not be collected again")
@@ -273,7 +279,71 @@ def test_resume_final_capture_at_limit_without_collecting_again(stack, monkeypat
     assert result["coverage"] == "complete_for_requested_input"
     assert result["applied"] == 1
     assert result["issues"] == []
+    assert result["run_id"] == run_id
+    assert evidence.get(observation.id).run_id == run_id
+    assert runner.resume(run_id) == result
     assert len(CanonicalReader(db).metrics(POST, True)) == 1
+
+
+@pytest.mark.parametrize("commit", [False, True], ids=["rollback", "commit"])
+def test_final_capture_observation_checkpoint_and_completion_share_caller_transaction(stack, commit):
+    db, evidence, _, registry = stack
+    path = EXAMPLES / "json-manifest.json"
+    manifest = json.loads(path.read_bytes())
+    manifest["_base"] = str(path.parent)
+    run_id = evidence.start_run(path, hashlib.sha256(path.read_bytes()).hexdigest(), "fixture-json", RunLimits())
+    collector, _ = registry.resolve("fixture-json")
+    batch = collector.collect(manifest, {}, RunLimits())
+    before = evidence.run(run_id)
+
+    with db.connect() as connection:
+        observation = evidence.save(
+            run_id, 0, batch.items[0], batch.next_checkpoint, complete=True, connection=connection,
+        )
+        assert evidence.run(run_id) == before
+        assert evidence.pending(run_id) == []
+        with pytest.raises(EvidenceError, match="observation_not_found"):
+            evidence.get(observation.id)
+        if not commit:
+            connection.rollback()
+
+    if commit:
+        after = evidence.run(run_id)
+        assert after["checkpoint"] == batch.next_checkpoint
+        assert after["input_complete"] is True
+        assert after["records_used"] == after["requests_used"] == 1
+        assert after["bytes_used"] == len(batch.items[0].payload)
+        assert evidence.pending(run_id) == [observation]
+        assert evidence.load(observation.id) == (observation, batch.items[0].payload)
+    else:
+        assert evidence.run(run_id) == before
+        assert evidence.pending(run_id) == []
+        with pytest.raises(EvidenceError, match="observation_not_found"):
+            evidence.get(observation.id)
+        # Retained files belong to the caller's rollback cleanup contract.
+        Path(observation.payload_path).unlink()
+
+
+def test_resume_interrupted_nonfinal_capture_preserves_prior_observation(stack, tmp_path):
+    db, evidence, runner, registry = stack
+    path = _manifest(tmp_path, items=[{"path": "post.json"}, {"path": "post.json"}])
+    manifest = json.loads(path.read_bytes())
+    manifest["_base"] = str(path.parent)
+    run_id = evidence.start_run(path, hashlib.sha256(path.read_bytes()).hexdigest(), "fixture-json", RunLimits())
+    collector, _ = registry.resolve("fixture-json")
+    batch = collector.collect(manifest, {}, RunLimits())
+    assert batch.complete is False
+    observation = evidence.save(run_id, 0, batch.items[0], batch.next_checkpoint)
+
+    result = runner.resume(run_id)
+    assert result["status"] == "completed"
+    assert result["run_id"] == run_id
+    assert result["observations"] == result["applied"] == result["records_used"] == result["requests_used"] == 2
+    assert result["issues"] == []
+    assert evidence.get(observation.id) == observation
+    assert evidence.run(run_id)["checkpoint"] == {"index": 2}
+    assert evidence.run(run_id)["input_complete"] is True
+    assert len(CanonicalReader(db).metrics(POST, True)) == 2
 
 
 @pytest.mark.parametrize("legacy_pending_marker", [False, True])

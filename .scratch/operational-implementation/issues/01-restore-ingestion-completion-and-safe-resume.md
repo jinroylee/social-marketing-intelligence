@@ -4,17 +4,17 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** S — one bounded baseline repair in a fresh implementation context.
 
 **Scope guard:** Repair the existing evidence-save completion contract and its caller compatibility only; introduce no task queue or unrelated refactor.
 
-- [ ] The evidence-save operation accepts an explicit final-input marker and a backward-compatible default for callers that do not provide it.
-- [ ] Observation persistence, checkpoint advancement, and final-input marking commit together, including caller-owned transactions.
-- [ ] At the request/record limit, a saved final capture resumes into canonical processing without another collector call; an interrupted nonfinal capture remains resumable.
-- [ ] Existing run migration and retained/transient replay scenarios preserve IDs and prior observations.
-- [ ] The shared repository check is green with the test database available; the current undefined-completion and unexpected-argument failures are resolved.
+- [x] The evidence-save operation accepts an explicit final-input marker and a backward-compatible default for callers that do not provide it.
+- [x] Observation persistence, checkpoint advancement, and final-input marking commit together, including caller-owned transactions.
+- [x] At the request/record limit, a saved final capture resumes into canonical processing without another collector call; an interrupted nonfinal capture remains resumable.
+- [x] Existing run migration and retained/transient replay scenarios preserve IDs and prior observations.
+- [x] The shared repository check is green with the test database available; the current undefined-completion and unexpected-argument failures are resolved.
 
 **Spec coverage:** user stories 35, 36, 38, 69; acceptance scenarios T04, T29 (the part exercised by this slice).
 

@@ -116,9 +116,13 @@ class EvidenceStore:
 
     def save(
         self, run_id: str, item_index: int, draft: ObservationDraft,
-        checkpoint: dict[str, Any], *, connection=None,
+        checkpoint: dict[str, Any], *, complete: bool = False, connection=None,
     ) -> RawObservation:
-        """Store evidence; callers rolling back an outer transaction clean its payload files."""
+        """Atomically save evidence, its checkpoint and whether input is complete.
+
+        Omitted completion leaves input resumable. A supplied connection stays
+        caller-owned; its caller cleans retained payload files after rollback.
+        """
         if not policy_allows(draft.policy, "process"):
             raise EvidenceError("processing_not_permitted")
         if draft.request_attempts < 1:
