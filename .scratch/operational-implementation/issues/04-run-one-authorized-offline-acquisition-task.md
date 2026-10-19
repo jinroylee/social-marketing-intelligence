@@ -4,7 +4,7 @@
 
 **Blocked by:** 02: Publish and inspect permitted ingested support.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -23,4 +23,10 @@
 
 ## Implementation evidence
 
-Implemented locally on `smi/operational-ticket-04`; the ticket remains claimed until integration verification. See [the implementation report](../reports/ticket-04.md) for public interfaces, red/green evidence, the **248-test** shared check and follow-on contracts.
+Implemented locally on `smi/operational-ticket-04` and integrated after passing the shared checks. See [the implementation report](../reports/ticket-04.md) for public interfaces, red/green evidence, the **248-test** shared check and follow-on contracts.
+
+## Completion
+
+- Implementation commit: `a27b433cdac2ba1d23fe409bb0f15aff65f82b4c`, fast-forward integrated into `integration/operational-tickets-01-10`.
+- Integrated verification: `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **248 tests in 132.96 seconds**.
+- All acceptance criteria are checked. Delivery remained offline and local, with real PostgreSQL and simulated external I/O; no push or PR occurred.
