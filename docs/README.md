@@ -5,6 +5,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | Document | Purpose |
 | --- | --- |
 | [Operational functional requirements](functional-requirements.md) | Target A/B/C flows, automatic shortlist persistence, acquisition/approval, explorer surfaces and hybrid spending; implemented versus missing coverage |
+| [Operational implementation specification](implementation-spec.md) | Consolidated implementation draft: user stories, public contracts, acceptance scenarios and bounded delivery milestones |
 | [Reader guide](reader-guide.md) | Plain-language walkthrough, sample data, UI-to-code map, table dictionary and current automation boundaries |
 | [Architecture](architecture.md) | Product boundaries, module ownership, data flow and current implementation coverage |
 | [Data model and ERD](data-model.md) | Implemented PostgreSQL relationships and the accepted business model |
@@ -16,6 +17,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Measurement and feedback](planning.md) | Proposed campaign plans and human decision-note revisions |
 | [Local review application](local-review.md) | Browser workflow, named local actor, evidence panels, saves and failure behavior |
 | [Development verification](development.md) | The shared local/CI check command and test prerequisites |
+| [Agent workflow configuration](agents/issue-tracker.md) | Local ticket publication, dependency gates, claiming, validation and resolution |
 | [Quality review](evaluation.md) | Separate technical, translation-assisted and marketer-usefulness gates |
 | [Canonical evidence ownership](adr/0001-canonical-evidence-ownership.md) | Why source evidence and business decisions have separate owners |
 | [Pinned support and current policy](adr/0002-pinned-support-current-policy.md) | Why reproducible decisions pin support while permissions remain current |

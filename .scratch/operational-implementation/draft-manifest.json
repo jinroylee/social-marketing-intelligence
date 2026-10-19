@@ -1,0 +1,1284 @@
+{
+  "status": "draft-awaiting-user-review",
+  "source": "docs/implementation-spec.md",
+  "publicationTarget": "unconfirmed; local draft files only",
+  "tickets": [
+    {
+      "id": 1,
+      "title": "Restore ingestion completion and safe resume",
+      "deps": [],
+      "size": "S",
+      "stories": [
+        35,
+        36,
+        38,
+        69
+      ],
+      "tests": [
+        "T04",
+        "T29"
+      ],
+      "what": "An operator can ingest bounded input and resume a completed capture without another collector call or losing prior run history.",
+      "scope": "Repair the existing evidence-save completion contract and its caller compatibility only; introduce no task queue or unrelated refactor.",
+      "criteria": [
+        "The evidence-save operation accepts an explicit final-input marker and a backward-compatible default for callers that do not provide it.",
+        "Observation persistence, checkpoint advancement, and final-input marking commit together, including caller-owned transactions.",
+        "At the request/record limit, a saved final capture resumes into canonical processing without another collector call; an interrupted nonfinal capture remains resumable.",
+        "Existing run migration and retained/transient replay scenarios preserve IDs and prior observations.",
+        "The shared repository check is green with the test database available; the current undefined-completion and unexpected-argument failures are resolved."
+      ],
+      "file": "01-restore-ingestion-completion-and-safe-resume.md"
+    },
+    {
+      "id": 2,
+      "title": "Publish and inspect permitted ingested support",
+      "deps": [
+        1
+      ],
+      "size": "M",
+      "stories": [
+        5,
+        6,
+        9,
+        10,
+        14,
+        32,
+        38,
+        68,
+        69
+      ],
+      "tests": [
+        "T01",
+        "T03",
+        "T05",
+        "T08",
+        "T09",
+        "T29"
+      ],
+      "what": "An operator can publish a bounded selection of already-ingested evidence and reopen a knowledge-publication detail page with exact usable support.",
+      "scope": "Deliver publication by identity for a bounded source-only selection and supported existing caption interpretations; no general search, background tasks, embeddings, or new ontology.",
+      "criteria": [
+        "A trusted operation publishes validated observation/derivation/assertion references with method versions, source times, publication time, coverage, and actual producer.",
+        "A source-backed account can be published with unknown profile/interpretation attributes; unsupported claims and un-ingested references cannot be published as facts.",
+        "A local publication detail surface reopens the committed selection and exact support after restart; partially prepared support is never visible as a committed publication.",
+        "Identical concurrent publication requests return one logical publication; changed payload under the same request identity conflicts.",
+        "Process/display/retention policy, commit-time withdrawal, superseded support, and later redaction or copy purge retain the existing evidence-owner contract.",
+        "Adding a new publication never mutates imported evidence-set membership or previously pinned support; existing pilot reads and explicit development-only synthetic visibility remain compatible."
+      ],
+      "file": "02-publish-and-inspect-permitted-ingested-support.md"
+    },
+    {
+      "id": 3,
+      "title": "Search current knowledge and pin result support",
+      "deps": [
+        2
+      ],
+      "size": "M",
+      "stories": [
+        5,
+        9,
+        10,
+        14,
+        22,
+        24,
+        32,
+        33,
+        68
+      ],
+      "tests": [
+        "T01",
+        "T08",
+        "T09",
+        "T16",
+        "T28"
+      ],
+      "what": "A marketer can search published knowledge, inspect coverage and freshness, and reopen the exact support selection behind a result.",
+      "scope": "Use bounded text/subject/platform/time filters and a stable support manifest; defer semantic/vector search and graph navigation.",
+      "criteria": [
+        "A public query and local knowledge-search surface search only committed, permitted publications and expose source references, relevant dates, methods, unknowns, and coverage.",
+        "Search distinguishes age-based freshness from permission/derivation health and does not count ingestion/publication time as a new capture.",
+        "A consequential query result can pin the actual observation/assertion/interpretation membership and versions used, rather than only storing the query.",
+        "A later publication can appear in a new query while an earlier pinned result retains exact membership and unavailable/superseded support indicators.",
+        "Queries and reopened results honor workspace and purpose boundaries, exclude synthetic inputs unless explicitly selected for development, and do not leak pending raw responses or denied text.",
+        "Default integration tests use real public readers and PostgreSQL, including source-only accounts, empty scope, newer publications, and withdrawal."
+      ],
+      "file": "03-search-current-knowledge-and-pin-result-support.md"
+    },
+    {
+      "id": 4,
+      "title": "Run one authorized offline acquisition task",
+      "deps": [
+        2
+      ],
+      "size": "M",
+      "stories": [
+        16,
+        30,
+        34,
+        35,
+        38
+      ],
+      "tests": [
+        "T01",
+        "T02",
+        "T03",
+        "T05",
+        "T06"
+      ],
+      "what": "A marketer can submit one bounded offline acquisition for an existing campaign, receive a task identity immediately, and inspect its ingestion and publication outcome.",
+      "scope": "One server-authorized campaign origin, one offline route, and one bounded worker entry point; reject unsupported origins and keep live execution disabled.",
+      "criteria": [
+        "Trusted campaign context establishes task origin and immutable scope/limits; arbitrary actor/origin fields cannot create schedule or assistant authority.",
+        "Submission persists actor, campaign basis, scope version, request identity, limits, and initial status before returning acknowledgment; it does not synchronously fetch.",
+        "A bounded worker uses the existing ingestion runner and publication operation, records its attempt/run links, and exposes a local task-detail surface after restart.",
+        "Queue acceptance, collection, ingestion, publication, failure, and no-usable-update meanings are distinguishable; raw fetch success alone never means a successful KB update.",
+        "Identical submission retries return the same task; changed scope under the same identity conflicts; foreign workspaces and forged origins dispatch no work.",
+        "No real source/model calls are possible in this slice; empty or unchanged inputs do not create fictitious update claims."
+      ],
+      "file": "04-run-one-authorized-offline-acquisition-task.md"
+    },
+    {
+      "id": 5,
+      "title": "Approve an exact assistant enrichment proposal",
+      "deps": [
+        4
+      ],
+      "size": "M",
+      "stories": [
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        34
+      ],
+      "tests": [
+        "T01",
+        "T02",
+        "T03",
+        "T17"
+      ],
+      "what": "A marketer can review a saved enrichment proposal, explicitly approve that exact scope, and submit an attributable offline task.",
+      "scope": "A direct local proposal/review/approval interaction using a supplied proposal; defer conversational generation of the proposal.",
+      "criteria": [
+        "A proposal revision visibly states purpose, refresh/fill/expansion intent, subject/search scope, and workspace before any acquisition task is submitted.",
+        "Only an attributable human action approves the exact proposal revision and scope; generated text or submitted actor kind is not approval.",
+        "Approval and retry-safe task submission bind one logical task to that approval; an identical retry cannot mint another task.",
+        "Changed or materially broader scope, missing approval, foreign workspace, and forged campaign/schedule origin are rejected before dispatch.",
+        "Approved on-demand scope may go beyond registered scheduled keywords while still honoring task limits.",
+        "The local approval and resulting task pages reopen exact attribution and scope after restart with existing form/Origin/CSRF protection."
+      ],
+      "file": "05-approve-an-exact-assistant-enrichment-proposal.md"
+    },
+    {
+      "id": 6,
+      "title": "Recover interrupted tasks and expose partial outcomes",
+      "deps": [
+        4
+      ],
+      "size": "M",
+      "stories": [
+        20,
+        31,
+        35,
+        36,
+        37,
+        38
+      ],
+      "tests": [
+        "T03",
+        "T04",
+        "T05",
+        "T06"
+      ],
+      "what": "An operator can resume an interrupted task and see which knowledge became usable, which phase failed, and what remains incomplete.",
+      "scope": "Single-worker recovery and the outcome matrix for one bounded route; worker competition and notification delivery are separate tickets.",
+      "criteria": [
+        "Persist phase/attempt progress so restarting after evidence, canonical, or publication commit reuses committed effects rather than starting a fresh acquisition.",
+        "Tasks expose usable update, partial update, no usable update, and failure with sanitized phase-specific reasons and actual coverage.",
+        "One valid and one failed input preserve the valid committed publication while reporting the failed remainder; unpublished material stays unavailable to KB queries.",
+        "Unchanged already-published evidence and empty eligible results are reported without inventing a newly usable update or market-absence claim.",
+        "Pending provider state is representable as waiting/resumable progress; an ambiguous chargeable operation cannot be blindly reissued.",
+        "Fault-injection tests at public worker boundaries verify restart behavior and stable support/attempt identities using real persistence."
+      ],
+      "file": "06-recover-interrupted-tasks-and-expose-partial-outcomes.md"
+    },
+    {
+      "id": 7,
+      "title": "Coordinate competing workers without duplicate effects",
+      "deps": [
+        6
+      ],
+      "size": "M",
+      "stories": [
+        20,
+        35,
+        36,
+        37
+      ],
+      "tests": [
+        "T03",
+        "T04",
+        "T07"
+      ],
+      "what": "Multiple workers can process the durable task frontier while an interrupted or stale worker cannot duplicate or overwrite completed work.",
+      "scope": "Claim, handoff, and stale-worker protection for the established task lifecycle; do not introduce a distributed broker or general workflow engine.",
+      "criteria": [
+        "Competing public worker claims grant one active execution authority for the same task phase and expose queued/running/recoverable state accurately.",
+        "Worker handoff after interruption uses committed progress and cannot create duplicate observations, publications, or logical task outcomes.",
+        "A worker that lost authority cannot commit stale results over a successor's progress.",
+        "Independent tasks can progress without one task's claim serializing the entire workspace.",
+        "Real competing connections/processes exercise claim races, lost acknowledgment, and recovery; sequential helper calls are not accepted as concurrency proof.",
+        "The visible task history records bounded attempts and recovery without exposing payloads or secrets."
+      ],
+      "file": "07-coordinate-competing-workers-without-duplicate-effects.md"
+    },
+    {
+      "id": 8,
+      "title": "Deliver durable task completion notifications",
+      "deps": [
+        6
+      ],
+      "size": "S",
+      "stories": [
+        18,
+        30,
+        31,
+        33,
+        36,
+        38,
+        68
+      ],
+      "tests": [
+        "T01",
+        "T03",
+        "T04",
+        "T05",
+        "T06"
+      ],
+      "what": "A marketer can reopen an in-application inbox and follow task completion messages to the actual usable update, partial result, or failure.",
+      "scope": "Local durable inbox and task completion delivery only; defer campaign regeneration actions and external message transports.",
+      "criteria": [
+        "Task completion and its logical notification are persisted consistently so interruption after a committed outcome cannot permanently hide completion.",
+        "Usable, partial, no-update, and failed outcomes have distinct concise messages with task/publication links and actual coverage.",
+        "Repeated delivery/resumption references one logical event; it does not invent multiple completed updates.",
+        "Inbox and task/publication navigation survive application restart and remain workspace scoped.",
+        "Notification text and source-dependent links apply current display/retention policy; unavailable support does not leak copied wording.",
+        "No email, Slack, push transport, or unrequested external messaging is introduced."
+      ],
+      "file": "08-deliver-durable-task-completion-notifications.md"
+    },
+    {
+      "id": 9,
+      "title": "Show attributable actual costs and forecasts",
+      "deps": [
+        4
+      ],
+      "size": "M",
+      "stories": [
+        41,
+        58,
+        61,
+        62,
+        63,
+        67
+      ],
+      "tests": [
+        "T21",
+        "T22",
+        "T23"
+      ],
+      "what": "An operator can inspect a task's measured usage and derived charges separately from forecasts and outstanding commitments.",
+      "scope": "One configured synthetic metered service and one forecast-only scope, through a public usage operation and local cost detail; no real paid calls or ceiling enforcement yet.",
+      "criteria": [
+        "Persist explicit metered/forecast-only classification, currency, period, service/provider, attributable task/attempt or operation, units, rate version, and measurement provenance/time.",
+        "Measured usage or charges produce derivable actual spending with auditable rate inputs; estimates and forecasts do not masquerade as actuals, and simulated measurements are labeled synthetic rather than commercial charges.",
+        "Repeated measurement identity reconciles once and conflicting reuse is visible rather than silently overwriting accounting history.",
+        "The cost surface distinguishes actuals, commitments, forecasts, unknown coverage, and meter failure; unknown cost is not zero.",
+        "Model operations without an acquisition task can receive an equivalent attributable operation identity.",
+        "Public-interface integration tests use simulated units/rates and prove forecast-only scopes never claim enforced monetary control."
+      ],
+      "file": "09-show-attributable-actual-costs-and-forecasts.md"
+    },
+    {
+      "id": 10,
+      "title": "Enforce shared monetary admission before work",
+      "deps": [
+        9
+      ],
+      "size": "M",
+      "stories": [
+        43,
+        59,
+        60,
+        63
+      ],
+      "tests": [
+        "T07",
+        "T21",
+        "T23"
+      ],
+      "what": "An operator can configure a metered ceiling and see competing chargeable operations admitted or refused before their simulated external calls.",
+      "scope": "Coordinated bounded commitments and ceiling admission for the existing synthetic cost scope; delayed billing and uncertain outcomes follow separately.",
+      "criteria": [
+        "Configured ceilings have explicit currency, accounting period, and cost scope; admissions consider actual spend plus outstanding bounded commitments.",
+        "Competing workers and public operation adapters share one authoritative admission decision and cannot exceed available bounded commitments through races.",
+        "Refused or paused work makes no additional chargeable call and exposes its allowance/blocked reason in task or operation status.",
+        "Task approval, scheduled authorization, and automatic shortlist saving cannot bypass monetary admission.",
+        "Forecast-only scopes remain forecast-only and retain request/record/byte bounds independently.",
+        "Tests use genuinely competing admissions and a counted fake transport, including exact allowance, exhausted allowance, and missing required control."
+      ],
+      "file": "10-enforce-shared-monetary-admission-before-work.md"
+    },
+    {
+      "id": 11,
+      "title": "Reconcile delayed charges and failed meters",
+      "deps": [
+        10
+      ],
+      "size": "M",
+      "stories": [
+        37,
+        58,
+        60,
+        61,
+        62,
+        63
+      ],
+      "tests": [
+        "T04",
+        "T22",
+        "T23"
+      ],
+      "what": "An operator can reconcile delayed or uncertain charges after retries and restarts without double-counting or accidentally reopening an exhausted allowance.",
+      "scope": "The established meter/commitment workflow, including late actuals and explicit control failure; do not add more providers.",
+      "criteria": [
+        "Late provider measurements replace or settle the correct outstanding commitment idempotently while preserving the measurement/rate audit trail.",
+        "Ambiguous remote-call outcomes retain an explicit unresolved commitment until reconciled or handled by a recorded bounded policy.",
+        "Retry and restart cannot double-charge accounting or release an unresolved operation as free work.",
+        "An unavailable expected meter pauses/refuses further work in that scope and presents a visible control failure rather than silently switching to forecasts.",
+        "Known charge bounds, billing lag, and strict-enforcement limitations are displayed; unbounded/delayed charges never imply guaranteed zero overshoot.",
+        "Integration tests cover late success/failure, replayed billing, conflicting measurements, restart, and meter recovery through public operations."
+      ],
+      "file": "11-reconcile-delayed-charges-and-failed-meters.md"
+    },
+    {
+      "id": 12,
+      "title": "Save visible executable campaign criteria",
+      "deps": [
+        1
+      ],
+      "size": "S",
+      "stories": [
+        1,
+        2,
+        3,
+        4,
+        20
+      ],
+      "tests": [
+        "T11",
+        "T29"
+      ],
+      "what": "A marketer can save and inspect a versioned executable criteria/ranking profile for a campaign using structured inputs.",
+      "scope": "Extend the existing brief workflow with a visible structured profile; no LLM interpretation, current-KB retrieval, or new ranking algorithm.",
+      "criteria": [
+        "Campaign editing records stable criteria identifiers, requirements/preferences/exclusions, explicit unknown handling, and the applicable ranking/coverage profile versions.",
+        "The saved interpretation is visible alongside the marketer's original input and pins the exact brief revision.",
+        "Stale edits conflict through expected-version checks; changed input creates an attributable successor rather than rewriting history.",
+        "Unknown audience, fees, availability, and sales assumptions remain unknown unless supported; structured labels cannot assert source facts.",
+        "Existing human campaign, measurement-plan, decision-note, and protected form behavior remains compatible.",
+        "A public-store and HTTP journey can create, revise, restart, and inspect the exact profile."
+      ],
+      "file": "12-save-visible-executable-campaign-criteria.md"
+    },
+    {
+      "id": 13,
+      "title": "Interpret natural-language criteria with one metered model",
+      "deps": [
+        11,
+        12
+      ],
+      "size": "M",
+      "stories": [
+        2,
+        3,
+        4,
+        58,
+        59,
+        63
+      ],
+      "tests": [
+        "T11",
+        "T12",
+        "T21",
+        "T23"
+      ],
+      "what": "A marketer can turn natural-language campaign criteria into a visible, versioned executable interpretation using one explicitly configured model route.",
+      "scope": "One provider transport and one bounded criteria-interpretation journey; default tests simulate transport and live enablement requires explicit configuration.",
+      "criteria": [
+        "Natural-language input produces a contract-validated interpretation with requirements, preferences, exclusions, unknown handling, method/model versions, and original-input linkage.",
+        "The executable interpretation is visible before it is used for assessment and remains pinned to the exact brief/profile revision.",
+        "Malformed or unsupported generated criteria fail visibly; source/model text cannot grant task authority, broaden approval, or override constraints.",
+        "The configured model route records attributable usage, obtains cost admission before calls, reconciles outcomes, and respects request/output bounds.",
+        "Missing key, model configuration, rate classification, or admission yields a visible unavailable/blocked capability rather than an unbounded call or invented interpretation.",
+        "Verify the selected provider's current primary contract during implementation; use simulated success/failure/authority-forgery responses in default integration tests and record any separately authorized live receipt."
+      ],
+      "file": "13-interpret-natural-language-criteria-with-one-metered-model.md"
+    },
+    {
+      "id": 14,
+      "title": "Compare eligible accounts from current knowledge",
+      "deps": [
+        3,
+        12
+      ],
+      "size": "M",
+      "stories": [
+        5,
+        6,
+        7,
+        9,
+        10,
+        14,
+        17,
+        68
+      ],
+      "tests": [
+        "T08",
+        "T09",
+        "T10",
+        "T11"
+      ],
+      "what": "A marketer can compare current-KB accounts against a campaign's recorded criteria with exact supporting evidence and explicit unknowns.",
+      "scope": "Reuse the existing deterministic caption criteria for a bounded KB candidate set; no automatic shortlist saves or LLM assessment yet.",
+      "criteria": [
+        "Candidates come only from current permitted KB support within the campaign scope and carry the exact retrieved support manifest/profile/brief versions.",
+        "Stable account identity plus one permitted ingested supporting observation is sufficient for eligibility; incomplete profiles remain explicit.",
+        "Handle-only or un-ingested references may appear as discovery seeds/gaps but never as supported comparison candidates.",
+        "Required exclusions and unknown policies affect the displayed assessment; caption language/PR markers do not imply audience geography or contracts.",
+        "Comparison details expose support, source dates, freshness, gaps, empty results, and actual method without pretending to be an LLM rank.",
+        "Preparation and reopen tests cover withdrawal races, newer publications, source namespaces, and immutable historical comparisons."
+      ],
+      "file": "14-compare-eligible-accounts-from-current-knowledge.md"
+    },
+    {
+      "id": 15,
+      "title": "Automatically save an attributed ordered shortlist",
+      "deps": [
+        14
+      ],
+      "size": "M",
+      "stories": [
+        8,
+        11,
+        12,
+        14,
+        20,
+        69
+      ],
+      "tests": [
+        "T03",
+        "T09",
+        "T13",
+        "T14",
+        "T29"
+      ],
+      "what": "A campaign's supported deterministic recommendation is saved automatically as an ordered shortlist revision that can be reopened without a human-review step.",
+      "scope": "Implement automated save authority and ordered persistence using the existing deterministic assessment; semantic LLM ranking and optional human curation are separate.",
+      "criteria": [
+        "A recommendation operation automatically persists the actual automation producer, exact brief/profile/method, candidate order, rationale, gaps, and pinned support.",
+        "An empty eligible result is saved explicitly; no un-ingested account or fabricated evidence is inserted to avoid an empty shortlist.",
+        "Saving requires no human approval/review/confirmation and never fabricates human authorship or endorsement.",
+        "Identical requests reopen the original saved revision without reassessment; changed payload under a request identity and stale revision updates conflict.",
+        "Existing human shortlist records and their statuses/attribution survive schema upgrade and restart unchanged.",
+        "Saved explanations enforce current policy and retention withdrawal while permitted historical membership and producer attribution remain pinned."
+      ],
+      "file": "15-automatically-save-an-attributed-ordered-shortlist.md"
+    },
+    {
+      "id": 16,
+      "title": "Rank campaign candidates with supported LLM assessment",
+      "deps": [
+        13,
+        15
+      ],
+      "size": "M",
+      "stories": [
+        6,
+        8,
+        9,
+        10,
+        11,
+        14,
+        68
+      ],
+      "tests": [
+        "T10",
+        "T11",
+        "T12",
+        "T13"
+      ],
+      "what": "A marketer receives an automatically saved campaign shortlist ordered by validated LLM assessment of a bounded current-KB candidate set.",
+      "scope": "One configured method/profile and bounded candidate batch using the established model transport; no discovery, model-driven tool loop, or new provider.",
+      "criteria": [
+        "Deterministic eligibility/requirements run before the bounded LLM assessment; incomplete supported accounts remain eligible subject to explicit unknown handling.",
+        "The saved result records actual assessed support, candidate ordering, reasons/gaps, model/method/profile versions, and automated producer.",
+        "Generated judgments may cite only permitted support belonging to assessed candidates; invented accounts, unsupported reasons, and malformed output fail or remain explicitly unassessed.",
+        "Source content cannot change tools, task origin, approvals, scope, or spending; model failure cannot be mislabeled as successful LLM ranking.",
+        "All model calls use the existing metering/admission contract; retrying a completed recommendation reopens its saved revision without another model call.",
+        "Public recommendation and UI tests cover missing attributes, constrained criteria, empty candidates, unsupported output, withdrawal, and restart."
+      ],
+      "file": "16-rank-campaign-candidates-with-supported-llm-assessment.md"
+    },
+    {
+      "id": 17,
+      "title": "Curate generated shortlists without rewriting history",
+      "deps": [
+        15
+      ],
+      "size": "S",
+      "stories": [
+        12,
+        13,
+        14,
+        19,
+        20,
+        69
+      ],
+      "tests": [
+        "T09",
+        "T13",
+        "T29"
+      ],
+      "what": "A marketer can optionally curate a generated shortlist and save an attributable successor while preserving the original automated recommendation.",
+      "scope": "Extend existing human selection/history forms to generated ordered revisions; do not add a mandatory review gate.",
+      "criteria": [
+        "Human curation can select/reorder accounts and record supported reasons/acknowledged unknowns as a new revision with actual human attribution.",
+        "The original automated rank, producer, support, and lack of human review remain unchanged.",
+        "Stale heads and conflicting retry identities fail visibly; an identical human save retries safely.",
+        "Current source-policy restrictions and inherited support apply to copied human reasons and submitted forms.",
+        "Existing historical human selections, confirmations, plans, and notes reopen with their original meaning after upgrade.",
+        "HTTP and public-store tests demonstrate optional curation and history without requiring a curation action before automated saving."
+      ],
+      "file": "17-curate-generated-shortlists-without-rewriting-history.md"
+    },
+    {
+      "id": 18,
+      "title": "Execute bounded offline keyword discovery",
+      "deps": [
+        3,
+        6
+      ],
+      "size": "M",
+      "stories": [
+        16,
+        35,
+        38,
+        42,
+        43,
+        46
+      ],
+      "tests": [
+        "T01",
+        "T05",
+        "T06",
+        "T19"
+      ],
+      "what": "An authorized task can search a scoped offline discovery route, ingest newly found records, and expose the resulting published KB updates.",
+      "scope": "One deterministic query-discovery route and capability contract; no real provider, automatic fallback, scheduler, or supplemental retrieval.",
+      "criteria": [
+        "Discovery accepts explicit query/subject/time scope and bounded limits rather than pretending a supplied-profile collector performs keyword search.",
+        "Configured capability and task authority are checked before dispatch; unsupported query routes expose an accurate unavailable reason.",
+        "A bounded offline discovery response flows through normal ingestion/publication and appears in current knowledge with query/route/selection lineage.",
+        "Results record actual capture times, coverage, missing fields, source identities, and prioritization/method context without inventing complete market coverage.",
+        "Empty, unchanged, partially valid, and failed results preserve the existing truthful task outcome meanings.",
+        "The public task/UI journey uses deterministic source-shaped fixtures and verifies no live calls, no duplicate publication benefit, and permitted support."
+      ],
+      "file": "18-execute-bounded-offline-keyword-discovery.md"
+    },
+    {
+      "id": 19,
+      "title": "Queue discovery when campaign coverage is insufficient",
+      "deps": [
+        15,
+        18
+      ],
+      "size": "M",
+      "stories": [
+        15,
+        16,
+        17,
+        34,
+        43
+      ],
+      "tests": [
+        "T02",
+        "T03",
+        "T14"
+      ],
+      "what": "A marketer receives the current supported shortlist immediately while inadequate quantity, relevance, or freshness automatically queues bounded campaign discovery.",
+      "scope": "One visible versioned coverage policy and its automatic task submission; do not regenerate or replace saved results.",
+      "criteria": [
+        "Assess actual candidate quantity, relevance, and freshness against a recorded coverage profile and show the reasons/coverage with the saved result.",
+        "Insufficient coverage establishes campaign task authority server-side and submits an associated bounded discovery task without asking for assistant approval.",
+        "Repeated coverage evaluation does not duplicate the same logical discovery request; forged campaign origin still cannot bypass assistant approval.",
+        "The current supported shortlist remains available, including an empty result, while the task is queued/running.",
+        "Source/cost admission failure is shown as blocked/refused enrichment without losing or fabricating the recommendation.",
+        "Public application tests demonstrate sufficient, thin, stale, empty, repeated, and refused cases through shortlist and task views."
+      ],
+      "file": "19-queue-discovery-when-campaign-coverage-is-insufficient.md"
+    },
+    {
+      "id": 20,
+      "title": "Offer explicit regeneration after campaign updates",
+      "deps": [
+        8,
+        19
+      ],
+      "size": "S",
+      "stories": [
+        18,
+        19,
+        20,
+        33
+      ],
+      "tests": [
+        "T09",
+        "T15"
+      ],
+      "what": "A campaign discovery completion notification offers regeneration, and only a marketer's explicit action creates a newly assessed saved shortlist revision.",
+      "scope": "Reuse the configured recommendation method and completion inbox; no silent rerank, automatic replacement, or new ranking method.",
+      "criteria": [
+        "Usable or partial published updates link the campaign notification to exact task/publication outcomes and an explicit regeneration action.",
+        "No-update/failure messages do not imply new evidence is available for a better recommendation.",
+        "Before the action, the saved shortlist's membership, order, methods, and support remain unchanged.",
+        "The explicit action uses the current campaign context, performs the configured assessment, and automatically saves an attributed successor under concurrency checks.",
+        "Duplicate action submission returns the same successor; a changed brief or stale version produces a visible conflict/recovery path.",
+        "A restart-capable HTTP journey verifies notification, no background mutation, regeneration, and both historical revisions."
+      ],
+      "file": "20-offer-explicit-regeneration-after-campaign-updates.md"
+    },
+    {
+      "id": 21,
+      "title": "Schedule offline discovery for registered keywords",
+      "deps": [
+        18
+      ],
+      "size": "M",
+      "stories": [
+        34,
+        39,
+        40,
+        41
+      ],
+      "tests": [
+        "T02",
+        "T18"
+      ],
+      "what": "An operator can register scheduled keywords and inspect due offline discovery tasks created under the schedule's recorded authority.",
+      "scope": "Keyword configuration and durable due-task creation/execution through the offline discovery route; keep live schedule activation disabled.",
+      "criteria": [
+        "A local configuration surface and public operation allow up to ten registered scheduled keywords per workspace, independently from monitoring topics.",
+        "Schedule records include configuration version and explicit day/timezone/cadence context; scheduled tasks retain their actual schedule/keyword authority.",
+        "A due tick creates bounded offline tasks once per logical scheduled occurrence and exposes status through the existing task surface.",
+        "Assistant/client input cannot choose schedule origin to bypass approval, and on-demand approved scope is not restricted to the registered list.",
+        "Restarts and concurrent due ticks do not create duplicate occurrences or reset recorded schedule history.",
+        "The UI labels the route offline and the daily target as a configurable admission allowance rather than measured throughput or per-keyword yield."
+      ],
+      "file": "21-schedule-offline-discovery-for-registered-keywords.md"
+    },
+    {
+      "id": 22,
+      "title": "Enforce the shared daily unique-post allowance",
+      "deps": [
+        21
+      ],
+      "size": "M",
+      "stories": [
+        40,
+        41,
+        44
+      ],
+      "tests": [
+        "T07",
+        "T18",
+        "T20"
+      ],
+      "what": "Scheduled discovery admits at most the configured daily total of unique eligible new posts across all keywords and competing workers.",
+      "scope": "Atomic new-post admission at the established scheduled ingestion boundary; do not treat request counts, refreshes, or costs as the same allowance.",
+      "criteria": [
+        "The initial configurable total is fifty unique eligible new posts per workspace/day across all registered keywords, not fifty per keyword.",
+        "Overlapping query results and competing tasks cannot admit the same eligible new post twice or collectively exceed the day's allowance; invalid/denied records do not count as successful new-post admission, and failed admission/ingestion releases or reconciles reservations safely.",
+        "Known-record refreshes remain distinct from new-post admission and cannot be disguised as additional new eligible posts.",
+        "Restarts, keyword edits, and configuration revisions preserve consumption under the recorded accounting-day/timezone boundary.",
+        "Task and schedule views show used/remaining allowance, deduplication, limits, and legitimate fewer-record outcomes without promising a fill target.",
+        "Real competing public operations test overlapping identities, exhausted allowance, day rollover, and configuration changes without paid I/O."
+      ],
+      "file": "22-enforce-the-shared-daily-unique-post-allowance.md"
+    },
+    {
+      "id": 23,
+      "title": "Avoid redundant discovery while preserving refresh history",
+      "deps": [
+        18
+      ],
+      "size": "M",
+      "stories": [
+        43,
+        44,
+        45,
+        46
+      ],
+      "tests": [
+        "T06",
+        "T19",
+        "T20"
+      ],
+      "what": "An operator can see unnecessary repeated retrieval skipped while legitimate stale-record refreshes and new observations retain their provenance.",
+      "scope": "One discovery route's query/retrieval history and explicit freshness/processing policy; no global cross-provider identity merge or automatic fallback.",
+      "criteria": [
+        "Persist prior query/retrieval scope, source identity, capture time, failures, usable publication, and method/version context needed for an explicit avoidance decision.",
+        "Repeated unchanged work within the configured freshness policy can be skipped with an inspectable reason rather than re-fetched or re-published as a new update.",
+        "Stale captures, changed source observations, required mapper revisions, and recoverable failed work remain eligible for appropriate new processing.",
+        "Unknown or unavailable freshness stays explicit; import/publication time cannot make old captures current.",
+        "Source namespaces, metric definitions, conflict history, and old result pins remain separate across refresh and deduplication.",
+        "Public task/KB tests count simulated retrievals and verify skip/refresh/failure behavior and historical support after restart."
+      ],
+      "file": "23-avoid-redundant-discovery-while-preserving-refresh-history.md"
+    },
+    {
+      "id": 24,
+      "title": "Enable one verified live on-demand discovery route",
+      "deps": [
+        7,
+        11,
+        23
+      ],
+      "size": "M",
+      "stories": [
+        35,
+        37,
+        42,
+        43,
+        44,
+        45,
+        46,
+        58,
+        59,
+        63
+      ],
+      "tests": [
+        "T04",
+        "T19",
+        "T20",
+        "T21",
+        "T22",
+        "T23"
+      ],
+      "what": "An authorized on-demand task can use one explicitly configured live TikTok query-discovery route and report the actual usable KB update and attributable cost.",
+      "scope": "One provider, platform, and query type; schedules remain offline until their separate activation ticket, and no automatic provider fallback is added.",
+      "criteria": [
+        "Select and verify one permitted discovery-capable route against current primary documentation and bounded responses during implementation; existing supplied-profile/oEmbed success is insufficient.",
+        "Use the established query task, worker coordination, retrieval avoidance, normal ingestion/publication, coverage, and source-policy contracts.",
+        "Before every chargeable call, enforce configured admission and bounded commitments; account for actual known units/charges and expose forecast-only or delayed portions.",
+        "Pending/ambiguous provider work resumes or reconciles without a blind paid retry; source/schema/identity conflicts yield accurate partial/failure outcomes.",
+        "Missing credentials, source-use policy, required route/cost configuration, or explicit live-operation authorization is an unmet external prerequisite, never an invented readiness pass.",
+        "Default tests remain simulated. A separately authorized bounded live receipt records requests, returned/usable records, capture times, missingness, and derivable charges without secrets; preserve source-specific identities and semantics."
+      ],
+      "file": "24-enable-one-verified-live-on-demand-discovery-route.md"
+    },
+    {
+      "id": 25,
+      "title": "Activate live scheduled discovery within daily bounds",
+      "deps": [
+        22,
+        24
+      ],
+      "size": "S",
+      "stories": [
+        39,
+        40,
+        41,
+        42,
+        44,
+        46
+      ],
+      "tests": [
+        "T18",
+        "T19",
+        "T20",
+        "T21"
+      ],
+      "what": "An operator can enable a verified live route for scheduled keyword discovery while the shared daily new-post allowance and spending controls remain enforced.",
+      "scope": "Connect the proven live route to the existing scheduler and allowance; no new provider, query type, or scheduling engine.",
+      "criteria": [
+        "Explicit route/schedule configuration enables live scheduled tasks under recorded schedule authority; an offline schedule never becomes live silently.",
+        "All keywords share the configured unique-new-post/day allowance and normal freshness/avoidance policy.",
+        "Every attempted provider operation uses shared spending admission, route limits, and recovery; exhausted daily or monetary allowance stops further relevant work visibly.",
+        "Scheduled outcomes distinguish fetched records, admitted new posts, usable publications, unchanged records, and partial/no-update results.",
+        "Restart/concurrent schedule tests with simulated live transport verify actual call counts and no bypass via origin or configuration changes.",
+        "Live execution still requires the established external configuration/authorization; no additional paid validation is silently authorized."
+      ],
+      "file": "25-activate-live-scheduled-discovery-within-daily-bounds.md"
+    },
+    {
+      "id": 26,
+      "title": "Supplement one valuable missing field and stop by value",
+      "deps": [
+        24
+      ],
+      "size": "M",
+      "stories": [
+        42,
+        43,
+        45,
+        46
+      ],
+      "tests": [
+        "T19",
+        "T20",
+        "T21",
+        "T23"
+      ],
+      "what": "A discovery task can selectively retrieve one configured missing field from an existing supplementary route and explain why it continued or stopped.",
+      "scope": "One supported missing-field case and one supplementary route; no general autonomous research loop or arbitrary route switching.",
+      "criteria": [
+        "An explicit selection policy considers missingness, freshness, permission, capability, expected information value, and cost before requesting supplementation.",
+        "Only the valuable in-scope record/field is fetched using parent task authority, remaining request/byte/record limits, and shared spending admission.",
+        "Supplementary observations retain their own source namespace, metric meaning, capture times, and provenance; conflicting support is not silently merged.",
+        "Unchanged evidence, unavailable capability, insufficient value, exhausted limits, source failure, or denied cost admission each produces an inspectable stopping reason.",
+        "Reference-only oEmbed responses cannot be turned into retained creator/account facts or comparison-grade evidence.",
+        "The task detail and resulting KB view show the actual new support/unknowns; counted fake transports verify no extra call after a stop condition."
+      ],
+      "file": "26-supplement-one-valuable-missing-field-and-stop-by-value.md"
+    },
+    {
+      "id": 27,
+      "title": "Answer free-form questions from permitted knowledge",
+      "deps": [
+        3,
+        13
+      ],
+      "size": "M",
+      "stories": [
+        21,
+        22,
+        23,
+        24,
+        33,
+        68
+      ],
+      "tests": [
+        "T08",
+        "T09",
+        "T12",
+        "T16"
+      ],
+      "what": "A marketer can ask a free-form KB question and receive an answer with inspectable support, dates, uncertainty, and explicit missing information.",
+      "scope": "Bounded knowledge retrieval and one model-backed answer journey using the established metered transport; no enrichment submission or external search tools.",
+      "criteria": [
+        "A local question/answer surface delegates to current permitted KB queries and records the actual support manifest and model/method context used.",
+        "Supported claims cite relevant permitted observations/interpretations and dates; missing, stale, ambiguous, or unsupported information remains explicit.",
+        "Reading existing knowledge requires no enrichment approval; no provider acquisition results or pending publication can support an answer.",
+        "Generated output is validated against the allowed support; evidence text cannot authorize tools, broaden scope, change actor authority, or override spending.",
+        "Model calls use shared cost admission and attributable usage; missing model/configuration or invalid output is a visible limitation/failure.",
+        "Reopened answer/support views and later questions respect current source policy and new publications without rewriting historical support."
+      ],
+      "file": "27-answer-free-form-questions-from-permitted-knowledge.md"
+    },
+    {
+      "id": 28,
+      "title": "Turn assistant knowledge gaps into approved enrichment",
+      "deps": [
+        5,
+        8,
+        27
+      ],
+      "size": "M",
+      "stories": [
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "tests": [
+        "T02",
+        "T03",
+        "T05",
+        "T12",
+        "T17"
+      ],
+      "what": "A marketer can turn an unanswered or stale assistant question into a scoped proposal, approve it, follow the task, and use published updates in a later query.",
+      "scope": "Compose the existing question, proposal/approval, task, and notification operations into one assistant journey; do not add new acquisition or model providers.",
+      "criteria": [
+        "An assistant knowledge gap can produce a visible proposal for refresh, attribute fill, or bounded subject expansion with an identifiable exact scope.",
+        "The assistant cannot submit before actual human approval and cannot convert a model-generated statement, forged origin, or changed scope into authority.",
+        "Approved scope may exceed scheduled keywords; material expansion requires corresponding new approval and still respects cost/source/task bounds.",
+        "After approval the interaction returns a task acknowledgment/status and later the durable actual completion/partial/failure notification.",
+        "Newly fetched information is never returned as a KB answer before ingestion/publication; a later explicit query can use usable publications.",
+        "HTTP/public-operation tests cover successful update, publication failure, broadened proposal, foreign actor, repeated approval, and source withdrawal."
+      ],
+      "file": "28-turn-assistant-knowledge-gaps-into-approved-enrichment.md"
+    },
+    {
+      "id": 29,
+      "title": "Collect bounded recent X evidence offline",
+      "deps": [
+        1
+      ],
+      "size": "M",
+      "stories": [
+        47,
+        48,
+        53,
+        54,
+        56,
+        57,
+        68,
+        69
+      ],
+      "tests": [
+        "T08",
+        "T24",
+        "T26",
+        "T29"
+      ],
+      "what": "An operator can configure an X monitoring topic, run a bounded offline collection window, and inspect retained recent observations independently of the full KB.",
+      "scope": "One deterministic recent-X route, one topic/window collection journey, and retention/policy-aware timeline; no alerts, live provider, or full KB ingestion.",
+      "criteria": [
+        "Persist monitoring topic configuration separately from scheduled keywords with explicit cadence/window, bounded collection, source policy, and retention settings.",
+        "A public bounded poll entry point retains recent observations with stable source references/identities, capture/publication times, window coverage, and acquisition context.",
+        "The topic/window/timeline surface reopens observations after restart without creating campaigns or requiring knowledge publications for every post.",
+        "Retries do not duplicate a logical window's observations; missing fields and incomplete coverage remain visible.",
+        "Process/display/retention permissions, expiry, and withdrawal govern retained monitoring copies and their detail views.",
+        "Offline integration tests prohibit external I/O and prove existing frozen-snapshot investigations keep their original independent behavior."
+      ],
+      "file": "29-collect-bounded-recent-x-evidence-offline.md"
+    },
+    {
+      "id": 30,
+      "title": "Detect quantitative X anomalies with retained alerts",
+      "deps": [
+        8,
+        29
+      ],
+      "size": "M",
+      "stories": [
+        49,
+        51,
+        54,
+        56,
+        57
+      ],
+      "tests": [
+        "T24",
+        "T26"
+      ],
+      "what": "A marketer receives an inspectable alert when a configured quantitative method finds a justified X volume or engagement anomaly.",
+      "scope": "One configured quantitative method and comparable baseline/window pair, with retained alert history and local inbox delivery; no semantic detection or external investigation.",
+      "criteria": [
+        "Record explicit detection/baseline windows, sampling and metric comparability, method/version, significance configuration, coverage, and necessary evidence.",
+        "A supported significant change creates a retained alert and concise durable notification with evidence and uncertainty.",
+        "Absent/incomparable baselines or insufficient coverage cannot produce an unsupported numerical spike claim and are visible as assessment limitations.",
+        "Alert detail/history survive restart and reflect current policy, expiry, and unavailable support without retaining denied copied wording.",
+        "Detection requires no full KB publication for all recent observations and cannot create campaigns, expand topic scope, or launch external searches.",
+        "Public polling/detection/inbox tests use controlled windows for real anomaly, no anomaly, missing baseline, changed sampling, retries, and withdrawal."
+      ],
+      "file": "30-detect-quantitative-x-anomalies-with-retained-alerts.md"
+    },
+    {
+      "id": 31,
+      "title": "Detect supported semantic X anomalies",
+      "deps": [
+        13,
+        30
+      ],
+      "size": "M",
+      "stories": [
+        50,
+        51,
+        54,
+        56,
+        57,
+        68
+      ],
+      "tests": [
+        "T12",
+        "T25",
+        "T26"
+      ],
+      "what": "A marketer can inspect semantic-shift or controversy alerts supported by retained recent X evidence and a versioned assessment method.",
+      "scope": "One bounded semantic method using the established metered model transport and alert contract; no external-search agent or new provider.",
+      "criteria": [
+        "Semantic assessment records method/model versions, selected windows/comparison context where applicable, actual recent support, uncertainty, and coverage limits.",
+        "A significant supported semantic finding produces an alert and local notification distinguishable from a quantitative measurement.",
+        "Malformed, unsupported, or source-injected generated output cannot invent support, approve work, expand monitoring topics, or call external research.",
+        "Missing comparison context cannot be hidden behind a confident change claim; method limitations remain inspectable.",
+        "Model calls obtain shared cost admission and usage attribution; default tests use controlled simulated responses and counted I/O.",
+        "Alert copies and reopened support honor source permissions/retention withdrawal, with exact historical method/window references preserved."
+      ],
+      "file": "31-detect-supported-semantic-x-anomalies.md"
+    },
+    {
+      "id": 32,
+      "title": "Explain X alerts using existing KB context only",
+      "deps": [
+        3,
+        30
+      ],
+      "size": "S",
+      "stories": [
+        22,
+        52,
+        54,
+        57,
+        68
+      ],
+      "tests": [
+        "T08",
+        "T09",
+        "T26"
+      ],
+      "what": "A marketer can open an X alert and see relevant existing KB context separately from the recent evidence that triggered detection.",
+      "scope": "Bounded existing-KB context lookup and explanation for the shared alert contract; no new external searches or automatic campaign initiation.",
+      "criteria": [
+        "The investigation reads only committed permitted KB knowledge available to its bounded query and pins the exact supporting context selected.",
+        "Alert detail distinguishes recent monitoring evidence, existing KB context, and derived explanation with dates, coverage, and uncertainty.",
+        "An investigation has no authority/capability to submit enrichment, forge scheduled collection, broaden configured topics, or create campaigns.",
+        "Missing KB context yields an explicit gap rather than external fallback or invented facts.",
+        "Current policy and newer publications do not substitute new evidence into a saved alert's context; denied dependencies redact copied explanations.",
+        "Public integration tests count external/model acquisition transports as forbidden and verify the same behavior for any supported alert method."
+      ],
+      "file": "32-explain-x-alerts-using-existing-kb-context-only.md"
+    },
+    {
+      "id": 33,
+      "title": "Promote selected monitoring evidence into knowledge",
+      "deps": [
+        2,
+        29
+      ],
+      "size": "M",
+      "stories": [
+        45,
+        53,
+        55,
+        56,
+        68
+      ],
+      "tests": [
+        "T08",
+        "T20",
+        "T27"
+      ],
+      "what": "An operator can deliberately promote selected permitted recent X observations through normal ingestion and publication, with traceable origins.",
+      "scope": "One local selected-observation promotion path; do not fetch new data or publish the whole feed automatically.",
+      "criteria": [
+        "A trusted explicit selection creates normal source observations/canonical mappings where supported and usable knowledge publications with links back to the monitoring inputs.",
+        "Promotion preserves source policy, capture times, native identities/namespaces, metric semantics, mapper versions, and unknown identity fields.",
+        "Retrying the same promotion does not duplicate canonical effects or logical publications.",
+        "No additional provider request or campaign is created; unselected observations remain solely in the bounded monitoring evidence path.",
+        "Monitoring and KB/alert copies honor their applicable retention, expiry, and withdrawal dependencies without using promotion to bypass denied support.",
+        "A local selection/result surface and public integration tests verify lineage, repeat promotion, partial invalid records, and policy changes."
+      ],
+      "file": "33-promote-selected-monitoring-evidence-into-knowledge.md"
+    },
+    {
+      "id": 34,
+      "title": "Enable one verified live recent-X route",
+      "deps": [
+        7,
+        11,
+        29
+      ],
+      "size": "M",
+      "stories": [
+        47,
+        48,
+        53,
+        54,
+        56,
+        58,
+        59,
+        63
+      ],
+      "tests": [
+        "T07",
+        "T19",
+        "T21",
+        "T22",
+        "T23",
+        "T26"
+      ],
+      "what": "An operator can enable one configured live recent-X collection route for monitoring topics and inspect bounded recent windows without full KB ingestion.",
+      "scope": "One provider and recent-post query type wired to existing topic/window collection; no new anomaly method or external follow-up research.",
+      "criteria": [
+        "Verify the selected route's current primary contract, permitted use, identities, pagination, limits, and bounded response shape during implementation.",
+        "Configured periodic polling uses coordinated worker execution and creates exact recent windows under topic authority, independently of KB publication.",
+        "Source limits, request/byte/record bounds, shared spending admission, usage/reconciliation, and retention apply before and after each call.",
+        "Pending/ambiguous outcomes and concurrent due polls do not blindly repeat chargeable work or duplicate logical windows.",
+        "Missing credentials/policy/cost configuration or explicit live authorization remains an external prerequisite; never invent a successful readiness receipt.",
+        "Default tests simulate transport. Any separately authorized bounded live receipt records actual attempts, timestamps, missingness, coverage and derivable costs without secrets."
+      ],
+      "file": "34-enable-one-verified-live-recent-x-route.md"
+    },
+    {
+      "id": 35,
+      "title": "Search graph entities and inspect supported neighbors",
+      "deps": [
+        3
+      ],
+      "size": "M",
+      "stories": [
+        64,
+        65,
+        68
+      ],
+      "tests": [
+        "T08",
+        "T28"
+      ],
+      "what": "A marketer can search permitted KB entities and inspect their immediate relationships and source evidence in a graph-oriented view.",
+      "scope": "One-hop entity/relationship projection over existing governed knowledge; no graph database, inferred Creator merging, or multi-hop exploration yet.",
+      "criteria": [
+        "A public projection and local graph surface search/filter supported entities and show a selected entity's immediate permitted relationships.",
+        "Relationship details distinguish observed, derived, and human bases and link to relevant source support/methods/dates.",
+        "Uncorroborated matching handles cannot create cross-platform Creator associations.",
+        "Process/display and withdrawal rules govern both graph labels and evidence details, including relationships whose support becomes unavailable.",
+        "Projection work uses owning public read interfaces and does not become another raw-fact store.",
+        "Public/HTTP tests cover empty search, bounded neighbors, differing relationship bases, foreign workspace, and denied support without leaks."
+      ],
+      "file": "35-search-graph-entities-and-inspect-supported-neighbors.md"
+    },
+    {
+      "id": 36,
+      "title": "Traverse and filter governed graph relationships",
+      "deps": [
+        35
+      ],
+      "size": "S",
+      "stories": [
+        64,
+        65,
+        68
+      ],
+      "tests": [
+        "T08",
+        "T28"
+      ],
+      "what": "A marketer can traverse multiple permitted graph relationships and narrow the view without losing relationship basis or evidence.",
+      "scope": "Bounded multi-hop navigation, filters, and entity detail expansion on the existing projection; no new ontology or datastore.",
+      "criteria": [
+        "Graph navigation supports explicit bounded traversal and filters for applicable entity/relationship/source context, with visible truncation or empty results.",
+        "Each traversed relationship remains inspectable with its observed/derived/human basis and supporting evidence.",
+        "Cycles, hidden nodes, and large neighborhoods cannot cause unbounded expansion or reveal denied labels through counts/details.",
+        "Policy changes invalidate/redact affected displayed detail without reconstructing withdrawn source wording.",
+        "Navigation and back/reopen behavior retain meaningful selection/filter context without implying historical graph membership is an immutable campaign decision.",
+        "HTTP/public-read tests exercise multi-hop navigation, cycles, bounded results, filters, and policy changes."
+      ],
+      "file": "36-traverse-and-filter-governed-graph-relationships.md"
+    },
+    {
+      "id": 37,
+      "title": "Trace tasks through publications and attributable costs",
+      "deps": [
+        6,
+        9
+      ],
+      "size": "M",
+      "stories": [
+        35,
+        38,
+        66,
+        67,
+        68
+      ],
+      "tests": [
+        "T04",
+        "T05",
+        "T08",
+        "T28"
+      ],
+      "what": "An operator can trace an acquisition task through attempts, runs, observations, transformations, publications, failures, and attributable usage in one lineage view.",
+      "scope": "Read-only task-to-publication lineage using public owners and existing status/cost records; no generic observability platform or graph-explorer dependency.",
+      "criteria": [
+        "A public lineage read and local view connect the actual task/authority to bounded attempts, ingestion runs, observations, derivation/method versions, and resulting publications.",
+        "The view makes queue acceptance, source success, partial ingestion, publication failure, no update, and usable completion visibly distinct.",
+        "Cost context links actuals, commitments, forecasts, meter provenance/lag, and unknown coverage where available without claiming unenforced ceilings.",
+        "Support/source excerpts pass current permissions, retention, and workspace checks; no credential or unrestricted provider payload appears in detail or errors.",
+        "Restart and recovery histories preserve links rather than inventing a successful continuous pipeline.",
+        "Public/HTTP tests exercise a successful trace, partial failure, resumed attempt, denied support, and cost attribution through real stores."
+      ],
+      "file": "37-trace-tasks-through-publications-and-attributable-costs.md"
+    },
+    {
+      "id": 38,
+      "title": "Prepare and validate operational quality-review packets",
+      "deps": [
+        16,
+        27,
+        31
+      ],
+      "size": "M",
+      "stories": [
+        9,
+        22,
+        50,
+        54,
+        68,
+        70
+      ],
+      "tests": [
+        "T08",
+        "T30"
+      ],
+      "what": "A reviewer can obtain and record attributable language/relevance review packets for a saved recommendation, a KB answer, and an X semantic alert.",
+      "scope": "A small shared review-record contract and public export/record/reopen journey for one bounded example of each result type; no automatic judgments or new evaluation platform.",
+      "criteria": [
+        "Packets identify exact reviewed membership, result/support IDs, methods/model versions, source spans/dates, and source-permitted original text with pending translation/reviewer fields.",
+        "Recorded judgments require actual reviewer/translator/method attribution, supported/unsupported/ambiguous/not-assessable labels, material errors/corrections, and explicit denominators.",
+        "The recorder rechecks support on export/record/read and excludes unavailable evidence rather than counting copied text toward a pass.",
+        "Technical correctness, translation-assisted labels, Japanese-original validation, and marketer usefulness remain separate statuses; missing human inputs remain pending.",
+        "Existing same-corpus monitoring/campaign review records and their semantics remain compatible or have a deliberate migration.",
+        "Integration tests prove packets do not fabricate times, translations, usefulness, source truth, or original-language accuracy; the software ticket alone establishes no human quality pass."
+      ],
+      "file": "38-prepare-and-validate-operational-quality-review-packets.md"
+    },
+    {
+      "id": 39,
+      "title": "Conduct one attributable operational marketer review",
+      "deps": [
+        20,
+        28,
+        32,
+        38
+      ],
+      "size": "S",
+      "stories": [
+        70
+      ],
+      "tests": [
+        "T30"
+      ],
+      "what": "A named human reviewer completes one bounded evaluation of the operational campaign, assistant-enrichment, and X-alert journeys with recorded evidence and limitations.",
+      "scope": "A validation activity using implemented review tools and a fixed permitted corpus/window selection; no code feature, invented benchmark, or generalized accuracy/sales claim.",
+      "criteria": [
+        "Select exact permitted reviewed examples and record reviewer identity/time, prior exposure, task order, and corpus/window membership before making a quality claim.",
+        "Capture actual manual baseline inputs and observed assisted task times/inspected evidence where the existing procedure requires them, plus a useful finding and reusable candidate decision or deliberate deferral.",
+        "Record actual feedback for campaign rank/rationale, assistant gaps/approval/publication behavior, and quantitative/semantic alert interpretation using the prepared packets.",
+        "Material unsupported claims, translation errors, or usability failures are documented with corrections or follow-up defects; they cannot be hidden to manufacture a pass.",
+        "Language and usefulness conclusions retain their actual denominators and qualifications; Japanese-original accuracy stays unvalidated without qualified original-language adjudication.",
+        "A named reviewer and permitted examples are explicit external prerequisites. If unavailable, keep the review pending and do not mark this validation ticket complete or replace the reviewer with model output."
+      ],
+      "file": "39-conduct-one-attributable-operational-marketer-review.md"
+    }
+  ]
+}

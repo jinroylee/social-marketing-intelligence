@@ -1,0 +1,21 @@
+# Ticket-planning findings
+
+- Source spec: 70 user stories, 30 acceptance scenarios, six proposed milestones. Accepted behavior remains authoritative; no additional product interview is required.
+- All proposed feature slices should expose a public operation and a usable local surface, with real PostgreSQL integration coverage and simulated external I/O by default.
+- There is no need for a speculative wide refactor. Existing collectors, mappers, ingestion checkpoints, public stores, actor boundaries, form protections, and isolated-schema tests are reusable.
+- The only initial baseline repair is the source-evidence save completion contract: the runner supplies a completion argument absent from the current signature and the save implementation references an undefined completion value. Fix it as a separate bounded recovery/regression ticket; do not perform that repair during ticket generation.
+- Distinguish minimal publication by identity from broader current-KB search and pinned retrieval results; task execution can reuse the first without waiting for graph or LLM work.
+- Split task happy path, exact assistant approval, recovery/partial outcomes, worker concurrency, and completion inbox. Treat each as a complete visible operational behavior.
+- Split spending into attributable actual/forecast reporting, coordinated admission, and uncertain/delayed reconciliation; no live route should precede the applicable controls.
+- Schedule configuration, daily unique-post allowance, retrieval avoidance, broad query discovery, and live enablement are separate behaviors. Scheduled live activation must depend on the daily allowance; on-demand live discovery need not wait for keyword configuration.
+- Current-KB comparisons, automated save authority, LLM assessment, optional human curation, coverage discovery, and explicit regeneration are distinct campaign behaviors.
+- Recent X observations can start independently after the baseline repair. Full KB publication is never a per-post prerequisite for X detection.
+- Model-backed consumers may reuse one explicitly metered provider transport introduced through a real user journey; no generic model-framework ticket is needed.
+- Final human quality evaluation must use genuine reviewer input and report pending if absent; implementation tests cannot fabricate a usefulness or original-language pass.
+- The tracker is still not configured in the supplied instructions; drafts are local and not published. to-tickets requires approval of the breakdown before either local ready-for-agent files or real tracker issues are published.
+- Final draft: 39 tickets, with 9 S and 30 M scopes, each 150–500 words and an explicit scope guard. Word limits are an artifact check, not a claim about implementation effort; scope was separated by observable behavior and distinct failure boundaries.
+- Full coverage: every user story 1–70 and acceptance scenario T01–T30 has an identified owner/extension ticket. The numbered breakdown includes both traceability tables.
+- Dependency audit: all blockers precede dependents, there are no cycles or redundant transitive edges. Initial frontier is ticket 01; after it completes, 02, 12, and 29 can start independently.
+- Source-policy/synthetic visibility, simulated cost labeling, and failed new-post-admission reconciliation were checked explicitly in the drafted criteria.
+- Required breakdown review was requested asynchronously after all drafts were concrete. No response or approval has been assumed. The published issues directory does not exist.
+- Fresh shared check still fails Ruff F821 at the unchanged source-evidence completion value and stops before pytest. Direct documentation link/ERD/instruction checks, draft-link/coverage/DAG checks, and whitespace checks pass.

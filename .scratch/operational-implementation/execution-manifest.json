@@ -1,0 +1,41 @@
+{
+  "baseline": "6220fff49b5b8e982ef5a8d54b7c788e45b0f648",
+  "integration_branch": "integration/operational-tickets-01-10",
+  "approved_tickets": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "execution_order": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "testing_boundaries": "Public operations and HTTP; real PostgreSQL; simulated external I/O",
+  "ticket_files": [
+    "01-restore-ingestion-completion-and-safe-resume.md",
+    "02-publish-and-inspect-permitted-ingested-support.md",
+    "03-search-current-knowledge-and-pin-result-support.md",
+    "04-run-one-authorized-offline-acquisition-task.md",
+    "05-approve-an-exact-assistant-enrichment-proposal.md",
+    "06-recover-interrupted-tasks-and-expose-partial-outcomes.md",
+    "07-coordinate-competing-workers-without-duplicate-effects.md",
+    "08-deliver-durable-task-completion-notifications.md",
+    "09-show-attributable-actual-costs-and-forecasts.md",
+    "10-enforce-shared-monetary-admission-before-work.md"
+  ]
+}

@@ -24,3 +24,9 @@ These rules apply throughout the repository. Follow any more specific `AGENTS.md
 
 - When implementing a module or submodule with a substantial, distinct role, add an `AGENTS.md` in its directory. Explain its responsibility, interface, dependencies, invariants, local rules, and likely antipatterns without repeating this file.
 - Every `AGENTS.md` must have a sibling `CLAUDE.md` that is a relative symlink to `AGENTS.md`. Keep one source of truth; update or remove the pair together.
+
+## Agent skills
+
+- For ticket submission, claiming, dependencies and completion, follow [the local issue tracker](docs/agents/issue-tracker.md).
+- For triage role names, use [the configured labels](docs/agents/triage-labels.md).
+- Before domain/interface work, follow [the domain documentation rules](docs/agents/domain.md).
