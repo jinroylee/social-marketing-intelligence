@@ -4,7 +4,7 @@
 
 **Blocked by:** 02: Publish and inspect permitted ingested support.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -20,3 +20,9 @@
 **Spec coverage:** user stories 5, 9, 10, 14, 22, 24, 32, 33, 68; acceptance scenarios T01, T08, T09, T16, T28 (the part exercised by this slice).
 
 **Verification:** Use the owning public operations and the existing integration/HTTP test conventions where applicable. Keep real PostgreSQL/policy behavior; simulate external I/O by default. Update the corresponding product contracts, physical ERD, and local module instructions when their behavior or ownership changes. Run the shared locked checks. A passing test suite does not establish human language or marketer-usefulness validation.
+
+## Completion
+
+- Implementation commit: `e3e55d3e89684bf3a5696d3caf0c1d257dde107c`, fast-forward integrated into `integration/operational-tickets-01-10`.
+- Integrated verification: `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **235 tests in 126.73 seconds**.
+- All acceptance criteria are checked. See [the implementation report](../reports/ticket-03.md) for public interfaces and focused verification. Delivery remained offline and local, with real PostgreSQL and simulated external I/O; no push or PR occurred.
