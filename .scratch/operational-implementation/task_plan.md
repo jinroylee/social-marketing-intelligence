@@ -6,11 +6,11 @@ Implement approved tickets 01–10 sequentially in fresh implementer worktrees, 
 
 ## Next Step
 
-Await final standards and specification review of the integration branch against starting commit `6220fff49b5b8e982ef5a8d54b7c788e45b0f648`. Tickets 01–10 are integrated and resolved; Phase 14 remains pending.
+Review tickets 01–10 against the starting commit, resolve findings, verify and clean up implementer worktrees.
 
 ## Current Phase
 
-Phase 14 — final standards/specification review pending after successful ticket 10 integration; the approved tickets 01–10 are complete.
+Phase 14 — final standards/spec review; tickets 01–10 are resolved and integration shared checks pass.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -116,6 +116,6 @@ Implemented in a fresh worktree and fast-forward integrated as `ce86f8caaf36d0be
 
 ### Phase 14 — Final standards/spec review and fixes
 
-**Status:** pending
+**Status:** in_progress
 
 Review the integration branch against the starting commit with independent standards/spec reviewers, resolve all actionable findings through one implementer worktree, run shared checks, and clean up implementer worktrees.
