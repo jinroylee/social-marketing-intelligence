@@ -4,7 +4,7 @@
 
 **Blocked by:** 06: Recover interrupted tasks and expose partial outcomes.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -24,3 +24,9 @@
 ## Comments
 
 Implemented locally with **111 focused tests** and **278 shared tests** passing. [Ticket 07 report](../reports/ticket-07.md) records public interfaces, actual competing connections/processes, stale-effect commit fencing, TDD evidence and operational limits. Status remains claimed for integration validation and resolution by the merger.
+
+## Completion
+
+- Implementation commit: `b8c232945859cf40b1c1ec1340dbcad66aee32f2`, fast-forward integrated into `integration/operational-tickets-01-10`.
+- Integrated verification: `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **278 tests in 144.00 seconds**.
+- All acceptance criteria are checked. Delivery remained offline and local, with real PostgreSQL and simulated external I/O; no push or PR occurred.
