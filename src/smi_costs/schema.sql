@@ -64,3 +64,24 @@ CREATE TABLE IF NOT EXISTS cost_route_controls (
     PRIMARY KEY (workspace_id, adapter_id),
     FOREIGN KEY (workspace_id, scope_id) REFERENCES cost_scopes(workspace_id, scope_id)
 );
+CREATE TABLE IF NOT EXISTS cost_reconciliations (
+    workspace_id text NOT NULL,
+    reconciliation_id text NOT NULL,
+    operation_id uuid NOT NULL,
+    measurement_id text NOT NULL,
+    body jsonb NOT NULL,
+    recorded_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (workspace_id, reconciliation_id),
+    UNIQUE (workspace_id, measurement_id),
+    FOREIGN KEY (workspace_id, operation_id) REFERENCES cost_operations(workspace_id, id),
+    FOREIGN KEY (workspace_id, measurement_id) REFERENCES cost_entries(workspace_id, measurement_id)
+);
+CREATE TABLE IF NOT EXISTS cost_meter_recoveries (
+    workspace_id text NOT NULL,
+    recovery_id text NOT NULL,
+    operation_id uuid NOT NULL,
+    body jsonb NOT NULL,
+    recorded_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (workspace_id, recovery_id),
+    FOREIGN KEY (workspace_id, operation_id) REFERENCES cost_operations(workspace_id, id)
+);

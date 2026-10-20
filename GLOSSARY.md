@@ -109,3 +109,9 @@ A stable workspace/request-bound accounting identity with actor, method and cost
 
 **Synthetic monetary admission**:
 A shared allowance decision for simulated metered work within one explicit cost scope. Its monetary ceiling includes measured spending and all outstanding commitments; task approval remains separate, and forecast-only scopes receive no monetary enforcement claim.
+
+**Cost reconciliation**:
+An attributable final measurement that identifies the outstanding cost portions it settles while retaining their original evidence. A reconciled cost does not establish that a missing service response or usable knowledge has been recovered.
+
+**Meter recovery**:
+An attributable confirmation that an expected cost meter is healthy again, distinct from the final accounting for its failed measurements. Restored meter health does not make an unresolved charge free.

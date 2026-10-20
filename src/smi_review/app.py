@@ -235,7 +235,9 @@ class ReviewApp:
             return self.page("Acquisition tasks", task_views.index(self.tasks.list(self.actor)))
         match = re.fullmatch(r"/tasks/([^/]+)", path)
         if match:
-            return self.page("Offline acquisition task", task_views.detail(self.tasks.read(identifier(match[1]), self.actor)))
+            task = self.tasks.read(identifier(match[1]), self.actor)
+            return self.page("Offline acquisition task", task_views.detail(task)
+                             + cost_views.task_summary(self.costs.list(self.actor, task_id=task['task_id'])))
         match = re.fullmatch(r"/campaigns/([^/]+)/tasks/new", path)
         if match:
             return self._task_page(identifier(match[1]))

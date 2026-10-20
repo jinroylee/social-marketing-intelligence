@@ -603,6 +603,24 @@ erDiagram
     cost_scopes ||--o| cost_ceilings : controls
     cost_scopes ||--o{ cost_route_controls : binds
     cost_operations ||--o| cost_admissions : dispatches
+    cost_operations ||--o{ cost_reconciliations : reconciles
+    cost_entries ||--o| cost_reconciliations : final_measurement
+    cost_operations ||--o{ cost_meter_recoveries : recovers
+    cost_reconciliations {
+        text workspace_id PK, FK
+        text reconciliation_id PK
+        uuid operation_id FK
+        text measurement_id UK, FK
+        jsonb body
+        timestamptz recorded_at
+    }
+    cost_meter_recoveries {
+        text workspace_id PK, FK
+        text recovery_id PK
+        uuid operation_id FK
+        jsonb body
+        timestamptz recorded_at
+    }
     cost_ceilings {
         text workspace_id PK, FK
         text scope_id PK, FK
@@ -660,7 +678,7 @@ erDiagram
 
 `cost_scopes.configuration` explicitly persists immutable provider/service, metered or forecast-only classification, currency, UTC period, and synthetic unit/rate version/rate where applicable. The configuring human and time are retained. Scope identity is workspace-local; changed configuration conflicts. `cost_operations` pins one workspace/request identity to that scope, actual actor/method and either both exact task/attempt IDs or neither. Task references are logical, validated through the public task owner's injected resolver rather than a cross-owner foreign key or direct SQL. This preserves acyclic module dependencies and equivalent model attribution without a task.
 
-`cost_entries` has a workspace-global measurement identity and composite operation/workspace foreign key. `kind` separates usage, forecast, declared outstanding commitment, unknown and meter failure. The body stores canonical exact decimal strings, actual recorder, provenance and measurement time; usage adds unit/rate/version, derived amount and synthetic basis; forecasts require assumptions. Repeated identities reconcile once and changed reuse conflicts without overwriting history. Totals remain per-operation/currency/period and missing categories remain unknown. Declared commitments remain outstanding until a future explicit reconciliation/release contract; usage does not retire them. `cost_ceilings` holds current trusted amount/pause control for that exact immutable currency/period scope. `cost_route_controls` permanently binds the installed synthetic fixture route to one scope and its one-request service contract. `cost_admissions` has one row per operation and a bounded reservation plus dispatched/settled/refused state, reason and actual dispatcher. The scope row serializes ledger writes, decisions and settlement across connections; no transaction spans simulated I/O. Settlement appends usage and replaces only its own dispatched reservation, never legacy declarations. Session-loss uncertainty retains liabilities and pauses replay. See [the accounting contract](costs.md).
+`cost_entries` has a workspace-global measurement identity and composite operation/workspace foreign key. `kind` separates usage, forecast, declared outstanding commitment, unknown and meter failure. The body stores canonical exact decimal strings, actual recorder, provenance and measurement time; usage adds unit/rate/version, derived amount and synthetic basis; forecasts require assumptions. Repeated identities reconcile once and changed reuse conflicts without overwriting history. Totals remain per-operation/currency/period and missing categories remain unknown. Declared commitments remain outstanding until an explicit final reconciliation names them; independent usage does not retire them. `cost_ceilings` holds current trusted amount/pause control for that exact immutable currency/period scope. `cost_route_controls` permanently binds the installed synthetic fixture route to one scope and its one-request service contract. `cost_admissions` has one row per operation and a bounded reservation plus dispatched/settled/refused state, reason and actual dispatcher. The scope row serializes ledger writes, decisions and settlement across connections; no transaction spans simulated I/O. Automatic adapter settlement appends usage and replaces only its own dispatched reservation; final reconciliation can also resolve explicitly named declarations and uncertainty. Session-loss uncertainty retains liabilities and pauses replay. `cost_reconciliations` binds a workspace-global event identity to one final usage entry and exact named admission/declaration/uncertainty targets in its immutable body, with operator, final outcome, report evidence/provenance and reconciliation time. The final measurement is unique per workspace across reconciliation events; explicit targets are validated under the scope lock. An equal existing measurement retains its original recorder. Reconciliation changes active totals rather than updating/deleting the entry audit. `cost_meter_recoveries` retains workspace-global health-check identity, exact already-reconciled failure IDs, operator, evidence/provenance and recovery time; no amount or dispatch permission follows from it. Unrecovered meter failure still blocks the scope after final usage. Both new tables use composite workspace/operation references; accounting retains no task dependency. See [the accounting contract](costs.md#final-synthetic-reconciliation-and-meter-recovery).
 
 ## Accepted future operational records
 

@@ -85,7 +85,7 @@ def test_forecasts_commitments_and_unknown_meter_failures_remain_separate(stack,
     costs.record_uncertainty(forecast['operation_id'], WORKER, measurement_id='unknown-1', state='unknown',
                              measured_at=MEASURED, provenance='operator-v1', reason='unmeterable_scope')
     read = costs.read(forecast['operation_id'], HUMAN)
-    assert read['coverage']['unknown_cost'] is True
+    assert read['coverage'] == {'status': 'unknown', 'unknown_cost': True}
     assert read['enforced_monetary_control'] is False
     assert read['actuals']['amount'] is None
     assert read['forecasts']['amount'] == '1000'

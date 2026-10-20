@@ -109,7 +109,7 @@ The browser sends a form to [`ReviewApp`](../src/smi_review/app.py). That applic
 | **Human inclusion reason / cite relevance support / acknowledge unknowns** | Record why you selected an account, what supports that reason and what you still do not know. Checking an unknown box acknowledges a gap; it does not resolve it. | `views.comparison_page`; `CampaignStore.save_shortlist`; `shortlist_selections` |
 | **Save draft / confirm shortlist** | Save working choices, or explicitly record your reviewed exploratory selection. Confirmation is an internal decision, not creator consent or campaign execution. | `shortlist_revisions`, `shortlist_selections` |
 | **Saved shortlist / successor revision** | Reopen the exact saved membership and reviewer. A later edit creates another revision. Current evidence availability is checked when reopening. | `views.shortlist_page`; `CampaignStore.read_shortlist` |
-| **Costs** | Inspect synthetic measured usage separately from forecasts, declared outstanding commitments and unknown/meter-failure coverage. | [`UsageAccounting`](../src/smi_costs/store.py); scopes/operations/entries plus ceilings, route controls and one-use admissions |
+| **Costs** | Inspect synthetic measured usage separately from forecasts, declared outstanding commitments and unknown/meter-failure coverage. | [`UsageAccounting`](../src/smi_costs/store.py); scopes/operations/entries, ceilings, route controls, one-use admissions, final reconciliations and meter recoveries |
 | **Completion inbox** | Reopen one durable completion per task with actual coverage and current permitted publication navigation. | [`CompletionInbox`](../src/smi_tasks/notifications/store.py); source-free `task_completion_events` |
 | **Knowledge search** | Filter current committed permitted publications, inspect freshness and unknowns, and reopen exact saved support. Scan/result limits are explicit. | [`query_views`](../src/smi_review/query_views.py), [`KnowledgeQueries`](../src/smi_knowledge/queries/store.py) |
 | **Knowledge publications** | Reopen committed bounded selections, exact support and current unavailable/superseded states. Publish explicitly through the operator CLI. | [`publication_views`](../src/smi_review/publication_views.py), [`KnowledgePublications`](../src/smi_knowledge/publications/store.py) |
@@ -178,7 +178,9 @@ Owner: [`smi_costs`](../src/smi_costs/schema.sql); [public accounting contract](
 
 | `cost_ceilings` | Current trusted scope amount, pause state, configuring human/time; scope fixes currency/period. | 0.125 synthetic allowance admits one bounded request costing 0.125. |
 | `cost_route_controls` | Immutable workspace fixture-route binding, exact cost scope and one-request bound. | Every campaign/approved-assistant worker reopens the configured guard after restart. |
-| `cost_admissions` | One bounded dispatch per operation, reserved amount, dispatched/settled/refused state, reason and actual dispatcher. | A lost response retains its commitment; another worker pauses instead of charging again. |
+| `cost_admissions` | One bounded dispatch per operation, reserved amount, dispatched/settled/refused state, reason and actual dispatcher. | A lost response retains its commitment; final reconciliation keeps the operation settled without permitting another call. |
+| `cost_reconciliations` | Immutable workspace/event identity, exact operation/final measurement and named liability targets, final outcome, operator, report evidence/provenance and time. | A final 0.125 report replaces a named 0.25 reservation; its bill cannot release another portion. |
+| `cost_meter_recoveries` | Immutable workspace/health-check identity, exact operation and already-reconciled failure IDs, operator, health evidence/provenance and time. | Late usage settles accounting while the scope remains blocked until an explicit meter-health recovery. |
 
 ### Shared business vocabulary, interpretations, publication and queries — 10 tables
 

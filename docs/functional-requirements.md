@@ -71,7 +71,7 @@ For metered cost scopes:
 
 For unmeterable scopes, retain forecast amounts and assumptions with their incomplete coverage clearly shown. Do not claim an enforced monetary ceiling there. Per-job request/byte/record limits, source quotas, task approval and value-based stopping remain separate controls and still apply. Assistant approval does not override a spending ceiling; automatic shortlist saving does not authorize external expenditure.
 
-The [offline accounting contract](costs.md) implements attributable synthetic unit/rate derivation, separate forecasts/declared commitments and explicit uncertainty. Configured bounded synthetic ceiling admission is installed across public adapters and the fixture worker. Commercial charge derivation and delayed commitment reconciliation remain future capabilities; forecast-only scopes retain independent resource bounds without an enforced monetary claim.
+The [offline accounting contract](costs.md) implements attributable synthetic unit/rate derivation, separate forecasts/declared commitments and explicit uncertainty. Configured bounded synthetic ceiling admission is installed across public adapters and the fixture worker. Explicit final synthetic usage reconciles named reservations/declarations/uncertainty idempotently, with separate failed-meter health recovery and visible billing/enforcement limits. Commercial charge derivation and provider-specific reconciliation remain future capabilities; forecast-only scopes retain independent resource bounds without an enforced monetary claim.
 
 ## Graph explorer and pipeline lineage
 

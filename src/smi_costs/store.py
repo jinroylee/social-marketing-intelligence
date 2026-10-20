@@ -12,6 +12,7 @@ from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
 
 from .contracts import CostScope, amount, decimal, text, timestamp
+from .reconciliation import reconcile_usage, recover_meter, resolved_entries, recovered_failures
 
 
 class UsageAccounting:
@@ -102,18 +103,27 @@ class UsageAccounting:
         scope = self._scope(connection, scope_id)
         control = connection.execute('SELECT * FROM cost_ceilings WHERE workspace_id=%s AND scope_id=%s',
                                      (self.workspace_id, scope_id)).fetchone()
-        entries = connection.execute('SELECT e.kind,e.body FROM cost_entries e JOIN cost_operations o ON o.id=e.operation_id '
+        entries = connection.execute('SELECT e.measurement_id,e.kind,e.body FROM cost_entries e JOIN cost_operations o ON o.id=e.operation_id '
                                      'WHERE o.workspace_id=%s AND o.scope_id=%s', (self.workspace_id, scope_id)).fetchall()
+        reconciliations = connection.execute('SELECT r.body FROM cost_reconciliations r JOIN cost_operations o ON o.id=r.operation_id '
+                                            'WHERE o.workspace_id=%s AND o.scope_id=%s', (self.workspace_id, scope_id)).fetchall()
+        resolved = resolved_entries(reconciliations)
+        recoveries = connection.execute('SELECT r.body FROM cost_meter_recoveries r JOIN cost_operations o ON o.id=r.operation_id '
+                                       'WHERE o.workspace_id=%s AND o.scope_id=%s', (self.workspace_id, scope_id)).fetchall()
+        recovered = recovered_failures(recoveries)
         pending = connection.execute("SELECT a.reserved_amount FROM cost_admissions a JOIN cost_operations o ON o.id=a.operation_id "
                                      "WHERE o.workspace_id=%s AND o.scope_id=%s AND a.state='dispatched'", (self.workspace_id, scope_id)).fetchall()
         with localcontext(Context(prec=80)):
             actual = sum((Decimal(e['body']['amount']) for e in entries if e['kind'] == 'usage'), Decimal(0))
-            declared = sum((Decimal(e['body']['amount']) for e in entries if e['kind'] == 'commitment'), Decimal(0))
+            declared = sum((Decimal(e['body']['amount']) for e in entries if e['kind'] == 'commitment' and e['measurement_id'] not in resolved), Decimal(0))
             outstanding = declared + sum((Decimal(p['reserved_amount']) for p in pending if p['reserved_amount'] is not None), Decimal(0))
             available = max(Decimal(0), control['amount'] - actual - outstanding) if control else None
+            over = max(Decimal(0), actual - control['amount']) if control else None
         metered = scope['classification'] == 'metered'
         reason = ('cost_control_missing' if metered and not control else 'cost_scope_paused' if control and control['paused']
-                  else 'cost_coverage_unavailable' if metered and any(e['kind'] in {'unknown', 'meter_failure'} for e in entries) else None)
+                  else 'cost_coverage_unavailable' if metered and any(
+                      (e['kind'] == 'meter_failure' and e['measurement_id'] not in recovered)
+                      or (e['kind'] in {'unknown', 'meter_failure'} and e['measurement_id'] not in resolved) for e in entries) else None)
         return {'scope_id': scope_id, 'currency': scope['currency'], 'period_start': scope['period_start'], 'period_end': scope['period_end'],
                 'classification': scope['classification'], 'ceiling_amount': amount(control['amount']) if control else None,
                 'paused': control['paused'] if control else False,
@@ -121,6 +131,7 @@ class UsageAccounting:
                 'updated_at': control['updated_at'].isoformat() if control else None,
                 'actual_amount': amount(actual), 'outstanding_amount': amount(outstanding), 'declared_commitment_amount': amount(declared),
                 'available_amount': amount(available) if available is not None else None,
+                'over_ceiling_amount': amount(over) if over is not None else None,
                 'enforced_monetary_control': metered and control is not None, 'blocked_reason': reason}
 
     def begin_operation(self, scope_id: str, actor: ActorContext, *, request_id: str, method: str,
@@ -163,7 +174,10 @@ class UsageAccounting:
                      units: str | Decimal | int, rate_version: str, measured_at: str, provenance: str) -> dict:
         """Derive one exact synthetic amount from an explicit versioned rate and units."""
         operation = self.read(operation_id, actor)
-        scope = operation['scope']
+        body = self._usage_body(operation['scope'], units, rate_version, measured_at, provenance)
+        return self._record(operation['operation_id'], actor, measurement_id, 'usage', body)
+
+    def _usage_body(self, scope, units, rate_version, measured_at, provenance):
         if scope['classification'] != 'metered':
             raise EvidenceError('cost_scope_not_metered')
         if rate_version != scope['rate_version']:
@@ -175,10 +189,36 @@ class UsageAccounting:
         text(provenance, 'provenance')
         with localcontext(Context(prec=80)):
             charge = units * Decimal(scope['unit_rate'])
-        body = {'units': amount(units), 'unit': scope['unit'], 'unit_rate': scope['unit_rate'],
+        return {'units': amount(units), 'unit': scope['unit'], 'unit_rate': scope['unit_rate'],
                 'rate_version': rate_version, 'amount': amount(charge), 'measured_at': at.isoformat(),
                 'provenance': provenance, 'synthetic': True}
-        return self._record(operation['operation_id'], actor, measurement_id, 'usage', body)
+
+    def reconcile_usage(self, operation_id: str, actor: ActorContext, *, reconciliation_id: str,
+                        measurement_id: str, units: str | Decimal | int, rate_version: str,
+                        measured_at: str, provenance: str, reconciled_at: str, evidence_id: str,
+                        outcome: str, settle_admission: bool = False,
+                        commitment_ids: tuple[str, ...] = (), uncertainty_ids: tuple[str, ...] = ()) -> dict:
+        """Record final synthetic usage and settle only explicitly evidenced liabilities.
+
+        A human operator attests the exact final report and outcome, including a
+        measured zero for confirmed uncharged failure. Ambiguity is not final
+        evidence. This resolves accounting only; it grants no transport retry.
+        """
+        return reconcile_usage(self, operation_id, actor, reconciliation_id=reconciliation_id,
+                               measurement_id=measurement_id, units=units, rate_version=rate_version,
+                               measured_at=measured_at, provenance=provenance, reconciled_at=reconciled_at,
+                               evidence_id=evidence_id, outcome=outcome, settle_admission=settle_admission,
+                               commitment_ids=commitment_ids, uncertainty_ids=uncertainty_ids)
+
+    def recover_meter(self, operation_id: str, actor: ActorContext, *, recovery_id: str,
+                      failure_ids: tuple[str, ...], recovered_at: str, provenance: str, evidence_id: str) -> dict:
+        """Attest restored expected-meter health after named failures have final accounting.
+
+        This human-only record clears exactly those failures. It neither releases
+        liabilities nor changes classification, ceiling, rate or retry authority.
+        """
+        return recover_meter(self, operation_id, actor, recovery_id=recovery_id, failure_ids=failure_ids,
+                             recovered_at=recovered_at, provenance=provenance, evidence_id=evidence_id)
 
     def _context(self, operation_id: str, actor: ActorContext, measured_at: str, provenance: str) -> tuple[dict, dict]:
         operation = self.read(operation_id, actor)
@@ -275,20 +315,51 @@ class UsageAccounting:
             admission = connection.execute('SELECT max_units,reserved_amount,state,reason FROM cost_admissions WHERE workspace_id=%s AND operation_id=%s', (self.workspace_id, operation_id)).fetchone()
             allowance = self._allowance(connection, row['scope_id'])
             entries = connection.execute('SELECT * FROM cost_entries WHERE workspace_id=%s AND operation_id=%s ORDER BY recorded_at,measurement_id', (self.workspace_id, operation_id)).fetchall()
+            reconciliations = connection.execute('SELECT * FROM cost_reconciliations WHERE workspace_id=%s AND operation_id=%s ORDER BY recorded_at,reconciliation_id', (self.workspace_id, operation_id)).fetchall()
+            recoveries = connection.execute('SELECT * FROM cost_meter_recoveries WHERE workspace_id=%s AND operation_id=%s ORDER BY recorded_at,recovery_id', (self.workspace_id, operation_id)).fetchall()
         entries = [{'measurement_id': e['measurement_id'], 'kind': e['kind'], **e['body'], 'recorded_at': e['recorded_at'].isoformat()} for e in entries]
         actual = [Decimal(e['amount']) for e in entries if e['kind'] == 'usage']
+        resolved = resolved_entries(reconciliations)
+        unresolved = {kind + '_ids': sorted(e['measurement_id'] for e in entries if e['kind'] in kinds and e['measurement_id'] not in resolved)
+                      for kind, kinds in (('commitment', {'commitment'}), ('uncertainty', {'unknown', 'meter_failure'}))}
+        recovered = recovered_failures(recoveries)
+        unresolved['meter_failure_ids'] = sorted(e['measurement_id'] for e in entries if e['kind'] == 'meter_failure' and e['measurement_id'] not in recovered)
         kinds = {e['kind'] for e in entries}
-        status = ('meter_failure' if 'meter_failure' in kinds else 'unknown' if 'unknown' in kinds
+        pending_cost = bool(unresolved['commitment_ids'] or unresolved['uncertainty_ids'] or admission and admission['state'] == 'dispatched')
+        final_id = next((r['measurement_id'] for r in reconciliations if r['body']['settle_admission']), f'admission:{operation_id}')
+        bounded_usage = next((e for e in entries if e['measurement_id'] == final_id and e['kind'] == 'usage'), None)
+        bound_status = ('not_recorded' if not admission else 'violated'
+                        if bounded_usage and Decimal(bounded_usage['units']) > admission['max_units'] else 'within_bound'
+                        if bounded_usage else 'unverified' if any(e.get('reason') == 'synthetic_service_bound_violated' for e in entries)
+                        else 'declared')
+        status = ('meter_failure' if unresolved['meter_failure_ids'] else 'unknown'
+                  if unresolved['uncertainty_ids'] or scope['classification'] == 'metered' and pending_cost
                   else 'forecast_only' if scope['classification'] == 'forecast_only'
                   else 'synthetic_measured' if actual else 'unmeasured')
         with localcontext(Context(prec=80)):
             total = amount(sum(actual, Decimal(0))) if actual else None
-            estimates = {kind + 's': {'amount': amount(sum((Decimal(e['amount']) for e in entries if e['kind'] == kind), Decimal(0)))
+            estimates = {kind + 's': {'amount': amount(sum((Decimal(e['amount']) for e in entries if e['kind'] == kind and e['measurement_id'] not in resolved), Decimal(0)))
                          if kind in kinds else None} for kind in ('forecast', 'commitment')}
         return {'operation_id': operation_id, 'workspace_id': self.workspace_id, 'request_id': row['request_id'],
                 'scope': scope, 'actor': {'actor_id': row['actor_id'], 'kind': row['actor_kind']}, 'method': row['method'],
                 'task_id': str(row['task_id']) if row['task_id'] else None, 'attempt_id': str(row['attempt_id']) if row['attempt_id'] else None,
                 'created_at': row['created_at'].isoformat(), 'entries': entries,
+                'reconciliations': [{'reconciliation_id': r['reconciliation_id'], 'measurement_id': r['measurement_id'],
+                                     **r['body'], 'recorded_at': r['recorded_at'].isoformat()} for r in reconciliations],
+                'unresolved': unresolved,
+                'meter_recoveries': [{'recovery_id': r['recovery_id'], **r['body'],
+                                     'recorded_at': r['recorded_at'].isoformat()} for r in recoveries],
+                'limits': {'known_unit_bound': amount(admission['max_units']) if admission else None,
+                           'known_charge_bound': amount(admission['reserved_amount']) if admission and admission['reserved_amount'] is not None else None,
+                           'bound_status': bound_status,
+                           'billing_lag_bound': None,
+                           'billing_state': 'forecast_only' if scope['classification'] == 'forecast_only'
+                           else 'awaiting_final_measurement' if pending_cost
+                           else 'final_measurement_recorded' if reconciliations or admission and admission['state'] == 'settled'
+                           else 'no_final_report_recorded',
+                           'meter_health': 'failed' if unresolved['meter_failure_ids'] else 'recovered' if recoveries else 'no_failure_recorded',
+                           'enforcement_basis': 'bounded_synthetic_service_contract_only' if allowance['enforced_monetary_control'] else 'no_enforced_monetary_ceiling',
+                           'zero_overshoot_guaranteed': False},
                 'actuals': {'amount': total, 'synthetic': True, 'commercial_charge': False},
                 **estimates, 'coverage': {'status': status, 'unknown_cost': status != 'synthetic_measured'},
                 'admission': {k: amount(v) if isinstance(v, Decimal) else v for k, v in admission.items()} if admission else None,

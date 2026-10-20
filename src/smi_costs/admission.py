@@ -110,7 +110,20 @@ class SyntheticOperationAdapter:
                     body = {'units': amount(units), 'unit': scope['unit'], 'unit_rate': scope['unit_rate'],
                             'rate_version': scope['rate_version'], 'amount': amount(charge),
                             'measured_at': now.isoformat(), 'provenance': 'bounded-synthetic-adapter-v1', 'synthetic': True}
-                    costs._insert_entry(connection, oid, actor, f'admission:{oid}', 'usage', body)
+                    prior = connection.execute('SELECT state FROM cost_admissions WHERE workspace_id=%s AND operation_id=%s',
+                                               (costs.workspace_id, oid)).fetchone()
+                    if prior['state'] == 'settled':
+                        # A trusted final report can arrive while this original
+                        # call is still returning. It already owns the charge;
+                        # a different response cannot add a second final bill.
+                        final = connection.execute("SELECT e.body FROM cost_reconciliations r JOIN cost_entries e "
+                                                   "ON e.workspace_id=r.workspace_id AND e.measurement_id=r.measurement_id "
+                                                   "WHERE r.workspace_id=%s AND r.operation_id=%s AND r.body->>'settle_admission'='true'",
+                                                   (costs.workspace_id, oid)).fetchone()
+                        if not final or Decimal(final['body']['units']) != units:
+                            raise EvidenceError('cost_measurement_conflict')
+                    else:
+                        costs._insert_entry(connection, oid, actor, f'admission:{oid}', 'usage', body)
                 connection.execute("UPDATE cost_admissions SET state='settled',reason=NULL,updated_at=now() WHERE workspace_id=%s AND operation_id=%s",
                                    (costs.workspace_id, oid))
                 allowance = costs._allowance(connection, self.scope_id)
