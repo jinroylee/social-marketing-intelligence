@@ -99,7 +99,7 @@ The browser sends a form to [`ReviewApp`](../src/smi_review/app.py). That applic
 
 | Screen or control | Friendly meaning | Main code and stored records |
 | --- | --- | --- |
-| **Offline task submit / detail** | Submit configured synthetic work for an exact current campaign brief or reviewed proposal/human approval, then reopen exact scope, actors and outcomes. | [`AcquisitionTasks` / `OfflineTaskWorker`](../src/smi_tasks/__init__.py); five task/proposal/approval tables, existing ingestion/publication owners |
+| **Offline task submit / detail** | Submit configured synthetic work for an exact current campaign brief or reviewed proposal/human approval, then reopen exact scope, actors and outcomes. | [`AcquisitionTasks` / `OfflineTaskWorker`](../src/smi_tasks/__init__.py); six task/proposal/approval/completion tables, existing ingestion/publication owners |
 | **Campaign workspace** (`/`) | Your saved campaigns and the available fixed input collections. “Loaded evidence” is sample coverage, not a complete market database. | [`views.home`](../src/smi_review/views.py); campaign, evidence-set and catalog listing interfaces |
 | **Create / revise brief** | State brand/products, objective, target market, platforms and selection criteria. The catalog supplies reference names and aliases. Optional commercial details may remain unknown. | `views.brief_form`; [`CampaignStore`](../src/smi_campaigns/store.py); `campaigns`, `campaign_briefs` |
 | **Selection criterion** | A named requirement or preference with an evidence type, expected value, inclusion/exclusion rule and unknown handling. Free-text labels express your intent; the current rules do not understand arbitrary prose. | [`Brief` / `Criterion`](../src/smi_campaigns/contracts.py); brief document |
@@ -109,6 +109,7 @@ The browser sends a form to [`ReviewApp`](../src/smi_review/app.py). That applic
 | **Human inclusion reason / cite relevance support / acknowledge unknowns** | Record why you selected an account, what supports that reason and what you still do not know. Checking an unknown box acknowledges a gap; it does not resolve it. | `views.comparison_page`; `CampaignStore.save_shortlist`; `shortlist_selections` |
 | **Save draft / confirm shortlist** | Save working choices, or explicitly record your reviewed exploratory selection. Confirmation is an internal decision, not creator consent or campaign execution. | `shortlist_revisions`, `shortlist_selections` |
 | **Saved shortlist / successor revision** | Reopen the exact saved membership and reviewer. A later edit creates another revision. Current evidence availability is checked when reopening. | `views.shortlist_page`; `CampaignStore.read_shortlist` |
+| **Completion inbox** | Reopen one durable completion per task with actual coverage and current permitted publication navigation. | [`CompletionInbox`](../src/smi_tasks/notifications/store.py); source-free `task_completion_events` |
 | **Knowledge search** | Filter current committed permitted publications, inspect freshness and unknowns, and reopen exact saved support. Scan/result limits are explicit. | [`query_views`](../src/smi_review/query_views.py), [`KnowledgeQueries`](../src/smi_knowledge/queries/store.py) |
 | **Knowledge publications** | Reopen committed bounded selections, exact support and current unavailable/superseded states. Publish explicitly through the operator CLI. | [`publication_views`](../src/smi_review/publication_views.py), [`KnowledgePublications`](../src/smi_knowledge/publications/store.py) |
 | **Investigations / create investigation** | Ask a standalone question about selected brands/products/topics, with optional publication dates. Intended market describes the question, not proven audience location. Selected references match with OR. | [`monitoring_views`](../src/smi_review/monitoring_views.py), [`MonitoringStore`](../src/smi_monitoring/store.py); investigations and scope revisions |
@@ -129,7 +130,7 @@ The UI does not currently expose a general database browser, ingestion dashboard
 
 ## Table dictionary
 
-There are 39 implemented tables. Most are supporting records for evidence, versions and explanations, not separate user workflows. JSONB columns hold structured documents such as a brief or candidate judgment; UUID references connect those documents to their exact sources.
+There are 42 implemented tables. Most are supporting records for evidence, versions and explanations, not separate user workflows. JSONB columns hold structured documents such as a brief or candidate judgment; UUID references connect those documents to their exact sources.
 
 The examples below describe row shapes. Campaign and investigation examples are illustrative; loading the sample alone does not create them. Full columns and relationships are in the [physical ERD](data-model.md) and linked SQL.
 
@@ -151,7 +152,7 @@ Owner: [`smi_ingestion`](../src/smi_ingestion/schema.sql), including [`evidence_
 | `evidence_sets` | One named, immutable dataset registration: manifest, byte digest, local import run and actor/time. | The 19-post sample dataset. |
 | `evidence_set_members` | One ordered dataset member, pinning its local observation and derivation plus original source IDs. | Member 0 binds O1/D1 to the original exported observation reference. |
 
-### Offline task admission and outcomes — 5 tables
+### Offline task admission and outcomes — 6 tables
 
 Owner: [`smi_tasks`](../src/smi_tasks/schema.sql); [public task contract](tasks.md).
 
@@ -162,6 +163,7 @@ Owner: [`smi_tasks`](../src/smi_tasks/schema.sql); [public task contract](tasks.
 | `acquisition_tasks` | A workspace/request-bound campaign or approved assistant task, exact brief/approval/configuration scope, initiator, hard limits, latest execution ID/session owner, durable commit/wait progress, outcome and sanitized coverage/failure. | Accepted now, executed separately through the local synthetic route. Its active PostgreSQL ownership lock distinguishes running from recoverable work. |
 | `acquisition_attempts` | One attributable worker attempt, exact ingestion run, total recovery count, most recent 20 recovery actors/100 phases, prepared support IDs and times. | Worker B resumes Worker A’s same run/support after a disconnected session; a late Worker A cannot commit local effects. A valid subset can publish with the failed remainder visible. |
 | `acquisition_task_publications` | One task's exact committed usable publication link. | Task T produced publication P; fetch-only input produces no such link. |
+| `task_completion_events` | One source-free event identity/task/time, committed with a terminal outcome; one unique event per task. | Reopen usable, partial, no-update or failure in **Inbox** after restart, with historical coverage and current permitted publication links. |
 
 ### Shared business vocabulary, interpretations, publication and queries — 10 tables
 

@@ -99,3 +99,15 @@ UPDATE acquisition_attempts SET recovery_count=greatest(recovery_count,jsonb_arr
                 FROM (SELECT value,n FROM jsonb_array_elements(resumed_by) WITH ORDINALITY AS e(value,n) ORDER BY n DESC LIMIT 20) recent),
     phases=(SELECT coalesce(jsonb_agg(value ORDER BY n),'[]'::jsonb)
             FROM (SELECT value,n FROM jsonb_array_elements(phases) WITH ORDINALITY AS e(value,n) ORDER BY n DESC LIMIT 100) recent);
+
+-- One source-free completion identity commits with the terminal task outcome.
+CREATE TABLE IF NOT EXISTS task_completion_events (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_id uuid NOT NULL UNIQUE REFERENCES acquisition_tasks(id),
+    created_at timestamptz NOT NULL
+);
+
+-- Upgrade completed tasks from before the inbox without changing their outcomes.
+INSERT INTO task_completion_events(task_id,created_at)
+SELECT id,coalesce(finished_at,submitted_at) FROM acquisition_tasks WHERE outcome IS NOT NULL ORDER BY id
+ON CONFLICT (task_id) DO NOTHING;

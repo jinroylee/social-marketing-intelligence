@@ -21,7 +21,7 @@ These are module boundaries within one Python application and PostgreSQL instanc
 
 | Owner | Responsibilities | Implementation coverage |
 | --- | --- | --- |
-| Offline acquisition tasks | Campaign-role admission, immutable supplied proposals, exact human approval, route/scope/limits, execution ownership, attempts, phases and run/publication outcomes | Implemented in `smi_tasks` for synthetic fixture JSON with competing-worker fencing, recovery and partial outcomes; scheduled authority, notifications and costs remain future work |
+| Offline acquisition tasks | Campaign-role admission, immutable supplied proposals, exact human approval, route/scope/limits, execution ownership, attempts, phases, run/publication outcomes and completion inbox | Implemented in `smi_tasks` for synthetic fixture JSON with competing-worker fencing, recovery, partial outcomes and local completion delivery; scheduled authority and costs remain future work |
 | Acquisition and canonical evidence | Collection, source policy, observations, stable account/content identity, field assertions, metrics and replay | Implemented in `smi_ingestion` |
 | Exact ingested support | Bounded selection and purpose-aware reads of observation/derivation/assertion/metric IDs, including fresh runs | Implemented in `smi_ingestion.support` |
 | Frozen evidence sets | Validated snapshot import, fixed member/derivation bindings, lineage and workspace/purpose-aware reads | Implemented in `smi_ingestion.evidence_sets` |
@@ -48,9 +48,11 @@ flowchart LR
     Publication --> Query[Current KB queries]
     Attempt --> Detail[Task phase, coverage and outcome]
     Publication --> Detail
+    Detail --> Event[One durable completion event]
+    Event --> Inbox[Policy-aware local inbox]
 ```
 
-The offline task slice retains one attempt across competing-worker recovery, including exact support and partial publication. Notification delivery and spending remain separate extensions.
+The offline task slice retains one attempt across competing-worker recovery, including exact support and partial publication. `CompletionInbox` reads one source-free event committed with each terminal outcome on the same fenced ownership session. It reopens task coverage and current publication support through their owners, exposing usable/partial/no-update/failure messages and permitted navigation after restart. Migration and workspace reconciliation idempotently backfill older outcomes; source withdrawal preserves historical counts while withholding unavailable publication links. See [the inbox contract](tasks.md#durable-completion-inbox). External transports, campaign regeneration and spending remain separate extensions.
 
 ## Acquisition and persistence
 
@@ -125,7 +127,7 @@ Same-origin form/Host checks and CSRF tokens protect local writes; the server co
 
 ## Accepted future extensions
 
-The [functional requirements](functional-requirements.md) extend bounded KB retrieval with LLM ranking, automatic shortlist persistence, an enrichment assistant, acquisition tasks/schedules, lightweight X anomaly detection, notifications, graph/lineage interfaces and hybrid spending control. None is implemented end to end by the current module names or diagrams above.
+The [functional requirements](functional-requirements.md) extend bounded KB retrieval with LLM ranking, automatic shortlist persistence, an enrichment assistant, acquisition tasks/schedules, lightweight X anomaly detection, notifications, graph/lineage interfaces and hybrid spending control. The broader A/B/C workflows remain incomplete; the local task and completion inbox interfaces are described above.
 
 ```mermaid
 flowchart TD

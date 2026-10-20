@@ -67,6 +67,9 @@ A scoped acquisition of additional evidence for the shared knowledge, initiated 
 **Task execution authority**:
 Temporary ownership of one admitted task's local effects by a worker. Handoff retains the task's original approval/scope, attempt, ingestion run and committed publication; owning execution grants no broader acquisition authority.
 
+**Task completion event**:
+A durable identity for one enrichment task’s terminal outcome, committed with that outcome. The local inbox presents historical coverage separately from current permitted publication support; delivery retries retain the same event.
+
 **Knowledge publication**:
 A versioned availability of ingested evidence and supported interpretations for knowledge-base queries. It identifies the source support and transformations that make an update usable.
 

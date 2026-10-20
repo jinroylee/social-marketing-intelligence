@@ -18,9 +18,9 @@ from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore
 from smi_monitoring import MonitoringStore
-from smi_tasks import AcquisitionTasks, EnrichmentProposal, OfflineRoute, TaskAuthority
+from smi_tasks import AcquisitionTasks, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority
 
-from . import monitoring_views, planning_views, proposal_views, publication_views, query_views, task_views, views
+from . import inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, task_views, views
 from .forms import identifier, one
 
 
@@ -96,6 +96,7 @@ class ReviewApp:
         self.monitoring = MonitoringStore(db, workspace_id)
         self.planning = CampaignPlanning(db, workspace_id)
         self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, authority=TaskAuthority.for_human(actor_id))
+        self.inbox = CompletionInbox(db, workspace_id)
         self.csrf = secrets.token_urlsafe(32)
 
     def page(self, title: str, content: str, status: int = 200) -> Response:
@@ -192,6 +193,11 @@ class ReviewApp:
             return self.page("Action needs attention", views.error_message(code), status)
 
     def _get(self, path, query):
+        if path == "/inbox":
+            return self.page("Completion inbox", inbox_views.index(self.inbox.list(self.actor)))
+        match = re.fullmatch(r"/inbox/([^/]+)", path)
+        if match:
+            return self.page("Task completion", inbox_views.detail(self.inbox.read(identifier(match[1]), self.actor)))
         if path == "/proposals":
             return self.page("Enrichment proposals", proposal_views.index(self.tasks.list_proposals(self.actor)))
         if path == "/proposals/new":

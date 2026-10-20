@@ -12,7 +12,7 @@ import psycopg
 from smi_knowledge import Catalog, KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
 from smi_campaigns import Brief, CampaignStore, Selection
 from smi_monitoring import MonitoringStore
-from smi_tasks import AcquisitionTasks, EnrichmentProposal, OfflineRoute, OfflineTaskWorker, TaskAuthority, TaskExecutionLost
+from smi_tasks import AcquisitionTasks, CompletionInbox, EnrichmentProposal, OfflineRoute, OfflineTaskWorker, TaskAuthority, TaskExecutionLost
 
 from .adapters.registry import default_registry
 from .canonical import CanonicalReader, CanonicalWriter
@@ -141,6 +141,12 @@ def main(argv: list[str] | None = None) -> int:
     task_inspect = commands.add_parser("inspect-task", help="Reopen durable phase/outcome, exact runs and publication links")
     task_inspect.add_argument("task_id")
     task_inspect.add_argument("--actor", default="local-marketer")
+    for command in ("list-inbox", "inspect-completion", "reconcile-completions"):
+        inbox_action = commands.add_parser(command, help="Reopen or reconcile durable local completion events")
+        inbox_action.add_argument("--actor", default="local-marketer")
+        inbox_action.add_argument("--workspace-id", default="local")
+        if command == "inspect-completion":
+            inbox_action.add_argument("event_id")
     proposal_save = commands.add_parser("save-proposal", help="Save a supplied immutable proposal without approving or submitting work")
     proposal_save.add_argument("proposal", type=Path)
     proposal_save.add_argument("--offline-manifest", type=Path, required=True)
@@ -197,6 +203,15 @@ def main(argv: list[str] | None = None) -> int:
                                                brief_id=args.brief_id, purpose=args.purpose, request_id=args.request_id)
             else:
                 result = AcquisitionTasks(db).read(args.task_id, ActorContext("local", args.actor, "human"))
+        elif args.command in {"list-inbox", "inspect-completion", "reconcile-completions"}:
+            inbox = CompletionInbox(db, args.workspace_id)
+            actor = ActorContext(args.workspace_id, args.actor, "human")
+            if args.command == "list-inbox":
+                result = inbox.list(actor)
+            elif args.command == "inspect-completion":
+                result = inbox.read(args.event_id, actor)
+            else:
+                result = inbox.reconcile(actor)
         elif args.command in {"search-knowledge", "inspect-query"}:
             queries = KnowledgeQueries(db)
             actor = ActorContext("local", args.actor, "human")
@@ -297,6 +312,8 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 result = {"status": "expired", "count": evidence.expire()}
         print(json.dumps(result, ensure_ascii=False, default=str))
+        if not isinstance(result, dict):
+            return 0
         return 1 if result.get("outcome") == "failure" else 2 if result.get("status") == "partial" else 0
     except (EvidenceError, TaskExecutionLost, ValueError, OSError, KeyError, psycopg.Error) as error:
         code = error.code if isinstance(error, EvidenceError) else 'task_execution_lost' if isinstance(error, TaskExecutionLost) else "database_error" if isinstance(error, psycopg.Error) else "invalid_input"

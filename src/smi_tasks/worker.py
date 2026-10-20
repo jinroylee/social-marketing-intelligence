@@ -89,6 +89,7 @@ class OfflineTaskWorker:
             connection.execute('UPDATE acquisition_attempts SET finished_at=now(),phases=%s WHERE id=%s', (Jsonb((phases + ['completed'])[-100:]), attempt_id))
             if publication_id:
                 connection.execute('INSERT INTO acquisition_task_publications(task_id,publication_id) VALUES (%s,%s) ON CONFLICT DO NOTHING', (task_id, publication_id))
+            connection.execute('INSERT INTO task_completion_events(task_id,created_at) SELECT id,finished_at FROM acquisition_tasks WHERE id=%s ON CONFLICT (task_id) DO NOTHING', (task_id,))
         self._notify(task_id, actor)
 
     @staticmethod
@@ -154,6 +155,8 @@ class OfflineTaskWorker:
                                    (Jsonb(resumed_by), attempt_id))
         phase = 'collection'
         coverage = row['coverage'] or {'collected_observations': 0, 'ingested_observations': 0, 'published_members': 0,
+                                       'requested_inputs': len(row['scope']['references']),
+                                       'remaining_inputs': len(row['scope']['references']),
                                        'scope': 'bounded_requested_input', 'market_coverage': 'unknown'}
         failed_phase, code = row['failure_phase'], row['failure_code']
         try:
