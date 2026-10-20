@@ -46,3 +46,9 @@ Applied the TDD skill at the already approved public HTTP, task/worker, campaign
 - Receipts establish historical task effects. Current source-policy and derivation availability still govern values and inbox navigation; a historical usable update does not promise permanent current availability.
 - Existing connected-worker, ambiguous-provider and synthetic-cost limits remain. This repair enables no live provider/model calls, commercial spending, hosted authentication or later-ticket features. Technical checks do not establish language quality or marketer usefulness.
 - Work remained local/offline with no push, PR, external messages, approval pause or subagents. No unresolved review finding or external blocker remains.
+
+## Integrated validation
+
+- Fast-forward integrated and checked commit: `4575fd0ef37b6049211bf83f95940f528932ea07` on `integration/operational-tickets-01-10`; runtime implementation commit: `08317376094487fb1310d3466ee3f65e512d8463`. The integration worktree was clean and the worker branch contained integration base `bf41d05e9f7a644a74ff32378fc8e78fb0cda4b5` before merging.
+- `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **325 tests in 269.09 seconds** in the root integration worktree.
+- Only this report and the shared progress record changed after verification. Resolved tickets and Phase 14 remain unchanged; final cleanup/reporting belongs to the orchestrator. No baseline review rerun, runtime edit, new ticket, push, PR, external message or provider/model call occurred.
