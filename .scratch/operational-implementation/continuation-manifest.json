@@ -212,7 +212,7 @@
   ],
   "execution_policy": "One active implementer at a time, fresh context/worktree per ticket, only after dependencies are resolved and integration shared checks pass. Keep external prerequisites explicit; work other dependency-ready tickets if an external gate blocks one.",
   "testing_boundaries": "Public operations and HTTP; real PostgreSQL; simulated external I/O",
-  "external_io": "Fully offline/local, simulated transports; read-only primary-documentation clarification pending. No live/paid source/model calls or external messages.",
+  "external_io": "Local execution with simulated transports. User authorizes read-only primary-documentation lookups only; no live/paid source/model calls or external messages.",
   "last_verified_runtime": {
     "checked_commit": "4575fd0ef37b6049211bf83f95940f528932ea07",
     "integration_evidence_commit": "0bb62aef6419549a2076c98b292be23939459733",
@@ -225,10 +225,15 @@
     "wheel_verified": true
   },
   "external_prerequisites": {
-    "13": "Current primary model contract verification and explicit model/cost configuration; documentation lookup clarification pending.",
+    "13": "Verify current primary model contract using authorized read-only primary documentation; require explicit model/cost configuration. All provider calls remain simulated in this run.",
     "24": "Verified permitted discovery capability, source/cost configuration and explicit live-operation authorization; no fabricated readiness receipt.",
     "25": "Verified live route and explicit scheduled-live configuration/authorization.",
     "34": "Current primary recent-X route contract, permitted policy/configuration and explicit live authorization.",
     "39": "Named actual human reviewer, permitted reviewed examples and actual feedback; agent output cannot substitute."
+  },
+  "documentation_authorization": {
+    "scope": "Read-only primary-documentation lookups only",
+    "source": "User response to Ticket 13 documentation clarification",
+    "live_execution_authorized": false
   }
 }

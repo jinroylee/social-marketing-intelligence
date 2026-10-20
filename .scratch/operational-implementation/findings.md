@@ -30,5 +30,7 @@
 ## Remaining-ticket continuation
 
 - Tickets 11–39 are approved and published. The previous first-ten manifest/reports remain completed history.
-- Ticket13 explicitly requires current primary-provider contract verification; no existing model/provider configuration or captured primary model contract was found in repository text. Read-only documentation clarification is pending while ticket11 proceeds offline.
+- Ticket13 explicitly requires current primary-provider contract verification; no existing model/provider configuration or captured primary model contract was found in repository text. The user approved read-only primary-documentation lookups only; model/source execution stays local and simulated while ticket11 proceeds.
 - Tickets24/25/34 require actual live prerequisites; ticket39 explicitly requires a named real human reviewer. Simulated tests cannot create those readiness/usefulness receipts.
+
+- Primary-provider contract research is captured in research/model-provider-contract.md. Official HTML API reference exceeded the web reader size limit, and its Markdown variant was unsupported by that reader. Bounded read-only HTTPS retrieval of official Markdown succeeded; no API execution or credentials were used.
