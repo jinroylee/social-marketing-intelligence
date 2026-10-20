@@ -12,6 +12,7 @@ import psycopg
 from smi_knowledge import Catalog, KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
 from smi_campaigns import Brief, CampaignStore, Selection
 from smi_monitoring import MonitoringStore
+from smi_costs import UsageAccounting
 from smi_tasks import AcquisitionTasks, CompletionInbox, EnrichmentProposal, OfflineRoute, OfflineTaskWorker, TaskAuthority, TaskExecutionLost
 
 from .adapters.registry import default_registry
@@ -177,6 +178,7 @@ def main(argv: list[str] | None = None) -> int:
             CampaignStore(db).migrate()
             MonitoringStore(db).migrate()
             AcquisitionTasks(db).migrate()
+            UsageAccounting(db).migrate()
             result = {"status": "migrated"}
         elif args.command in {"save-proposal", "inspect-proposal", "approve-proposal", "submit-approved-task"}:
             route = OfflineRoute(args.offline_manifest, args.offline_route_version) if args.command == "save-proposal" else None

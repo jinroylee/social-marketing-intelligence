@@ -12,7 +12,7 @@ This is the accepted target contract for the flows in [`FR.md`](../FR.md) and th
 | Monitoring | Independent saved snapshot investigations with literal counts and source support | Recent X collection, quantitative/semantic anomaly methods, separate light evidence path and alerts |
 | Permissions | Trusted local human/automation actors, purpose-aware evidence reads, exact task-specific human enrichment approval and human-only shortlist writes | Authority for automated shortlist persistence |
 | Visibility | Original-source panels, saved revision history, committed publication/search details, task commit/wait progress, partial outcomes, durable local completion inbox, exact support/lineage and CLI run reports | Knowledge graph explorer and pipeline/lineage view |
-| Spending | Acquisition request/byte/record bounds; no monetary ledger or limiter | Actual-spend derivation, enforceable ceilings for metered costs and forecasts for the remainder |
+| Spending | Acquisition bounds and source-free synthetic accounting with forecasts/uncertainty; no monetary admission/limiter | Actual-spend derivation, enforceable ceilings for metered costs and forecasts for the remainder |
 
 No A/B/C flow is implemented end to end. The physical tables and current interfaces remain those documented in [architecture](architecture.md), [data model](data-model.md) and the individual module contracts.
 
@@ -71,7 +71,7 @@ For metered cost scopes:
 
 For unmeterable scopes, retain forecast amounts and assumptions with their incomplete coverage clearly shown. Do not claim an enforced monetary ceiling there. Per-job request/byte/record limits, source quotas, task approval and value-based stopping remain separate controls and still apply. Assistant approval does not override a spending ceiling; automatic shortlist saving does not authorize external expenditure.
 
-Actual charge derivation, ceiling storage/admission and reconciliation are future capabilities. The existing application has no monetary meter or ceiling enforcement.
+The [offline accounting contract](costs.md) implements attributable synthetic unit/rate derivation, separate forecasts/declared commitments and explicit uncertainty. Commercial charge derivation, coordinated ceiling admission and commitment reconciliation remain future capabilities; the application makes no enforced monetary ceiling claim.
 
 ## Graph explorer and pipeline lineage
 

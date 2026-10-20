@@ -2,7 +2,7 @@
 
 ## Implemented relational model
 
-The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql) and [offline tasks](../src/smi_tasks/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
+The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql), [offline tasks](../src/smi_tasks/schema.sql) and [offline costs](../src/smi_costs/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
 
 ```mermaid
 erDiagram
@@ -470,7 +470,7 @@ Monitoring has no campaign foreign key. Its scope and insight heads preserve ind
 
 ## Product domain model
 
-This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, scheduled acquisition authority, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams describe implemented tables, including task execution ownership below.
+This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, scheduled acquisition authority, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams describe implemented tables, including task execution ownership and independent synthetic accounting below.
 
 ```mermaid
 erDiagram
@@ -594,9 +594,48 @@ Task `execution_id`, `execution_backend_pid` and `execution_actor` identify the 
 
 A terminal outcome, attempt completion, task/publication link and one `task_completion_events` row commit on the same fenced task connection. The event has one unique task reference and retains only source-free identity/time. Migration and workspace reconciliation backfill legacy terminal tasks idempotently. Inbox messages read the immutable outcome/coverage from the task and current display/support state from the publication owner, retaining historical counts while withholding unavailable publication links. See [the completion contract](tasks.md#durable-completion-inbox).
 
+## Implemented offline accounting model
+
+```mermaid
+erDiagram
+    cost_scopes ||--o{ cost_operations : classifies
+    cost_operations ||--o{ cost_entries : records
+    cost_scopes {
+        text workspace_id PK
+        text scope_id PK
+        jsonb configuration
+        text operator_id
+        timestamptz created_at
+    }
+    cost_operations {
+        uuid id PK
+        text workspace_id FK
+        text scope_id FK
+        text request_id
+        text actor_id
+        text actor_kind
+        text method
+        uuid task_id
+        uuid attempt_id
+        timestamptz created_at
+    }
+    cost_entries {
+        text workspace_id PK, FK
+        text measurement_id PK
+        uuid operation_id FK
+        text kind
+        jsonb body
+        timestamptz recorded_at
+    }
+```
+
+`cost_scopes.configuration` explicitly persists immutable provider/service, metered or forecast-only classification, currency, UTC period, and synthetic unit/rate version/rate where applicable. The configuring human and time are retained. Scope identity is workspace-local; changed configuration conflicts. `cost_operations` pins one workspace/request identity to that scope, actual actor/method and either both exact task/attempt IDs or neither. Task references are logical, validated through the public task owner's injected resolver rather than a cross-owner foreign key or direct SQL. This preserves acyclic module dependencies and equivalent model attribution without a task.
+
+`cost_entries` has a workspace-global measurement identity and composite operation/workspace foreign key. `kind` separates usage, forecast, declared outstanding commitment, unknown and meter failure. The body stores canonical exact decimal strings, actual recorder, provenance and measurement time; usage adds unit/rate/version, derived amount and synthetic basis; forecasts require assumptions. Repeated identities reconcile once and changed reuse conflicts without overwriting history. Totals remain per-operation/currency/period and missing categories remain unknown. Declared commitments remain outstanding until a future explicit reconciliation/release contract; usage does not retire them. No ceiling or admission is installed. See [the accounting contract](costs.md).
+
 ## Accepted future operational records
 
-These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication, exact query results and campaign and exactly approved assistant offline task/attempt paths. The broader operational relationships below remain conceptual.
+These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication, exact query results and campaign and exactly approved assistant offline task/attempt paths. Synthetic accounting is also installed above; ceiling/admission and the broader operational relationships below remain conceptual.
 
 ```mermaid
 erDiagram

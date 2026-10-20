@@ -238,3 +238,14 @@ class AcquisitionTasks:
                 'attempts': [{'attempt_id': str(a['id']), 'number': a['number'], 'run_id': str(a['run_id']),
                               'producer': {'actor_id': a['producer_id'], 'kind': a['producer_kind']}, 'resumed_by': a['resumed_by'], 'recovery_count': a['recovery_count'], 'publication_support': a['publication_support'], 'phases': a['phases'],
                               'started_at': a['started_at'].isoformat(), 'finished_at': a['finished_at'].isoformat() if a['finished_at'] else None} for a in attempts]}
+
+    def resolve_cost_attribution(self, task_id: str, attempt_id: str, actor: ActorContext) -> dict[str, str]:
+        """Validate source-free accounting references through the owning task interface."""
+        try:
+            task_id, attempt_id = str(uuid.UUID(task_id)), str(uuid.UUID(attempt_id))
+        except (ValueError, TypeError, AttributeError):
+            raise EvidenceError('cost_task_attribution_not_found') from None
+        task = self.read(task_id, actor)
+        if not any(a['attempt_id'] == attempt_id for a in task['attempts']):
+            raise EvidenceError('cost_task_attribution_not_found')
+        return {'task_id': task['task_id'], 'attempt_id': attempt_id}

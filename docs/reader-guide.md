@@ -109,6 +109,7 @@ The browser sends a form to [`ReviewApp`](../src/smi_review/app.py). That applic
 | **Human inclusion reason / cite relevance support / acknowledge unknowns** | Record why you selected an account, what supports that reason and what you still do not know. Checking an unknown box acknowledges a gap; it does not resolve it. | `views.comparison_page`; `CampaignStore.save_shortlist`; `shortlist_selections` |
 | **Save draft / confirm shortlist** | Save working choices, or explicitly record your reviewed exploratory selection. Confirmation is an internal decision, not creator consent or campaign execution. | `shortlist_revisions`, `shortlist_selections` |
 | **Saved shortlist / successor revision** | Reopen the exact saved membership and reviewer. A later edit creates another revision. Current evidence availability is checked when reopening. | `views.shortlist_page`; `CampaignStore.read_shortlist` |
+| **Costs** | Inspect synthetic measured usage separately from forecasts, declared outstanding commitments and unknown/meter-failure coverage. | [`UsageAccounting`](../src/smi_costs/store.py); immutable `cost_scopes`, `cost_operations`, `cost_entries` |
 | **Completion inbox** | Reopen one durable completion per task with actual coverage and current permitted publication navigation. | [`CompletionInbox`](../src/smi_tasks/notifications/store.py); source-free `task_completion_events` |
 | **Knowledge search** | Filter current committed permitted publications, inspect freshness and unknowns, and reopen exact saved support. Scan/result limits are explicit. | [`query_views`](../src/smi_review/query_views.py), [`KnowledgeQueries`](../src/smi_knowledge/queries/store.py) |
 | **Knowledge publications** | Reopen committed bounded selections, exact support and current unavailable/superseded states. Publish explicitly through the operator CLI. | [`publication_views`](../src/smi_review/publication_views.py), [`KnowledgePublications`](../src/smi_knowledge/publications/store.py) |
@@ -130,7 +131,7 @@ The UI does not currently expose a general database browser, ingestion dashboard
 
 ## Table dictionary
 
-There are 42 implemented tables. Most are supporting records for evidence, versions and explanations, not separate user workflows. JSONB columns hold structured documents such as a brief or candidate judgment; UUID references connect those documents to their exact sources.
+There are 45 implemented tables. Most are supporting records for evidence, versions and explanations, not separate user workflows. JSONB columns hold structured documents such as a brief or candidate judgment; UUID references connect those documents to their exact sources.
 
 The examples below describe row shapes. Campaign and investigation examples are illustrative; loading the sample alone does not create them. Full columns and relationships are in the [physical ERD](data-model.md) and linked SQL.
 
@@ -164,6 +165,16 @@ Owner: [`smi_tasks`](../src/smi_tasks/schema.sql); [public task contract](tasks.
 | `acquisition_attempts` | One attributable worker attempt, exact ingestion run, total recovery count, most recent 20 recovery actors/100 phases, prepared support IDs and times. | Worker B resumes Worker A’s same run/support after a disconnected session; a late Worker A cannot commit local effects. A valid subset can publish with the failed remainder visible. |
 | `acquisition_task_publications` | One task's exact committed usable publication link. | Task T produced publication P; fetch-only input produces no such link. |
 | `task_completion_events` | One source-free event identity/task/time, committed with a terminal outcome; one unique event per task. | Reopen usable, partial, no-update or failure in **Inbox** after restart, with historical coverage and current permitted publication links. |
+
+### Offline cost accounting — 3 tables
+
+Owner: [`smi_costs`](../src/smi_costs/schema.sql); [public accounting contract](costs.md).
+
+| Table | What one row stores | Example |
+| --- | --- | --- |
+| `cost_scopes` | Immutable workspace/scope configuration: provider/service, classification, currency/period, synthetic unit/rate/version, configuring human/time. | An operator's simulated unit rate for one accounting month; no invented commercial price. |
+| `cost_operations` | Stable workspace/request identity with actual actor/method, configured scope and optional validated exact task/attempt pair. | A synthetic model operation with no task, or a measurement attributed to the original worker attempt. |
+| `cost_entries` | Workspace-unique measurement identity, operation, distinct usage/forecast/declared-commitment/unknown/meter-failure kind, exact decimal inputs and provenance/time/recorder. | Three synthetic units at 0.125 derive 0.375; forecasts and unresolved declared commitments remain separate. |
 
 ### Shared business vocabulary, interpretations, publication and queries — 10 tables
 
@@ -240,7 +251,7 @@ read fixed evidence -> apply caption rules -> build comparison or summary -> sav
 
 There is no embedded LLM call, translation model, model-driven tool selection, autonomous research loop or scheduled monitoring job. The application's `local-rule-preparation` actor has kind `automation` so attribution and write permissions are explicit; that label does not imply an AI agent. The coding assistant developing this repository is separate from the running application.
 
-The accepted target adds current-KB model assessment/ranking, automatically saved shortlists, conversational assistant proposals/answers, advanced shared scheduled/on-demand workers, X anomaly alerts and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. The direct supplied-proposal approval and offline task path is present; those broader capabilities remain future work. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
+The accepted target adds current-KB model assessment/ranking, automatically saved shortlists, conversational assistant proposals/answers, advanced shared scheduled/on-demand workers, X anomaly alerts and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. The direct supplied-proposal approval, offline task path and source-free synthetic accounting/forecast surface are present; those broader capabilities remain future work. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
 
 Marketer evaluation is a human assessment of whether the findings and decisions are useful. It is not a runtime agent or a database workflow that can manufacture its own answers. The procedure is in [quality review](evaluation.md); execution records belong in `.scratch/`.
 

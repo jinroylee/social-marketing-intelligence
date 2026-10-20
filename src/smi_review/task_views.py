@@ -32,6 +32,7 @@ def submit_form(campaign, brief, csrf, route):
 def detail(task):
     """Show exact attribution, phases, counts and permitted-publication navigation."""
     content = f'<h1>Offline acquisition task</h1><p>{e(task["task_id"])}</p><p><a href="/tasks">All tasks</a></p>'
+    content += f'<p><a href="/tasks/{e(task["task_id"])}/costs">Usage and costs</a></p>'
     content += f'<p>Status: {e(task["status"])} · Outcome: {e(task["outcome"] or "Pending")}</p>'
     content += '<p>Synthetic development inputs. Retrieved material becomes usable only after ingestion and publication. No usable update does not establish market absence.</p>'
     for label, item in (('Workspace', task['workspace_id']), ('Origin', task['origin']), ('Proposal approval', task['proposal_approval']), ('Initiator', task['initiator']), ('Submitted', task['submitted_at']),

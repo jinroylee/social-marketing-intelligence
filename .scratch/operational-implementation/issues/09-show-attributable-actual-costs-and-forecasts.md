@@ -4,18 +4,18 @@
 
 **Blocked by:** 04: Run one authorized offline acquisition task.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
 **Scope guard:** One configured synthetic metered service and one forecast-only scope, through a public usage operation and local cost detail; no real paid calls or ceiling enforcement yet.
 
-- [ ] Persist explicit metered/forecast-only classification, currency, period, service/provider, attributable task/attempt or operation, units, rate version, and measurement provenance/time.
-- [ ] Measured usage or charges produce derivable actual spending with auditable rate inputs; estimates and forecasts do not masquerade as actuals, and simulated measurements are labeled synthetic rather than commercial charges.
-- [ ] Repeated measurement identity reconciles once and conflicting reuse is visible rather than silently overwriting accounting history.
-- [ ] The cost surface distinguishes actuals, commitments, forecasts, unknown coverage, and meter failure; unknown cost is not zero.
-- [ ] Model operations without an acquisition task can receive an equivalent attributable operation identity.
-- [ ] Public-interface integration tests use simulated units/rates and prove forecast-only scopes never claim enforced monetary control.
+- [x] Persist explicit metered/forecast-only classification, currency, period, service/provider, attributable task/attempt or operation, units, rate version, and measurement provenance/time.
+- [x] Measured usage or charges produce derivable actual spending with auditable rate inputs; estimates and forecasts do not masquerade as actuals, and simulated measurements are labeled synthetic rather than commercial charges.
+- [x] Repeated measurement identity reconciles once and conflicting reuse is visible rather than silently overwriting accounting history.
+- [x] The cost surface distinguishes actuals, commitments, forecasts, unknown coverage, and meter failure; unknown cost is not zero.
+- [x] Model operations without an acquisition task can receive an equivalent attributable operation identity.
+- [x] Public-interface integration tests use simulated units/rates and prove forecast-only scopes never claim enforced monetary control.
 
 **Spec coverage:** user stories 41, 58, 61, 62, 63, 67; acceptance scenarios T21, T22, T23 (the part exercised by this slice).
 

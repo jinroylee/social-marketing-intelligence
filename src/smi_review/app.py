@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, urlsplit
 
 import psycopg
 
+from smi_costs import UsageAccounting
 from smi_campaigns import Brief, CampaignStore, Criterion, Selection
 from smi_campaigns.planning import CampaignPlanning, DecisionNote, MeasurementPlan
 from smi_ingestion.contracts import ExternalKey
@@ -20,7 +21,7 @@ from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStor
 from smi_monitoring import MonitoringStore
 from smi_tasks import AcquisitionTasks, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority
 
-from . import inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, task_views, views
+from . import cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, task_views, views
 from .forms import identifier, one
 
 
@@ -97,6 +98,7 @@ class ReviewApp:
         self.planning = CampaignPlanning(db, workspace_id)
         self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, authority=TaskAuthority.for_human(actor_id))
         self.inbox = CompletionInbox(db, workspace_id)
+        self.costs = UsageAccounting(db, workspace_id, task_attribution=self.tasks.resolve_cost_attribution)
         self.csrf = secrets.token_urlsafe(32)
 
     def page(self, title: str, content: str, status: int = 200) -> Response:
@@ -193,6 +195,15 @@ class ReviewApp:
             return self.page("Action needs attention", views.error_message(code), status)
 
     def _get(self, path, query):
+        if path == "/costs":
+            return self.page("Usage and costs", cost_views.index(self.costs.list(self.actor)))
+        match = re.fullmatch(r"/costs/([^/]+)", path)
+        if match:
+            return self.page("Cost detail", cost_views.detail(self.costs.read(identifier(match[1]), self.actor)))
+        match = re.fullmatch(r"/tasks/([^/]+)/costs", path)
+        if match:
+            task = self.tasks.read(identifier(match[1]), self.actor)
+            return self.page("Task costs", cost_views.index(self.costs.list(self.actor, task_id=task['task_id'])))
         if path == "/inbox":
             return self.page("Completion inbox", inbox_views.index(self.inbox.list(self.actor)))
         match = re.fullmatch(r"/inbox/([^/]+)", path)

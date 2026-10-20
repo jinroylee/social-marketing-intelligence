@@ -103,3 +103,8 @@ uv run smi-ingest submit-approved-task PROPOSAL_ID --approval-id APPROVAL_ID --s
 ```
 
 `proposal.json` contains only `purpose`, `intent`, `subject_ids` and `search_queries`; the last two are JSON arrays, with at least one nonempty. The local CLI is an operator boundary: approval runs as its named human; save/submit use the named automation identity. Do not expose its approval or campaign commands as unrestricted assistant tools. In the browser, **Proposals** opens `/proposals`, `/proposals/new` saves supplied scope, and `/proposals/ID` shows the immutable revision before a checked explicit approval action. The protected approval POST saves human approval then acknowledges its one task; the original request identity permits safe completion if interrupted between those commits. Proposal and task pages reopen each other's exact links without configured route access. Existing Host/Origin/CSRF checks and escaped rendering apply.
+
+
+## Source-free cost attribution
+
+`resolve_cost_attribution(task_id, attempt_id, actor)` is the public task-owner seam for accounting consumers. It normalizes IDs, reopens the existing workspace task and rejects any attempt outside that task. Foreign/nonexistent tasks and attempts cannot be attached by recording arbitrary strings. The accounting owner receives this resolver by injection and stores exact logical references without task-table reads or an import cycle. [Cost records](costs.md) retain independently measured synthetic units/rates and source-free actor/method/provenance; their forecasts, declared commitments and unknown/failure coverage never change task authority or imply monetary admission. The worker does not automatically produce these measurements.

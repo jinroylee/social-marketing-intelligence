@@ -1,0 +1,9 @@
+# Offline usage accounting
+
+Own immutable operator cost scopes, stable attributable operations and append-only synthetic usage/forecast/declared-commitment/uncertainty records. Public interfaces are `CostScope` and `UsageAccounting`; read [the contract](../../docs/costs.md) before changing configuration, identity, arithmetic or reconciliation behavior.
+
+Keep dependencies toward shared database/actor/error contracts. Accept exact task/attempt attribution through an injected public resolver; the task owner validates workspace and attempt membership. Keep accounting free of task imports and direct task-table SQL so later worker admission can compose both owners without a cycle. Retain actor, method, service/provider, currency/period, units/rate version and source-free measurement provenance/time. Equivalent model operations require a stable request identity even without a task.
+
+Preserve immutable scope/rate configuration and globally workspace-unique measurement identities. Conflicting retries raise visible errors and retain original history. Use finite exact decimal inputs/products/totals; preserve explicit zero separately from unknown. Meter failure remains metered, never a forecast-only fallback. Synthetic records must stay labeled synthetic and never commercial charges. Keep actuals, forecasts, declared outstanding commitments and uncertainty distinct; configuration/records grant no work admission or enforced ceiling.
+
+Store sanitized operational identifiers rather than source text, prompts/responses, credentials or payloads. Source/publication owners keep current policy; historical source-free usage survives withdrawn support. Test through public operations and HTTP against real PostgreSQL with simulated units/rates, including competing retries and foreign attribution. Update the contract, architecture, physical ERD and dictionary with ownership/schema changes.

@@ -99,3 +99,9 @@ An observed, derived, or human-supplied claim about an entity, retaining its evi
 
 **Metric observation**:
 A measurement with its metric definition, value, subject, relevant time or window, and source evidence. The same label from different sources does not by itself establish comparable measurements.
+
+**Cost scope**:
+An operator-configured service/provider, currency and accounting period with explicit metered or forecast-only classification. Synthetic unit/rate measurements establish simulated resource costs, not commercial charges; unknown coverage, forecasts and outstanding commitments remain separate from measured actuals and enforced admission.
+
+**Cost operation**:
+A stable workspace/request-bound accounting identity with actor, method and cost scope, optionally validated against an exact acquisition task/attempt. Equivalent model operations retain attribution without requiring an acquisition task.
