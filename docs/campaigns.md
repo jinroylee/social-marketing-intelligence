@@ -8,6 +8,20 @@
 
 Criteria carry a stable ID, visible label, typed kind, expected value, inclusion/exclusion operator, requirement flag and unknown handling. `unknown_handling="acknowledge"` permits an exploratory decision with an explicit gap. `"defer"` blocks confirmation for an unknown required criterion. Optional campaign dates, budget, currency and audience details remain human context or explicit unknowns. Publication filters use a separate timezone-aware window.
 
+`Brief.original_input` optionally retains the marketer's exact prose alongside those structured choices. Prose is human context, not an interpreted assessment or source evidence. Callers submit stable criterion IDs again when editing the same need; adding/removing needs changes the successor's criteria without changing historical IDs. The browser preserves IDs while editing rows or adding/removing neighboring rows.
+
+Every newly saved brief atomically records `campaign_briefs.executable_profile`, an immutable structured snapshot pinned by `brief_id` and `brief_version`. `read_campaign` returns it alongside the original brief document, author and time; `read_comparison` exposes the snapshot from its exact pinned brief. Requirements/preferences, exclusions and explicit unknown policies retain the existing caption-judgment and human-confirmation effects described below. Changed prose or structured choices participate in request conflict checks and create attributable successors through `revise_brief`. The application cannot supply or overwrite execution-version metadata.
+
+The installed profile versions describe these bounded capabilities:
+
+| Profile | Recorded version | Installed behavior |
+| --- | --- | --- |
+| Criteria | `structured-caption-criteria-v1` | Human structured choices, with `human_structured_input` basis; literal caption method `campaign-caption-comparison-v1` |
+| Ranking | `unranked-caption-comparison-v1` | Explicitly `unranked`: marketer-known accounts followed by dataset encounter order; no fit score or ranked assessment |
+| Coverage | `fixed-selected-observations-v1` | `descriptive_only` for fixed selected observations; sufficiency assessment is `not_implemented` |
+
+The profile records baseline unknown audience geography, fees, availability, sales effectiveness and recent-post history. A structured audience/fee/availability/sales need remains a need, even if its label sounds factual; it cannot supply source support. Migration leaves pre-profile revisions with `executable_profile=null`. Reads never reconstruct their historical method versions; a new brief revision records the installed profile. Briefs without separate prose retain their structured fields as the original input and preserve their existing request identity.
+
 Known accounts use exact platform/namespace/native string IDs. Handles are not identity keys. Unsupported account references can remain requested candidates with no observed evidence.
 
 `revise_brief(..., expected_version=..., request_id=...)` appends a successor rather than changing an earlier question. A stale expected version raises `brief_version_conflict`. Starting and revising require a trusted human actor in the configured workspace. Automation can read and prepare a comparison for an existing human-initiated campaign, but cannot save a human selection or confirmation.
@@ -93,7 +107,7 @@ The [local browser surface](local-review.md) implements this workflow over the s
 
 ## Accepted future recommendation workflow
 
-Search the current permitted KB, interpret natural-language criteria into visible versioned ranking profiles, and combine rules with LLM assessment. Eligibility requires stable account identity and at least one permitted ingested supporting observation; full profiles/history are not required. Other missing/stale attributes remain visible. Unlike the current known-reference comparison behavior, unregistered reference-only accounts are discovery inputs rather than ranked output candidates.
+Extend the installed structured profile with natural-language interpretation, search the current permitted KB, and combine rules with LLM assessment. The current unranked/descriptive version labels do not claim that assessment or sufficiency checks are implemented. Eligibility requires stable account identity and at least one permitted ingested supporting observation; full profiles/history are not required. Other missing/stale attributes remain visible. Unlike the current known-reference comparison behavior, unregistered reference-only accounts are discovery inputs rather than ranked output candidates.
 
 The agent can save the ordered recommendation as a shortlist without a human save, review, confirmation or approval step. Record actual authorship, ranking/model/method versions, source support, exact brief, rationale and gaps. Optional human curation/review is separately attributed; an automated save cannot claim human confirmation. This deliberately extends the current store's human-only authority, as recorded in [ADR 0003](adr/0003-automatic-shortlist-persistence.md).
 

@@ -296,6 +296,7 @@ erDiagram
         uuid campaign_id FK
         int version
         jsonb document
+        jsonb executable_profile
         text request_id
         text request_digest
         text recorded_by
@@ -356,7 +357,7 @@ erDiagram
     }
 ```
 
-Campaign heads serialize brief/shortlist saves. Revision/request uniqueness separates a new human decision from retries. Comparisons pin exact brief and knowledge IDs plus dataset digest and actual member IDs. Candidate keys retain platform/namespace/native string identity; an absent requested account has no canonical account UUID. Explicit support rows bind copied bodies and human reasons to their source-policy dependencies. Purging removes the source-derived copy, not the selected membership or actor history.
+Campaign heads serialize brief/shortlist saves. Revision/request uniqueness separates a new human decision from retries. Each new brief atomically saves the human document (including optional original prose) and its exact structured executable profile, with stable criterion IDs, unknown policies and installed criteria/ranking/coverage versions. The profile is one-to-one with its brief revision and contains its exact ID/version; older rows keep a null profile rather than reconstructed history. Its current ranking is explicitly unranked and coverage descriptive. Comparisons pin exact brief/profile and knowledge IDs plus dataset digest and actual member IDs. Candidate keys retain platform/namespace/native string identity; an absent requested account has no canonical account UUID. Explicit support rows bind copied bodies and human reasons to their source-policy dependencies. Purging removes the source-derived copy, not the selected membership or actor history.
 
 ## Monitoring and planning tables
 

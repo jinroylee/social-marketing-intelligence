@@ -4,6 +4,8 @@ Own localhost HTTP handling, form parsing and escaped HTML evidence panels. `Rev
 
 Construct the named human and preparation-worker actors on the server. Forms carry request IDs and expected versions; preserve submitted edits on recoverable errors, and require an explicit human confirmation. Recheck display policy through public readers when rendering. Render captions only for available/current candidate support, and keep provisional interpretations, human reasons and unknowns visibly distinct.
 
+Brief forms preserve original human prose and stable criterion IDs on edits/errors. Render the campaign owner's saved profile beside the original input and exact historical brief; use its installed version labels and explicit legacy-unrecorded state. Profile/method versions are server-owned metadata, not form authority.
+
 Allow only the server's loopback Host and same-origin writes with its CSRF token. Escape all data; source URLs are validated external links, never fetched or embedded. Serve only fixed bundled assets. Keep browser state out of durable decisions: PostgreSQL revisions own save/reopen behavior.
 
 Keep investigations, knowledge search and publication list/detail pages independently reachable from campaigns. Search forms use `KnowledgeQueries` to preserve actual result membership; result pages reopen current display policy and show explicit scan/result limits and freshness. Publication pages read committed membership through `KnowledgePublications`, showing denied/superseded support metadata without source text. Proposed measurement and human feedback stay distinct from observed outcomes. Feedback error pages withhold submitted source-dependent text when support is unavailable.

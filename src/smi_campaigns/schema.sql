@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS campaign_briefs (
     UNIQUE (campaign_id, request_id)
 );
 
+-- Existing revisions did not record a profile; never invent their historical version.
+ALTER TABLE campaign_briefs ADD COLUMN IF NOT EXISTS executable_profile JSONB;
+
 CREATE TABLE IF NOT EXISTS comparison_drafts (
     id UUID PRIMARY KEY,
     campaign_id UUID NOT NULL REFERENCES campaigns(id),

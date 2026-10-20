@@ -69,6 +69,7 @@ pre { white-space: pre-wrap; font-size: 13px; line-height: 1.8; background: var(
 .evidence { background: var(--paper); padding: 18px; border-radius: 7px; }
 .post { margin: 22px 0; padding-top: 20px; border-top: 1px solid var(--line); }
 .caption { white-space: pre-wrap; font-size: 15px; line-height: 1.9; overflow-wrap: anywhere; }
+.preserve { white-space: pre-wrap; overflow-wrap: anywhere; }
 mark { background: #e2edb8; color: var(--ink); padding: 2px 0; }
 .unknowns { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); border-top: 1px solid var(--line); padding-top: 16px; }
 .unknowns legend { padding-top: 18px; }

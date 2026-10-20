@@ -70,6 +70,7 @@ class Brief:
     context: dict[str, str | None] = field(default_factory=dict)
     publication_from: str | None = None
     publication_to: str | None = None
+    original_input: str | None = None
 
     def validate(self) -> None:
         for name in ("catalog_id", "brand_id", "objective", "target_market"):
@@ -90,6 +91,7 @@ class Brief:
         require(len(set(self.known_accounts)) == len(self.known_accounts), "duplicate_known_account")
         require(isinstance(self.context, dict) and self.context.keys() <= CONTEXT_FIELDS
                 and all(v is None or text(v) for v in self.context.values()), "invalid_brief.context")
+        require(self.original_input is None or text(self.original_input), "invalid_brief.original_input")
         start, end = window_time(self.publication_from), window_time(self.publication_to)
         require(start is None or end is None or start <= end, "invalid_brief.window_order")
 
@@ -102,6 +104,9 @@ class Brief:
         result["criteria"] = [asdict(c) for c in self.criteria]
         result["known_accounts"] = [asdict(a) for a in self.known_accounts]
         result["context"] = {key: self.context.get(key) for key in sorted(CONTEXT_FIELDS)}
+        # Preserve the request digest of pre-profile structured briefs on retries.
+        if self.original_input is None:
+            del result["original_input"]
         return result
 
     @classmethod
@@ -114,7 +119,7 @@ class Brief:
         for key in ("product_ids", "platforms", "criteria"):
             require(isinstance(document[key], list), f"invalid_brief.{key}")
         require(isinstance(document.get("known_accounts", []), list), "invalid_brief.known_accounts")
-        require(document.keys() <= required | {"known_accounts", "context", "publication_from", "publication_to"}, "unknown_brief_field")
+        require(document.keys() <= required | {"known_accounts", "context", "publication_from", "publication_to", "original_input"}, "unknown_brief_field")
         try:
             brief = cls(**{**document,
                            "product_ids": tuple(document["product_ids"]), "platforms": tuple(document["platforms"]),

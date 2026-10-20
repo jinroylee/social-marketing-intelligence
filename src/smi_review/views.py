@@ -149,6 +149,7 @@ def brief_form(catalog, catalogs, csrf, campaign=None, current=None, submitted=N
     content += f'<form method="post" action="{e(action)}" id="brief-form">{hidden("csrf",csrf)}{hidden("request_id",value(submitted,"request_id",str(uuid.uuid4())))}{hidden("catalog_id",catalog["catalog_id"])}'
     if campaign:
         content += hidden("expected_version", value(submitted, "expected_version", campaign["brief_version"]))
+    content += f'<section class="panel"><h2>Original marketer input</h2><label>Campaign needs in your own words<textarea name="original_input" rows="3">{e(get("original_input"))}</textarea></label><p>Saved alongside your structured choices. This text is human context; no language model interprets it. The structured fields below determine the installed caption comparison.</p></section>'
     content += f'<section class="panel"><h2>Campaign scope</h2><div class="form-grid"><label>Brand<select name="brand_id" id="brand">{options([(b["id"],b["name"]) for b in catalog["brands"]],get("brand_id"))}</select></label><label>Target market<input name="target_market" value="{e(get("target_market"))}" placeholder="JP" required></label></div><fieldset><legend>Products <span class="muted">Optional for a brand-level brief</span></legend><div class="choice-grid">'
     chosen_products = submitted.get("product_ids", []) if submitted is not None else document["product_ids"]
     for product in catalog["products"]:
@@ -181,7 +182,21 @@ def brief_summary(brief) -> str:
     content = f'<section class="panel"><div class="row-title"><h2>Brief {brief["version"]}</h2><span class="badge">Human input</span></div><p class="lede">{e(document["objective"])}</p><dl class="facts"><div><dt>Brand / products</dt><dd>{e(document["brand_id"])} / {e(", ".join(document["product_ids"]) or "Brand-level scope")}</dd></div><div><dt>Target market</dt><dd>{e(document["target_market"])}</dd></div><div><dt>Platforms</dt><dd>{e(", ".join(document["platforms"]))}</dd></div></dl><ul>'
     for criterion in document["criteria"]:
         content += f'<li>{e(criterion["label"])} · {e(KINDS[criterion["kind"]])} · {e(criterion["value"] or "Unspecified value")} · {"required" if criterion["required"] else "preference"} · {e(criterion["operator"])} · unknown: {e(criterion["unknown_handling"])}</li>'
-    return content + f'</ul><small>Recorded by {e(brief["recorded_by"])} · {e(brief["recorded_at"])}</small><details><summary>Exact brief reference and optional context</summary><p>Brief ID: {e(brief["id"])}</p><p>Catalog: {e(document["catalog_id"])}</p><p>{e(document["context"])}</p><p>Publication window: {e(document.get("publication_from") or "Open")} → {e(document.get("publication_to") or "Open")}</p></details></section>'
+    content += f'</ul><h3>Original marketer input</h3><p class="preserve">{e(document.get("original_input") or "No separate prose input recorded; structured fields above are the original input.")}</p>'
+    content += profile_summary(brief.get("executable_profile"))
+    return content + f'<small>Recorded by {e(brief["recorded_by"])} · {e(brief["recorded_at"])}</small><details><summary>Exact brief reference and optional context</summary><p>Brief ID: {e(brief["id"])}</p><p>Catalog: {e(document["catalog_id"])}</p><p>{e(document["context"])}</p><p>Publication window: {e(document.get("publication_from") or "Open")} → {e(document.get("publication_to") or "Open")}</p></details></section>'
+
+
+def profile_summary(profile) -> str:
+    """Show the saved executable snapshot; never reconstruct a legacy profile."""
+    content = '<h3>Saved executable profile</h3>'
+    if profile is None:
+        return content + '<p>No executable profile was recorded for this historical brief. Save a successor brief to record the installed structured profile.</p>'
+    content += f'<p>Brief {e(profile["brief_version"])} · {e(profile["brief_id"])}<br>Basis: {e(profile["basis"])} · {e(profile["criteria_profile_version"])}<br>Caption method: {e(profile["comparison_method_version"])}</p><ul>'
+    for criterion in profile["criteria"]:
+        content += f'<li>{e(criterion["id"])}: {e(criterion["label"])} · {e(criterion["kind"])} = {e(criterion["value"] or "Unspecified")} · {e(criterion["importance"])} · {e(criterion["operator"])} · unknown: {e(criterion["unknown_handling"])}</li>'
+    ranking, coverage = profile["ranking_profile"], profile["coverage_profile"]
+    return content + f'</ul><p>Ranking profile: {e(ranking["version"])} · {e(ranking["status"])}<br>Order: {e(ranking["ordering"])}</p><p>Coverage profile: {e(coverage["version"])} · {e(coverage["status"])}<br>Scope: {e(coverage["scope"])} · sufficiency assessment: {e(coverage["sufficiency_assessment"])}</p><p>Baseline unknowns: {e(", ".join(profile["baseline_unknowns"]))}. Structured needs and labels do not establish source facts.</p>'
 
 
 def campaign_page(campaign, current, datasets, csrf) -> str:

@@ -22,6 +22,8 @@ Shared acquisition tasks, knowledge publication, source-policy enforcement, noti
 
 The first delivery is a working offline task-to-knowledge path: authorize and submit a task, execute bounded input, ingest and publish usable support, inspect the result after restart, and receive an accurate completion record. Subsequent milestones add ranking, live discovery, the assistant, and X monitoring without replacing that contract.
 
+Structured campaign profiles are installed: a human brief save records original prose when supplied and an immutable executable criteria snapshot with exact brief/version, stable criteria IDs, requirements/preferences/exclusions and unknown policies. Its ranking version is explicitly unranked and its coverage version descriptive; natural-language interpretation, ranked assessment and coverage sufficiency remain future work. See the [implemented profile contract](campaigns.md#implemented-briefs-and-actors).
+
 ## User Stories
 
 1. As a marketer, I want to create a campaign brief with brand/product scope, objective, target market, platforms, and selection criteria, so that recommendations answer my actual campaign question.

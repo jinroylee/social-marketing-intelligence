@@ -90,6 +90,8 @@ HTTP boundary errors explain that the request was not saved and provide **Open c
 
 The HTTP boundary returns visible validation errors, `409` version/request conflicts, `404` missing records and sanitized `503` database/setup failures. Host/origin failures use `403`; oversized/unsupported request bodies use `413`/`415`. Domain-store checks remain authoritative after every form submission.
 
+Create/revise brief forms save optional original marketer prose alongside stable structured criteria. Campaign and historical brief panels reopen the exact saved executable profile, brief ID/version, criteria policies, installed caption method, unranked ordering and descriptive coverage versions. Prose and structured needs remain human input; audience, commercial terms and sales remain unknown without source support. Stale revisions retain submitted prose, criterion IDs and retry/version context. Historical pre-profile briefs visibly report that no profile was recorded. See the [campaign profile contract](campaigns.md#implemented-briefs-and-actors).
+
 ## Accepted future application surfaces
 
 Campaign results show ranked KB-backed accounts, supporting rationale, unknowns/freshness and automatic save attribution. Saving does not require a human approval checkbox. Optional human curation/review is distinct. Insufficient coverage shows the automatically queued discovery status; completion offers explicit regeneration rather than replacing the saved result.

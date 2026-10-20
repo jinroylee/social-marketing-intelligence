@@ -14,6 +14,19 @@ VALUE_FIELDS = {"brand_mention": "brand_id", "product_mention": "product_id", "t
                 "script_evidence": "script", "literal_marker": "marker"}
 
 
+def structured_profile(document: dict[str, Any], brief_id: str, version: int) -> dict[str, Any]:
+    """Snapshot the installed structured rules, without claiming ranking or coverage assessment."""
+    return {"brief_id": brief_id, "brief_version": version, "basis": "human_structured_input",
+            "criteria_profile_version": "structured-caption-criteria-v1", "comparison_method_version": METHOD_VERSION,
+            "criteria": [{**c, "importance": "requirement" if c["required"] else "preference"}
+                         for c in document["criteria"]],
+            "ranking_profile": {"version": "unranked-caption-comparison-v1", "status": "unranked",
+                                "ordering": "marketer_known_then_dataset_encounter_order"},
+            "coverage_profile": {"version": "fixed-selected-observations-v1", "status": "descriptive_only",
+                                 "scope": "fixed_selected_observations", "sufficiency_assessment": "not_implemented"},
+            "baseline_unknowns": list(BASE_UNKNOWNS)}
+
+
 def account_token(key: dict[str, str]) -> str:
     """Stable identity including the namespace; handles are never matching keys."""
     return json.dumps(key, sort_keys=True, separators=(",", ":"))

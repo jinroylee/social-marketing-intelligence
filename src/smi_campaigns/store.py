@@ -15,7 +15,7 @@ from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgeStore
 
-from .comparison import METHOD_VERSION, build_comparison
+from .comparison import METHOD_VERSION, build_comparison, structured_profile
 from .contracts import Brief, Selection, require, text
 
 
@@ -78,9 +78,10 @@ class CampaignStore:
             campaign_id, brief_id = str(uuid.uuid4()), str(uuid.uuid4())
             connection.execute("INSERT INTO campaigns(id,workspace_id,owner_id,request_id,request_digest) VALUES (%s,%s,%s,%s,%s)",
                                (campaign_id, self.workspace_id, actor.actor_id, request_id, digest))
-            connection.execute("INSERT INTO campaign_briefs(id,campaign_id,version,document,request_id,request_digest,recorded_by) "
-                               "VALUES (%s,%s,1,%s,%s,%s,%s)",
-                               (brief_id, campaign_id, Jsonb(document), request_id, digest, actor.actor_id))
+            connection.execute("INSERT INTO campaign_briefs(id,campaign_id,version,document,request_id,request_digest,recorded_by,executable_profile) "
+                               "VALUES (%s,%s,1,%s,%s,%s,%s,%s)",
+                               (brief_id, campaign_id, Jsonb(document), request_id, digest, actor.actor_id,
+                                Jsonb(structured_profile(document, brief_id, 1))))
         return {"status": "created", "campaign_id": campaign_id, "brief_id": brief_id, "brief_version": 1}
 
     def revise_brief(self, campaign_id: str, brief: Brief, actor: ActorContext, *, expected_version: int, request_id: str) -> dict[str, Any]:
@@ -98,9 +99,10 @@ class CampaignStore:
                 return {"status": "duplicate", "brief_id": str(prior["id"]), "brief_version": prior["version"]}
             require(campaign["brief_version"] == expected_version, "brief_version_conflict")
             brief_id, version = str(uuid.uuid4()), expected_version + 1
-            connection.execute("INSERT INTO campaign_briefs(id,campaign_id,version,document,request_id,request_digest,recorded_by) "
-                               "VALUES (%s,%s,%s,%s,%s,%s,%s)",
-                               (brief_id, campaign_id, version, Jsonb(document), request_id, digest, actor.actor_id))
+            connection.execute("INSERT INTO campaign_briefs(id,campaign_id,version,document,request_id,request_digest,recorded_by,executable_profile) "
+                               "VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                               (brief_id, campaign_id, version, Jsonb(document), request_id, digest, actor.actor_id,
+                                Jsonb(structured_profile(document, brief_id, version))))
             connection.execute("UPDATE campaigns SET brief_version=%s WHERE id=%s", (version, campaign_id))
         return {"status": "revised", "brief_id": brief_id, "brief_version": version}
 
@@ -116,7 +118,7 @@ class CampaignStore:
                                             "FROM shortlist_revisions WHERE campaign_id=%s ORDER BY version", (campaign_id,)).fetchall()
         return {"campaign_id": campaign_id, "owner_id": campaign["owner_id"], "created_at": campaign["created_at"].isoformat(),
                 "brief_version": campaign["brief_version"], "shortlist_version": campaign["shortlist_version"],
-                "briefs": [{"id": str(b["id"]), "version": b["version"], "document": b["document"],
+                "briefs": [{"id": str(b["id"]), "version": b["version"], "document": b["document"], "executable_profile": b["executable_profile"],
                             "recorded_by": b["recorded_by"], "recorded_at": b["recorded_at"].isoformat()} for b in briefs],
                 "comparisons": [{**row, "id": str(row["id"]), "brief_id": str(row["brief_id"]),
                                  "prepared_at": row["prepared_at"].isoformat()} for row in comparisons],
@@ -204,7 +206,8 @@ class CampaignStore:
         return {"status": "prepared", "comparison_id": comparison_id, "method": "rule_based", "coverage": coverage}
 
     def _comparison(self, connection, comparison_id: str):
-        row = connection.execute("SELECT d.* FROM comparison_drafts d JOIN campaigns c ON c.id=d.campaign_id "
+        row = connection.execute("SELECT d.*,b.executable_profile FROM comparison_drafts d JOIN campaigns c ON c.id=d.campaign_id "
+                                 "JOIN campaign_briefs b ON b.id=d.brief_id "
                                  "WHERE d.id=%s AND c.workspace_id=%s", (comparison_id, self.workspace_id)).fetchone()
         require(row is not None, "comparison_not_found")
         return row
@@ -256,6 +259,7 @@ class CampaignStore:
         return {"comparison_id": comparison_id, "campaign_id": str(draft["campaign_id"]), "brief_id": str(draft["brief_id"]),
                 "knowledge_run_id": str(draft["knowledge_run_id"]), "dataset_id": draft["dataset_id"], "digest": draft["dataset_digest"],
                 "method": "rule_based", "method_version": draft["method_version"], "coverage": draft["coverage"],
+                "executable_profile": draft["executable_profile"],
                 "prepared_by": draft["prepared_by"], "actor_kind": draft["actor_kind"], "prepared_at": draft["prepared_at"].isoformat(),
                 "candidates": output}
 

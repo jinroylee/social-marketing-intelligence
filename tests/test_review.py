@@ -394,3 +394,50 @@ def test_missing_setup_is_sanitized_and_empty_workspace_guides_loading(stack):
         assert status == 200 and "Load your evidence first" in html and "No campaigns yet" in html
         status, _, html = request(url, path="/campaigns/new")
         assert status == 200 and "Offline sample setup" in html
+
+
+def test_structured_profile_http_create_revise_conflict_and_restart(review):
+    app, url = review
+    _, _, html = request(url, path="/campaigns/new")
+    fields = form(html, "/campaigns")
+    assert "original_input" in fields
+    original = 'Seek <Japan> partners; audience and fees remain unverified.'
+    fields.update(objective=["Structured campaign"], target_market=["JP"], original_input=[original])
+    status, headers, html = request(url, "POST", "/campaigns", fields)
+    assert status == 303, html
+    path = headers["Location"]
+    _, _, html = request(url, path=path)
+    assert "Seek &lt;Japan&gt; partners" in html
+    assert "structured-caption-criteria-v1" in html
+    assert "unranked-caption-comparison-v1" in html and "descriptive_only" in html
+    assert "relevance" in html and "Original marketer input" in html
+    first = app.campaigns.read_campaign(path.rsplit("/", 1)[1], app.actor)["briefs"][0]
+    assert first["executable_profile"]["brief_id"] in html
+    _, _, html = request(url, path=path + "/edit")
+    revision = form(html, path + "/briefs")
+    assert revision["original_input"] == [original]
+    revision.update(original_input=["Prioritize product relevance; check audience later."],
+                    criterion_0_label=["Preferred product relevance"])
+    revision.pop("criterion_0_required")
+    status, _, html = request(url, "POST", path + "/briefs", revision)
+    assert status == 303, html
+    stale = copy.deepcopy(revision)
+    stale.update(request_id=["stale-structured-profile"], original_input=["Unsaved <revised> needs"])
+    status, _, html = request(url, "POST", path + "/briefs", stale)
+    assert status == 409 and "brief_version_conflict" in html
+    preserved = form(html, path + "/briefs")
+    assert preserved["request_id"] == ["stale-structured-profile"]
+    assert preserved["expected_version"] == ["1"]
+    assert preserved["original_input"] == ["Unsaved <revised> needs"]
+    assert preserved["criterion_0_id"] == ["relevance"]
+    restarted = ReviewApp(app.campaigns.db, "named-reviewer")
+    with running(restarted) as reopened_url:
+        status, _, html = request(reopened_url, path=path)
+        assert status == 200
+        assert "Prioritize product relevance; check audience later." in html
+        assert "Seek &lt;Japan&gt; partners" in html
+        assert "Preferred product relevance" in html and "preference" in html
+        history = restarted.campaigns.read_campaign(path.rsplit("/", 1)[1], restarted.actor)["briefs"]
+        assert len(history) == 2 and history[0] == first
+        assert history[1]["executable_profile"]["brief_version"] == 2
+        assert history[1]["recorded_by"] == "named-reviewer"

@@ -328,3 +328,91 @@ def test_cli_campaign_comparison_confirmation_and_reopen_in_separate_process(cam
     shortlist_id = json.loads(confirmed.stdout)["shortlist_id"]
     reopened = _cli(store.db, evidence.root, "inspect-shortlist", shortlist_id)
     assert reopened.returncode == 0 and json.loads(reopened.stdout)["status"] == "confirmed"
+
+
+def test_structured_profile_reopens_exact_human_input_and_revision_after_restart(campaigns):
+    store = campaigns[0]
+    original = "Find Japan campaign partners; fees and availability need checking."
+    brief = replace(BRIEF, original_input=original, criteria=(
+        Criterion("mention", "Product relevance", "product_mention", "hero-cushion"),
+        Criterion("audience", "Japan audience", "audience_geography", "JP", unknown_handling="defer"),
+        Criterion("fees", "Fee preference", "fee", "within budget", required=False),
+        Criterion("exclude", "Avoid PR marker", "literal_marker", "pr_marker", operator="exclude"),
+    ))
+    created = store.start(brief, HUMAN, request_id="structured-start")
+    reopened = CampaignStore(store.db).read_campaign(created["campaign_id"], HUMAN)["briefs"][0]
+    assert reopened["document"]["original_input"] == original
+    profile = reopened["executable_profile"]
+    assert profile["brief_id"] == created["brief_id"]
+    assert profile["brief_version"] == 1
+    assert profile["basis"] == "human_structured_input"
+    assert profile["criteria_profile_version"] == "structured-caption-criteria-v1"
+    assert [(c["id"], c["importance"], c["operator"], c["unknown_handling"]) for c in profile["criteria"]] == [
+        ("mention", "requirement", "include", "acknowledge"),
+        ("audience", "requirement", "include", "defer"),
+        ("fees", "preference", "include", "acknowledge"),
+        ("exclude", "requirement", "exclude", "acknowledge"),
+    ]
+    assert profile["ranking_profile"] == {"version": "unranked-caption-comparison-v1", "status": "unranked",
+                                          "ordering": "marketer_known_then_dataset_encounter_order"}
+    assert profile["coverage_profile"] == {"version": "fixed-selected-observations-v1", "status": "descriptive_only",
+                                           "scope": "fixed_selected_observations", "sufficiency_assessment": "not_implemented"}
+    assert profile["baseline_unknowns"] == ["audience_geography", "fees", "availability", "sales_effectiveness", "recent_post_history"]
+    assert reopened["recorded_by"] == HUMAN.actor_id
+    assert store.start(brief, HUMAN, request_id="structured-start")["brief_id"] == created["brief_id"]
+
+
+def test_profile_successors_keep_unknown_needs_and_retry_identity(campaigns):
+    store, _, knowledge_run = campaigns
+    brief = replace(BRIEF, original_input="Japan audience and agreed fees, availability and sales are needs, not facts.",
+                    criteria=tuple(Criterion(kind, kind, kind, "desired", unknown_handling="defer")
+                                   for kind in ("audience_geography", "fee", "availability", "sales")))
+    created = store.start(brief, HUMAN, request_id="profile-start")
+    before = store.read_campaign(created["campaign_id"], HUMAN)["briefs"][0]
+    prepared = store.prepare_comparison(created["campaign_id"], created["brief_id"], knowledge_run, AUTOMATION, request_id="unknown-needs")
+    for candidate in store.read_comparison(prepared["comparison_id"], HUMAN)["candidates"]:
+        assert [(j["criterion_id"], j["state"], j["support_ids"]) for j in candidate["body"]["judgments"]] == [
+            ("audience_geography", "unknown", []), ("fee", "unknown", []),
+            ("availability", "unknown", []), ("sales", "unknown", []),
+        ]
+    edited = replace(brief, original_input="Check fees first.", criteria=(replace(brief.criteria[1], required=False),))
+    other = ActorContext("local", "second-marketer", "human")
+    revised = store.revise_brief(created["campaign_id"], edited, other, expected_version=1, request_id="profile-revise")
+    with pytest.raises(EvidenceError, match="brief_version_conflict"):
+        store.revise_brief(created["campaign_id"], brief, HUMAN, expected_version=1, request_id="stale-profile")
+    for changed, actor in ((brief, other), (edited, HUMAN)):
+        with pytest.raises(EvidenceError, match="campaign_request_conflict"):
+            store.revise_brief(created["campaign_id"], changed, actor, expected_version=1, request_id="profile-revise")
+    assert store.revise_brief(created["campaign_id"], edited, other, expected_version=1, request_id="profile-revise")["brief_id"] == revised["brief_id"]
+    history = CampaignStore(store.db).read_campaign(created["campaign_id"], HUMAN)["briefs"]
+    assert history[0] == before
+    assert history[1]["recorded_by"] == "second-marketer"
+    assert history[1]["executable_profile"]["brief_id"] == revised["brief_id"]
+    assert history[1]["executable_profile"]["brief_version"] == 2
+    assert history[1]["executable_profile"]["criteria"][0]["id"] == "fee"
+    assert history[1]["executable_profile"]["criteria"][0]["importance"] == "preference"
+    prepared = store.prepare_comparison(created["campaign_id"], revised["brief_id"], knowledge_run, AUTOMATION, request_id="profile-compare")
+    view = store.read_comparison(prepared["comparison_id"], HUMAN)
+    assert view["executable_profile"] == history[1]["executable_profile"]
+    for candidate in view["candidates"]:
+        assert candidate["body"]["judgments"][0]["state"] == "unknown"
+        assert candidate["body"]["judgments"][0]["support_ids"] == []
+        assert {"audience_geography", "fees", "availability", "sales_effectiveness"} <= set(candidate["body"]["unknowns"])
+
+
+def test_upgrade_preserves_unprofiled_history_and_existing_request_identity(campaigns):
+    store = campaigns[0]
+    created = store.start(BRIEF, HUMAN, request_id="before-profiles")
+    before = store.read_campaign(created["campaign_id"], HUMAN)["briefs"][0]
+    # Simulate the prior physical schema, which had no executable-profile column.
+    with store.db.connect() as connection:
+        connection.execute("ALTER TABLE campaign_briefs DROP COLUMN executable_profile")
+    store.migrate()
+    store.migrate()
+    reopened = CampaignStore(store.db).read_campaign(created["campaign_id"], HUMAN)["briefs"][0]
+    assert reopened == {**before, "executable_profile": None}
+    assert store.start(BRIEF, HUMAN, request_id="before-profiles") == {**created, "status": "duplicate"}
+    revised = store.revise_brief(created["campaign_id"], BRIEF, HUMAN, expected_version=1, request_id="after-profiles")
+    history = store.read_campaign(created["campaign_id"], HUMAN)["briefs"]
+    assert history[0] == reopened
+    assert history[1]["executable_profile"]["brief_id"] == revised["brief_id"]

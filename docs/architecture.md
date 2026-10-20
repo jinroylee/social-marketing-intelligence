@@ -112,7 +112,7 @@ The rules identify literal mentions and markers. Their output distinguishes prod
 
 ## Campaign decisions
 
-`smi_campaigns` owns briefs, comparison drafts and shortlist revisions through a small transactional interface. A human starts or revises the brief; automation may prepare a comparison for that existing campaign. The draft pins the exact brief, knowledge run and enumerated frozen evidence. A human saves a draft or confirms an exploratory account selection with source-supported relevance and acknowledged unknowns.
+`smi_campaigns` owns briefs, comparison drafts and shortlist revisions through a small transactional interface. A human starts or revises the brief, atomically saving original prose when supplied and an executable structured-profile snapshot with stable criterion IDs and exact brief identity/version. Installed versions describe caption rules, unranked ordering and descriptive coverage; legacy revisions retain an unrecorded profile. Automation may prepare a comparison for that existing campaign. The draft pins the exact brief/profile, knowledge run and enumerated frozen evidence. A human saves a draft or confirms an exploratory account selection with source-supported relevance and acknowledged unknowns.
 
 Request identities make retries safe, and expected-version checks prevent competing edits from overwriting the campaign's brief or shortlist head. Later work creates successor records. Candidate bodies and copied human reasons track their source/interpretation dependencies; current policy can hide/purge explanations while preserving permitted historical membership and reviewer metadata. See the [campaign contract](campaigns.md).
 
@@ -120,7 +120,7 @@ The deterministic method reports criterion states and coverage rather than unive
 
 ## Local review application
 
-`smi_review` composes public stores into escaped server-rendered forms and policy-aware evidence panels. Its standard-library HTTP server binds to loopback. A configured named human starts/revises briefs and saves/confirms shortlists; a distinct automation context prepares the rule-based knowledge/comparison. Request IDs and expected versions pass through to the domain stores, which own validation and transactions.
+`smi_review` composes public stores into escaped server-rendered forms and policy-aware evidence panels. Its standard-library HTTP server binds to loopback. A configured named human starts/revises briefs and saves/confirms shortlists; a distinct automation context prepares the rule-based knowledge/comparison. Brief editing retains original human prose alongside the campaign-owned immutable executable profile, exact brief revision and truthful installed version labels. Request IDs and expected versions pass through to the domain stores, which own validation and transactions.
 
 The browser can save/review a supplied immutable enrichment proposal, approve its exact scope and submit its single offline task. It can create a brief, prepare/review a comparison, save a draft, explicitly confirm and reopen exact historical revisions after server restarts. Dataset/catalog/campaign listing interfaces provide navigation without bypassing evidence ownership. Original permitted captions, exact support spans, source/date lineage, provisional judgments and unknowns remain visible. Current-policy withdrawal withholds source-dependent form contents as well as saved explanations. See [local review](local-review.md).
 

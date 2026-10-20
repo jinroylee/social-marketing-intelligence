@@ -42,7 +42,7 @@ def brief_from_form(form: dict[str, list[str]]) -> Brief:
         raise EvidenceError("invalid_brief.criteria")
     allowed = {"csrf", "request_id", "expected_version", "criterion_count", "catalog_id", "brand_id", "product_ids",
                "objective", "target_market", "platforms", "known_accounts", "publication_from", "publication_to",
-               "campaign_dates", "budget", "currency", "audience_detail"}
+               "campaign_dates", "budget", "currency", "audience_detail", "original_input"}
     columns = {"id", "label", "kind", "value", "required", "operator", "unknown_handling"}
     allowed.update(f"criterion_{i}_{column}" for i in range(count) for column in columns)
     if not form.keys() <= allowed:
@@ -64,7 +64,8 @@ def brief_from_form(form: dict[str, list[str]]) -> Brief:
                  one(form, "objective"), one(form, "target_market"),
                  tuple(p.strip() for p in one(form, "platforms").split(",") if p.strip()), criteria, tuple(accounts),
                  {key: one(form, key).strip() or None for key in ("campaign_dates", "budget", "currency", "audience_detail")},
-                 one(form, "publication_from").strip() or None, one(form, "publication_to").strip() or None)
+                 one(form, "publication_from").strip() or None, one(form, "publication_to").strip() or None,
+                 one(form, "original_input") or None)
 
 
 def selections_from_form(form: dict[str, list[str]]) -> tuple[Selection, ...]:

@@ -4,18 +4,18 @@
 
 **Blocked by:** 01: Restore ingestion completion and safe resume.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** S — one bounded user-visible journey or extension in a fresh implementation context.
 
 **Scope guard:** Extend the existing brief workflow with a visible structured profile; no LLM interpretation, current-KB retrieval, or new ranking algorithm.
 
-- [ ] Campaign editing records stable criteria identifiers, requirements/preferences/exclusions, explicit unknown handling, and the applicable ranking/coverage profile versions.
-- [ ] The saved interpretation is visible alongside the marketer's original input and pins the exact brief revision.
-- [ ] Stale edits conflict through expected-version checks; changed input creates an attributable successor rather than rewriting history.
-- [ ] Unknown audience, fees, availability, and sales assumptions remain unknown unless supported; structured labels cannot assert source facts.
-- [ ] Existing human campaign, measurement-plan, decision-note, and protected form behavior remains compatible.
-- [ ] A public-store and HTTP journey can create, revise, restart, and inspect the exact profile.
+- [x] Campaign editing records stable criteria identifiers, requirements/preferences/exclusions, explicit unknown handling, and the applicable ranking/coverage profile versions.
+- [x] The saved interpretation is visible alongside the marketer's original input and pins the exact brief revision.
+- [x] Stale edits conflict through expected-version checks; changed input creates an attributable successor rather than rewriting history.
+- [x] Unknown audience, fees, availability, and sales assumptions remain unknown unless supported; structured labels cannot assert source facts.
+- [x] Existing human campaign, measurement-plan, decision-note, and protected form behavior remains compatible.
+- [x] A public-store and HTTP journey can create, revise, restart, and inspect the exact profile.
 
 **Spec coverage:** user stories 1, 2, 3, 4, 20; acceptance scenarios T11, T29 (the part exercised by this slice).
 
