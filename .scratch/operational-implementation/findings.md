@@ -34,3 +34,5 @@
 - Tickets24/25/34 require actual live prerequisites; ticket39 explicitly requires a named real human reviewer. Simulated tests cannot create those readiness/usefulness receipts.
 
 - Primary-provider contract research is captured in research/model-provider-contract.md. Official HTML API reference exceeded the web reader size limit, and its Markdown variant was unsupported by that reader. Bounded read-only HTTPS retrieval of official Markdown succeeded; no API execution or credentials were used.
+
+- Ticket13 pre-merge review found a scope gap: a simulated-only transport left the selected provider adapter unimplemented, with no later model-live ticket. Offline execution does not preclude concrete adapter code tested with simulated HTTP. The implementer is closing the gap with explicit server enablement, a current primary-verified model context bound, and truthful provider-reported/synthetic accounting provenance. No live call or commercial receipt is authorized.

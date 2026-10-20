@@ -71,3 +71,5 @@
 - Marked ticket 12 resolved with all acceptance criteria checked and Phase 16 complete. Ticket 13 / Phase 17 remains pending for fresh dispatch with its documented prerequisites. Only tracker/planning/report metadata changed after verification; no runtime edit, live call, external message, new implementation, push, PR or cleanup occurred.
 
 - Started ticket 13 in fresh context /root/implement_13 and worktree /tmp/smi-operational-ticket-13 from verified integration 6cd91e1c674e9bd47062a8a07b1d620d985455d3. Current primary-contract documentation lookup is authorized; all provider execution remains simulated. Only this implementer is active.
+
+- Ticket13 focused slices passed, but root identified the missing concrete provider transport before completion. The superseded full gate was stopped (exit130); no completion claimed. The fresh implementer continues this same ticket to add the bounded HTTP adapter and compatible measurement-basis support, with all HTTP I/O simulated. Ticket14 remains unstarted.
