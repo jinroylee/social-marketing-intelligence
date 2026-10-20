@@ -6,11 +6,11 @@ Implement approved tickets 01–10 sequentially in fresh implementer worktrees, 
 
 ## Next Step
 
-Await dispatch of pending ticket 07 in a fresh implementer worktree based on the verified integration tip. Ticket 06 is integrated and resolved; ticket 07 has not started.
+Implement ticket 07 in a fresh worktree, then merge and validate before advancing.
 
 ## Current Phase
 
-Phase 10 — ticket 07 pending after successful ticket 06 integration; execute tickets 01–10 sequentially within the approved boundaries and local tracker setup.
+Phase 10 — executing ticket 07 after successful ticket 06 integration.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -92,7 +92,7 @@ Implemented in a fresh worktree and fast-forward integrated as `19b65407b2b52082
 
 ### Phase 10 — Implement ticket 07
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer worktree, TDD, documented interfaces/schema, local commit, merger integration, shared check, then local ticket resolution.
 
