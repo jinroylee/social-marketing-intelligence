@@ -214,15 +214,28 @@
   "testing_boundaries": "Public operations and HTTP; real PostgreSQL; simulated external I/O",
   "external_io": "Local execution with simulated transports. User authorizes read-only primary-documentation lookups only; no live/paid source/model calls or external messages.",
   "last_verified_runtime": {
-    "checked_commit": "4575fd0ef37b6049211bf83f95940f528932ea07",
-    "integration_evidence_commit": "0bb62aef6419549a2076c98b292be23939459733",
+    "checked_commit": "e31e823e527ba9903daa5aab6e10c6cb02a145b9",
     "command": "UV_OFFLINE=1 uv run --locked python tools/check.py",
-    "passed_tests": 325,
-    "seconds": 269.09,
-    "focused_repair_tests": 129,
+    "passed_tests": 338,
+    "seconds": 207.81,
+    "focused_tests": 89,
     "real_postgresql": true,
     "simulated_external_io": true,
-    "wheel_verified": true
+    "wheel_verified": true,
+    "wheel_evidence": {
+      "artifact": "/tmp/smi-ticket-11-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
+      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-11-wheel",
+      "exact_integrated_files_matched": [
+        "smi_costs/admission.py",
+        "smi_costs/reconciliation.py",
+        "smi_costs/schema.sql",
+        "smi_costs/store.py",
+        "smi_review/app.py",
+        "smi_review/cost_views.py"
+      ],
+      "evidence_report": "reports/ticket-11.md"
+    },
+    "integration_evidence_report": "reports/ticket-11.md"
   },
   "external_prerequisites": {
     "13": "Verify current primary model contract using authorized read-only primary documentation; require explicit model/cost configuration. All provider calls remain simulated in this run.",
@@ -235,5 +248,19 @@
     "scope": "Read-only primary-documentation lookups only",
     "source": "User response to Ticket 13 documentation clarification",
     "live_execution_authorized": false
-  }
+  },
+  "ticket_implementations": [
+    {
+      "ticket": 11,
+      "title": "Reconcile delayed charges and failed meters",
+      "commit": "e31e823e527ba9903daa5aab6e10c6cb02a145b9",
+      "integration_tests": 338,
+      "integration_seconds": 207.81,
+      "file": "11-reconcile-delayed-charges-and-failed-meters.md",
+      "report": "reports/ticket-11.md",
+      "focused_tests": 89,
+      "focused_seconds": 61.63,
+      "wheel_verified": true
+    }
+  ]
 }

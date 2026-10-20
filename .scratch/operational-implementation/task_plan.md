@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 11 in a fresh context, then merge and validate before advancing.
+Dispatch ticket 12 in a fresh implementer context/worktree based on the verified integration tip. Ticket 11 is integrated and resolved; ticket 12 is pending.
 
 ## Current Phase
 
-Phase 15 — ticket 11; user approved all remaining tickets in the same workflow. The completed first batch and its reviews are preserved.
+Phase 16 — ticket 12 pending after successful ticket 11 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -128,9 +128,9 @@ The user requested all remaining tickets in the exact same manner. Tickets 11–
 
 ### Phase 15 — Implement ticket 11
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated `e31e823e527ba9903daa5aab6e10c6cb02a145b9`. The root integration gate `UV_OFFLINE=1 uv run --locked python tools/check.py` passed all static checks, PostgreSQL preflight and **338 tests in 207.81 seconds**; the worker wheel matches all six changed runtime/schema files. All acceptance criteria are checked and local ticket 11 is resolved.
 
 ### Phase 16 — Implement ticket 12
 
