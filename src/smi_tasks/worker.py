@@ -1,4 +1,4 @@
-"""Single-worker recovery composed from public ingestion/publication operations."""
+"""Fenced task execution composed from public ingestion/publication operations."""
 
 from collections.abc import Callable
 from dataclasses import asdict
@@ -22,6 +22,7 @@ from smi_ingestion.support import IngestedEvidence, SupportReference
 from smi_knowledge import KnowledgePublications
 
 from .store import AcquisitionTasks
+from .execution import TaskExecution
 
 
 class _ObserverFailure(Exception):
@@ -34,16 +35,21 @@ class OfflineTaskWorker:
 
     ``on_progress`` observes source-free task snapshots after owner commits. Its
     exceptions propagate, leaving committed work recoverable. Publication commit
-    notification precedes task acknowledgment; recovery finds that request-bound
-    publication even if no task link was saved. Workers must run sequentially.
+    notification precedes task acknowledgment. One task owns a PostgreSQL session;
+    all owner mutations use its connection, so session loss fences late results.
+    ``on_execution`` exposes a trusted disconnect handle. ``before_commit`` is a
+    trusted source-free interruption/diagnostic port inside owner transactions.
     """
 
     def __init__(self, db: Database, evidence_root: Path, workspace_id: str = 'local', *,
-                 collector: Collector | None = None, on_progress: Callable[[dict[str, Any]], None] | None = None):
+                 collector: Collector | None = None, on_progress: Callable[[dict[str, Any]], None] | None = None,
+                 on_execution: Callable[[TaskExecution], None] | None = None,
+                 before_commit: Callable[[str], None] | None = None):
         self.db, self.workspace_id = db, workspace_id
         self.tasks = AcquisitionTasks(db, workspace_id)
         self.evidence = EvidenceStore(db, evidence_root)
         self.on_progress = on_progress
+        self.on_execution, self.before_commit = on_execution, before_commit
         registry = AdapterRegistry()
         registry.register('fixture-json', collector or LocalFileCollector('fixture-json'), JsonFixtureMapper())
         self.runner = IngestionRunner(self.evidence, CanonicalWriter(db), registry)
@@ -58,7 +64,7 @@ class OfflineTaskWorker:
             except Exception as error:
                 raise _ObserverFailure(error) from error
 
-    def _checkpoint(self, task_id, attempt_id, phase, coverage, actor, *, observation_id=None,
+    def _checkpoint(self, task_id, attempt_id, phase, coverage, actor, execution, *, observation_id=None,
                     support=None, failure_phase=None, failure_code=None, waiting=None):
         progress = {'phase': phase}
         if observation_id:
@@ -66,19 +72,21 @@ class OfflineTaskWorker:
         status = 'publishing' if phase == 'publication_prepared' else 'waiting' if waiting else 'ingesting'
         if waiting:
             progress.update(waiting)
-        with self.db.connect() as connection:
+        with execution.transaction('checkpoint') as connection:
             connection.execute('UPDATE acquisition_tasks SET status=%s,progress=%s,coverage=%s,failure_phase=%s,failure_code=%s WHERE id=%s',
                                (status, Jsonb(progress), Jsonb(coverage), failure_phase, failure_code, task_id))
-            connection.execute('UPDATE acquisition_attempts SET phases=phases || %s::jsonb WHERE id=%s', (Jsonb([phase]), attempt_id))
+            phases = connection.execute('SELECT phases FROM acquisition_attempts WHERE id=%s', (attempt_id,)).fetchone()['phases']
+            connection.execute('UPDATE acquisition_attempts SET phases=%s WHERE id=%s', (Jsonb((phases + [phase])[-100:]), attempt_id))
             if support is not None:
                 connection.execute('UPDATE acquisition_attempts SET publication_support=%s WHERE id=%s', (Jsonb([asdict(s) for s in support]), attempt_id))
         self._notify(task_id, actor)
 
-    def _finish(self, task_id, attempt_id, coverage, actor, *, outcome, failure_phase=None, failure_code=None, publication_id=None):
-        with self.db.connect() as connection:
+    def _finish(self, task_id, attempt_id, coverage, actor, execution, *, outcome, failure_phase=None, failure_code=None, publication_id=None):
+        with execution.transaction('completion') as connection:
             connection.execute("UPDATE acquisition_tasks SET status=%s,outcome=%s,progress=%s,coverage=%s,failure_phase=%s,failure_code=%s,finished_at=now() WHERE id=%s",
                                ('failed' if outcome == 'failure' else 'completed', outcome, Jsonb({'phase': 'completed'}), Jsonb(coverage), failure_phase, failure_code, task_id))
-            connection.execute('UPDATE acquisition_attempts SET finished_at=now(),phases=phases || %s::jsonb WHERE id=%s', (Jsonb(['completed']), attempt_id))
+            phases = connection.execute('SELECT phases FROM acquisition_attempts WHERE id=%s', (attempt_id,)).fetchone()['phases']
+            connection.execute('UPDATE acquisition_attempts SET finished_at=now(),phases=%s WHERE id=%s', (Jsonb((phases + ['completed'])[-100:]), attempt_id))
             if publication_id:
                 connection.execute('INSERT INTO acquisition_task_publications(task_id,publication_id) VALUES (%s,%s) ON CONFLICT DO NOTHING', (task_id, publication_id))
         self._notify(task_id, actor)
@@ -102,11 +110,32 @@ class OfflineTaskWorker:
         actor.require_workspace(self.workspace_id)
         if actor.kind != 'automation':
             raise EvidenceError('task_worker_authority_required')
-        view = self.tasks.read(task_id, actor)
-        if view['outcome'] is not None:
-            return view
-        with self.db.connect() as connection:
+        task_id = str(uuid.UUID(task_id))
+
+        def before_commit(phase):
+            if self.before_commit:
+                try:
+                    self.before_commit(phase)
+                except Exception as error:
+                    raise _ObserverFailure(error) from error
+
+        try:
+            with TaskExecution(self.db, self.workspace_id, task_id, actor, before_commit=before_commit) as execution:
+                if not execution.acquired or execution.terminal:
+                    return self.tasks.read(task_id, actor)
+                if self.on_execution:
+                    self.on_execution(execution)
+                result = self._run_one(task_id, actor, execution)
+        except _ObserverFailure as error:
+            raise error.cause
+        # Waiting/recoverable reads must observe the released ownership session.
+        return self.tasks.read(task_id, actor) if result['outcome'] is None else result
+
+    def _run_one(self, task_id, actor, execution):
+        with execution.transaction('attempt') as connection:
             row = connection.execute('SELECT * FROM acquisition_tasks WHERE id=%s AND workspace_id=%s FOR UPDATE', (task_id, self.workspace_id)).fetchone()
+            if row['outcome'] is not None:
+                return self.tasks.read(task_id, actor)
             if row['origin'] not in {'campaign', 'assistant'} or row['scope']['route'] != 'fixture-json':
                 raise EvidenceError('unsupported_task_origin_or_route')
             if row['status'] == 'queued':
@@ -120,8 +149,9 @@ class OfflineTaskWorker:
                 if attempt is None:
                     raise EvidenceError('task_execution_incomplete')
                 attempt_id, run_id = str(attempt['id']), str(attempt['run_id'])
-                connection.execute('UPDATE acquisition_attempts SET resumed_by=resumed_by || %s::jsonb WHERE id=%s',
-                                   (Jsonb([{'actor_id': actor.actor_id, 'kind': actor.kind}]), attempt_id))
+                resumed_by = (attempt['resumed_by'] + [{'actor_id': actor.actor_id, 'kind': actor.kind}])[-20:]
+                connection.execute('UPDATE acquisition_attempts SET resumed_by=%s,recovery_count=recovery_count+1 WHERE id=%s',
+                                   (Jsonb(resumed_by), attempt_id))
         phase = 'collection'
         coverage = row['coverage'] or {'collected_observations': 0, 'ingested_observations': 0, 'published_members': 0,
                                        'scope': 'bounded_requested_input', 'market_coverage': 'unknown'}
@@ -138,13 +168,13 @@ class OfflineTaskWorker:
 
                     def committed(commit_phase, observation_id):
                         counts = self._coverage(self.runner.inspect(run_id), len(row['scope']['references']))
-                        self._checkpoint(task_id, attempt_id, commit_phase, counts, actor, observation_id=observation_id)
+                        self._checkpoint(task_id, attempt_id, commit_phase, counts, actor, execution, observation_id=observation_id)
 
-                    report = self.runner.resume(run_id, on_commit=committed)
+                    report = self.runner.resume(run_id, on_commit=committed, transaction=execution.transaction)
                     phase = 'ingestion'
                     coverage = self._coverage(report, len(row['scope']['references']))
                     if report['waiting']:
-                        self._checkpoint(task_id, attempt_id, 'waiting', coverage, actor, waiting=report['waiting'])
+                        self._checkpoint(task_id, attempt_id, 'waiting', coverage, actor, execution, waiting=report['waiting'])
                         return self.tasks.read(task_id, actor)
                     failed_phase = code = None
                     if report['issues'] or report['status'] != 'completed':
@@ -152,29 +182,29 @@ class OfflineTaskWorker:
                         failed_phase = 'ingestion' if report['quarantined'] or code == 'processing_not_permitted' else 'collection'
                     support = IngestedEvidence(self.db, self.workspace_id).select_run(run_id, actor, include_synthetic=True)
                     phase = 'publication'
-                    new_support = publications.unpublished(support, actor, include_synthetic=True)
+                    with execution.transaction('selection') as connection:
+                        new_support = publications.unpublished(support, actor, include_synthetic=True, connection=connection)
                     coverage.update(eligible_members=len(support), unchanged_members=len(support) - len(new_support),
                                     ineligible_observations=report['applied'] - len(support), unpublished_members=len(new_support))
                     support = new_support
-                    self._checkpoint(task_id, attempt_id, 'publication_prepared', coverage, actor, support=support,
+                    self._checkpoint(task_id, attempt_id, 'publication_prepared', coverage, actor, execution, support=support,
                                      failure_phase=failed_phase, failure_code=code)
                 else:
                     phase = 'publication'
                     support = tuple(SupportReference(s['observation_id'], s['derivation_id'], tuple(s['assertion_ids']), tuple(s['metric_ids'])) for s in attempt['publication_support'])
                 if not support:
-                    self._finish(task_id, attempt_id, coverage, actor, outcome='failure' if code else 'no_usable_update', failure_phase=failed_phase, failure_code=code)
+                    self._finish(task_id, attempt_id, coverage, actor, execution, outcome='failure' if code else 'no_usable_update', failure_phase=failed_phase, failure_code=code)
                     return self.tasks.read(task_id, actor)
-                published = publications.publish(support, actor, request_id=f'task:{task_id}', include_synthetic=True)
+                with execution.transaction('publication') as connection:
+                    published = publications.publish(support, actor, request_id=f'task:{task_id}', include_synthetic=True, connection=connection)
                 self._notify(task_id, actor, phase='publication_committed', publication_id=published['publication_id'])
                 coverage['published_members'] = len(support)
             else:
                 coverage['published_members'] = published['coverage']['members']
             coverage['unpublished_members'] = 0
-            self._finish(task_id, attempt_id, coverage, actor, outcome='partial_update' if code else 'usable_update',
+            self._finish(task_id, attempt_id, coverage, actor, execution, outcome='partial_update' if code else 'usable_update',
                          failure_phase=failed_phase, failure_code=code, publication_id=published['publication_id'])
-        except _ObserverFailure as error:
-            raise error.cause
         except (EvidenceError, OSError, ValueError, KeyError, TypeError) as error:
             code = error.code if isinstance(error, EvidenceError) else 'offline_input_unavailable'
-            self._finish(task_id, attempt_id, coverage, actor, outcome='failure', failure_phase=phase, failure_code=code)
+            self._finish(task_id, attempt_id, coverage, actor, execution, outcome='failure', failure_phase=phase, failure_code=code)
         return self.tasks.read(task_id, actor)

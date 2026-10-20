@@ -159,8 +159,8 @@ Owner: [`smi_tasks`](../src/smi_tasks/schema.sql); [public task contract](tasks.
 | --- | --- | --- |
 | `enrichment_proposals` | An immutable supplied revision with purpose, refresh/fill/expansion intent, subject/search and input scope, exact route/limits digest and proposer. | Save a proposal without submitting acquisition. |
 | `enrichment_approvals` | One configured human's exact workspace/revision/digest approval and original retry identity. | Approval A authorizes at most one task for proposal P. |
-| `acquisition_tasks` | A workspace/request-bound campaign or approved assistant task, exact brief/approval/configuration scope, initiator, hard limits, durable commit/wait progress, outcome and sanitized coverage/failure. | Accepted now, executed separately through the local synthetic route. |
-| `acquisition_attempts` | One attributable worker attempt, exact ingestion run, recovery actors, prepared support IDs and observed phases/times. | Worker B resumes Worker A’s same run/support after an interruption; a valid subset can publish with the failed remainder visible. |
+| `acquisition_tasks` | A workspace/request-bound campaign or approved assistant task, exact brief/approval/configuration scope, initiator, hard limits, latest execution ID/session owner, durable commit/wait progress, outcome and sanitized coverage/failure. | Accepted now, executed separately through the local synthetic route. Its active PostgreSQL ownership lock distinguishes running from recoverable work. |
+| `acquisition_attempts` | One attributable worker attempt, exact ingestion run, total recovery count, most recent 20 recovery actors/100 phases, prepared support IDs and times. | Worker B resumes Worker A’s same run/support after a disconnected session; a late Worker A cannot commit local effects. A valid subset can publish with the failed remainder visible. |
 | `acquisition_task_publications` | One task's exact committed usable publication link. | Task T produced publication P; fetch-only input produces no such link. |
 
 ### Shared business vocabulary, interpretations, publication and queries — 10 tables

@@ -180,7 +180,7 @@ class EvidenceStore:
             raise
 
     def advance(self, run_id: str, checkpoint: dict[str, Any], *, complete: bool,
-                waiting: str | None = None, request_attempts: int = 0) -> None:
+                waiting: str | None = None, request_attempts: int = 0, connection=None) -> None:
         """Commit a no-observation frontier, including safe pending/ambiguous waits.
 
         Opaque operation handles stay in ingestion. Ambiguous operations cannot
@@ -191,7 +191,7 @@ class EvidenceStore:
                 or (waiting and (complete or not checkpoint or request_attempts < 1))):
             raise EvidenceError('invalid_collection_wait')
         progress = {'code': waiting, 'resumable': waiting == 'provider_pending'} if waiting else None
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             run = connection.execute('SELECT limits,requests_used FROM ingestion_runs WHERE id=%s FOR UPDATE', (run_id,)).fetchone()
             if run is None:
                 raise EvidenceError('run_not_found')
@@ -224,22 +224,38 @@ class EvidenceStore:
             raise EvidenceError("payload_corrupt")
         return observation, payload
 
-    def mark(self, observation_id: str, status: str) -> None:
+    def mark(self, observation_id: str, status: str, *, connection=None) -> None:
+        """Set mapping status, optionally within the caller's owner transaction."""
         if status not in {"applied", "quarantined"}:
             raise ValueError("Invalid observation status")
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             connection.execute("UPDATE source_observations SET status=%s WHERE id=%s", (status, observation_id))
 
-    def issue(self, run_id: str, observation_id: str | None, code: str, message: str) -> None:
-        with self.db.connect() as connection:
+    def issue(self, run_id: str, observation_id: str | None, code: str, message: str, *, connection=None) -> None:
+        """Record a sanitized run issue, optionally in a caller-owned transaction."""
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             connection.execute(
                 "INSERT INTO ingestion_issues(run_id,observation_id,code,message) VALUES (%s,%s,%s,%s)",
                 (run_id, observation_id, code, message)
             )
 
-    def finish(self, run_id: str, status: str) -> None:
-        with self.db.connect() as connection:
+    def finish(self, run_id: str, status: str, *, connection=None) -> None:
+        """Persist run status using the supplied owner transaction when present."""
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             connection.execute("UPDATE ingestion_runs SET status=%s WHERE id=%s", (status, run_id))
+
+    def discard_uncommitted(self, observation: RawObservation) -> None:
+        """Clean a retained file only when its caller transaction did not commit.
+
+        A lost commit acknowledgment may still have committed the observation;
+        check durable metadata before deleting its uniquely named payload file.
+        """
+        with self.db.connect() as connection:
+            exists = connection.execute('SELECT 1 FROM source_observations WHERE id=%s', (observation.id,)).fetchone()
+        if not exists and observation.payload_path:
+            path = Path(observation.payload_path)
+            if path.parent.resolve() == self.root:
+                path.unlink(missing_ok=True)
 
     def revoke(self, observation_id: str) -> None:
         observation = self.get(observation_id)

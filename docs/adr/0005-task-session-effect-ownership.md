@@ -1,0 +1,11 @@
+# Keep task ownership and its effects on one PostgreSQL session
+
+Status: accepted
+
+An acquisition task can outlive a worker process and already owns stable attempt, ingestion-run and publication identities. Competing workers must resume those committed effects while a worker returning late from I/O cannot mutate a successor's task or source support. A task-row status transition alone cannot protect writes made later on independent owner connections.
+
+Use one task-specific PostgreSQL session advisory lock and a fresh execution ID checked under the task row lock. Recheck terminal state in the claim transaction. Every task-dependent mutation joins a caller-owned transaction on that same ownership connection through public ingestion/canonical/publication operations. The session remains open across I/O, without a database transaction or row lock spanning collection. Session loss releases the claim and aborts pending owner writes; its old handle cannot reconnect. Recovery reuses committed progress and the original publication after a lost acknowledgment. Different tasks have different sessions, preserving independent progress.
+
+This trades timed failover for a small local protocol. A lease plus tokens could enable automatic takeover, but would still need transactional fences around each actual owner's effects and explicit renewal/expiry semantics. A session lock combined with separately opened write connections would leave a stale-worker gap. A workspace-wide lock would unnecessarily serialize independent tasks; a broker would not eliminate the need for effect ownership.
+
+A connected but paused worker retains ownership until the session closes. Failure detection follows PostgreSQL and transport configuration. Closing a session cannot cancel an external operation already dispatched; safe replay and ambiguous paid operations remain adapter contracts. This decision guarantees local per-task effect ownership, not provider-side exactly-once requests/charges or novelty admission across distinct tasks collecting the same capture. Bounded source-free recovery summaries preserve total handoff count, initial producer, stable attempt/run and exact support without retaining unbounded actor/phase arrays.

@@ -6,12 +6,20 @@ import hashlib
 import json
 from pathlib import Path
 from collections.abc import Callable
+from contextlib import AbstractContextManager, nullcontext
 from typing import Any
 
 from .adapters.registry import AdapterRegistry
 from .canonical import CanonicalWriter
 from .contracts import RawObservation, RunLimits
 from .evidence import EvidenceError, EvidenceStore
+
+
+TransactionScope = Callable[[str], AbstractContextManager]
+
+
+def _transaction(scope: TransactionScope | None, phase: str):
+    return scope(phase) if scope else nullcontext()
 
 
 class IngestionRunner:
@@ -38,7 +46,7 @@ class IngestionRunner:
         run_id = self.evidence.start_run(manifest_path, digest, manifest["adapter"], selected_limits)
         return self.resume(run_id)
 
-    def _process(self, observation: RawObservation, transient_payload: bytes | None = None) -> bool:
+    def _process(self, observation: RawObservation, transient_payload: bytes | None = None, *, transaction=None) -> bool:
         try:
             if transient_payload is None:
                 observation, payload = self.evidence.load(observation.id)
@@ -46,15 +54,17 @@ class IngestionRunner:
                 payload = transient_payload
             _, mapper = self.registry.resolve(observation.adapter_id)
             batch = mapper.normalize(observation, payload)
-            self.writer.apply(observation.id, batch, f"{observation.adapter_id}:{mapper.version}")
+            with _transaction(transaction, 'canonical') as connection:
+                self.writer.apply(observation.id, batch, f"{observation.adapter_id}:{mapper.version}", connection=connection)
             return True
         except (EvidenceError, ValueError, KeyError, UnicodeError, json.JSONDecodeError) as error:
             code = error.code if isinstance(error, EvidenceError) else "normalization_failed"
-            self.evidence.issue(observation.run_id, observation.id, code, code)
-            self.evidence.mark(observation.id, "quarantined")
+            with _transaction(transaction, 'quarantine') as connection:
+                self.evidence.issue(observation.run_id, observation.id, code, code, connection=connection)
+                self.evidence.mark(observation.id, "quarantined", connection=connection)
             return False
 
-    def _report(self, run_id: str, completed_input: bool, *, finish: bool = True) -> dict[str, Any]:
+    def _report(self, run_id: str, completed_input: bool, *, finish: bool = True, transaction=None) -> dict[str, Any]:
         run = self.evidence.run(run_id)
         with self.evidence.db.connect() as connection:
             counts = connection.execute(
@@ -121,7 +131,8 @@ class IngestionRunner:
         if run["waiting"]:
             status = "waiting"
         if finish:
-            self.evidence.finish(run_id, status)
+            with _transaction(transaction, 'ingestion_finished') as connection:
+                self.evidence.finish(run_id, status, connection=connection)
         return {
             "run_id": run_id, "status": status, "waiting": run["waiting"],
             "coverage": "complete_for_requested_input" if completed_input else "partial",
@@ -141,70 +152,93 @@ class IngestionRunner:
         """Read committed counts and issues without advancing or finishing the run."""
         return self._report(run_id, self.evidence.run(run_id)["input_complete"], finish=False)
 
-    def resume(self, run_id: str, *, on_commit: Callable[[str, str], None] | None = None) -> dict[str, Any]:
+    def resume(self, run_id: str, *, on_commit: Callable[[str, str], None] | None = None,
+               transaction: TransactionScope | None = None) -> dict[str, Any]:
         """Resume checkpoints; notify after durable evidence/canonical commits.
 
         The callback receives a phase and observation ID. Callback exceptions
         propagate so an operator can stop between commits without undoing work.
+        A supplied transaction scope yields the owner's connection for every
+        mutation and commits before notification. Collector I/O and normalization
+        run outside it; a disconnected owner cannot persist their late results.
         """
         run = self.evidence.run(run_id)
         manifest, digest = self._manifest(Path(run["manifest_path"]))
         if digest != run["manifest_hash"]:
             raise EvidenceError("input_changed")
         if run['waiting'] and not run['waiting']['resumable']:
-            return self._report(run_id, run['input_complete'])
+            return self._report(run_id, run['input_complete'], transaction=transaction)
         collector, _ = self.registry.resolve(run["adapter_id"])
-        self.writer.reconcile_applied(run_id)
+        with _transaction(transaction, 'reconcile') as connection:
+            self.writer.reconcile_applied(run_id, connection=connection)
         for observation in self.evidence.pending(run_id):
-            if self._process(observation) and on_commit:
+            if self._process(observation, transaction=transaction) and on_commit:
                 on_commit("canonical_committed", observation.id)
         if run["status"] == "completed" or run["input_complete"]:
-            return self._report(run_id, True)
+            return self._report(run_id, True, transaction=transaction)
         completed_input = False
         while True:
             run = self.evidence.run(run_id)
             selected_limits = RunLimits(**run["limits"])
             if run["records_used"] >= min(selected_limits.max_pages, selected_limits.max_records):
-                self.evidence.advance(run_id, run["checkpoint"], complete=False)
-                self.evidence.issue(run_id, None, "record_limit_reached", "record_limit_reached")
+                with _transaction(transaction, 'collection_limit') as connection:
+                    self.evidence.advance(run_id, run["checkpoint"], complete=False, connection=connection)
+                    self.evidence.issue(run_id, None, "record_limit_reached", "record_limit_reached", connection=connection)
                 break
             if run["requests_used"] >= selected_limits.max_requests:
-                self.evidence.advance(run_id, run["checkpoint"], complete=False)
-                self.evidence.issue(run_id, None, "request_limit_reached", "request_limit_reached")
+                with _transaction(transaction, 'collection_limit') as connection:
+                    self.evidence.advance(run_id, run["checkpoint"], complete=False, connection=connection)
+                    self.evidence.issue(run_id, None, "request_limit_reached", "request_limit_reached", connection=connection)
                 break
             remaining_bytes = selected_limits.max_bytes - run["bytes_used"]
             if remaining_bytes <= 0:
-                self.evidence.advance(run_id, run["checkpoint"], complete=False)
-                self.evidence.issue(run_id, None, "byte_limit_reached", "byte_limit_reached")
+                with _transaction(transaction, 'collection_limit') as connection:
+                    self.evidence.advance(run_id, run["checkpoint"], complete=False, connection=connection)
+                    self.evidence.issue(run_id, None, "byte_limit_reached", "byte_limit_reached", connection=connection)
                 break
             bounded = RunLimits(selected_limits.max_requests - run["requests_used"], 1, 1, remaining_bytes)
+            # Check the owner session again before dispatch. The transaction ends
+            # before I/O; only its still-owned response may enter an effect scope.
+            with _transaction(transaction, 'collection_dispatch'):
+                pass
             try:
                 batch = collector.collect(manifest, run["checkpoint"], bounded)
             except (EvidenceError, OSError, ValueError, KeyError, TypeError) as error:
                 code = error.code if isinstance(error, EvidenceError) else "source_unavailable"
-                self.evidence.issue(run_id, None, code, code)
+                with _transaction(transaction, 'collection_failed') as connection:
+                    self.evidence.issue(run_id, None, code, code, connection=connection)
                 break
             if batch.waiting and batch.items:
                 raise EvidenceError('invalid_collection_wait')
             if not batch.items:
-                self.evidence.advance(run_id, batch.next_checkpoint, complete=batch.complete,
-                                      waiting=batch.waiting, request_attempts=batch.request_attempts)
+                with _transaction(transaction, 'collection_frontier') as connection:
+                    self.evidence.advance(run_id, batch.next_checkpoint, complete=batch.complete,
+                                          waiting=batch.waiting, request_attempts=batch.request_attempts, connection=connection)
                 completed_input = batch.complete
                 break
             if len(batch.items) != 1:
-                self.evidence.issue(run_id, None, "unsupported_batch_size", "unsupported_batch_size")
+                with _transaction(transaction, 'collection_failed') as connection:
+                    self.evidence.issue(run_id, None, "unsupported_batch_size", "unsupported_batch_size", connection=connection)
                 break
             for draft in batch.items:
+                observation = None
                 try:
-                    observation = self.evidence.save(
-                        run_id, run["records_used"], draft, batch.next_checkpoint, complete=batch.complete
-                    )
+                    try:
+                        with _transaction(transaction, 'evidence') as connection:
+                            observation = self.evidence.save(
+                                run_id, run["records_used"], draft, batch.next_checkpoint, complete=batch.complete, connection=connection
+                            )
+                    except BaseException:
+                        if observation is not None:
+                            self.evidence.discard_uncommitted(observation)
+                        raise
                 except EvidenceError as error:
-                    self.evidence.issue(run_id, None, error.code, error.code)
-                    return self._report(run_id, False)
+                    with _transaction(transaction, 'collection_failed') as connection:
+                        self.evidence.issue(run_id, None, error.code, error.code, connection=connection)
+                    return self._report(run_id, False, transaction=transaction)
                 if on_commit:
                     on_commit("evidence_committed", observation.id)
-                if self._process(observation, None if observation.payload_path else draft.payload) and on_commit:
+                if self._process(observation, None if observation.payload_path else draft.payload, transaction=transaction) and on_commit:
                     on_commit("canonical_committed", observation.id)
             if batch.complete:
                 completed_input = True
@@ -213,7 +247,7 @@ class IngestionRunner:
                 # The source already recorded why collection stopped. Do not
                 # add a misleading request-limit issue at the same boundary.
                 break
-        return self._report(run_id, completed_input)
+        return self._report(run_id, completed_input, transaction=transaction)
 
     def replay(self, observation_id: str) -> dict[str, Any]:
         observation, payload = self.evidence.load(observation_id)

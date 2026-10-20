@@ -80,9 +80,22 @@ ALTER TABLE acquisition_tasks ADD CONSTRAINT acquisition_tasks_origin_basis_chec
     OR (origin = 'assistant' AND campaign_id IS NULL AND brief_id IS NULL AND approval_id IS NOT NULL)
 );
 
--- Durable single-worker restart frontier; phase metadata contains no source values.
+-- Durable restart frontier; phase metadata contains no source values.
 ALTER TABLE acquisition_tasks ADD COLUMN IF NOT EXISTS progress jsonb NOT NULL DEFAULT '{}';
 ALTER TABLE acquisition_attempts ADD COLUMN IF NOT EXISTS resumed_by jsonb NOT NULL DEFAULT '[]';
 ALTER TABLE acquisition_attempts ADD COLUMN IF NOT EXISTS publication_support jsonb;
 ALTER TABLE acquisition_tasks DROP CONSTRAINT IF EXISTS acquisition_tasks_status_check;
 ALTER TABLE acquisition_tasks ADD CONSTRAINT acquisition_tasks_status_check CHECK (status IN ('queued','collecting','ingesting','publishing','waiting','completed','failed'));
+
+-- The backend owns a task-specific session lock; metadata alone grants no authority.
+ALTER TABLE acquisition_tasks ADD COLUMN IF NOT EXISTS execution_id uuid;
+ALTER TABLE acquisition_tasks ADD COLUMN IF NOT EXISTS execution_backend_pid integer;
+ALTER TABLE acquisition_tasks ADD COLUMN IF NOT EXISTS execution_actor jsonb;
+ALTER TABLE acquisition_attempts ADD COLUMN IF NOT EXISTS recovery_count integer NOT NULL DEFAULT 0;
+
+-- Summaries remain bounded across safe polling and repeated process recovery.
+UPDATE acquisition_attempts SET recovery_count=greatest(recovery_count,jsonb_array_length(resumed_by)),
+    resumed_by=(SELECT coalesce(jsonb_agg(value ORDER BY n),'[]'::jsonb)
+                FROM (SELECT value,n FROM jsonb_array_elements(resumed_by) WITH ORDINALITY AS e(value,n) ORDER BY n DESC LIMIT 20) recent),
+    phases=(SELECT coalesce(jsonb_agg(value ORDER BY n),'[]'::jsonb)
+            FROM (SELECT value,n FROM jsonb_array_elements(phases) WITH ORDINALITY AS e(value,n) ORDER BY n DESC LIMIT 100) recent);

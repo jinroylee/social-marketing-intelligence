@@ -34,8 +34,8 @@ class KnowledgePublications:
         KnowledgeStore(self.db, self.workspace_id).migrate()
 
     def publish(self, support: tuple[SupportReference, ...], actor: ActorContext, *, request_id: str,
-                interpretation_ids: tuple[str, ...] = (), include_synthetic: bool = False) -> dict[str, Any]:
-        """Commit one validated bounded selection, retaining the actual producer."""
+                interpretation_ids: tuple[str, ...] = (), include_synthetic: bool = False, connection=None) -> dict[str, Any]:
+        """Publish a validated selection, optionally in a caller-owned transaction."""
         actor.require_workspace(self.workspace_id)
         if not isinstance(request_id, str) or not request_id.strip() or len(request_id) > 200:
             raise EvidenceError('invalid_publication_request_id')
@@ -43,7 +43,7 @@ class KnowledgePublications:
                     'producer': {'actor_id': actor.actor_id, 'kind': actor.kind}, 'method_version': self.method_version,
                     'interpretation_ids': interpretation_ids, 'include_synthetic': include_synthetic}
         digest = hashlib.sha256(json.dumps(document, sort_keys=True).encode()).hexdigest()
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             connection.execute('SELECT pg_advisory_xact_lock(hashtext(%s))', (f'publication:{self.workspace_id}:{request_id}',))
             existing = connection.execute('SELECT id,request_digest FROM knowledge_publications WHERE workspace_id=%s AND request_id=%s', (self.workspace_id, request_id)).fetchone()
             if existing:
@@ -77,23 +77,24 @@ class KnowledgePublications:
                                    (publication_id, position, identity))
         return {'status': 'published', 'publication_id': publication_id}
 
-    def unpublished(self, support: tuple[SupportReference, ...], actor: ActorContext, *, include_synthetic: bool = False) -> tuple[SupportReference, ...]:
+    def unpublished(self, support: tuple[SupportReference, ...], actor: ActorContext, *, include_synthetic: bool = False, connection=None) -> tuple[SupportReference, ...]:
         """Select captures/mappings not already usable in a committed publication.
 
         This compares source-owned capture identities, not entity counts or market
         novelty. A later capture or mapping is distinct. Current process policy and
         derivation health are required on both sides; withdrawn support cannot make
-        a newly permitted capture appear already usable.
+        a newly permitted capture appear already usable. A supplied connection
+        retains policy locks and legacy identity updates in its owner transaction.
         """
         actor.require_workspace(self.workspace_id)
         if not support:
             return ()
-        members = self.evidence.read(support, actor, purpose='process', include_synthetic=include_synthetic)
-        if any(m['availability'] != 'available' or m['support_status'] != 'current' for m in members):
-            raise EvidenceError('publication_support_unavailable')
-        versions = {m['content_version'] for m in members}
-        existing_versions = set()
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
+            members = self.evidence.read(support, actor, purpose='process', include_synthetic=include_synthetic, connection=connection)
+            if any(m['availability'] != 'available' or m['support_status'] != 'current' for m in members):
+                raise EvidenceError('publication_support_unavailable')
+            versions = {m['content_version'] for m in members}
+            existing_versions = set()
             rows = connection.execute(
                 'SELECT s.* FROM knowledge_publication_support s JOIN knowledge_publications p ON p.id=s.publication_id '
                 'WHERE p.workspace_id=%s AND (NOT p.synthetic OR %s) AND (s.content_version=ANY(%s) OR s.content_version IS NULL)',

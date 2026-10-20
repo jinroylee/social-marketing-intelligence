@@ -12,7 +12,7 @@ import psycopg
 from smi_knowledge import Catalog, KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
 from smi_campaigns import Brief, CampaignStore, Selection
 from smi_monitoring import MonitoringStore
-from smi_tasks import AcquisitionTasks, EnrichmentProposal, OfflineRoute, OfflineTaskWorker, TaskAuthority
+from smi_tasks import AcquisitionTasks, EnrichmentProposal, OfflineRoute, OfflineTaskWorker, TaskAuthority, TaskExecutionLost
 
 from .adapters.registry import default_registry
 from .canonical import CanonicalReader, CanonicalWriter
@@ -298,8 +298,8 @@ def main(argv: list[str] | None = None) -> int:
                 result = {"status": "expired", "count": evidence.expire()}
         print(json.dumps(result, ensure_ascii=False, default=str))
         return 1 if result.get("outcome") == "failure" else 2 if result.get("status") == "partial" else 0
-    except (EvidenceError, ValueError, OSError, KeyError, psycopg.Error) as error:
-        code = error.code if isinstance(error, EvidenceError) else "database_error" if isinstance(error, psycopg.Error) else "invalid_input"
+    except (EvidenceError, TaskExecutionLost, ValueError, OSError, KeyError, psycopg.Error) as error:
+        code = error.code if isinstance(error, EvidenceError) else 'task_execution_lost' if isinstance(error, TaskExecutionLost) else "database_error" if isinstance(error, psycopg.Error) else "invalid_input"
         print(json.dumps({"status": "failed", "code": code}))
         return 1
 

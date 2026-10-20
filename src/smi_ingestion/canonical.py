@@ -24,9 +24,9 @@ class CanonicalWriter:
     def __init__(self, db: Database):
         self.db = db
 
-    def reconcile_applied(self, run_id: str) -> None:
+    def reconcile_applied(self, run_id: str, *, connection=None) -> None:
         """Recover pending status left by older, separately committed canonical writes."""
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             connection.execute(
                 "UPDATE source_observations o SET status='applied' "
                 "WHERE o.run_id=%s AND o.status='pending' AND EXISTS "

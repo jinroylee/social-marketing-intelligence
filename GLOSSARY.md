@@ -64,6 +64,9 @@ An attributable human action authorizing one exact saved proposal revision and s
 **Enrichment task**:
 A scoped acquisition of additional evidence for the shared knowledge, initiated by a configured schedule, campaign coverage need or approved assistant proposal. Its completion distinguishes retrieved material from knowledge actually made available for use.
 
+**Task execution authority**:
+Temporary ownership of one admitted task's local effects by a worker. Handoff retains the task's original approval/scope, attempt, ingestion run and committed publication; owning execution grants no broader acquisition authority.
+
 **Knowledge publication**:
 A versioned availability of ingested evidence and supported interpretations for knowledge-base queries. It identifies the source support and transformations that make an update usable.
 

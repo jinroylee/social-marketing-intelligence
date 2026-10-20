@@ -10,4 +10,6 @@ Keep investigations, knowledge search and publication list/detail pages independ
 
 Save supplied immutable proposals and approve their displayed scope only through the configured human action. Reopen approval-only interrupted actions with their durable request identity; render exact task/proposal links and keep conversation generation outside this surface. Submit configured offline campaign tasks through `AcquisitionTasks` and render source-free task/run/publication lineage independently through task list/detail routes. The server chooses the synthetic fixture route, actor and origin; form fields cannot grant origin, approval or live-collector authority. Acknowledgment does not execute the worker.
 
+Task detail reads execution ownership from `AcquisitionTasks`: distinguish active running work from recoverable committed progress and waiting/terminal states. Keep worker disconnect/transaction observers at trusted composition boundaries; forms cannot revoke claims or choose execution IDs.
+
 Update `docs/local-review.md` when changing routes or operator behavior. Verify server-bound actor identity, stale saves, policy withdrawal, error-state preservation and restart/reopen using isolated schemas. The application does not acquire live evidence, run paid models or translate captions.
