@@ -17,6 +17,8 @@ ALTER TABLE ingestion_runs ADD COLUMN IF NOT EXISTS workspace_id TEXT NOT NULL D
 ALTER TABLE ingestion_runs ADD COLUMN IF NOT EXISTS requests_used INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE ingestion_runs ADD COLUMN IF NOT EXISTS input_complete BOOLEAN NOT NULL DEFAULT FALSE;
 
+ALTER TABLE ingestion_runs ADD COLUMN IF NOT EXISTS waiting JSONB;
+
 CREATE TABLE IF NOT EXISTS source_observations (
     id UUID PRIMARY KEY,
     run_id UUID NOT NULL REFERENCES ingestion_runs(id),

@@ -27,6 +27,7 @@ erDiagram
         text adapter_id
         text manifest_hash
         jsonb checkpoint
+        jsonb waiting
         boolean input_complete
         jsonb limits
         text status
@@ -469,7 +470,7 @@ Monitoring has no campaign foreign key. Its scope and insight heads preserve ind
 
 ## Product domain model
 
-This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, scheduled acquisition authority/recovery, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams above describe implemented tables.
+This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, scheduled acquisition authority and competing-worker claims, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams above describe implemented tables.
 
 ```mermaid
 erDiagram
@@ -551,6 +552,7 @@ erDiagram
         text manifest_hash
         text status
         text outcome
+        jsonb progress
         jsonb coverage
         text failure_phase
         text failure_code
@@ -565,6 +567,8 @@ erDiagram
         text producer_id
         text producer_kind
         jsonb phases
+        jsonb resumed_by
+        jsonb publication_support
         timestamptz started_at
         timestamptz finished_at
     }
@@ -574,7 +578,7 @@ erDiagram
     }
 ```
 
-Task admission persists its campaign/brief or exact proposal/approval basis, configuration and resource limits before returning. Proposal IDs identify immutable supplied revisions; each pins purpose, refresh/fill/expansion intent, subject/search and input scope, route/configuration and limits. Approval records the configured human, exact digest and request identity; one proposal permits at most one approval and one approval at most one task. The origin-basis constraint requires campaign plus brief for campaign tasks, or approval with no campaign/brief for assistant tasks. The migration preserves original campaign-only rows. Workspace/request identity binds the full scope and initiator. Only server-established campaign/assistant origins and a synthetic fixture-json route are installed. Actor roles come from trusted server configuration, separately from submitted identity metadata. Attempts retain exact run IDs and actual automation producers; task/publication links retain usable committed outcomes separately from raw collection. Task data copies no source wording. Current-policy publication reads remain responsible for values. Publication support's source-owned `content_version` fingerprint compares capture/mapping/selection identity across new run UUIDs without copying payloads; denied or superseded support does not suppress a newly usable publication. See [the task contract](tasks.md) for installed lifecycle and recovery limits.
+Task admission persists its campaign/brief or exact proposal/approval basis, configuration and resource limits before returning. Proposal IDs identify immutable supplied revisions; each pins purpose, refresh/fill/expansion intent, subject/search and input scope, route/configuration and limits. Approval records the configured human, exact digest and request identity; one proposal permits at most one approval and one approval at most one task. The origin-basis constraint requires campaign plus brief for campaign tasks, or approval with no campaign/brief for assistant tasks. The migration preserves original campaign-only rows. Workspace/request identity binds the full scope and initiator. Only server-established campaign/assistant origins and a synthetic fixture-json route are installed. Actor roles come from trusted server configuration, separately from submitted identity metadata. Attempts retain exact run IDs, initial automation producers, recovery actors, committed phases and the exact prepared source-support selection; task/publication links retain usable committed outcomes separately from raw collection. Task data copies no source wording. Current-policy publication reads remain responsible for values. Publication support's source-owned `content_version` fingerprint compares capture/mapping/selection identity across new run UUIDs without copying payloads; denied or superseded support does not suppress a newly usable publication. See [the task contract](tasks.md) for installed lifecycle and recovery limits. Task `progress` records the durable phase/observation frontier. A publication committed before task acknowledgment is reopened through the publication owner by request identity. Ingestion-run `waiting` stores only a bounded reason/resumability pair; the opaque operation handle remains in its checkpoint. No-observation waits and their request usage commit together. These columns upgrade existing rows without changing their IDs or authority basis.
 
 ## Accepted future operational records
 

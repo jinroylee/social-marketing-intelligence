@@ -14,6 +14,7 @@ from smi_ingestion.contracts import RunLimits
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
+from smi_knowledge import KnowledgePublications
 
 from .contracts import EnrichmentProposal, OfflineRoute, TaskAuthority
 
@@ -212,14 +213,23 @@ class AcquisitionTasks:
             approval = connection.execute('SELECT proposal_id FROM enrichment_approvals WHERE id=%s', (row['approval_id'],)).fetchone() if row['approval_id'] else None
             attempts = connection.execute('SELECT * FROM acquisition_attempts WHERE task_id=%s ORDER BY number', (task_id,)).fetchall()
             publications = connection.execute('SELECT publication_id FROM acquisition_task_publications WHERE task_id=%s ORDER BY publication_id', (task_id,)).fetchall()
+        progress = row['progress'] or {'phase': row['status']}
+        coverage = dict(row['coverage'])
+        publication_ids = [str(p['publication_id']) for p in publications]
+        if row['outcome'] is None and progress.get('phase') == 'publication_prepared':
+            committed = KnowledgePublications(self.db, self.workspace_id).find_request(f'task:{task_id}', actor, include_synthetic=True)
+            if committed:
+                progress = {'phase': 'publication_committed', 'publication_id': committed['publication_id']}
+                coverage.update(published_members=committed['coverage']['members'], unpublished_members=0)
+                publication_ids = [committed['publication_id']]
         return {'task_id': task_id, 'workspace_id': self.workspace_id, 'request_id': row['request_id'],
                 'origin': row['origin'], 'initiator': {'actor_id': row['initiator_id'], 'kind': row['initiator_kind']},
                 'scope_version': row['scope_version'], 'scope': row['scope'], 'limits': row['limits'], 'attempt_limit': row['attempt_limit'],
-                'status': row['status'], 'outcome': row['outcome'], 'coverage': row['coverage'],
+                'status': row['status'], 'progress': progress, 'outcome': row['outcome'], 'coverage': coverage,
                 'failure': {'phase': row['failure_phase'], 'code': row['failure_code']} if row['failure_code'] else None,
                 'submitted_at': row['submitted_at'].isoformat(), 'finished_at': row['finished_at'].isoformat() if row['finished_at'] else None,
                 'proposal_approval': self.read_proposal(str(approval['proposal_id']), actor)['approval'] if approval else None,
-                'publication_ids': [str(p['publication_id']) for p in publications],
+                'publication_ids': publication_ids,
                 'attempts': [{'attempt_id': str(a['id']), 'number': a['number'], 'run_id': str(a['run_id']),
-                              'producer': {'actor_id': a['producer_id'], 'kind': a['producer_kind']}, 'phases': a['phases'],
+                              'producer': {'actor_id': a['producer_id'], 'kind': a['producer_kind']}, 'resumed_by': a['resumed_by'], 'publication_support': a['publication_support'], 'phases': a['phases'],
                               'started_at': a['started_at'].isoformat(), 'finished_at': a['finished_at'].isoformat() if a['finished_at'] else None} for a in attempts]}

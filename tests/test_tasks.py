@@ -259,7 +259,7 @@ def test_submission_does_not_fetch_missing_payload_and_worker_sanitizes_failure(
     assert failed['publication_ids'] == []
 
 
-def test_fixed_limits_stop_worker_without_publishing_incomplete_input(stack, tmp_path):
+def test_fixed_limits_publish_valid_subset_with_explicit_incomplete_input(stack, tmp_path):
     from smi_ingestion.contracts import RunLimits
     from smi_tasks import AcquisitionTasks, OfflineRoute, OfflineTaskWorker
 
@@ -270,14 +270,15 @@ def test_fixed_limits_stop_worker_without_publishing_incomplete_input(stack, tmp
     tasks = AcquisitionTasks(tasks.db, route=OfflineRoute(manifest, limits=RunLimits(1, 1, 1, 1000)), authority=tasks.authority)
     accepted = submit(tasks, campaign)
     limited = OfflineTaskWorker(tasks.db, evidence.root).run_one(accepted['task_id'], WORKER)
-    assert limited['outcome'] == 'failure'
+    assert limited['outcome'] == 'partial_update'
     assert limited['failure'] == {'phase': 'collection', 'code': 'record_limit_reached'}
     assert limited['limits'] == {'max_requests': 1, 'max_pages': 1, 'max_records': 1, 'max_bytes': 1000}
     assert limited['coverage']['collected_observations'] == 1
     assert limited['coverage']['ingested_observations'] == 1
-    assert limited['coverage']['published_members'] == 0
-    assert limited['publication_ids'] == []
-    assert KnowledgeQueries(tasks.db).search(QueryScope(), HUMAN, request_id='limited', include_synthetic=True)['members'] == []
+    assert limited['coverage']['published_members'] == 1
+    assert limited['coverage']['remaining_inputs'] == 1
+    assert len(limited['publication_ids']) == 1
+    assert len(KnowledgeQueries(tasks.db).search(QueryScope(), HUMAN, request_id='limited', include_synthetic=True)['members']) == 1
 
 
 def test_current_campaign_basis_stale_brief_and_worker_authority_are_explicit(stack, tmp_path):
@@ -608,3 +609,241 @@ def test_approval_only_restart_reuses_original_human_action_to_finish_submission
     assert reopened['approval']['approval_id'] == approved['approval_id']
     assert reopened['approval']['approver'] == {'actor_id': 'task-marketer', 'kind': 'human'}
     assert len(tasks.list(HUMAN)) == 1
+
+
+def test_worker_recovers_committed_evidence_without_refetching_or_replacing_attempt(stack, tmp_path):
+    import pytest
+    from smi_tasks import OfflineTaskWorker
+
+    tasks, campaign, evidence, _ = setup_task(stack, tmp_path)
+    task_id = submit(tasks, campaign)['task_id']
+
+    def interrupt(progress):
+        if progress['progress']['phase'] == 'evidence_committed':
+            raise RuntimeError('simulated process interruption')
+
+    with pytest.raises(RuntimeError, match='simulated process interruption'):
+        OfflineTaskWorker(tasks.db, evidence.root, on_progress=interrupt).run_one(task_id, WORKER)
+    interrupted = tasks.read(task_id, HUMAN)
+    assert interrupted['status'] == 'ingesting'
+    assert interrupted['outcome'] is None
+    assert interrupted['coverage']['collected_observations'] == 1
+    assert interrupted['coverage']['ingested_observations'] == 0
+    assert interrupted['progress']['observation_id']
+    assert KnowledgeQueries(tasks.db).search(QueryScope(), HUMAN, request_id='interrupted', include_synthetic=True)['members'] == []
+    (tmp_path / 'account.json').unlink()
+    recovered = OfflineTaskWorker(tasks.db, evidence.root).run_one(task_id, ActorContext('local', 'recovery-worker', 'automation'))
+    assert recovered['outcome'] == 'usable_update'
+    assert len(recovered['attempts']) == 1
+    assert recovered['attempts'][0]['attempt_id'] == interrupted['attempts'][0]['attempt_id']
+    assert recovered['attempts'][0]['run_id'] == interrupted['attempts'][0]['run_id']
+    assert recovered['attempts'][0]['producer'] == interrupted['attempts'][0]['producer']
+    assert recovered['attempts'][0]['resumed_by'] == [{'actor_id': 'recovery-worker', 'kind': 'automation'}]
+    assert recovered['coverage']['requests_used'] == 1
+    result = KnowledgeQueries(tasks.db).search(QueryScope(), HUMAN, request_id='recovered', include_synthetic=True)
+    assert result['members'][0]['observation_id'] == interrupted['progress']['observation_id']
+    assert OfflineTaskWorker(tasks.db, evidence.root).run_one(task_id, WORKER) == recovered
+
+
+def test_mixed_mapping_failure_publishes_only_valid_support_and_reports_remainder(stack, tmp_path):
+    from smi_tasks import OfflineTaskWorker
+
+    tasks, campaign, evidence, _ = setup_task(stack, tmp_path, items=[
+        {'path': 'invalid.json', 'reference': 'synthetic://invalid'},
+        {'path': 'account.json', 'reference': 'synthetic://valid'},
+    ])
+    (tmp_path / 'invalid.json').write_text(json.dumps({'account': {'id': 17}}))
+    completed = OfflineTaskWorker(tasks.db, evidence.root).run_one(submit(tasks, campaign)['task_id'], WORKER)
+    assert completed['outcome'] == 'partial_update'
+    assert completed['failure'] == {'phase': 'ingestion', 'code': 'normalization_failed'}
+    assert completed['coverage']['collected_observations'] == 2
+    assert completed['coverage']['ingested_observations'] == 1
+    assert completed['coverage']['quarantined_observations'] == 1
+    assert completed['coverage']['published_members'] == 1
+    assert completed['coverage']['remaining_inputs'] == 1
+    assert len(completed['publication_ids']) == 1
+    result = KnowledgeQueries(tasks.db).search(QueryScope(), HUMAN, request_id='valid-subset', include_synthetic=True)
+    assert len(result['members']) == 1
+    assert result['members'][0]['run_id'] == completed['attempts'][0]['run_id']
+    assert result['members'][0]['observation_id'] != completed['coverage']['issues'][0]['observation_id']
+
+
+def test_worker_recovers_canonical_and_publication_commits_with_exact_support(stack, tmp_path):
+    import pytest
+    from smi_ingestion.support import IngestedEvidence
+    from smi_knowledge import KnowledgePublications
+    from smi_tasks import OfflineTaskWorker
+
+    tasks, campaign, evidence, _ = setup_task(stack, tmp_path)
+    phases = ['canonical_committed', 'publication_prepared', 'publication_committed', 'completed']
+    for phase in phases:
+        (tmp_path / 'account.json').write_text(json.dumps({'account': {'id': 'offline-account', 'handle': 'test-account'}}))
+        # A distinct capture is a valid new update, independent of the prior task.
+        manifest = tasks.route.manifest_path
+        document = json.loads(manifest.read_text())
+        document['captured_at'] = f'2026-10-0{phases.index(phase) + 2}T00:00:00Z'
+        manifest.write_text(json.dumps(document))
+        task_id = submit(tasks, campaign, request_id=phase)['task_id']
+
+        def interrupt(progress):
+            if progress['progress']['phase'] == phase:
+                raise RuntimeError('simulated process interruption')
+
+        with pytest.raises(RuntimeError, match='simulated process interruption'):
+            OfflineTaskWorker(tasks.db, evidence.root, on_progress=interrupt).run_one(task_id, WORKER)
+        interrupted = tasks.read(task_id, HUMAN)
+        run_id = interrupted['attempts'][0]['run_id']
+        support = IngestedEvidence(tasks.db).select_run(run_id, HUMAN, include_synthetic=True)
+        assert len(support) == 1
+        (tmp_path / 'account.json').unlink()
+        recovery_actor = ActorContext('local', 'different-recovery-worker', 'automation')
+        recovered = OfflineTaskWorker(tasks.db, evidence.root).run_one(task_id, recovery_actor)
+        assert recovered['outcome'] == 'usable_update'
+        assert recovered['attempts'][0]['attempt_id'] == interrupted['attempts'][0]['attempt_id']
+        assert recovered['attempts'][0]['run_id'] == run_id
+        assert recovered['coverage']['requests_used'] == 1
+        assert recovered['coverage']['published_members'] == 1
+        assert IngestedEvidence(tasks.db).select_run(run_id, HUMAN, include_synthetic=True) == support
+        publication = KnowledgePublications(tasks.db).read(recovered['publication_ids'][0], HUMAN, include_synthetic=True)
+        assert publication['members'][0]['observation_id'] == support[0].observation_id
+        expected_producer = recovery_actor if phase in {'canonical_committed', 'publication_prepared'} else WORKER
+        assert publication['producer']['actor_id'] == expected_producer.actor_id
+        assert len(KnowledgePublications(tasks.db).list(HUMAN, include_synthetic=True)) == phases.index(phase) + 1
+        assert OfflineTaskWorker(tasks.db, evidence.root).run_one(task_id, WORKER) == recovered
+
+
+def test_pending_collection_resumes_saved_operation_and_ambiguous_operation_never_reissues(stack, tmp_path):
+    from smi_ingestion.adapters.local import LocalFileCollector
+    from smi_ingestion.contracts import CollectedBatch
+    from smi_tasks import OfflineTaskWorker
+
+    tasks, campaign, evidence, _ = setup_task(stack, tmp_path)
+
+    class SimulatedAsyncFixture:
+        def __init__(self, code):
+            self.code, self.starts, self.resumes = code, 0, 0
+
+        def collect(self, manifest, checkpoint, limits):
+            if 'operation_id' not in checkpoint:
+                self.starts += 1
+                return CollectedBatch((), {'index': 0, 'operation_id': 'simulated-operation'}, False,
+                                      waiting=self.code, request_attempts=1)
+            self.resumes += 1
+            return LocalFileCollector('fixture-json').collect(manifest, checkpoint, limits)
+
+    provider = SimulatedAsyncFixture('provider_pending')
+    task_id = submit(tasks, campaign)['task_id']
+    waiting = OfflineTaskWorker(tasks.db, evidence.root, collector=provider).run_one(task_id, WORKER)
+    assert waiting['status'] == 'waiting'
+    assert waiting['outcome'] is None
+    assert waiting['failure'] is None
+    assert waiting['progress'] == {'phase': 'waiting', 'code': 'provider_pending', 'resumable': True}
+    assert waiting['coverage']['requests_used'] == 1
+    assert waiting['publication_ids'] == []
+    assert tasks.read(task_id, HUMAN) == waiting
+    from smi_review import ReviewApp
+    from test_review import request, running
+    with running(ReviewApp(tasks.db)) as url:
+        status, _, detail = request(url, path=f'/tasks/{task_id}')
+        assert status == 200
+        assert 'provider_pending' in detail
+        assert 'resumable' in detail
+    resumed = OfflineTaskWorker(tasks.db, evidence.root, collector=provider).run_one(task_id, WORKER)
+    assert resumed['outcome'] == 'usable_update'
+    assert resumed['coverage']['requests_used'] == 2
+    assert resumed['attempts'][0]['attempt_id'] == waiting['attempts'][0]['attempt_id']
+    assert provider.starts == 1
+    assert provider.resumes == 1
+
+    ambiguous_provider = SimulatedAsyncFixture('provider_operation_ambiguous')
+    ambiguous_id = submit(tasks, campaign, request_id='ambiguous')['task_id']
+    ambiguous = OfflineTaskWorker(tasks.db, evidence.root, collector=ambiguous_provider).run_one(ambiguous_id, WORKER)
+    assert ambiguous['progress'] == {'phase': 'waiting', 'code': 'provider_operation_ambiguous', 'resumable': False}
+    again = OfflineTaskWorker(tasks.db, evidence.root, collector=ambiguous_provider).run_one(ambiguous_id, WORKER)
+    assert again['status'] == 'waiting'
+    assert again['outcome'] is None
+    assert again['coverage']['requests_used'] == 1
+    assert again['attempts'][0]['run_id'] == ambiguous['attempts'][0]['run_id']
+    assert ambiguous_provider.starts == 1
+    assert ambiguous_provider.resumes == 0
+
+
+def test_withdrawal_at_publication_boundary_reports_unpublished_support_without_query_visibility(stack, tmp_path):
+    from smi_tasks import OfflineTaskWorker
+
+    tasks, campaign, evidence, _ = setup_task(stack, tmp_path)
+    task_id = submit(tasks, campaign)['task_id']
+
+    def withdraw(progress):
+        if progress['progress']['phase'] == 'publication_prepared':
+            evidence.revoke(progress['attempts'][0]['publication_support'][0]['observation_id'])
+
+    failed = OfflineTaskWorker(tasks.db, evidence.root, on_progress=withdraw).run_one(task_id, WORKER)
+    assert failed['outcome'] == 'failure'
+    assert failed['failure'] == {'phase': 'publication', 'code': 'publication_support_unavailable'}
+    assert failed['coverage']['ingested_observations'] == 1
+    assert failed['coverage']['published_members'] == 0
+    assert failed['coverage']['unpublished_members'] == 1
+    assert failed['publication_ids'] == []
+    assert KnowledgeQueries(tasks.db).search(QueryScope(), HUMAN, request_id='withdrawn-preparation', include_synthetic=True)['members'] == []
+
+
+def test_waiting_operation_stops_at_persisted_request_bound_without_another_call(stack, tmp_path):
+    from smi_ingestion.contracts import CollectedBatch, RunLimits
+    from smi_tasks import AcquisitionTasks, OfflineRoute, OfflineTaskWorker
+
+    tasks, campaign, evidence, manifest = setup_task(stack, tmp_path)
+    tasks = AcquisitionTasks(tasks.db, route=OfflineRoute(manifest, limits=RunLimits(1, 1, 1, 1000)), authority=tasks.authority)
+
+    class PendingFixture:
+        calls = 0
+
+        def collect(self, manifest, checkpoint, limits):
+            self.calls += 1
+            return CollectedBatch((), {'operation_id': 'pending'}, False, waiting='provider_pending', request_attempts=1)
+
+    provider = PendingFixture()
+    task_id = submit(tasks, campaign)['task_id']
+    waiting = OfflineTaskWorker(tasks.db, evidence.root, collector=provider).run_one(task_id, WORKER)
+    assert waiting['status'] == 'waiting'
+    exhausted = OfflineTaskWorker(tasks.db, evidence.root, collector=provider).run_one(task_id, WORKER)
+    assert exhausted['outcome'] == 'failure'
+    assert exhausted['failure'] == {'phase': 'collection', 'code': 'request_limit_reached'}
+    assert exhausted['coverage']['requests_used'] == 1
+    assert provider.calls == 1
+
+
+def test_interrupted_partial_publication_reopens_committed_coverage_without_inputs(stack, tmp_path):
+    import pytest
+    from smi_tasks import OfflineTaskWorker
+
+    tasks, campaign, evidence, manifest = setup_task(stack, tmp_path, items=[
+        {'path': 'account.json', 'reference': 'synthetic://valid'},
+        {'path': 'missing.json', 'reference': 'synthetic://failed'},
+    ])
+    task_id = submit(tasks, campaign)['task_id']
+
+    def interrupt(progress):
+        if progress['progress']['phase'] == 'publication_committed':
+            raise OSError('simulated lost acknowledgment')
+
+    with pytest.raises(OSError, match='simulated lost acknowledgment'):
+        OfflineTaskWorker(tasks.db, evidence.root, on_progress=interrupt).run_one(task_id, WORKER)
+    committed = tasks.read(task_id, HUMAN)
+    assert committed['outcome'] is None
+    assert committed['progress']['phase'] == 'publication_committed'
+    assert committed['coverage']['published_members'] == 1
+    assert committed['coverage']['unpublished_members'] == 0
+    assert committed['coverage']['remaining_inputs'] == 1
+    assert committed['failure'] == {'phase': 'collection', 'code': 'source_unavailable'}
+    assert len(committed['publication_ids']) == 1
+    manifest.unlink()
+    (tmp_path / 'account.json').unlink()
+    completed = OfflineTaskWorker(tasks.db, evidence.root).run_one(task_id, ActorContext('local', 'recovery', 'automation'))
+    assert completed['outcome'] == 'partial_update'
+    assert completed['failure'] == committed['failure']
+    assert completed['publication_ids'] == committed['publication_ids']
+    assert completed['coverage'] == committed['coverage']
+    result = KnowledgeQueries(tasks.db).search(QueryScope(), HUMAN, request_id='committed-partial', include_synthetic=True)
+    assert len(result['members']) == 1
+    assert result['manifest'][0]['publication_producer']['actor_id'] == WORKER.actor_id

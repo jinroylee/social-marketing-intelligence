@@ -139,7 +139,7 @@ Owner: [`smi_ingestion`](../src/smi_ingestion/schema.sql), including [`evidence_
 
 | Table | What one row stores | Example |
 | --- | --- | --- |
-| `ingestion_runs` | One workspace-owned acquisition/import job: adapter, input manifest, limits, resource use, checkpoint and status. | The offline job that imports all 19 sample observations. Its local run differs from the export's original collection runs. |
+| `ingestion_runs` | One workspace-owned acquisition/import job: adapter, input manifest, limits, resource use, checkpoint, optional provider wait reason/resumability and status. | The offline job that imports all 19 sample observations. Its local run differs from the export's original collection runs. |
 | `source_observations` | One captured source response or imported record, with acquisition lineage, times, policy, payload hash/path and coverage. | O1: the captured `guga9791` post record. |
 | `ingestion_issues` | A reported problem associated with a run and optionally an observation. | An adapter failure code and sanitized message. |
 | `canonical_entities` | A stable internal UUID for an account or a content item. It does not hold a complete mutable profile. | A1 is an account; P1 is its post. There is no implemented Creator/person entity here. |
@@ -159,8 +159,8 @@ Owner: [`smi_tasks`](../src/smi_tasks/schema.sql); [public task contract](tasks.
 | --- | --- | --- |
 | `enrichment_proposals` | An immutable supplied revision with purpose, refresh/fill/expansion intent, subject/search and input scope, exact route/limits digest and proposer. | Save a proposal without submitting acquisition. |
 | `enrichment_approvals` | One configured human's exact workspace/revision/digest approval and original retry identity. | Approval A authorizes at most one task for proposal P. |
-| `acquisition_tasks` | A workspace/request-bound campaign or approved assistant task, exact brief/approval/configuration scope, initiator, hard limits, phase, outcome and sanitized coverage/failure. | Accepted now, executed separately through the local synthetic route. |
-| `acquisition_attempts` | One attributable worker attempt, exact ingestion run and observed phases/times. | Worker A ingested one observation, then published one usable member. |
+| `acquisition_tasks` | A workspace/request-bound campaign or approved assistant task, exact brief/approval/configuration scope, initiator, hard limits, durable commit/wait progress, outcome and sanitized coverage/failure. | Accepted now, executed separately through the local synthetic route. |
+| `acquisition_attempts` | One attributable worker attempt, exact ingestion run, recovery actors, prepared support IDs and observed phases/times. | Worker B resumes Worker A’s same run/support after an interruption; a valid subset can publish with the failed remainder visible. |
 | `acquisition_task_publications` | One task's exact committed usable publication link. | Task T produced publication P; fetch-only input produces no such link. |
 
 ### Shared business vocabulary, interpretations, publication and queries — 10 tables

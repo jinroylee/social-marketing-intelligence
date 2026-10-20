@@ -79,3 +79,10 @@ ALTER TABLE acquisition_tasks ADD CONSTRAINT acquisition_tasks_origin_basis_chec
     (origin = 'campaign' AND campaign_id IS NOT NULL AND brief_id IS NOT NULL AND approval_id IS NULL)
     OR (origin = 'assistant' AND campaign_id IS NULL AND brief_id IS NULL AND approval_id IS NOT NULL)
 );
+
+-- Durable single-worker restart frontier; phase metadata contains no source values.
+ALTER TABLE acquisition_tasks ADD COLUMN IF NOT EXISTS progress jsonb NOT NULL DEFAULT '{}';
+ALTER TABLE acquisition_attempts ADD COLUMN IF NOT EXISTS resumed_by jsonb NOT NULL DEFAULT '[]';
+ALTER TABLE acquisition_attempts ADD COLUMN IF NOT EXISTS publication_support jsonb;
+ALTER TABLE acquisition_tasks DROP CONSTRAINT IF EXISTS acquisition_tasks_status_check;
+ALTER TABLE acquisition_tasks ADD CONSTRAINT acquisition_tasks_status_check CHECK (status IN ('queued','collecting','ingesting','publishing','waiting','completed','failed'));

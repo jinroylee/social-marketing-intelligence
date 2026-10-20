@@ -170,7 +170,7 @@ class EvidenceStore:
                 ).fetchone()
                 connection.execute(
                     "UPDATE ingestion_runs SET checkpoint=%s, input_complete=%s, records_used=records_used+1, "
-                    "bytes_used=bytes_used+%s,requests_used=requests_used+%s WHERE id=%s",
+                    "bytes_used=bytes_used+%s,requests_used=requests_used+%s,waiting=NULL WHERE id=%s",
                     (Jsonb(checkpoint), complete, len(draft.payload), draft.request_attempts, run_id)
                 )
             return _observation(row)
@@ -178,6 +178,27 @@ class EvidenceStore:
             if path:
                 path.unlink(missing_ok=True)
             raise
+
+    def advance(self, run_id: str, checkpoint: dict[str, Any], *, complete: bool,
+                waiting: str | None = None, request_attempts: int = 0) -> None:
+        """Commit a no-observation frontier, including safe pending/ambiguous waits.
+
+        Opaque operation handles stay in ingestion. Ambiguous operations cannot
+        resume automatically; a pending adapter promises checkpoint replay safety.
+        """
+        if (waiting not in {None, 'provider_pending', 'provider_operation_ambiguous'}
+                or type(request_attempts) is not int or request_attempts < 0
+                or (waiting and (complete or not checkpoint or request_attempts < 1))):
+            raise EvidenceError('invalid_collection_wait')
+        progress = {'code': waiting, 'resumable': waiting == 'provider_pending'} if waiting else None
+        with self.db.connect() as connection:
+            run = connection.execute('SELECT limits,requests_used FROM ingestion_runs WHERE id=%s FOR UPDATE', (run_id,)).fetchone()
+            if run is None:
+                raise EvidenceError('run_not_found')
+            if run['requests_used'] + request_attempts > run['limits']['max_requests']:
+                raise EvidenceError('request_limit_reached')
+            connection.execute('UPDATE ingestion_runs SET checkpoint=%s,input_complete=%s,waiting=%s,requests_used=requests_used+%s WHERE id=%s',
+                               (Jsonb(checkpoint), complete, Jsonb(progress), request_attempts, run_id))
 
     def get(self, observation_id: str) -> RawObservation:
         with self.db.connect() as connection:

@@ -36,7 +36,7 @@ def detail(task):
     content += '<p>Synthetic development inputs. Retrieved material becomes usable only after ingestion and publication. No usable update does not establish market absence.</p>'
     for label, item in (('Workspace', task['workspace_id']), ('Origin', task['origin']), ('Proposal approval', task['proposal_approval']), ('Initiator', task['initiator']), ('Submitted', task['submitted_at']),
                         ('Scope version', task['scope_version']), ('Immutable scope', task['scope']), ('Limits', task['limits']),
-                        ('Attempt limit', task['attempt_limit']), ('Coverage', task['coverage']), ('Failure', task['failure']), ('Attempts', task['attempts'])):
+                        ('Attempt limit', task['attempt_limit']), ('Progress', task['progress']), ('Coverage', task['coverage']), ('Failure', task['failure']), ('Attempts', task['attempts'])):
         content += f'<p>{e(label)}: {e(json.dumps(item, ensure_ascii=False))}</p>'
     if task['proposal_approval']:
         proposal_id = task['proposal_approval']['proposal_id']

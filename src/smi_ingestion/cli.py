@@ -135,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     task_submit.add_argument("--offline-manifest", type=Path, required=True)
     task_submit.add_argument("--offline-route-version", default="offline-fixture-v1")
     task_submit.add_argument("--actor", default="local-marketer")
-    task_run = commands.add_parser("run-offline-task", help="Execute at most one queued fixture-json task; live collectors are unavailable")
+    task_run = commands.add_parser("run-offline-task", help="Execute or resume one fixture-json task; live collectors are unavailable")
     task_run.add_argument("task_id")
     task_run.add_argument("--worker-id", default="local-offline-task-worker")
     task_inspect = commands.add_parser("inspect-task", help="Reopen durable phase/outcome, exact runs and publication links")

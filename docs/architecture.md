@@ -21,7 +21,7 @@ These are module boundaries within one Python application and PostgreSQL instanc
 
 | Owner | Responsibilities | Implementation coverage |
 | --- | --- | --- |
-| Offline acquisition tasks | Campaign-role admission, immutable supplied proposals, exact human approval, route/scope/limits, attempts, phases and run/publication outcomes | Implemented in `smi_tasks` for synthetic fixture JSON only; recovery, scheduled authority, notifications and costs remain future work |
+| Offline acquisition tasks | Campaign-role admission, immutable supplied proposals, exact human approval, route/scope/limits, attempts, phases and run/publication outcomes | Implemented in `smi_tasks` for synthetic fixture JSON with single-worker recovery and partial outcomes; scheduled authority, competing-worker claims, notifications and costs remain future work |
 | Acquisition and canonical evidence | Collection, source policy, observations, stable account/content identity, field assertions, metrics and replay | Implemented in `smi_ingestion` |
 | Exact ingested support | Bounded selection and purpose-aware reads of observation/derivation/assertion/metric IDs, including fresh runs | Implemented in `smi_ingestion.support` |
 | Frozen evidence sets | Validated snapshot import, fixed member/derivation bindings, lineage and workspace/purpose-aware reads | Implemented in `smi_ingestion.evidence_sets` |
@@ -32,7 +32,7 @@ These are module boundaries within one Python application and PostgreSQL instanc
 
 ## Offline task orchestration
 
-`smi_tasks` composes `CampaignStore`, `IngestionRunner`, `IngestedEvidence` and `KnowledgePublications` through their public interfaces. Server-configured identity roles separately authorize campaign humans/services and proposal approvers. Arbitrary assistant automation cannot obtain campaign authority by choosing that operation. Campaign submission establishes origin from an exact existing current brief; assistant submission requires an immutable supplied proposal and its exact attributable human approval. Admission commits immutable route/configuration digest, actor, scope and limits, then returns a queued task ID without collecting. The bounded worker persists an attempt/run link and actual automation producer, uses a fixture-json-only registry, rejects changed manifests and records collected versus ingested versus published counts. Source-free task metadata survives restart. Empty or unchanged currently published captures yield no usable update; raw fetch or mapping failure cannot declare a knowledge benefit. Terminal retries reuse the original outcome. See [the task contract](tasks.md).
+`smi_tasks` composes `CampaignStore`, `IngestionRunner`, `IngestedEvidence` and `KnowledgePublications` through their public interfaces. Server-configured identity roles separately authorize campaign humans/services and proposal approvers. Arbitrary assistant automation cannot obtain campaign authority by choosing that operation. Campaign submission establishes origin from an exact existing current brief; assistant submission requires an immutable supplied proposal and its exact attributable human approval. Admission commits immutable route/configuration digest, actor, scope and limits, then returns a queued task ID without collecting. The bounded worker persists an attempt/run link and actual automation producer, uses a fixture-json-only registry, rejects changed manifests and records collected versus ingested versus published counts. Single-worker recovery reuses the same attempt/run and committed evidence/canonical effects, retaining exact prepared publication support and recovery actors. Source-free task reads reopen a request-bound committed publication even after a lost task acknowledgment, preserving its actual producer. Valid subsets publish as partial updates with the failed remainder visible; empty or unchanged usable captures create no fictitious update. Simulated pending operations resume an opaque checkpoint, while ambiguous operations remain waiting without another collector call. Terminal retries reuse the original outcome. Competing-worker claims remain future work. See [the task contract](tasks.md).
 
 ```mermaid
 flowchart LR
@@ -48,7 +48,7 @@ flowchart LR
     Publication --> Detail
 ```
 
-The first task slice has one attempt and explicit incomplete-execution state; crash recovery, partial publication, competing workers, notification delivery and spending remain separate extensions.
+The offline task slice retains one attempt across single-worker recovery, including exact support and partial publication. Competing workers, notification delivery and spending remain separate extensions.
 
 ## Acquisition and persistence
 

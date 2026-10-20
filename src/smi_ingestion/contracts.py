@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 
 @dataclass(frozen=True)
@@ -53,9 +53,18 @@ class ObservationDraft:
 
 @dataclass(frozen=True)
 class CollectedBatch:
+    """Bounded collection result; waits have no items and retain an opaque checkpoint.
+
+    ``provider_pending`` promises that resuming the checkpoint is safe (for
+    example polling the existing operation). An ambiguous operation stays blocked
+    for reconciliation. No-item requests must report their actual attempts.
+    """
+
     items: tuple[ObservationDraft, ...]
     next_checkpoint: dict[str, Any]
     complete: bool
+    waiting: Literal['provider_pending', 'provider_operation_ambiguous'] | None = None
+    request_attempts: int = 0
 
 
 @dataclass(frozen=True)

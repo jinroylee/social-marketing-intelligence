@@ -14,6 +14,10 @@ This document describes implemented acquisition capabilities and the evidence st
 
 See [local source commands](../README.md#explicit-live-source-operations), [adapter code](../src/smi_ingestion/adapters/registry.py) and [evidence contracts](evidence-sets.md). Examples under `examples/live/` are explicit network operations; the default snapshot workflow is offline. Load credentials from local configuration without printing or committing them. Existing credentials do not themselves authorize additional source calls or prove source-use clearance.
 
+## Durable collection progress
+
+`IngestionRunner.resume(run_id, on_commit=...)` exposes evidence/canonical commit notifications; `inspect(run_id)` reads counts without I/O or state advancement. `CollectedBatch` supports a no-observation wait with an opaque checkpoint and actual request attempts. Pending waits promise safe checkpoint resume; ambiguous operations remain blocked without reissuing collection. The saved checkpoint, waiting reason and request usage commit together. The [offline task worker](tasks.md) exercises this contract with simulated fixture I/O only; it enables no real provider. Real routes must establish safe operation reconciliation before using this task path.
+
 ## Retained Bright Data verification evidence
 
 The [redacted API/ingestion receipt](../.scratch/brightdata-source-readiness/api-retry-2026-10-12T092701Z.json) records a successful bounded profile-and-posts check: two synchronous HTTP 200 responses produced one account and ten posts; offline mapper replay resolved their identities/author links. It is an operational verification record, not a current service-health check or a completed discovery benchmark.

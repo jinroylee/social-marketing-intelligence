@@ -108,6 +108,21 @@ class KnowledgePublications:
                         connection.execute('UPDATE knowledge_publication_support SET content_version=%s WHERE publication_id=%s AND position=%s', (member['content_version'], row['publication_id'], row['position']))
         return tuple(reference for reference, member in zip(support, members) if member['content_version'] not in existing_versions)
 
+    def find_request(self, request_id: str, actor: ActorContext, *, include_synthetic: bool = False) -> dict[str, Any] | None:
+        """Find committed source-free metadata after a lost publication acknowledgment.
+
+        This preserves the original producer and coverage without reselecting
+        support or attempting a new publication under a recovery actor.
+        """
+        actor.require_workspace(self.workspace_id)
+        with self.db.connect() as connection:
+            row = connection.execute('SELECT id,producer_id,producer_kind,coverage,synthetic FROM knowledge_publications WHERE workspace_id=%s AND request_id=%s', (self.workspace_id, request_id)).fetchone()
+        if row is None:
+            return None
+        if row['synthetic'] and not include_synthetic:
+            raise EvidenceError('synthetic_evidence_excluded')
+        return {'publication_id': str(row['id']), 'producer': {'actor_id': row['producer_id'], 'kind': row['producer_kind']}, 'coverage': row['coverage']}
+
     def list(self, actor: ActorContext, *, include_synthetic: bool = False, limit: int | None = None, newest_first: bool = False, connection=None) -> list[dict[str, Any]]:
         """List committed publication metadata within the trusted actor's workspace."""
         actor.require_workspace(self.workspace_id)

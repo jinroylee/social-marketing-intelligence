@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from collections.abc import Callable
 from typing import Any
 
 from .adapters.registry import AdapterRegistry
@@ -37,7 +38,7 @@ class IngestionRunner:
         run_id = self.evidence.start_run(manifest_path, digest, manifest["adapter"], selected_limits)
         return self.resume(run_id)
 
-    def _process(self, observation: RawObservation, transient_payload: bytes | None = None) -> None:
+    def _process(self, observation: RawObservation, transient_payload: bytes | None = None) -> bool:
         try:
             if transient_payload is None:
                 observation, payload = self.evidence.load(observation.id)
@@ -46,12 +47,14 @@ class IngestionRunner:
             _, mapper = self.registry.resolve(observation.adapter_id)
             batch = mapper.normalize(observation, payload)
             self.writer.apply(observation.id, batch, f"{observation.adapter_id}:{mapper.version}")
+            return True
         except (EvidenceError, ValueError, KeyError, UnicodeError, json.JSONDecodeError) as error:
             code = error.code if isinstance(error, EvidenceError) else "normalization_failed"
             self.evidence.issue(observation.run_id, observation.id, code, code)
             self.evidence.mark(observation.id, "quarantined")
+            return False
 
-    def _report(self, run_id: str, completed_input: bool) -> dict[str, Any]:
+    def _report(self, run_id: str, completed_input: bool, *, finish: bool = True) -> dict[str, Any]:
         run = self.evidence.run(run_id)
         with self.evidence.db.connect() as connection:
             counts = connection.execute(
@@ -115,9 +118,12 @@ class IngestionRunner:
         status = "completed" if completed_input and not issues and not by_status.get("pending") and not any(
             result["outcome"] in source_failures for result in latest_results.values()
         ) else "partial"
-        self.evidence.finish(run_id, status)
+        if run["waiting"]:
+            status = "waiting"
+        if finish:
+            self.evidence.finish(run_id, status)
         return {
-            "run_id": run_id, "status": status,
+            "run_id": run_id, "status": status, "waiting": run["waiting"],
             "coverage": "complete_for_requested_input" if completed_input else "partial",
             "observations": sum(by_status.values()), "applied": by_status.get("applied", 0),
             "quarantined": by_status.get("quarantined", 0),
@@ -131,15 +137,27 @@ class IngestionRunner:
             "issues": [{"code": row["code"], "observation_id": str(row["observation_id"]) if row["observation_id"] else None} for row in issues],
         }
 
-    def resume(self, run_id: str) -> dict[str, Any]:
+    def inspect(self, run_id: str) -> dict[str, Any]:
+        """Read committed counts and issues without advancing or finishing the run."""
+        return self._report(run_id, self.evidence.run(run_id)["input_complete"], finish=False)
+
+    def resume(self, run_id: str, *, on_commit: Callable[[str, str], None] | None = None) -> dict[str, Any]:
+        """Resume checkpoints; notify after durable evidence/canonical commits.
+
+        The callback receives a phase and observation ID. Callback exceptions
+        propagate so an operator can stop between commits without undoing work.
+        """
         run = self.evidence.run(run_id)
         manifest, digest = self._manifest(Path(run["manifest_path"]))
         if digest != run["manifest_hash"]:
             raise EvidenceError("input_changed")
+        if run['waiting'] and not run['waiting']['resumable']:
+            return self._report(run_id, run['input_complete'])
         collector, _ = self.registry.resolve(run["adapter_id"])
         self.writer.reconcile_applied(run_id)
         for observation in self.evidence.pending(run_id):
-            self._process(observation)
+            if self._process(observation) and on_commit:
+                on_commit("canonical_committed", observation.id)
         if run["status"] == "completed" or run["input_complete"]:
             return self._report(run_id, True)
         completed_input = False
@@ -147,13 +165,16 @@ class IngestionRunner:
             run = self.evidence.run(run_id)
             selected_limits = RunLimits(**run["limits"])
             if run["records_used"] >= min(selected_limits.max_pages, selected_limits.max_records):
+                self.evidence.advance(run_id, run["checkpoint"], complete=False)
                 self.evidence.issue(run_id, None, "record_limit_reached", "record_limit_reached")
                 break
             if run["requests_used"] >= selected_limits.max_requests:
+                self.evidence.advance(run_id, run["checkpoint"], complete=False)
                 self.evidence.issue(run_id, None, "request_limit_reached", "request_limit_reached")
                 break
             remaining_bytes = selected_limits.max_bytes - run["bytes_used"]
             if remaining_bytes <= 0:
+                self.evidence.advance(run_id, run["checkpoint"], complete=False)
                 self.evidence.issue(run_id, None, "byte_limit_reached", "byte_limit_reached")
                 break
             bounded = RunLimits(selected_limits.max_requests - run["requests_used"], 1, 1, remaining_bytes)
@@ -163,7 +184,11 @@ class IngestionRunner:
                 code = error.code if isinstance(error, EvidenceError) else "source_unavailable"
                 self.evidence.issue(run_id, None, code, code)
                 break
+            if batch.waiting and batch.items:
+                raise EvidenceError('invalid_collection_wait')
             if not batch.items:
+                self.evidence.advance(run_id, batch.next_checkpoint, complete=batch.complete,
+                                      waiting=batch.waiting, request_attempts=batch.request_attempts)
                 completed_input = batch.complete
                 break
             if len(batch.items) != 1:
@@ -177,7 +202,10 @@ class IngestionRunner:
                 except EvidenceError as error:
                     self.evidence.issue(run_id, None, error.code, error.code)
                     return self._report(run_id, False)
-                self._process(observation, None if observation.payload_path else draft.payload)
+                if on_commit:
+                    on_commit("evidence_committed", observation.id)
+                if self._process(observation, None if observation.payload_path else draft.payload) and on_commit:
+                    on_commit("canonical_committed", observation.id)
             if batch.complete:
                 completed_input = True
                 break
