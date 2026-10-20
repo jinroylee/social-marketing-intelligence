@@ -4,7 +4,7 @@
 
 **Blocked by:** 04: Run one authorized offline acquisition task.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -24,3 +24,9 @@
 ## Comments
 
 - Implementation and local validation are recorded in [the ticket 06 report](../reports/ticket-06.md). All acceptance criteria are implemented and locally verified; status remains claimed for integration verification and resolution by the merger.
+
+## Completion
+
+- Implementation commit: `19b65407b2b52082314916f2a744f54bd6bc1cf2`, fast-forward integrated into `integration/operational-tickets-01-10`.
+- Integrated verification: `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **263 tests in 145.93 seconds**.
+- All acceptance criteria are checked. Delivery remained offline and local, with real PostgreSQL and simulated external I/O; no push or PR occurred.
