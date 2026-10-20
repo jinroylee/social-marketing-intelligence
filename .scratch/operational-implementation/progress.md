@@ -65,3 +65,7 @@
 - Marked ticket 11 resolved with all acceptance criteria checked and Phase 15 complete. Ticket 12 / Phase 16 is pending for a fresh implementer. The merger changed only tracker/planning/report metadata; no runtime edit, live call, external message, new implementation, push, PR or cleanup occurred.
 
 - Started ticket 12 in fresh context /root/implement_12 and worktree /tmp/smi-operational-ticket-12, based on verified integration b6c78c97d95fea9357231e826b012d5317ad65b8 after ticket 11 resolution. Only one implementer is active; ticket13 remains pending.
+
+- Ticket 12 fast-forward integrated and checked at `7d42792ab0f65ab58bd72c9f20bb433c04d3b337` after confirming the clean continuation integration worktree and ancestry from `e7ef85a`. Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed all static checks, PostgreSQL preflight and **342 tests in 216.08 seconds**.
+- Independently verified the worker wheel matches all seven changed runtime/schema/asset files. Appended ticket 12 evidence and advanced last_verified_runtime in continuation-manifest.json, preserving ticket 11 evidence, the original baseline and historical execution-manifest.json.
+- Marked ticket 12 resolved with all acceptance criteria checked and Phase 16 complete. Ticket 13 / Phase 17 remains pending for fresh dispatch with its documented prerequisites. Only tracker/planning/report metadata changed after verification; no runtime edit, live call, external message, new implementation, push, PR or cleanup occurred.

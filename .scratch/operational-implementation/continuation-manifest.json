@@ -214,28 +214,29 @@
   "testing_boundaries": "Public operations and HTTP; real PostgreSQL; simulated external I/O",
   "external_io": "Local execution with simulated transports. User authorizes read-only primary-documentation lookups only; no live/paid source/model calls or external messages.",
   "last_verified_runtime": {
-    "checked_commit": "e31e823e527ba9903daa5aab6e10c6cb02a145b9",
+    "checked_commit": "7d42792ab0f65ab58bd72c9f20bb433c04d3b337",
     "command": "UV_OFFLINE=1 uv run --locked python tools/check.py",
-    "passed_tests": 338,
-    "seconds": 207.81,
-    "focused_tests": 89,
+    "passed_tests": 342,
+    "seconds": 216.08,
+    "focused_tests": 81,
     "real_postgresql": true,
     "simulated_external_io": true,
     "wheel_verified": true,
     "wheel_evidence": {
-      "artifact": "/tmp/smi-ticket-11-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
-      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-11-wheel",
+      "artifact": "/tmp/smi-ticket-12-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
+      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-12-wheel",
       "exact_integrated_files_matched": [
-        "smi_costs/admission.py",
-        "smi_costs/reconciliation.py",
-        "smi_costs/schema.sql",
-        "smi_costs/store.py",
+        "smi_campaigns/comparison.py",
+        "smi_campaigns/contracts.py",
+        "smi_campaigns/schema.sql",
+        "smi_campaigns/store.py",
         "smi_review/app.py",
-        "smi_review/cost_views.py"
+        "smi_review/views.py",
+        "smi_review/static/review.css"
       ],
-      "evidence_report": "reports/ticket-11.md"
+      "evidence_report": "reports/ticket-12.md"
     },
-    "integration_evidence_report": "reports/ticket-11.md"
+    "integration_evidence_report": "reports/ticket-12.md"
   },
   "external_prerequisites": {
     "13": "Verify current primary model contract using authorized read-only primary documentation; require explicit model/cost configuration. All provider calls remain simulated in this run.",
@@ -260,6 +261,18 @@
       "report": "reports/ticket-11.md",
       "focused_tests": 89,
       "focused_seconds": 61.63,
+      "wheel_verified": true
+    },
+    {
+      "ticket": 12,
+      "title": "Save visible executable campaign criteria",
+      "commit": "7d42792ab0f65ab58bd72c9f20bb433c04d3b337",
+      "integration_tests": 342,
+      "integration_seconds": 216.08,
+      "file": "12-save-visible-executable-campaign-criteria.md",
+      "report": "reports/ticket-12.md",
+      "focused_tests": 81,
+      "focused_seconds": 94.78,
       "wheel_verified": true
     }
   ]

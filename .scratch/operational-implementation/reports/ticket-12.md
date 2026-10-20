@@ -32,3 +32,10 @@ Applied the TDD skill at the already-approved public `CampaignStore` and real lo
 ## Limits
 
 No LLM interpretation, current-KB retrieval, discovery, ranking algorithm, sufficiency assessment or automatic shortlist authority was added. Profiles describe the installed frozen-caption workflow, and future assessment/coverage work must use truthful successor versions. Original prose is human input, not source verification. Earlier unprofiled history remains explicitly unrecorded. There is no blocker for ticket 12; software checks do not establish language or marketer-usefulness validation. Execution remained offline/local: no source/provider/model network calls, external messages, push, PR or deployment.
+
+## Integrated validation
+
+- Fast-forward integrated and checked commit: `7d42792ab0f65ab58bd72c9f20bb433c04d3b337` on `integration/operational-tickets-11-39`, after confirming a clean root worktree and ancestry from `e7ef85a371c4f9810ce2715190fb1a08d0dcaf2c`.
+- Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **342 tests in 216.08 seconds**. No runtime/test change occurred during the gate.
+- Independently compared `/tmp/smi-ticket-12-wheel/smi_ingestion-0.1.0-py3-none-any.whl` with the integrated tree: all seven changed runtime/schema/asset files match byte for byte (`smi_campaigns/comparison.py`, `smi_campaigns/contracts.py`, `smi_campaigns/schema.sql`, `smi_campaigns/store.py`, `smi_review/app.py`, `smi_review/views.py`, `smi_review/static/review.css`).
+- Local ticket 12 is resolved. Continuation evidence preserves ticket 11 and the historical first-batch manifest. Ticket 13 remains pending for fresh dispatch by the orchestrator. Only tracker/planning/report metadata changed after verification; no runtime edit, live call, external message, push, PR or cleanup occurred.

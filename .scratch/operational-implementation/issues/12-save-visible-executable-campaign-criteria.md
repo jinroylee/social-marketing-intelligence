@@ -4,7 +4,7 @@
 
 **Blocked by:** 01: Restore ingestion completion and safe resume.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** S — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -20,3 +20,9 @@
 **Spec coverage:** user stories 1, 2, 3, 4, 20; acceptance scenarios T11, T29 (the part exercised by this slice).
 
 **Verification:** Use the owning public operations and the existing integration/HTTP test conventions where applicable. Keep real PostgreSQL/policy behavior; simulate external I/O by default. Update the corresponding product contracts, physical ERD, and local module instructions when their behavior or ownership changes. Run the shared locked checks. A passing test suite does not establish human language or marketer-usefulness validation.
+
+## Completion
+
+- Implementation and integrated checked commit: `7d42792ab0f65ab58bd72c9f20bb433c04d3b337`, fast-forward integrated into `integration/operational-tickets-11-39`.
+- Integrated `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **342 tests in 216.08 seconds**.
+- All acceptance criteria are checked. The worker wheel matches all seven changed runtime/schema/asset files in the integrated tree byte for byte; [the implementation report](../reports/ticket-12.md) records focused and integrated verification. Delivery stayed local with real PostgreSQL and simulated external I/O; no live call, external message, push or PR occurred.
