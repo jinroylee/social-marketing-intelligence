@@ -6,7 +6,10 @@ import hashlib
 import json
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .interpretation import ResponsesRoute, ResponsesTransport
 
 from psycopg.types.json import Jsonb
 
@@ -30,8 +33,9 @@ def _request(request_id: str) -> None:
 class CampaignStore:
     """Own briefs, automated comparisons and immutable human shortlist revisions."""
 
-    def __init__(self, db: Database, workspace_id: str = "local"):
+    def __init__(self, db: Database, workspace_id: str = "local", *, model_route: ResponsesRoute | None = None, model_transport: ResponsesTransport | None = None, model_credential: str | None = None):
         self.db = db
+        self.model_route, self.model_transport, self.model_credential = model_route, model_transport, model_credential
         self.workspace_id = workspace_id
         self.knowledge = KnowledgeStore(db, workspace_id)
         self.evidence = EvidenceSetReader(db, workspace_id)
@@ -114,16 +118,111 @@ class CampaignStore:
             briefs = connection.execute("SELECT * FROM campaign_briefs WHERE campaign_id=%s ORDER BY version", (campaign_id,)).fetchall()
             comparisons = connection.execute("SELECT id,brief_id,prepared_at,prepared_by FROM comparison_drafts "
                                              "WHERE campaign_id=%s ORDER BY prepared_at,id", (campaign_id,)).fetchall()
+            interpretations = connection.execute("SELECT id FROM campaign_criteria_interpretations WHERE campaign_id=%s ORDER BY recorded_at,id", (campaign_id,)).fetchall()
             shortlists = connection.execute("SELECT id,comparison_id,brief_id,version,status,recorded_by,recorded_at "
                                             "FROM shortlist_revisions WHERE campaign_id=%s ORDER BY version", (campaign_id,)).fetchall()
         return {"campaign_id": campaign_id, "owner_id": campaign["owner_id"], "created_at": campaign["created_at"].isoformat(),
                 "brief_version": campaign["brief_version"], "shortlist_version": campaign["shortlist_version"],
                 "briefs": [{"id": str(b["id"]), "version": b["version"], "document": b["document"], "executable_profile": b["executable_profile"],
                             "recorded_by": b["recorded_by"], "recorded_at": b["recorded_at"].isoformat()} for b in briefs],
+                "interpretations": [self.read_interpretation(str(row["id"]), actor) for row in interpretations],
                 "comparisons": [{**row, "id": str(row["id"]), "brief_id": str(row["brief_id"]),
                                  "prepared_at": row["prepared_at"].isoformat()} for row in comparisons],
                 "shortlists": [{**row, "id": str(row["id"]), "brief_id": str(row["brief_id"]),
                                 "comparison_id": str(row["comparison_id"]), "recorded_at": row["recorded_at"].isoformat()} for row in shortlists]}
+
+    def interpretation_capability(self, actor: ActorContext) -> dict:
+        """Inspect explicit server enablement without credentials, I/O or admission."""
+        actor.require_workspace(self.workspace_id)
+        try:
+            require(self.model_route is not None and self.model_transport is not None, 'model_route_unavailable')
+            require(text(self.model_credential), 'model_credential_unavailable')
+            self.model_route.document()
+            require(getattr(self.model_transport, 'execution_mode', 'simulated') == self.model_route.execution_mode,
+                    'model_transport_classification_mismatch')
+            if self.model_route.execution_mode == 'provider':
+                require(getattr(self.model_transport, 'enabled', False) is True, 'model_live_disabled')
+            return {'status': 'configured', 'execution_mode': self.model_route.execution_mode, 'reason': None}
+        except EvidenceError as error:
+            return {'status': 'unavailable', 'execution_mode': None, 'reason': str(error)}
+
+    def read_interpretation(self, interpretation_id: str, actor: ActorContext) -> dict:
+        """Reopen exact immutable input, generated profile and sanitized model outcome."""
+        actor.require_workspace(self.workspace_id)
+        with self.db.connect() as connection:
+            row = connection.execute(
+                "SELECT i.*,b.version,b.document FROM campaign_criteria_interpretations i "
+                "JOIN campaigns c ON c.id=i.campaign_id JOIN campaign_briefs b ON b.id=i.brief_id "
+                "WHERE i.id=%s AND c.workspace_id=%s", (interpretation_id, self.workspace_id)).fetchone()
+        require(row is not None, 'criteria_interpretation_not_found')
+        return {'interpretation_id': str(row['id']), 'campaign_id': str(row['campaign_id']),
+                'brief_id': str(row['brief_id']), 'brief_version': row['version'], 'status': row['status'], 'reason': row['reason'],
+                'request_id': row['request_id'], 'requested_by': row['requested_by'],
+                'generated_by': {'actor_id': 'campaign-criteria-model', 'kind': 'automation'},
+                'original_input': row['document'].get('original_input'), 'configuration': row['configuration'],
+                'operation_id': str(row['operation_id']) if row['operation_id'] else None,
+                'usage': row['usage'], 'executable_profile': row['executable_profile'],
+                'recorded_at': row['recorded_at'].isoformat(),
+                'finished_at': row['finished_at'].isoformat() if row['finished_at'] else None}
+
+    def interpret_criteria(self, campaign_id: str, brief_id: str, actor: ActorContext, *, expected_version: int, request_id: str) -> dict:
+        """Save one visible generated addition for an exact human brief; retries never redispatch.
+
+        Claims commit before simulated service I/O. Interrupted claims remain visibly
+        in progress with unknown outcome; a new identity is an explicit new operation.
+        """
+        from smi_costs import UsageAccounting
+        from .interpretation import execute, METHOD_VERSION
+        self._human(actor)
+        _request(request_id)
+        digest = _digest({'brief_id': brief_id, 'expected_version': expected_version, 'method': METHOD_VERSION})
+        with self.db.connect() as connection:
+            self._campaign(connection, campaign_id, lock=True)
+            prior = connection.execute('SELECT * FROM campaign_criteria_interpretations WHERE campaign_id=%s AND request_id=%s',
+                                       (campaign_id, request_id)).fetchone()
+            if prior:
+                require(prior['request_digest'] == digest and prior['requested_by'] == actor.actor_id, 'criteria_interpretation_request_conflict')
+                return self.read_interpretation(str(prior['id']), actor)
+            self.require_current_brief(campaign_id, brief_id, actor, expected_version=expected_version, connection=connection)
+            brief = connection.execute('SELECT document FROM campaign_briefs WHERE id=%s', (brief_id,)).fetchone()['document']
+            identity = {'interpretation_id': str(uuid.uuid4()), 'brief_id': brief_id, 'brief_version': expected_version}
+            connection.execute('INSERT INTO campaign_criteria_interpretations(id,campaign_id,brief_id,request_id,request_digest,requested_by,status) '
+                               "VALUES (%s,%s,%s,%s,%s,%s,'in_progress')",
+                               (identity['interpretation_id'], campaign_id, brief_id, request_id, digest, actor.actor_id))
+        configuration = None
+        try:
+            require(self.model_route is not None and self.model_transport is not None, 'model_route_unavailable')
+            require(text(self.model_credential), 'model_credential_unavailable')
+            configuration = self.model_route.document()
+            require(getattr(self.model_transport, 'execution_mode', 'simulated') == self.model_route.execution_mode,
+                    'model_transport_classification_mismatch')
+            if self.model_route.execution_mode == 'provider':
+                require(getattr(self.model_transport, 'enabled', False) is True, 'model_live_disabled')
+            require(text(brief.get('original_input')), 'model_original_input_missing')
+            with self.db.connect() as connection:
+                connection.execute('UPDATE campaign_criteria_interpretations SET configuration=%s WHERE id=%s',
+                                   (Jsonb(configuration), identity['interpretation_id']))
+            def attach_operation(operation_id):
+                with self.db.connect() as connection:
+                    connection.execute('UPDATE campaign_criteria_interpretations SET operation_id=%s WHERE id=%s',
+                                       (operation_id, identity['interpretation_id']))
+            worker = ActorContext(self.workspace_id, 'campaign-criteria-model', 'automation')
+            outcome = execute(self.model_route, self.model_transport, self.model_credential,
+                              UsageAccounting(self.db, self.workspace_id), worker, identity, brief, attach_operation)
+        except EvidenceError as error:
+            reason = str(error)
+            outcome = {'status': 'meter_failure' if reason in {'synthetic_service_bound_violated', 'provider_service_bound_or_meter_violated'} else 'blocked', 'reason': reason}
+        except Exception:
+            # Provider exception messages may contain prompts/credentials. Retain only a fixed code.
+            outcome = {'status': 'transport_uncertain', 'reason': 'model_transport_outcome_unknown'}
+        with self.db.connect() as connection:
+            campaign = self._campaign(connection, campaign_id, lock=True)
+            if outcome['status'] == 'succeeded' and campaign['brief_version'] != expected_version:
+                outcome = {**outcome, 'status': 'stale', 'reason': 'brief_version_conflict', 'executable_profile': None}
+            connection.execute('UPDATE campaign_criteria_interpretations SET status=%s,reason=%s,configuration=%s,usage=%s,executable_profile=%s,finished_at=now() WHERE id=%s',
+                               (outcome['status'], outcome.get('reason'), Jsonb(configuration), Jsonb(outcome.get('usage')),
+                                Jsonb(outcome.get('executable_profile')), identity['interpretation_id']))
+        return self.read_interpretation(identity['interpretation_id'], actor)
 
     def require_current_brief(self, campaign_id: str, brief_id: str, actor: ActorContext, *, expected_version: int, connection) -> None:
         """Validate an exact current brief, locking its campaign until the caller commits.
@@ -155,17 +254,27 @@ class CampaignStore:
 
     def prepare_comparison(
         self, campaign_id: str, brief_id: str, knowledge_run_id: str, actor: ActorContext, *, request_id: str,
-        include_synthetic: bool = False,
+        include_synthetic: bool = False, interpretation_id: str | None = None,
     ) -> dict[str, Any]:
         """Prepare a rule-based draft for an exact current brief and knowledge/evidence run."""
         actor.require_workspace(self.workspace_id)
         _request(request_id)
-        digest = _digest({"brief_id": brief_id, "knowledge_run_id": knowledge_run_id, "method": METHOD_VERSION})
+        request = {"brief_id": brief_id, "knowledge_run_id": knowledge_run_id, "method": METHOD_VERSION}
+        if interpretation_id is not None:
+            request['interpretation_id'] = interpretation_id
+        digest = _digest(request)
         with self.db.connect() as connection:
             self._campaign(connection, campaign_id)
             brief_row = connection.execute("SELECT * FROM campaign_briefs WHERE id=%s AND campaign_id=%s", (brief_id, campaign_id)).fetchone()
         require(brief_row is not None, "campaign_brief_not_found")
-        brief = Brief.from_document(brief_row["document"])
+        document = brief_row['document']
+        if interpretation_id is not None:
+            interpretation = self.read_interpretation(interpretation_id, actor)
+            require(interpretation['campaign_id'] == campaign_id and interpretation['brief_id'] == brief_id
+                    and interpretation['status'] == 'succeeded', 'criteria_interpretation_not_executable')
+            document = {**document, 'criteria': [{key: value for key, value in criterion.items() if key not in {'importance', 'basis'}}
+                                                 for criterion in interpretation['executable_profile']['criteria']]}
+        brief = Brief.from_document(document)
         knowledge = self.knowledge.read(knowledge_run_id, actor, purpose="process", include_synthetic=include_synthetic)
         require(knowledge["catalog_id"] == brief.catalog_id, "comparison_catalog_mismatch")
         source = self.evidence.read(knowledge["dataset_id"], actor, purpose="process", include_synthetic=include_synthetic)
@@ -189,10 +298,10 @@ class CampaignStore:
                         for c in candidates for d in c["dependencies"]), "comparison_support_changed")
             comparison_id = str(uuid.uuid4())
             connection.execute("INSERT INTO comparison_drafts(id,campaign_id,brief_id,knowledge_run_id,dataset_id,dataset_digest,"
-                               "method_version,request_id,request_digest,coverage,prepared_by,actor_kind) "
-                               "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                               "method_version,request_id,request_digest,coverage,prepared_by,actor_kind,criteria_interpretation_id) "
+                               "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                                (comparison_id, campaign_id, brief_id, knowledge_run_id, source["dataset_id"], source["digest"],
-                                METHOD_VERSION, request_id, digest, Jsonb(coverage), actor.actor_id, actor.kind))
+                                METHOD_VERSION, request_id, digest, Jsonb(coverage), actor.actor_id, actor.kind, interpretation_id))
             for position, candidate in enumerate(candidates):
                 candidate_id = str(uuid.uuid4())
                 connection.execute("INSERT INTO comparison_candidates(id,comparison_id,position,account_key,account_id,origin,body) "
@@ -206,8 +315,8 @@ class CampaignStore:
         return {"status": "prepared", "comparison_id": comparison_id, "method": "rule_based", "coverage": coverage}
 
     def _comparison(self, connection, comparison_id: str):
-        row = connection.execute("SELECT d.*,b.executable_profile FROM comparison_drafts d JOIN campaigns c ON c.id=d.campaign_id "
-                                 "JOIN campaign_briefs b ON b.id=d.brief_id "
+        row = connection.execute("SELECT d.*,COALESCE(i.executable_profile,b.executable_profile) AS executable_profile FROM comparison_drafts d JOIN campaigns c ON c.id=d.campaign_id "
+                                 "JOIN campaign_briefs b ON b.id=d.brief_id LEFT JOIN campaign_criteria_interpretations i ON i.id=d.criteria_interpretation_id "
                                  "WHERE d.id=%s AND c.workspace_id=%s", (comparison_id, self.workspace_id)).fetchone()
         require(row is not None, "comparison_not_found")
         return row
@@ -260,6 +369,7 @@ class CampaignStore:
                 "knowledge_run_id": str(draft["knowledge_run_id"]), "dataset_id": draft["dataset_id"], "digest": draft["dataset_digest"],
                 "method": "rule_based", "method_version": draft["method_version"], "coverage": draft["coverage"],
                 "executable_profile": draft["executable_profile"],
+                "criteria_interpretation_id": str(draft["criteria_interpretation_id"]) if draft["criteria_interpretation_id"] else None,
                 "prepared_by": draft["prepared_by"], "actor_kind": draft["actor_kind"], "prepared_at": draft["prepared_at"].isoformat(),
                 "candidates": output}
 

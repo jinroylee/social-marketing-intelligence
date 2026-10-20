@@ -27,6 +27,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Lightweight monitoring evidence](adr/0004-lightweight-monitoring-evidence.md) | Why X detection owns bounded recent evidence separately from full KB publication |
 | [Task session effect ownership](adr/0005-task-session-effect-ownership.md) | Why each task's execution lock and effect transactions share one PostgreSQL session |
 | [Bounded synthetic admission](adr/0006-bounded-synthetic-admission.md) | Why scope decisions and ledger writes share a lock while uncertain dispatches keep their commitments |
+| [Generated criteria preserve human constraints](adr/0008-generated-criteria-preserve-human-constraints.md) | Why generated additions stay separate from human briefs and require exact visible selection |
 | [Final cost evidence and meter recovery](adr/0007-final-cost-evidence-and-meter-recovery.md) | Why named liabilities require final evidence and meter health has separate operator recovery |
 
 The root [glossary](../GLOSSARY.md) defines domain language; the [README](../README.md) explains local commands.

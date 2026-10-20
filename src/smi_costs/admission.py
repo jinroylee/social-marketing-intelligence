@@ -26,6 +26,13 @@ class SyntheticResult:
     units: str | Decimal | int
 
 
+@dataclass(frozen=True)
+class ProviderResult(SyntheticResult):
+    """Provider-reported units and source-free validated token counts, never a final invoice."""
+
+    token_usage: dict | None = None
+
+
 class SyntheticOperationAdapter:
     """Run one simulated call at most once for a stable operation identity.
 
@@ -35,6 +42,10 @@ class SyntheticOperationAdapter:
     ``transaction`` joins a task's actual ownership session for dispatch/settlement.
     I/O occurs after the dispatch commit and outside database transactions.
     """
+
+    measurement_basis = 'synthetic'
+    provenance = 'bounded-synthetic-adapter-v1'
+    failure_reason = 'synthetic_service_bound_violated'
 
     def __init__(self, accounting: 'UsageAccounting', scope_id: str, *, max_units: str | Decimal | int):
         self.accounting, self.scope_id = accounting, scope_id
@@ -55,6 +66,8 @@ class SyntheticOperationAdapter:
                                           method=method, task_id=task_id, attempt_id=attempt_id)
         oid = operation['operation_id']
         scope = operation['scope']
+        if scope.get('measurement_basis', 'synthetic') != self.measurement_basis:
+            raise EvidenceError('cost_measurement_basis_mismatch')
         metered = scope['classification'] == 'metered'
         with localcontext(Context(prec=80)):
             reserved = Decimal(self.max_units) * Decimal(scope['unit_rate']) if metered else None
@@ -87,6 +100,15 @@ class SyntheticOperationAdapter:
         result = call(self.max_units)
         try:
             valid = isinstance(result, SyntheticResult) and decimal(result.units) <= Decimal(self.max_units)
+            if self.measurement_basis == 'provider_reported':
+                keys = {'input_tokens', 'output_tokens', 'total_tokens', 'cached_tokens', 'cache_write_tokens', 'reasoning_tokens'}
+                valid = (valid and isinstance(result, ProviderResult) and isinstance(result.token_usage, dict)
+                         and set(result.token_usage) == keys and all(type(v) is int and v >= 0 for v in result.token_usage.values()))
+                if valid:
+                    usage = result.token_usage
+                    valid = (usage['total_tokens'] == usage['input_tokens'] + usage['output_tokens']
+                             and usage['cached_tokens'] + usage['cache_write_tokens'] <= usage['input_tokens']
+                             and usage['reasoning_tokens'] <= usage['output_tokens'])
         except EvidenceError:
             valid = False
         if not valid:
@@ -97,9 +119,9 @@ class SyntheticOperationAdapter:
                     costs._lock_scope(connection, self.scope_id)
                     costs._insert_entry(connection, oid, actor, f'admission-meter:{oid}',
                                         'meter_failure' if metered else 'unknown',
-                                        {'measured_at': now.isoformat(), 'provenance': 'bounded-synthetic-adapter-v1',
-                                         'reason': 'synthetic_service_bound_violated'})
-            raise EvidenceError('synthetic_service_bound_violated')
+                                        {'measured_at': now.isoformat(), 'provenance': self.provenance,
+                                         'reason': self.failure_reason})
+            raise EvidenceError(self.failure_reason)
         with transaction('cost_settlement') if transaction else nullcontext() as owned:
             with nullcontext(owned) if owned is not None else costs.db.connect() as connection:
                 costs._lock_scope(connection, self.scope_id)
@@ -109,7 +131,9 @@ class SyntheticOperationAdapter:
                         charge = units * Decimal(scope['unit_rate'])
                     body = {'units': amount(units), 'unit': scope['unit'], 'unit_rate': scope['unit_rate'],
                             'rate_version': scope['rate_version'], 'amount': amount(charge),
-                            'measured_at': now.isoformat(), 'provenance': 'bounded-synthetic-adapter-v1', 'synthetic': True}
+                            'measured_at': now.isoformat(), 'provenance': self.provenance, 'synthetic': self.measurement_basis == 'synthetic'}
+                    if self.measurement_basis == 'provider_reported':
+                        body.update(measurement_basis='provider_reported', token_usage=result.token_usage)
                     prior = connection.execute('SELECT state FROM cost_admissions WHERE workspace_id=%s AND operation_id=%s',
                                                (costs.workspace_id, oid)).fetchone()
                     if prior['state'] == 'settled':
@@ -128,3 +152,16 @@ class SyntheticOperationAdapter:
                                    (costs.workspace_id, oid))
                 allowance = costs._allowance(connection, self.scope_id)
         return {'status': 'executed', 'reason': None, 'operation_id': oid, 'allowance': allowance, 'value': result.value}
+
+
+class ProviderOperationAdapter(SyntheticOperationAdapter):
+    """Share one-use admission/settlement for a verified bounded provider contract.
+
+    The provider integration supplies defensible finite unit bounds and reports
+    validated usage. This records configured-rate usage, not an audited invoice;
+    uncertainty still retains the reservation without automatic release/retry.
+    """
+
+    measurement_basis = 'provider_reported'
+    provenance = 'openai-responses-reported-usage-v1'
+    failure_reason = 'provider_service_bound_or_meter_violated'

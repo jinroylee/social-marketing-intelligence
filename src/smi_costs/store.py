@@ -174,6 +174,8 @@ class UsageAccounting:
                      units: str | Decimal | int, rate_version: str, measured_at: str, provenance: str) -> dict:
         """Derive one exact synthetic amount from an explicit versioned rate and units."""
         operation = self.read(operation_id, actor)
+        if operation['scope'].get('measurement_basis') == 'provider_reported':
+            raise EvidenceError('provider_report_required')
         body = self._usage_body(operation['scope'], units, rate_version, measured_at, provenance)
         return self._record(operation['operation_id'], actor, measurement_id, 'usage', body)
 
@@ -191,34 +193,40 @@ class UsageAccounting:
             charge = units * Decimal(scope['unit_rate'])
         return {'units': amount(units), 'unit': scope['unit'], 'unit_rate': scope['unit_rate'],
                 'rate_version': rate_version, 'amount': amount(charge), 'measured_at': at.isoformat(),
-                'provenance': provenance, 'synthetic': True}
+                'provenance': provenance, 'synthetic': scope.get('measurement_basis', 'synthetic') == 'synthetic',
+                **({'measurement_basis': 'provider_reported', 'report_basis': 'operator_final_attestation'}
+                   if scope.get('measurement_basis') == 'provider_reported' else {})}
 
     def reconcile_usage(self, operation_id: str, actor: ActorContext, *, reconciliation_id: str,
                         measurement_id: str, units: str | Decimal | int, rate_version: str,
                         measured_at: str, provenance: str, reconciled_at: str, evidence_id: str,
                         outcome: str, settle_admission: bool = False,
-                        commitment_ids: tuple[str, ...] = (), uncertainty_ids: tuple[str, ...] = ()) -> dict:
-        """Record final synthetic usage and settle only explicitly evidenced liabilities.
+                        commitment_ids: tuple[str, ...] = (), uncertainty_ids: tuple[str, ...] = (),
+                        measurement_basis: str = 'synthetic') -> dict:
+        """Record final usage with an explicit matching basis and settle named liabilities.
 
         A human operator attests the exact final report and outcome, including a
         measured zero for confirmed uncharged failure. Ambiguity is not final
-        evidence. This resolves accounting only; it grants no transport retry.
+        evidence. Provider reports require explicit provider basis and remain
+        operator attestations rather than independently verified invoices. This
+        resolves accounting only; it grants no transport retry.
         """
         return reconcile_usage(self, operation_id, actor, reconciliation_id=reconciliation_id,
                                measurement_id=measurement_id, units=units, rate_version=rate_version,
                                measured_at=measured_at, provenance=provenance, reconciled_at=reconciled_at,
                                evidence_id=evidence_id, outcome=outcome, settle_admission=settle_admission,
-                               commitment_ids=commitment_ids, uncertainty_ids=uncertainty_ids)
+                               commitment_ids=commitment_ids, uncertainty_ids=uncertainty_ids, measurement_basis=measurement_basis)
 
     def recover_meter(self, operation_id: str, actor: ActorContext, *, recovery_id: str,
-                      failure_ids: tuple[str, ...], recovered_at: str, provenance: str, evidence_id: str) -> dict:
+                      failure_ids: tuple[str, ...], recovered_at: str, provenance: str, evidence_id: str,
+                      measurement_basis: str = 'synthetic') -> dict:
         """Attest restored expected-meter health after named failures have final accounting.
 
         This human-only record clears exactly those failures. It neither releases
         liabilities nor changes classification, ceiling, rate or retry authority.
         """
         return recover_meter(self, operation_id, actor, recovery_id=recovery_id, failure_ids=failure_ids,
-                             recovered_at=recovered_at, provenance=provenance, evidence_id=evidence_id)
+                             recovered_at=recovered_at, provenance=provenance, evidence_id=evidence_id, measurement_basis=measurement_basis)
 
     def _context(self, operation_id: str, actor: ActorContext, measured_at: str, provenance: str) -> tuple[dict, dict]:
         operation = self.read(operation_id, actor)
@@ -330,12 +338,13 @@ class UsageAccounting:
         bounded_usage = next((e for e in entries if e['measurement_id'] == final_id and e['kind'] == 'usage'), None)
         bound_status = ('not_recorded' if not admission else 'violated'
                         if bounded_usage and Decimal(bounded_usage['units']) > admission['max_units'] else 'within_bound'
-                        if bounded_usage else 'unverified' if any(e.get('reason') == 'synthetic_service_bound_violated' for e in entries)
+                        if bounded_usage else 'unverified' if any(e.get('reason') in {'synthetic_service_bound_violated', 'provider_service_bound_or_meter_violated'} for e in entries)
                         else 'declared')
+        provider_reported = scope.get('measurement_basis') == 'provider_reported'
         status = ('meter_failure' if unresolved['meter_failure_ids'] else 'unknown'
                   if unresolved['uncertainty_ids'] or scope['classification'] == 'metered' and pending_cost
                   else 'forecast_only' if scope['classification'] == 'forecast_only'
-                  else 'synthetic_measured' if actual else 'unmeasured')
+                  else ('provider_reported' if provider_reported else 'synthetic_measured') if actual else 'unmeasured')
         with localcontext(Context(prec=80)):
             total = amount(sum(actual, Decimal(0))) if actual else None
             estimates = {kind + 's': {'amount': amount(sum((Decimal(e['amount']) for e in entries if e['kind'] == kind and e['measurement_id'] not in resolved), Decimal(0)))
@@ -358,9 +367,9 @@ class UsageAccounting:
                            else 'final_measurement_recorded' if reconciliations or admission and admission['state'] == 'settled'
                            else 'no_final_report_recorded',
                            'meter_health': 'failed' if unresolved['meter_failure_ids'] else 'recovered' if recoveries else 'no_failure_recorded',
-                           'enforcement_basis': 'bounded_synthetic_service_contract_only' if allowance['enforced_monetary_control'] else 'no_enforced_monetary_ceiling',
+                           'enforcement_basis': ('declared_bounded_provider_contract' if provider_reported else 'bounded_synthetic_service_contract_only') if allowance['enforced_monetary_control'] else 'no_enforced_monetary_ceiling',
                            'zero_overshoot_guaranteed': False},
-                'actuals': {'amount': total, 'synthetic': True, 'commercial_charge': False},
-                **estimates, 'coverage': {'status': status, 'unknown_cost': status != 'synthetic_measured'},
+                'actuals': {'amount': total, 'synthetic': not provider_reported, 'commercial_charge': None if provider_reported else False},
+                **estimates, 'coverage': {'status': status, 'unknown_cost': status not in {'synthetic_measured', 'provider_reported'}},
                 'admission': {k: amount(v) if isinstance(v, Decimal) else v for k, v in admission.items()} if admission else None,
                 'allowance': allowance, 'enforced_monetary_control': allowance['enforced_monetary_control']}

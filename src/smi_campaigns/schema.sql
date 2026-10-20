@@ -89,3 +89,25 @@ CREATE TABLE IF NOT EXISTS shortlist_selections (
     reason_withdrawn BOOLEAN NOT NULL DEFAULT FALSE,
     UNIQUE (revision_id, candidate_id)
 );
+
+-- Attempts retain only validated interpretation and source-free method/cost provenance.
+CREATE TABLE IF NOT EXISTS campaign_criteria_interpretations (
+    id UUID PRIMARY KEY,
+    campaign_id UUID NOT NULL REFERENCES campaigns(id),
+    brief_id UUID NOT NULL REFERENCES campaign_briefs(id),
+    request_id TEXT NOT NULL,
+    request_digest TEXT NOT NULL,
+    requested_by TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('in_progress','succeeded','blocked','invalid','refused','incomplete','meter_failure','transport_uncertain','stale')),
+    reason TEXT,
+    configuration JSONB,
+    operation_id UUID,
+    usage JSONB,
+    executable_profile JSONB,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    finished_at TIMESTAMPTZ,
+    UNIQUE (campaign_id, request_id)
+);
+
+ALTER TABLE comparison_drafts ADD COLUMN IF NOT EXISTS criteria_interpretation_id UUID
+    REFERENCES campaign_criteria_interpretations(id);

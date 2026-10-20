@@ -49,8 +49,10 @@ def timestamp(value: str) -> datetime:
 class CostScope:
     """Immutable operator classification for one service/currency/accounting period.
 
-    Metered configuration in this offline milestone always uses synthetic units
-    and rates. A new rate or classification requires a new scope identity.
+    Default metered configuration preserves synthetic units/rates. Provider
+    reports require explicit measurement basis and configured rates; neither
+    basis establishes an independently verified invoice. New rates or
+    classifications require a new scope identity.
     """
 
     scope_id: str
@@ -63,6 +65,7 @@ class CostScope:
     unit: str | None = None
     rate_version: str | None = None
     unit_rate: str | Decimal | int | None = None
+    measurement_basis: str = 'synthetic'
 
     def document(self) -> dict:
         """Return a canonical persistable configuration or reject invalid inputs."""
@@ -83,8 +86,10 @@ class CostScope:
             if any(v is not None for v in (self.unit, self.rate_version, self.unit_rate)):
                 raise EvidenceError('forecast_scope_has_meter')
             rate = None
-        return {'scope_id': self.scope_id, 'provider': self.provider, 'service': self.service,
+        if not isinstance(self.measurement_basis, str) or self.measurement_basis not in {'synthetic', 'provider_reported'} or (self.measurement_basis == 'provider_reported' and self.classification != 'metered'):
+            raise EvidenceError('invalid_cost_measurement_basis')
+        return {**({'measurement_basis': self.measurement_basis} if self.measurement_basis != 'synthetic' else {}), 'scope_id': self.scope_id, 'provider': self.provider, 'service': self.service,
                 'classification': self.classification, 'currency': self.currency,
                 'period_start': start.isoformat(), 'period_end': end.isoformat(),
                 'unit': self.unit, 'rate_version': self.rate_version, 'unit_rate': rate,
-                'synthetic': self.classification == 'metered'}
+                'synthetic': self.classification == 'metered' and self.measurement_basis == 'synthetic'}

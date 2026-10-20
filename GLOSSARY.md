@@ -34,6 +34,9 @@ An internal planning context created by a marketer, described by a campaign brie
 **Campaign brief**:
 A marketer-defined statement of the brand/product scope, objective, target market, platforms, and at least one creator-selection criterion. It is the starting point for campaign planning and exploratory creator comparison even when commercial details remain unknown.
 
+**Executable criteria interpretation**:
+A saved, versioned reading of campaign needs pinned to an exact brief and original input. Model-generated additions retain their automated basis and preserve the human constraints; they are distinct from verified source facts and grant no task authority. A later assessment explicitly selects that immutable interpretation.
+
 **Creator**:
 A person, group, or organization that creates content, distinct from any particular platform account. Accounts are linked to a creator through corroborated evidence or a recorded marketer correction.
 

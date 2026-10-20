@@ -43,13 +43,16 @@ def detail(operation):
         return 'Unknown' if amount is None else f'{amount} {scope["currency"]}'
     content = f'<h1>Cost detail</h1><p>{e(scope["provider"])} / {e(scope["service"])} · {e(scope["classification"])}</p>'
     control = operation['enforced_monetary_control']
-    content += '<p>No commercial charge. Measured units and rates are synthetic development inputs.</p>'
-    content += '<p>Enforced synthetic monetary ceiling.</p>' if control else '<p>No enforced monetary ceiling.</p>'
+    synthetic = operation['actuals']['synthetic']
+    content += ('<p>No commercial charge. Measured units and rates are synthetic development inputs.</p>' if synthetic else
+                '<p>Provider-reported usage valued at explicit configured rates. Final commercial charge is not established by this report.</p>')
+    content += ('<p>Enforced synthetic monetary ceiling.</p>' if synthetic else '<p>Configured provider monetary admission ceiling.</p>') if control else '<p>No enforced monetary ceiling.</p>'
     if control:
         content += f'<p>Scope ceiling: {e(operation["allowance"]["ceiling_amount"])} {e(scope["currency"])}</p>'
     content += f'<p>Admission: {e(json.dumps(operation["admission"]))}</p><p>Authoritative scope allowance: {e(json.dumps(operation["allowance"]))}</p>'
     content += control_summary(operation)
-    content += f'<p>Synthetic measured amount: {e(value("actuals"))}</p><p>Forecasts: {e(value("forecasts"))}</p><p>Outstanding commitments: {e(value("commitments"))}</p>'
+    measured_label = 'Synthetic measured amount' if synthetic else 'Configured-rate provider-reported amount'
+    content += f'<p>{measured_label}: {e(value("actuals"))}</p><p>Forecasts: {e(value("forecasts"))}</p><p>Outstanding commitments: {e(value("commitments"))}</p>'
     content += f'<p>Coverage: {e(operation["coverage"]["status"])} · Unknown cost: {e(operation["coverage"]["unknown_cost"])}</p>'
     content += '<p>Declared commitments do not authorize work or reserve a ceiling. Missing amounts are unknown; amounts from different currencies or periods are not combined.</p>'
     if operation['task_id']:

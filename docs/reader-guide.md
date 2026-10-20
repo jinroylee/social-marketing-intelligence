@@ -172,9 +172,9 @@ Owner: [`smi_costs`](../src/smi_costs/schema.sql); [public accounting contract](
 
 | Table | What one row stores | Example |
 | --- | --- | --- |
-| `cost_scopes` | Immutable workspace/scope configuration: provider/service, classification, currency/period, synthetic unit/rate/version, configuring human/time. | An operator's simulated unit rate for one accounting month; no invented commercial price. |
+| `cost_scopes` | Immutable workspace/scope configuration: provider/service, classification, currency/period, unit/rate/version, synthetic default or explicit provider-reported basis, configuring human/time. | An operator's simulated unit rate for one accounting month; no invented commercial price. |
 | `cost_operations` | Stable workspace/request identity with actual actor/method, configured scope and optional validated exact task/attempt pair. | A synthetic model operation with no task, or a measurement attributed to the original worker attempt. |
-| `cost_entries` | Workspace-unique measurement identity, operation, distinct usage/forecast/declared-commitment/unknown/meter-failure kind, exact decimal inputs and provenance/time/recorder. | Three synthetic units at 0.125 derive 0.375; forecasts and unresolved declared commitments remain separate. |
+| `cost_entries` | Workspace-unique measurement identity, operation, distinct usage/forecast/declared-commitment/unknown/meter-failure kind, exact decimal inputs and provenance/time/recorder; provider usage adds source-free token/cache/reasoning counts. | Three synthetic units at 0.125 derive 0.375; forecasts and unresolved declared commitments remain separate. |
 
 | `cost_ceilings` | Current trusted scope amount, pause state, configuring human/time; scope fixes currency/period. | 0.125 synthetic allowance admits one bounded request costing 0.125. |
 | `cost_route_controls` | Immutable workspace fixture-route binding, exact cost scope and one-request bound. | Every campaign/approved-assistant worker reopens the configured guard after restart. |
@@ -209,7 +209,8 @@ Owner: [`smi_campaigns`](../src/smi_campaigns/schema.sql).
 | --- | --- | --- |
 | `campaigns` | A human-owned campaign workspace with current brief/shortlist version counters. | C1: an investigation of potential Hero Cushion accounts for Japan. |
 | `campaign_briefs` | One immutable human question, optional original prose and structured executable-profile snapshot pinned to this exact brief/version, with author/time. Older rows retain a null profile. | Brief v1: stable product/script/audience criteria and unknown policies, `structured-caption-criteria-v1`, unranked ordering and descriptive fixed-observation coverage. |
-| `comparison_drafts` | One prepared comparison's exact brief, knowledge run, dataset/digest, method, coverage and preparation actor/time. | Compare brief v1 against K1, using `campaign-caption-comparison-v1`. |
+| `campaign_criteria_interpretations` | One exact-brief original-prose interpretation attempt, requesting human, generated provenance, sanitized outcome, explicit model/measurement-basis/weight/bounds, usage and logical cost-operation reference. Failed/interrupted attempts cannot be silently retried or assessed. | Responses generated additions preserve human constraints; concrete provider HTTP is opt-in, and all verification is simulated with no live receipt. |
+| `comparison_drafts` | One prepared comparison's exact brief, optional explicitly selected immutable criteria interpretation, knowledge run, dataset/digest, method, coverage and preparation actor/time. | Compare brief v1 against K1, using `campaign-caption-comparison-v1`. |
 | `comparison_candidates` | One account within that comparison: native key, campaign-relative origin, order and structured criterion judgments/unknowns. | A1: origin `both`; product mention satisfied; audience unknown. Order is not a quality ranking. |
 | `comparison_support` | A candidate's dependencies on observations, field assertions and optional knowledge interpretations. | A1's judgment depends on O1's caption interpretation and author identity assertion. |
 | `shortlist_revisions` | One immutable draft or confirmed human selection event, pinned to its brief/comparison, with reviewer/time. | Shortlist v1, confirmed by a named marketer. |

@@ -12,6 +12,7 @@ import psycopg
 
 from smi_costs import UsageAccounting
 from smi_campaigns import Brief, CampaignStore, Criterion, Selection
+from smi_campaigns.interpretation import ResponsesRoute, ResponsesTransport
 from smi_campaigns.planning import CampaignPlanning, DecisionNote, MeasurementPlan
 from smi_ingestion.contracts import ExternalKey
 from smi_ingestion.db import Database
@@ -86,11 +87,12 @@ def selections_from_form(form: dict[str, list[str]]) -> tuple[Selection, ...]:
 class ReviewApp:
     """One trusted local marketer's browser application; all saves go through domain stores."""
 
-    def __init__(self, db: Database, actor_id: str = "local-marketer", workspace_id: str = "local", *, offline_route: OfflineRoute | None = None):
+    def __init__(self, db: Database, actor_id: str = "local-marketer", workspace_id: str = "local", *, offline_route: OfflineRoute | None = None,
+                 model_route: ResponsesRoute | None = None, model_transport: ResponsesTransport | None = None, model_credential: str | None = None):
         self.actor = ActorContext(workspace_id, actor_id, "human")
         self.actor.require_workspace(workspace_id)
         self.worker = ActorContext(workspace_id, "local-rule-preparation", "automation")
-        self.campaigns = CampaignStore(db, workspace_id)
+        self.campaigns = CampaignStore(db, workspace_id, model_route=model_route, model_transport=model_transport, model_credential=model_credential)
         self.knowledge = KnowledgeStore(db, workspace_id)
         self.publications = KnowledgePublications(db, workspace_id)
         self.queries = KnowledgeQueries(db, workspace_id)
@@ -108,6 +110,12 @@ class ReviewApp:
     def _campaign(self, campaign_id: str):
         campaign = self.campaigns.read_campaign(campaign_id, self.actor)
         return campaign, campaign["briefs"][-1]
+
+    def _campaign_page(self, campaign_id, submitted=None, error=None, status=200):
+        campaign, current = self._campaign(campaign_id)
+        capability = self.campaigns.interpretation_capability(self.actor)
+        return self.page("Campaign", views.campaign_page(campaign, current, self.evidence.list_sets(self.actor), self.csrf,
+                                                         model_configured=capability['status'] == 'configured', model_mode=capability['execution_mode'], submitted=submitted, error=error), status)
 
     def _brief_page(self, campaign_id: str | None, query, submitted=None, error=None, status=200):
         campaign, current = self._campaign(campaign_id) if campaign_id else (None, None)
@@ -192,6 +200,9 @@ class ReviewApp:
                         return self.page("Search current knowledge", query_views.search_form(self.csrf, form, code), status)
                     if path == "/campaigns":
                         return self._brief_page(None, {}, form, code, status)
+                    match = re.fullmatch(r"/campaigns/([^/]+)/interpretations", path)
+                    if match:
+                        return self._campaign_page(identifier(match[1]), form, code, status)
                     match = re.fullmatch(r"/campaigns/([^/]+)/briefs", path)
                     if match:
                         return self._brief_page(identifier(match[1]), {}, form, code, status)
@@ -288,8 +299,7 @@ class ReviewApp:
             campaign_id = identifier(match[1])
             if match[2]:
                 return self._brief_page(campaign_id, query)
-            campaign, current = self._campaign(campaign_id)
-            return self.page("Campaign", views.campaign_page(campaign, current, self.evidence.list_sets(self.actor), self.csrf))
+            return self._campaign_page(campaign_id)
         match = re.fullmatch(r"/comparisons/([^/]+)", path)
         if match:
             return self._comparison_page(identifier(match[1]), query)
@@ -387,9 +397,17 @@ class ReviewApp:
             self.campaigns.revise_brief(campaign_id, brief_from_form(form), self.actor,
                                         expected_version=int(one(form, "expected_version")), request_id=request_id)
             return Response(303, location=f"/campaigns/{campaign_id}")
+        match = re.fullmatch(r"/campaigns/([^/]+)/interpretations", path)
+        if match:
+            if not form.keys() <= {"csrf", "request_id", "brief_id", "expected_version"}:
+                raise EvidenceError("invalid_form")
+            campaign_id = identifier(match[1])
+            self.campaigns.interpret_criteria(campaign_id, identifier(one(form, "brief_id")), self.actor,
+                                              expected_version=int(one(form, "expected_version")), request_id=request_id)
+            return Response(303, location=f"/campaigns/{campaign_id}")
         match = re.fullmatch(r"/campaigns/([^/]+)/comparisons", path)
         if match:
-            if not form.keys() <= {"csrf", "request_id", "brief_id", "dataset_id"}:
+            if not form.keys() <= {"csrf", "request_id", "brief_id", "dataset_id", "interpretation_id"}:
                 raise EvidenceError("invalid_form")
             campaign_id = identifier(match[1])
             campaign, _ = self._campaign(campaign_id)
@@ -399,7 +417,8 @@ class ReviewApp:
                 raise EvidenceError("campaign_brief_not_found")
             run = self.knowledge.prepare(one(form, "dataset_id"), brief["document"]["catalog_id"], self.worker,
                                          request_id=f"review:{request_id}")
-            prepared = self.campaigns.prepare_comparison(campaign_id, brief_id, run["run_id"], self.worker, request_id=request_id)
+            prepared = self.campaigns.prepare_comparison(campaign_id, brief_id, run["run_id"], self.worker, request_id=request_id,
+                                                         interpretation_id=identifier(one(form, "interpretation_id")) if one(form, "interpretation_id") else None)
             return Response(303, location=f"/comparisons/{prepared['comparison_id']}")
         match = re.fullmatch(r"/comparisons/([^/]+)/shortlists", path)
         if match:

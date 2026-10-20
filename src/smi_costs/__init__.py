@@ -2,6 +2,6 @@
 
 from .contracts import CostScope
 from .store import UsageAccounting
-from .admission import SyntheticOperationAdapter, SyntheticResult
+from .admission import SyntheticOperationAdapter, SyntheticResult, ProviderOperationAdapter, ProviderResult
 
-__all__ = ['CostScope', 'UsageAccounting', 'SyntheticOperationAdapter', 'SyntheticResult']
+__all__ = ['CostScope', 'UsageAccounting', 'SyntheticOperationAdapter', 'SyntheticResult', 'ProviderOperationAdapter', 'ProviderResult']

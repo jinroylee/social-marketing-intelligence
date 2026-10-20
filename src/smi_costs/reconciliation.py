@@ -28,7 +28,7 @@ def recovered_failures(recoveries):
     return {mid for r in recoveries for mid in r['body']['failure_ids']}
 
 
-def recover_meter(costs, operation_id, actor, *, recovery_id, failure_ids, recovered_at, provenance, evidence_id):
+def recover_meter(costs, operation_id, actor, *, recovery_id, failure_ids, recovered_at, provenance, evidence_id, measurement_basis='synthetic'):
     actor.require_workspace(costs.workspace_id, importing=True)
     for value, name in ((recovery_id, 'recovery_id'), (provenance, 'provenance'), (evidence_id, 'evidence_id')):
         text(value, name)
@@ -37,11 +37,14 @@ def recover_meter(costs, operation_id, actor, *, recovery_id, failure_ids, recov
         raise EvidenceError('invalid_cost_recovery_targets')
     operation = costs.read(operation_id, actor)
     oid = operation['operation_id']
+    if measurement_basis not in {'synthetic', 'provider_reported'} or operation['scope'].get('measurement_basis', 'synthetic') != measurement_basis:
+        raise EvidenceError('cost_measurement_basis_mismatch')
     if operation['scope']['classification'] != 'metered':
         raise EvidenceError('cost_scope_not_metered')
     at = timestamp(recovered_at)
     body = {'failure_ids': failure_ids, 'recovered_at': at.isoformat(), 'provenance': provenance,
-            'evidence_id': evidence_id, 'operator': {'actor_id': actor.actor_id, 'kind': actor.kind}}
+            'evidence_id': evidence_id, 'operator': {'actor_id': actor.actor_id, 'kind': actor.kind},
+            **({'measurement_basis': measurement_basis} if measurement_basis == 'provider_reported' else {})}
     with costs.db.connect() as connection:
         costs._lock_scope(connection, operation['scope']['scope_id'])
         connection.execute('SELECT pg_advisory_xact_lock(hashtext(%s))',
@@ -76,7 +79,7 @@ def recover_meter(costs, operation_id, actor, *, recovery_id, failure_ids, recov
 
 def reconcile_usage(costs, operation_id, actor, *, reconciliation_id, measurement_id, units,
                     rate_version, measured_at, provenance, reconciled_at, evidence_id, outcome,
-                    settle_admission, commitment_ids, uncertainty_ids):
+                    settle_admission, commitment_ids, uncertainty_ids, measurement_basis='synthetic'):
     actor.require_workspace(costs.workspace_id, importing=True)
     for value, name in ((reconciliation_id, 'reconciliation_id'), (measurement_id, 'measurement_id'),
                         (evidence_id, 'evidence_id')):
@@ -88,6 +91,8 @@ def reconcile_usage(costs, operation_id, actor, *, reconciliation_id, measuremen
         raise EvidenceError('invalid_cost_reconciliation_targets')
     operation = costs.read(operation_id, actor)
     oid = operation['operation_id']
+    if measurement_basis not in {'synthetic', 'provider_reported'} or operation['scope'].get('measurement_basis', 'synthetic') != measurement_basis:
+        raise EvidenceError('cost_measurement_basis_mismatch')
     usage = costs._usage_body(operation['scope'], units, rate_version, measured_at, provenance)
     admission = operation['admission']
     bound_failure = (f'reconciliation-meter:{oid}' if settle_admission and admission
@@ -99,7 +104,8 @@ def reconcile_usage(costs, operation_id, actor, *, reconciliation_id, measuremen
         raise EvidenceError('invalid_cost_reconciliation_time')
     body = {'settle_admission': settle_admission, 'commitment_ids': commitment_ids, 'uncertainty_ids': uncertainty_ids,
             'evidence_id': evidence_id, 'outcome': outcome, 'reconciled_at': at.isoformat(),
-            'provenance': provenance, 'operator': {'actor_id': actor.actor_id, 'kind': actor.kind}}
+            'provenance': provenance, 'operator': {'actor_id': actor.actor_id, 'kind': actor.kind},
+            **({'measurement_basis': measurement_basis, 'commercial_invoice_verified': False} if measurement_basis == 'provider_reported' else {})}
     with costs.db.connect() as connection:
         costs._lock_scope(connection, operation['scope']['scope_id'])
         connection.execute('SELECT pg_advisory_xact_lock(hashtext(%s))',
@@ -124,7 +130,7 @@ def reconcile_usage(costs, operation_id, actor, *, reconciliation_id, measuremen
             # cost is known, but future dispatch still needs meter recovery.
             costs._insert_entry(connection, oid, actor, bound_failure, 'meter_failure',
                                 {'measured_at': usage['measured_at'], 'provenance': provenance,
-                                 'reason': 'synthetic_service_bound_violated'})
+                                 'reason': 'provider_service_bound_or_meter_violated' if measurement_basis == 'provider_reported' else 'synthetic_service_bound_violated'})
         previous = connection.execute('SELECT body FROM cost_reconciliations WHERE workspace_id=%s AND operation_id=%s',
                                       (costs.workspace_id, oid)).fetchall()
         resolved = resolved_entries(previous)
