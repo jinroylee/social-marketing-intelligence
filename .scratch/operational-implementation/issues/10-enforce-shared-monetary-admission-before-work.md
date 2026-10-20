@@ -4,7 +4,7 @@
 
 **Blocked by:** 09: Show attributable actual costs and forecasts.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -24,3 +24,9 @@
 ## Comments
 
 Implemented on `smi/operational-ticket-10`; see [the ticket report](../reports/ticket-10.md). Status remains claimed pending integration/shared-check verification by the merger.
+
+## Completion
+
+- Implementation commit: `ce86f8caaf36d0be3c5fc01dc8b5553f6d525c7f`, fast-forward integrated into `integration/operational-tickets-01-10`.
+- Integrated verification: `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **315 tests in 193.21 seconds**.
+- All acceptance criteria are checked. Delivery remained offline and local, with real PostgreSQL and simulated external I/O; no push or PR occurred.
