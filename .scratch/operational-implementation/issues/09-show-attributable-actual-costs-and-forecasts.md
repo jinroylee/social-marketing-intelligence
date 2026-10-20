@@ -4,7 +4,7 @@
 
 **Blocked by:** 04: Run one authorized offline acquisition task.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -20,3 +20,9 @@
 **Spec coverage:** user stories 41, 58, 61, 62, 63, 67; acceptance scenarios T21, T22, T23 (the part exercised by this slice).
 
 **Verification:** Use the owning public operations and the existing integration/HTTP test conventions where applicable. Keep real PostgreSQL/policy behavior; simulate external I/O by default. Update the corresponding product contracts, physical ERD, and local module instructions when their behavior or ownership changes. Run the shared locked checks. A passing test suite does not establish human language or marketer-usefulness validation.
+
+## Completion
+
+- Implementation commit: `02f931faba0fb5a2136b01141a92031646c40224`, fast-forward integrated into `integration/operational-tickets-01-10`.
+- Integrated verification: `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **301 tests in 165.55 seconds**.
+- All acceptance criteria are checked. See [the implementation report](../reports/ticket-09.md) for public interfaces and focused verification. Delivery remained offline and local, with real PostgreSQL and simulated external I/O; no push or PR occurred.
