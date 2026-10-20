@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 14 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–13 are integrated and resolved; ticket 14 is pending. Ticket 13 primary-contract/software work is complete, while future live configuration and readiness remain unestablished.
+Implement ticket 14 in its fresh context/worktree, then merge and validate before advancing. Tickets 11–13 are integrated and resolved.
 
 ## Current Phase
 
-Phase 18 — ticket 14 pending after successful ticket 13 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 18 — ticket 14 in progress after successful ticket 13 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -146,7 +146,7 @@ Fast-forward integrated `2420af1de46a1756d370914a555ae826e574a306`. Root `UV_OFF
 
 ### Phase 18 — Implement ticket 14
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
