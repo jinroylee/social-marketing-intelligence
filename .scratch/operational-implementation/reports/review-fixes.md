@@ -37,7 +37,8 @@ Applied the TDD skill at the already approved public HTTP, task/worker, campaign
 - `UV_OFFLINE=1 uv run --locked python tools/check.py`: **passed**, including Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **325 tests in 267.00 seconds**. This includes all ten new regression cases and the final proposal request-conflict assertion.
 - `UV_OFFLINE=1 uv run --locked python tools/check.py --static`: passed Ruff, documentation links, physical ERD coverage and instruction symlinks. `git diff --check`: passed.
 - `UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-operational-review-fixes-wheel`: passed. Archive inspection matched the exact current bytes of all nine changed runtime/schema modules.
-- `git merge --no-edit integration/operational-tickets-01-10`: **Already up to date** against `bf41d05` before completion. The final implementation commit SHA is returned to the merger after committing this report and the validated changes.
+- Implementation commit: `08317376094487fb1310d3466ee3f65e512d8463` contains all runtime, test, contract and owner-instruction repairs plus this report. This final evidence-only update records that commit's SHA.
+- `git merge --no-edit integration/operational-tickets-01-10`: **Already up to date** against `bf41d05` before completion. Final static checks and `git diff --check` passed after recording the shared result; root planning files remained unchanged.
 
 ## Limits
 
