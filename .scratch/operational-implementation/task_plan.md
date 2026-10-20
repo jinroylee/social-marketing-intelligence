@@ -6,7 +6,7 @@ Implement approved tickets 01–10 sequentially in fresh implementer worktrees, 
 
 ## Next Step
 
-Review tickets 01–10 against the starting commit, resolve findings, verify and clean up implementer worktrees.
+Resolve the independent baseline review findings in one fresh implementer, verify integration, then clean up implementer worktrees.
 
 ## Current Phase
 
