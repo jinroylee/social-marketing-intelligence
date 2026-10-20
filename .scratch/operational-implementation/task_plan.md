@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 13 in its fresh context/worktree with current primary-contract verification and simulated provider I/O, then merge and validate before advancing. Tickets 11–12 are integrated and resolved.
+Dispatch ticket 14 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–13 are integrated and resolved; ticket 14 is pending. Ticket 13 primary-contract/software work is complete, while future live configuration and readiness remain unestablished.
 
 ## Current Phase
 
-Phase 17 — ticket 13 in progress after successful ticket 12 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 18 — ticket 14 pending after successful ticket 13 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -140,9 +140,9 @@ Fast-forward integrated `7d42792ab0f65ab58bd72c9f20bb433c04d3b337`. The root int
 
 ### Phase 17 — Implement ticket 13
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated `2420af1de46a1756d370914a555ae826e574a306`. Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed all static checks, PostgreSQL preflight and **381 tests in 253.68 seconds**; the worker wheel matches all 20 listed changed packaged files. All acceptance criteria are checked and local ticket 13 is resolved. Primary-contract verification and concrete disabled-by-default provider software are complete; live credentials/rates/configuration/readiness and human quality remain unestablished.
 
 ### Phase 18 — Implement ticket 14
 

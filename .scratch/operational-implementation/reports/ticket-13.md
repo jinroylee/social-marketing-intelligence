@@ -39,3 +39,11 @@ No API-key helper was available or actual key needed. Every test credential/rate
 ## Limits
 
 No live/paid source/model call, push, PR, deployment or external message occurred. The installed provider adapter is opt-in; this run supplies no live receipt, real credentials, readiness or human language/usefulness result. Client/model limits do not establish provider cancellation, independent invoice verification, a finite billing-lag deadline or zero overshoot for delayed/unbounded charges. Interrupted attempts remain visible and cannot silently reissue. Reconciliation restores neither a missing response/profile nor task authority. No local implementation blocker remains.
+
+## Integrated validation
+
+- Resumed from the completed frozen worker gate (**381 tests in 244.79 seconds**, finished during the usage interruption); that worker gate was not rerun after resume. Confirmed the clean root and ancestry from `7a35bb9a01e6a7c9a9db2a17336dc2618f35327a`, then fast-forward integrated `2420af1de46a1756d370914a555ae826e574a306`.
+- Independent root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **381 tests in 253.68 seconds** on that exact integrated commit. No runtime/test change occurred during the gate.
+- Independently compared `/tmp/smi-ticket-13-wheel/smi_ingestion-0.1.0-py3-none-any.whl` with the integrated tree: all 20 entries in `/tmp/smi-ticket-13-wheel-files.txt` match byte for byte, including owner-instruction symlink targets. The exact list is retained in continuation-manifest.json.
+- The pre-merge concrete-adapter, model/tier/nonfinal-billing and provider-basis reconciliation/recovery gaps are closed by this implementation and simulated verification. Primary contract verification/software completion does not establish live configuration, credentials, rates, readiness, a live receipt or human quality.
+- Local ticket 13 is resolved; ticket 14 is pending for fresh dispatch. Prior continuation evidence, the historical execution manifest and original review baseline are preserved. Only tracker/planning/report metadata changed after verification; no runtime edit, external call/message, push, PR, deployment or cleanup occurred.

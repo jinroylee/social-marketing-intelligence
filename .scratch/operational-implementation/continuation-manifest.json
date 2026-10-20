@@ -214,32 +214,45 @@
   "testing_boundaries": "Public operations and HTTP; real PostgreSQL; simulated external I/O",
   "external_io": "Local execution with simulated transports. User authorizes read-only primary-documentation lookups only; no live/paid source/model calls or external messages.",
   "last_verified_runtime": {
-    "checked_commit": "7d42792ab0f65ab58bd72c9f20bb433c04d3b337",
+    "checked_commit": "2420af1de46a1756d370914a555ae826e574a306",
     "command": "UV_OFFLINE=1 uv run --locked python tools/check.py",
-    "passed_tests": 342,
-    "seconds": 216.08,
-    "focused_tests": 81,
+    "passed_tests": 381,
+    "seconds": 253.68,
+    "focused_tests": 76,
     "real_postgresql": true,
     "simulated_external_io": true,
     "wheel_verified": true,
     "wheel_evidence": {
-      "artifact": "/tmp/smi-ticket-12-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
-      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-12-wheel",
+      "artifact": "/tmp/smi-ticket-13-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
+      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-13-wheel",
       "exact_integrated_files_matched": [
-        "smi_campaigns/comparison.py",
-        "smi_campaigns/contracts.py",
+        "smi_campaigns/AGENTS.md",
+        "smi_campaigns/CLAUDE.md",
+        "smi_campaigns/interpretation/AGENTS.md",
+        "smi_campaigns/interpretation/CLAUDE.md",
+        "smi_campaigns/interpretation/__init__.py",
+        "smi_campaigns/interpretation/http.py",
         "smi_campaigns/schema.sql",
         "smi_campaigns/store.py",
+        "smi_costs/AGENTS.md",
+        "smi_costs/CLAUDE.md",
+        "smi_costs/__init__.py",
+        "smi_costs/admission.py",
+        "smi_costs/contracts.py",
+        "smi_costs/reconciliation.py",
+        "smi_costs/store.py",
+        "smi_review/AGENTS.md",
+        "smi_review/CLAUDE.md",
         "smi_review/app.py",
-        "smi_review/views.py",
-        "smi_review/static/review.css"
+        "smi_review/cost_views.py",
+        "smi_review/views.py"
       ],
-      "evidence_report": "reports/ticket-12.md"
+      "evidence_report": "reports/ticket-13.md"
     },
-    "integration_evidence_report": "reports/ticket-12.md"
+    "integration_evidence_report": "reports/ticket-13.md"
   },
   "external_prerequisites": {
-    "13": "Verify current primary model contract using authorized read-only primary documentation; require explicit model/cost configuration. All provider calls remain simulated in this run.",
+    "13": "Current primary model contract verified on 2026-10-20 and ticket 13 software implemented/validated with intercepted HTTP simulation. Future live operation still requires explicit server enablement, real credentials, model/cost/rate configuration and separate readiness/authorization; these are not supplied or established. No live receipt or human-quality result is claimed.",
     "24": "Verified permitted discovery capability, source/cost configuration and explicit live-operation authorization; no fabricated readiness receipt.",
     "25": "Verified live route and explicit scheduled-live configuration/authorization.",
     "34": "Current primary recent-X route contract, permitted policy/configuration and explicit live authorization.",
@@ -274,6 +287,21 @@
       "focused_tests": 81,
       "focused_seconds": 94.78,
       "wheel_verified": true
+    },
+    {
+      "ticket": 13,
+      "title": "Interpret natural-language criteria with one metered model",
+      "commit": "2420af1de46a1756d370914a555ae826e574a306",
+      "integration_tests": 381,
+      "integration_seconds": 253.68,
+      "file": "13-interpret-natural-language-criteria-with-one-metered-model.md",
+      "report": "reports/ticket-13.md",
+      "focused_tests": 76,
+      "focused_seconds": 62.69,
+      "wheel_verified": true,
+      "primary_contract_verified_on": "2026-10-20",
+      "provider_adapter_disabled_by_default": true,
+      "live_receipt": false
     }
   ]
 }

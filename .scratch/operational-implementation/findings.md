@@ -36,3 +36,8 @@
 - Primary-provider contract research is captured in research/model-provider-contract.md. Official HTML API reference exceeded the web reader size limit, and its Markdown variant was unsupported by that reader. Bounded read-only HTTPS retrieval of official Markdown succeeded; no API execution or credentials were used.
 
 - Ticket13 pre-merge review found a scope gap: a simulated-only transport left the selected provider adapter unimplemented, with no later model-live ticket. Offline execution does not preclude concrete adapter code tested with simulated HTTP. The implementer is closing the gap with explicit server enablement, a current primary-verified model context bound, and truthful provider-reported/synthetic accounting provenance. No live call or commercial receipt is authorized.
+
+## Ticket 13 pre-merge gap closure
+
+- Closed the earlier root scope gap in `2420af1de46a1756d370914a555ae826e574a306`: concrete fixed-host bounded Responses adapter, disabled by default; explicit verified model contract; strict returned model/tier/final-usage handling; separate provider/synthetic basis; exact provider-basis final reconciliation and separate health recovery. Root shared validation passed **381 tests in 253.68 seconds** with all HTTP intercepted simulation.
+- Primary-contract verification and software implementation are complete. Future live enablement, real credentials/rates/configuration, account readiness, live receipts and human quality remain unestablished; no readiness or commercial-invoice claim follows from the simulated tests.

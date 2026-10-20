@@ -4,7 +4,7 @@
 
 **Blocked by:** 11: Reconcile delayed charges and failed meters; 12: Save visible executable campaign criteria.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -20,3 +20,10 @@
 **Spec coverage:** user stories 2, 3, 4, 58, 59, 63; acceptance scenarios T11, T12, T21, T23 (the part exercised by this slice).
 
 **Verification:** Use the owning public operations and the existing integration/HTTP test conventions where applicable. Keep real PostgreSQL/policy behavior; simulate external I/O by default. Update the corresponding product contracts, physical ERD, and local module instructions when their behavior or ownership changes. Run the shared locked checks. A passing test suite does not establish human language or marketer-usefulness validation.
+
+## Completion
+
+- Implementation and integrated checked commit: `2420af1de46a1756d370914a555ae826e574a306`, fast-forward integrated into `integration/operational-tickets-11-39`.
+- Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **381 tests in 253.68 seconds**. All acceptance criteria are checked.
+- The worker wheel matches all 20 listed changed packaged files in the integrated tree byte for byte. [The implementation report](../reports/ticket-13.md) records primary-contract verification, focused evidence, pre-merge gap closure and integrated verification.
+- Current primary contract verification and software implementation are complete. The provider adapter remains disabled by default; future live operation needs explicit enablement, real credentials, model/cost/rate configuration and separate readiness/authorization. No live receipt or human-quality result is claimed; all verification HTTP was intercepted simulation. No external message, push, PR or deployment occurred.
