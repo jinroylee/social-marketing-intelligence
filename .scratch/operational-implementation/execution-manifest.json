@@ -37,5 +37,121 @@
     "08-deliver-durable-task-completion-notifications.md",
     "09-show-attributable-actual-costs-and-forecasts.md",
     "10-enforce-shared-monetary-admission-before-work.md"
-  ]
+  ],
+  "status": "complete",
+  "ticket_implementations": [
+    {
+      "ticket": 1,
+      "title": "Restore ingestion completion and safe resume",
+      "commit": "11bc6cbe9c25fde9443b2785dbf5482b2ae18c0a",
+      "integration_tests": 209,
+      "integration_seconds": 132.74,
+      "file": "01-restore-ingestion-completion-and-safe-resume.md"
+    },
+    {
+      "ticket": 2,
+      "title": "Publish and inspect permitted ingested support",
+      "commit": "09f3d18d9a4195c8f14fd670e51c1b157a7f2ced",
+      "integration_tests": 223,
+      "integration_seconds": 128.48,
+      "file": "02-publish-and-inspect-permitted-ingested-support.md"
+    },
+    {
+      "ticket": 3,
+      "title": "Search current knowledge and pin result support",
+      "commit": "e3e55d3e89684bf3a5696d3caf0c1d257dde107c",
+      "integration_tests": 235,
+      "integration_seconds": 126.73,
+      "file": "03-search-current-knowledge-and-pin-result-support.md"
+    },
+    {
+      "ticket": 4,
+      "title": "Run one authorized offline acquisition task",
+      "commit": "a27b433cdac2ba1d23fe409bb0f15aff65f82b4c",
+      "integration_tests": 248,
+      "integration_seconds": 132.96,
+      "file": "04-run-one-authorized-offline-acquisition-task.md"
+    },
+    {
+      "ticket": 5,
+      "title": "Approve an exact assistant enrichment proposal",
+      "commit": "7ba1c46fe1b355afb6f2e42e703e0079fc359f3d",
+      "integration_tests": 256,
+      "integration_seconds": 148.43,
+      "file": "05-approve-an-exact-assistant-enrichment-proposal.md"
+    },
+    {
+      "ticket": 6,
+      "title": "Recover interrupted tasks and expose partial outcomes",
+      "commit": "19b65407b2b52082314916f2a744f54bd6bc1cf2",
+      "integration_tests": 263,
+      "integration_seconds": 145.93,
+      "file": "06-recover-interrupted-tasks-and-expose-partial-outcomes.md"
+    },
+    {
+      "ticket": 7,
+      "title": "Coordinate competing workers without duplicate effects",
+      "commit": "b8c232945859cf40b1c1ec1340dbcad66aee32f2",
+      "integration_tests": 278,
+      "integration_seconds": 144.0,
+      "file": "07-coordinate-competing-workers-without-duplicate-effects.md"
+    },
+    {
+      "ticket": 8,
+      "title": "Deliver durable task completion notifications",
+      "commit": "96754561b3c39caa8f31c102a9eeda671ddc735e",
+      "integration_tests": 291,
+      "integration_seconds": 164.22,
+      "file": "08-deliver-durable-task-completion-notifications.md"
+    },
+    {
+      "ticket": 9,
+      "title": "Show attributable actual costs and forecasts",
+      "commit": "02f931faba0fb5a2136b01141a92031646c40224",
+      "integration_tests": 301,
+      "integration_seconds": 165.55,
+      "file": "09-show-attributable-actual-costs-and-forecasts.md"
+    },
+    {
+      "ticket": 10,
+      "title": "Enforce shared monetary admission before work",
+      "commit": "ce86f8caaf36d0be3c5fc01dc8b5553f6d525c7f",
+      "integration_tests": 315,
+      "integration_seconds": 193.21,
+      "file": "10-enforce-shared-monetary-admission-before-work.md"
+    }
+  ],
+  "review": {
+    "baseline": "6220fff49b5b8e982ef5a8d54b7c788e45b0f648",
+    "reviewed_head": "c48ec5d",
+    "standards": {
+      "findings": 3,
+      "resolved": 3,
+      "remaining": 0,
+      "original_worst_severity": "P2"
+    },
+    "spec": {
+      "findings": 1,
+      "resolved": 1,
+      "remaining": 0,
+      "original_worst_severity": "P2"
+    },
+    "repair_commit": "08317376094487fb1310d3466ee3f65e512d8463"
+  },
+  "validation": {
+    "checked_commit": "4575fd0ef37b6049211bf83f95940f528932ea07",
+    "integration_evidence_commit": "0bb62aef6419549a2076c98b292be23939459733",
+    "command": "UV_OFFLINE=1 uv run --locked python tools/check.py",
+    "passed_tests": 325,
+    "seconds": 269.09,
+    "focused_repair_tests": 129,
+    "real_postgresql": true,
+    "simulated_external_io": true,
+    "wheel_verified": true
+  },
+  "cleanup": {
+    "implementer_worktrees_removed": 11,
+    "local_branch_refs_retained": true,
+    "preserved_existing_worktree": "/Users/makinarocks/orca/workspaces/social-marketing-intelligence/kokanee"
+  }
 }

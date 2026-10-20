@@ -19,3 +19,10 @@
 - Source-policy/synthetic visibility, simulated cost labeling, and failed new-post-admission reconciliation were checked explicitly in the drafted criteria.
 - Required breakdown review was requested asynchronously after all drafts were concrete. No response or approval has been assumed. The published issues directory does not exist.
 - Fresh shared check still fails Ruff F821 at the unchanged source-evidence completion value and stops before pytest. Direct documentation link/ERD/instruction checks, draft-link/coverage/DAG checks, and whitespace checks pass.
+
+## Completed batch
+
+- All first ten tickets are resolved; authoritative commits and checks are in execution-manifest.json and reports/final.md.
+- Original-baseline standards/spec reviews found three standards findings and one publication-ownership defect; all were repaired in one implementer context and verified with 325 integration tests.
+- Publication recovery now requires an atomic task receipt plus exact prepared support and source-run lineage, while current policy still governs values.
+- Live operations, commercial billing reconciliation and tickets after 10 remain outside this completed batch.
