@@ -4,7 +4,7 @@ import json
 import uuid
 from dataclasses import asdict
 
-from .views import e, hidden
+from .views import e, error_message, hidden, value
 
 
 def index(tasks):
@@ -15,9 +15,13 @@ def index(tasks):
     return content if tasks else content + '<p>No submitted tasks. Open a campaign to submit configured offline work.</p>'
 
 
-def submit_form(campaign, brief, csrf, route):
+def submit_form(campaign, brief, csrf, route, submitted=None, error=None):
     """Show trusted campaign/configuration scope before acknowledging work."""
     content = f'<h1>Submit offline acquisition</h1><p>Campaign <a href="/campaigns/{e(campaign["campaign_id"])}">{e(campaign["campaign_id"])}</a> · brief version {e(brief["version"])}</p>'
+    if error:
+        content += error_message(error)
+    if brief['version'] != campaign['brief_version']:
+        content += f'<p>This brief is stale. <a href="/campaigns/{e(campaign["campaign_id"])}/tasks/new">Review the current brief before submitting a new task.</a></p>'
     if route is None:
         return content + '<p>Offline task route is not configured. Ask the local operator to configure a synthetic fixture manifest.</p>'
     _, digest, manifest = route.snapshot()
@@ -25,8 +29,8 @@ def submit_form(campaign, brief, csrf, route):
     content += f'<p>Route: fixture-json · configuration {e(route.version)} · manifest {e(digest)}</p>'
     content += f'<p>Limits: {e(json.dumps(asdict(route.limits)))}</p><p>References: {e(json.dumps([i.get("reference", "") for i in manifest["items"]]))}</p>'
     content += f'<form action="/campaigns/{e(campaign["campaign_id"])}/tasks" method="post">'
-    content += hidden('csrf', csrf) + hidden('request_id', str(uuid.uuid4())) + hidden('brief_id', brief['id'])
-    return content + '<label>Purpose<textarea name="purpose" required maxlength="1000">Fill campaign evidence coverage</textarea></label><button type="submit">Submit offline task</button></form>'
+    content += hidden('csrf', csrf) + hidden('request_id', value(submitted, 'request_id', str(uuid.uuid4()))) + hidden('brief_id', brief['id'])
+    return content + f'<label>Purpose<textarea name="purpose" required maxlength="1000">{e(value(submitted, "purpose", "Fill campaign evidence coverage"))}</textarea></label><button type="submit">Submit offline task</button></form>'
 
 
 def detail(task):

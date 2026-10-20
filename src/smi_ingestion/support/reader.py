@@ -81,6 +81,37 @@ class IngestedEvidence:
                     references.append(SupportReference(str(row['id']), str(row['derivation_id']), tuple(str(f['id']) for f in fields), tuple(str(m['id']) for m in metrics)))
         return tuple(references)
 
+    def require_run_support(self, run_id: str, references: tuple[SupportReference, ...], actor: ActorContext, *,
+                            include_synthetic: bool = False, connection=None) -> None:
+        """Validate exact applied support's immutable run lineage without reading values.
+
+        Historical publication recovery still needs this lineage after source
+        policy withdrawal or derivation supersession. This grants no permission
+        to process/display values or publish support. Caller transactions retain
+        the source/derivation locks through their dependent commit.
+        """
+        actor.require_workspace(self.workspace_id)
+        if not 1 <= len(references) <= 100 or len({r.observation_id for r in references}) != len(references):
+            raise EvidenceError('invalid_support_selection')
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
+            for reference in references:
+                row = connection.execute(
+                    'SELECT o.synthetic FROM source_observations o JOIN ingestion_runs r ON r.id=o.run_id '
+                    'JOIN derivations d ON d.observation_id=o.id '
+                    "WHERE o.id=%s AND d.id=%s AND o.run_id=%s AND r.workspace_id=%s AND o.status='applied' FOR SHARE OF o,d",
+                    (reference.observation_id, reference.derivation_id, run_id, self.workspace_id),
+                ).fetchone()
+                if row is None:
+                    raise EvidenceError('ingested_support_run_mismatch')
+                if row['synthetic'] and not include_synthetic:
+                    raise EvidenceError('synthetic_evidence_excluded')
+                fields = connection.execute('SELECT count(*) AS n FROM field_assertions WHERE derivation_id=%s AND id=ANY(%s::uuid[])',
+                                            (reference.derivation_id, list(reference.assertion_ids))).fetchone()['n']
+                metrics = connection.execute('SELECT count(*) AS n FROM metric_observations WHERE derivation_id=%s AND id=ANY(%s::uuid[])',
+                                             (reference.derivation_id, list(reference.metric_ids))).fetchone()['n']
+                if fields != len(reference.assertion_ids) or metrics != len(reference.metric_ids):
+                    raise EvidenceError('invalid_support_reference')
+
     def read(
         self, references: tuple[SupportReference, ...], actor: ActorContext, *,
         purpose: Literal['display', 'process'] = 'display', include_synthetic: bool = False, connection=None,

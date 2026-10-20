@@ -123,6 +123,22 @@ class CampaignStore:
                 "shortlists": [{**row, "id": str(row["id"]), "brief_id": str(row["brief_id"]),
                                 "comparison_id": str(row["comparison_id"]), "recorded_at": row["recorded_at"].isoformat()} for row in shortlists]}
 
+    def require_current_brief(self, campaign_id: str, brief_id: str, actor: ActorContext, *, expected_version: int, connection) -> None:
+        """Validate an exact current brief, locking its campaign until the caller commits.
+
+        Dependent admission must use this same transaction. A successor brief
+        cannot commit between validation and the dependent write; stale or
+        foreign brief identities raise ``brief_version_conflict``.
+        """
+        actor.require_workspace(self.workspace_id)
+        require(type(expected_version) is int and expected_version >= 1, 'invalid_expected_brief_version')
+        row = connection.execute(
+            'SELECT c.brief_version,b.version FROM campaigns c JOIN campaign_briefs b ON b.campaign_id=c.id '
+            'WHERE c.id=%s AND c.workspace_id=%s AND b.id=%s FOR SHARE OF c',
+            (campaign_id, self.workspace_id, brief_id),
+        ).fetchone()
+        require(row is not None and row['brief_version'] == row['version'] == expected_version, 'brief_version_conflict')
+
     def list_campaigns(self, actor: ActorContext) -> list[dict[str, Any]]:
         """List campaign heads and human brief context, without source-derived explanations."""
         actor.require_workspace(self.workspace_id)

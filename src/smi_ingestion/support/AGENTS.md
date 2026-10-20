@@ -6,6 +6,6 @@ Keep source values with ingestion. Validate every selected assertion/metric agai
 
 Expose one-way capture/mapping/selection `content_version` only for permitted support. Keep payload hashes and identity construction with this source owner; equivalent new run UUIDs preserve content identity while later captures, methods or selected logical fields differ.
 
-A caller-owned transaction retains source/derivation share locks through dependent commits. Return denied support as metadata-only tombstones and superseded derivations as review-required. Consumers own their retained copies and must reconcile them under source retention policy.
+`require_run_support` validates exact applied support against its immutable workspace/run lineage without reading values, including after policy withdrawal or derivation supersession; it grants no publication or value-use permission. A caller-owned transaction retains source/derivation share locks through dependent commits. Return denied support as metadata-only tombstones and superseded derivations as review-required. Consumers own their retained copies and must reconcile them under source retention policy.
 
 This interface does not publish knowledge, infer business attributes, or mutate imported evidence-set membership. Update the evidence contract, architecture and physical ERD when changing ownership, limits or transaction behavior.

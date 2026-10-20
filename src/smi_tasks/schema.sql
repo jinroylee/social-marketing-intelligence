@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS acquisition_attempts (
     finished_at timestamptz,
     UNIQUE(task_id,number)
 );
+-- A task-owned receipt commits with publication, before terminal acknowledgment.
 CREATE TABLE IF NOT EXISTS acquisition_task_publications (
     task_id uuid NOT NULL REFERENCES acquisition_tasks(id),
     publication_id uuid NOT NULL REFERENCES knowledge_publications(id),

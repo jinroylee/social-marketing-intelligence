@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import pytest
 
 from smi_campaigns import CampaignStore
 from smi_tasks import TaskAuthority
@@ -304,6 +305,38 @@ def test_current_campaign_basis_stale_brief_and_worker_authority_are_explicit(st
     assert completed['outcome'] == 'usable_update'
 
 
+def test_campaign_basis_remains_current_until_dependent_transaction_commits(stack, tmp_path):
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError
+    from dataclasses import replace
+    from threading import Event
+    import pytest
+    from smi_ingestion.evidence import EvidenceError
+
+    tasks, campaign, _, _ = setup_task(stack, tmp_path)
+    campaigns = CampaignStore(tasks.db)
+    attempted = Event()
+
+    def revise():
+        attempted.set()
+        return campaigns.revise_brief(campaign['campaign_id'], replace(BRIEF, objective='Successor question'), HUMAN,
+                                      expected_version=1, request_id='successor')
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        with tasks.db.connect() as connection:
+            campaigns.require_current_brief(campaign['campaign_id'], campaign['brief_id'], HUMAN,
+                                            expected_version=1, connection=connection)
+            future = pool.submit(revise)
+            assert attempted.wait(5)
+            with pytest.raises(TimeoutError):
+                future.result(timeout=0.1)
+        assert future.result(timeout=5)['brief_version'] == 2
+    with tasks.db.connect() as connection:
+        with pytest.raises(EvidenceError, match='brief_version_conflict'):
+            campaigns.require_current_brief(campaign['campaign_id'], campaign['brief_id'], HUMAN,
+                                            expected_version=1, connection=connection)
+    assert tasks.list(HUMAN) == []
+
+
 def test_identity_free_and_process_denied_inputs_cannot_become_published_support(stack, tmp_path):
     from smi_tasks import AcquisitionTasks, OfflineRoute, OfflineTaskWorker
 
@@ -518,6 +551,137 @@ def test_local_supplied_proposal_requires_exact_review_and_reopens_approval_afte
         assert proposal_path in task_page
         assert 'new unregistered topic' in task_page
         assert request(url, path='/proposals')[0] == 200
+
+
+def test_proposal_validation_preserves_editable_escaped_scope_and_retry_identity(stack, tmp_path):
+    from smi_review import ReviewApp
+    from test_review import form, request, running
+
+    tasks, _, _, _ = setup_task(stack, tmp_path)
+    with running(ReviewApp(tasks.db, actor_id=HUMAN.actor_id, offline_route=tasks.route)) as url:
+        supplied = form(request(url, path='/proposals/new')[2], '/proposals')
+        supplied.update(purpose=['Fill <missing> knowledge'], intent=['expansion'],
+                        subject_ids=['\n'.join(f'account:{n}' for n in range(31))], search_queries=['a & b'])
+        status, _, page = request(url, 'POST', '/proposals', supplied)
+        assert status == 422
+        retry = form(page, '/proposals')
+        for field in ('request_id', 'purpose', 'intent', 'subject_ids', 'search_queries'):
+            assert retry[field] == supplied[field]
+        assert 'Fill &lt;missing&gt; knowledge' in page
+        assert 'Fill <missing> knowledge' not in page
+        assert tasks.list_proposals(HUMAN) == []
+        retry['subject_ids'] = ['account:one']
+        assert request(url, 'POST', '/proposals', retry)[0] == 303
+        retry['search_queries'] = ['Changed <search> scope']
+        status, _, page = request(url, 'POST', '/proposals', retry)
+        assert status == 409
+        conflict = form(page, '/proposals')
+        assert conflict['request_id'] == retry['request_id']
+        assert conflict['search_queries'] == retry['search_queries']
+        assert len(tasks.list_proposals(HUMAN)) == 1
+
+
+def test_campaign_task_errors_preserve_edits_and_identity_with_server_owned_basis(stack, tmp_path):
+    from dataclasses import replace
+    import uuid
+    from smi_review import ReviewApp
+    from test_review import form, request, running
+
+    tasks, campaign, _, _ = setup_task(stack, tmp_path)
+    path = f"/campaigns/{campaign['campaign_id']}/tasks"
+    with running(ReviewApp(tasks.db, actor_id=HUMAN.actor_id, offline_route=tasks.route)) as url:
+        supplied = form(request(url, path=path + '/new')[2], path)
+        supplied['purpose'] = ['<missing>' + 'x' * 1000]
+        status, _, page = request(url, 'POST', path, supplied)
+        assert status == 422
+        retry = form(page, path)
+        assert retry['purpose'] == supplied['purpose']
+        assert retry['request_id'] == supplied['request_id']
+        assert '<missing>' not in page
+        assert tasks.list(HUMAN) == []
+
+        retry['purpose'] = ['Keep my <research> question']
+        CampaignStore(tasks.db).revise_brief(campaign['campaign_id'], replace(BRIEF, objective='New question'), HUMAN,
+                                           expected_version=1, request_id='revised')
+        status, _, page = request(url, 'POST', path, retry)
+        assert status == 409
+        stale = form(page, path)
+        assert stale['brief_id'] == [campaign['brief_id']]
+        assert stale['purpose'] == retry['purpose']
+        assert stale['request_id'] == retry['request_id']
+        assert 'brief version 1' in page
+
+        forged_id = str(uuid.uuid4())
+        status, _, page = request(url, 'POST', path, {**retry, 'brief_id': forged_id, 'origin': 'schedule', 'actor_id': 'forged'})
+        assert status == 422
+        safe = form(page, path)
+        current = CampaignStore(tasks.db).read_campaign(campaign['campaign_id'], HUMAN)['briefs'][-1]
+        assert safe['brief_id'] == [current['id']]
+        assert not {'origin', 'actor_id'} & safe.keys()
+        assert forged_id not in page
+        assert request(url, 'POST', path, safe, headers={'Origin': 'http://foreign.invalid'})[0] == 403
+        status, headers, _ = request(url, 'POST', path, safe)
+        assert status == 303
+        safe['purpose'] = ['Changed <purpose>']
+        status, _, page = request(url, 'POST', path, safe)
+        assert status == 409
+        conflict = form(page, path)
+        assert conflict['purpose'] == safe['purpose']
+        assert conflict['request_id'] == safe['request_id']
+        assert len(tasks.list(HUMAN)) == 1
+        assert request(url, path=headers['Location'])[0] == 200
+
+
+def test_approval_errors_reopen_exact_scope_and_original_action_after_submission_failure(stack, tmp_path):
+    from smi_review import ReviewApp
+    from smi_tasks import EnrichmentProposal
+    from test_review import form, request, running
+
+    tasks, _, _, manifest = setup_task(stack, tmp_path)
+    saved = tasks.save_proposal(EnrichmentProposal('Fill <account> gaps', 'fill', ('account:one',)), WORKER, request_id='proposal')
+    proposal = tasks.read_proposal(saved['proposal_id'], HUMAN)
+    path = f"/proposals/{saved['proposal_id']}/approve"
+    with running(ReviewApp(tasks.db, actor_id=HUMAN.actor_id, offline_route=tasks.route)) as url:
+        approval = form(request(url, path=path.removesuffix('/approve'))[2], path)
+        status, _, page = request(url, 'POST', path, approval)
+        assert status == 422
+        retry = form(page, path)
+        assert retry['request_id'] == approval['request_id']
+        assert 'reviewed' not in retry
+
+        retry['reviewed'] = ['yes']
+        status, _, page = request(url, 'POST', path, {**retry, 'scope_digest': '<forged>', 'actor_id': 'forged'})
+        assert status == 422
+        trusted = form(page, path)
+        assert trusted['scope_digest'] == [proposal['scope_digest']]
+        assert trusted['request_id'] == retry['request_id']
+        assert trusted['reviewed'] == ['yes']
+        assert 'actor_id' not in trusted
+        assert '&lt;forged&gt;' not in page
+        status, _, page = request(url, 'POST', path, {**trusted, 'scope_digest': 'wrong-digest'})
+        assert status == 409
+        assert form(page, path)['scope_digest'] == [proposal['scope_digest']]
+
+        original_manifest = manifest.read_text()
+        manifest.write_text(original_manifest + '\n')
+        status, _, page = request(url, 'POST', path, trusted)
+        assert status == 422
+        durable = tasks.read_proposal(saved['proposal_id'], HUMAN)['approval']
+        assert durable['request_id'] == trusted['request_id'][0]
+        retry = form(page, path)
+        assert retry['request_id'] == [durable['request_id']]
+        assert retry['scope_digest'] == [proposal['scope_digest']]
+        assert tasks.list(HUMAN) == []
+
+        status, _, page = request(url, 'POST', path, {**retry, 'request_id': 'another-action'})
+        assert status == 409
+        retry = form(page, path)
+        assert retry['request_id'] == [durable['request_id']]
+        manifest.write_text(original_manifest)
+        assert request(url, 'POST', path, {**retry, 'csrf': 'forged'})[0] == 422
+        status, headers, _ = request(url, 'POST', path, retry)
+        assert status == 303
+        assert request(url, 'POST', path, retry)[1]['Location'] == headers['Location']
 
 
 def test_operator_saves_reviews_approves_and_submits_exact_proposal_in_separate_processes(stack, tmp_path):
@@ -847,3 +1011,112 @@ def test_interrupted_partial_publication_reopens_committed_coverage_without_inpu
     result = KnowledgeQueries(tasks.db).search(QueryScope(), HUMAN, request_id='committed-partial', include_synthetic=True)
     assert len(result['members']) == 1
     assert result['manifest'][0]['publication_producer']['actor_id'] == WORKER.actor_id
+
+
+def test_public_publication_request_text_cannot_authorize_an_empty_task_update(stack, tmp_path):
+    from smi_ingestion.support import IngestedEvidence
+    from smi_knowledge import KnowledgePublications
+    from smi_tasks import OfflineTaskWorker
+    from test_publications import ingest_account
+
+    tasks, campaign, evidence, _ = setup_task(stack, tmp_path, items=[])
+    task_id = submit(tasks, campaign)['task_id']
+    run_id, _ = ingest_account(stack, native_id='unrelated')
+    publications = KnowledgePublications(tasks.db)
+    unrelated = publications.publish(IngestedEvidence(tasks.db).select_run(run_id, HUMAN), WORKER,
+                                     request_id=f'task:{task_id}', include_synthetic=True)
+    completed = OfflineTaskWorker(tasks.db, evidence.root).run_one(task_id, WORKER)
+    assert completed['outcome'] == 'failure'
+    assert completed['failure'] == {'phase': 'publication', 'code': 'publication_request_conflict'}
+    assert completed['coverage']['collected_observations'] == 0
+    assert completed['coverage']['published_members'] == 0
+    assert completed['publication_ids'] == []
+    assert completed['attempts'][0]['publication_support'] is None
+    assert publications.read(unrelated['publication_id'], HUMAN)['members'][0]['run_id'] == run_id
+    assert OfflineTaskWorker(tasks.db, evidence.root).run_one(task_id, WORKER) == completed
+
+
+@pytest.mark.parametrize('collision', ['unrelated_prepared', 'exact_prepared', 'exact_race'])
+def test_public_publication_cannot_claim_prepared_task_support_without_worker_receipt(stack, tmp_path, collision):
+    from smi_ingestion.support import IngestedEvidence, SupportReference
+    from smi_knowledge import KnowledgePublications
+    from smi_tasks import OfflineTaskWorker
+    from test_publications import ingest_account
+
+    tasks, campaign, evidence, _ = setup_task(stack, tmp_path)
+    task_id = submit(tasks, campaign)['task_id']
+    unrelated_run, _ = ingest_account(stack, native_id='unrelated')
+    publications = KnowledgePublications(tasks.db)
+
+    def collide(progress):
+        if progress['progress']['phase'] != 'publication_prepared':
+            return
+        if collision == 'unrelated_prepared':
+            support = IngestedEvidence(tasks.db).select_run(unrelated_run, HUMAN)
+        else:
+            support = tuple(SupportReference(s['observation_id'], s['derivation_id'], tuple(s['assertion_ids']), tuple(s['metric_ids']))
+                            for s in progress['attempts'][0]['publication_support'])
+        publications.publish(support, WORKER, request_id=f'task:{task_id}', include_synthetic=True)
+        if collision != 'exact_race':
+            raise RuntimeError('interrupted after unrelated public publication')
+
+    if collision == 'exact_race':
+        completed = OfflineTaskWorker(tasks.db, evidence.root, on_progress=collide).run_one(task_id, WORKER)
+    else:
+        with pytest.raises(RuntimeError, match='interrupted after unrelated public publication'):
+            OfflineTaskWorker(tasks.db, evidence.root, on_progress=collide).run_one(task_id, WORKER)
+        prepared = tasks.read(task_id, HUMAN)
+        assert prepared['progress']['phase'] == 'publication_prepared'
+        assert prepared['coverage']['published_members'] == 0
+        assert prepared['publication_ids'] == []
+        completed = OfflineTaskWorker(tasks.db, evidence.root).run_one(task_id, WORKER)
+    assert completed['outcome'] == 'failure'
+    assert completed['failure'] == {'phase': 'publication', 'code': 'publication_request_conflict'}
+    assert completed['coverage']['collected_observations'] == 1
+    assert completed['coverage']['ingested_observations'] == 1
+    assert completed['coverage']['published_members'] == 0
+    assert completed['publication_ids'] == []
+    assert len(publications.list(HUMAN, include_synthetic=True)) == 1
+
+
+def test_lost_acknowledgment_recovers_receipted_publication_after_policy_withdrawal(stack, tmp_path):
+    from smi_knowledge import KnowledgePublications
+    from smi_tasks import CompletionInbox, OfflineTaskWorker
+
+    tasks, campaign, evidence, manifest = setup_task(stack, tmp_path, payload={
+        'account': {'id': 'private-account', 'handle': 'secret-source-wording'},
+    })
+    task_id = submit(tasks, campaign)['task_id']
+
+    def interrupt(progress):
+        if progress['progress']['phase'] == 'publication_committed':
+            raise RuntimeError('lost task acknowledgment')
+
+    with pytest.raises(RuntimeError, match='lost task acknowledgment'):
+        OfflineTaskWorker(tasks.db, evidence.root, on_progress=interrupt).run_one(task_id, WORKER)
+    committed = tasks.read(task_id, HUMAN)
+    assert committed['progress']['phase'] == 'publication_committed'
+    publication_id = committed['publication_ids'][0]
+    original = KnowledgePublications(tasks.db).find_request(f'task:{task_id}', HUMAN, include_synthetic=True)
+    evidence.revoke(original['support'][0]['observation_id'])
+    manifest.unlink()
+    (tmp_path / 'account.json').unlink()
+
+    completed = OfflineTaskWorker(tasks.db, evidence.root).run_one(task_id, ActorContext('local', 'successor', 'automation'))
+    assert completed['outcome'] == 'usable_update'
+    assert completed['coverage'] == committed['coverage']
+    assert completed['publication_ids'] == [publication_id]
+    assert completed['attempts'][0]['producer'] == committed['attempts'][0]['producer']
+    assert completed['attempts'][0]['publication_support'] == committed['attempts'][0]['publication_support']
+    assert KnowledgePublications(tasks.db).find_request(f'task:{task_id}', HUMAN, include_synthetic=True) == original
+    historical = KnowledgePublications(tasks.db).read(publication_id, HUMAN, include_synthetic=True)
+    assert historical['producer'] == {'actor_id': WORKER.actor_id, 'kind': 'automation'}
+    assert historical['current_coverage']['available_members'] == 0
+    assert 'assertions' not in historical['members'][0]
+    assert 'secret-source-wording' not in json.dumps(completed)
+    assert KnowledgeQueries(tasks.db).search(QueryScope(), HUMAN, request_id='withdrawn', include_synthetic=True)['members'] == []
+    event = CompletionInbox(tasks.db).list(HUMAN)[0]
+    assert event['coverage']['published_members'] == 1
+    assert event['current_coverage'] == {'available_members': 0, 'unavailable_members': 1}
+    assert event['publications'][0]['href'] is None
+    assert OfflineTaskWorker(tasks.db, evidence.root).run_one(task_id, WORKER) == completed

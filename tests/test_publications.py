@@ -162,6 +162,46 @@ def test_current_policy_redacts_pinned_support_without_changing_publication_hist
     assert publications.publish(support, WORKER, request_id='policy')['status'] == 'duplicate'
 
 
+def test_source_free_publication_recovery_validates_exact_run_lineage_after_withdrawal(stack):
+    import json
+    import pytest
+    from smi_ingestion.evidence import EvidenceError
+    from smi_ingestion.support import SupportReference
+
+    db, evidence, _, _ = stack
+    run_id, observation = ingest_account(stack, native_id='private-source-wording')
+    other_run, _ = ingest_account(stack, native_id='other-account')
+    reader = IngestedEvidence(db)
+    support = reader.select_run(run_id, HUMAN)
+    other = reader.select_run(other_run, HUMAN)
+    publications = KnowledgePublications(db)
+    publications.migrate()
+    created = publications.publish(support, WORKER, request_id='recovery')
+    original = publications.find_request('recovery', HUMAN)
+    evidence.revoke(observation.id)
+
+    metadata = publications.find_request('recovery', HUMAN)
+    assert metadata == original
+    assert metadata['publication_id'] == created['publication_id']
+    assert metadata['support'] == [{'observation_id': support[0].observation_id, 'derivation_id': support[0].derivation_id,
+                                    'assertion_ids': list(support[0].assertion_ids), 'metric_ids': []}]
+    assert metadata['producer'] == {'actor_id': WORKER.actor_id, 'kind': 'automation'}
+    assert metadata['interpretation_ids'] == []
+    assert 'private-source-wording' not in json.dumps(metadata)
+    assert 'source_reference' not in json.dumps(metadata)
+    reader.require_run_support(run_id, support, HUMAN)
+    with pytest.raises(EvidenceError, match='ingested_support_run_mismatch'):
+        reader.require_run_support(other_run, support, HUMAN)
+    changed = SupportReference(support[0].observation_id, support[0].derivation_id, other[0].assertion_ids)
+    with pytest.raises(EvidenceError, match='invalid_support_reference'):
+        reader.require_run_support(run_id, (changed,), HUMAN)
+    foreign = ActorContext('foreign', 'reader', 'human')
+    with pytest.raises(EvidenceError, match='workspace_access_denied'):
+        reader.require_run_support(run_id, support, foreign)
+    assert KnowledgePublications(db, 'foreign').find_request('recovery', foreign) is None
+    assert 'assertions' not in publications.read(created['publication_id'], HUMAN)['members'][0]
+
+
 def test_local_publication_detail_reopens_and_redacts_after_restart(stack):
     from smi_review import ReviewApp
     from test_review import request, running

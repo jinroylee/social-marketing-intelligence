@@ -40,9 +40,9 @@ class _CostDispatchBlocked(RuntimeError):
 class _ControlledCollector:
     """Composition of exact task authority, execution fencing and one-use cost control."""
 
-    def __init__(self, collector, accounting, control, task_id, attempt, actor, execution):
+    def __init__(self, collector, accounting, control, attempt, execution):
         self.collector, self.accounting, self.control = collector, accounting, control
-        self.task_id, self.attempt, self.actor, self.execution = task_id, attempt, actor, execution
+        self.attempt, self.execution = attempt, execution
 
     def collect(self, manifest, checkpoint, limits):
         # One invocation may make at most one synthetic request, including waits.
@@ -55,8 +55,8 @@ class _ControlledCollector:
             requests = sum(item.request_attempts for item in batch.items) if batch.items else batch.request_attempts
             return SyntheticResult(batch, requests)
 
-        result = adapter.execute(self.actor, request_id=f'task:{self.task_id}:{identity}', method='fixture-dispatch-v1', call=call,
-                                 task_id=self.task_id, attempt_id=str(self.attempt['id']), transaction=self.execution.transaction,
+        result = adapter.execute(self.execution.actor, request_id=f'task:{self.execution.task_id}:{identity}', method='fixture-dispatch-v1', call=call,
+                                 task_id=self.execution.task_id, attempt_id=str(self.attempt['id']), transaction=self.execution.transaction,
                                  operation_actor=ActorContext(self.accounting.workspace_id, self.attempt['producer_id'], self.attempt['producer_kind']))
         if result['status'] != 'executed':
             raise _CostDispatchBlocked(result)
@@ -86,9 +86,9 @@ class OfflineTaskWorker:
         self.collector = collector or LocalFileCollector('fixture-json')
         self.costs = UsageAccounting(db, workspace_id, task_attribution=self.tasks.resolve_cost_attribution)
 
-    def _notify(self, task_id, actor, *, phase=None, publication_id=None):
+    def _notify(self, execution, *, phase=None, publication_id=None):
         if self.on_progress:
-            view = self.tasks.read(task_id, actor)
+            view = self.tasks.read(execution.task_id, execution.actor)
             if phase:
                 view['progress'] = {'phase': phase, 'publication_id': publication_id}
             try:
@@ -96,7 +96,7 @@ class OfflineTaskWorker:
             except Exception as error:
                 raise _ObserverFailure(error) from error
 
-    def _checkpoint(self, task_id, attempt_id, phase, coverage, actor, execution, *, observation_id=None,
+    def _checkpoint(self, execution, attempt_id, phase, coverage, *, observation_id=None,
                     support=None, failure_phase=None, failure_code=None, waiting=None):
         progress = {'phase': phase}
         if observation_id:
@@ -106,23 +106,21 @@ class OfflineTaskWorker:
             progress.update(waiting)
         with execution.transaction('checkpoint') as connection:
             connection.execute('UPDATE acquisition_tasks SET status=%s,progress=%s,coverage=%s,failure_phase=%s,failure_code=%s WHERE id=%s',
-                               (status, Jsonb(progress), Jsonb(coverage), failure_phase, failure_code, task_id))
+                               (status, Jsonb(progress), Jsonb(coverage), failure_phase, failure_code, execution.task_id))
             phases = connection.execute('SELECT phases FROM acquisition_attempts WHERE id=%s', (attempt_id,)).fetchone()['phases']
             connection.execute('UPDATE acquisition_attempts SET phases=%s WHERE id=%s', (Jsonb((phases + [phase])[-100:]), attempt_id))
             if support is not None:
                 connection.execute('UPDATE acquisition_attempts SET publication_support=%s WHERE id=%s', (Jsonb([asdict(s) for s in support]), attempt_id))
-        self._notify(task_id, actor)
+        self._notify(execution)
 
-    def _finish(self, task_id, attempt_id, coverage, actor, execution, *, outcome, failure_phase=None, failure_code=None, publication_id=None):
+    def _finish(self, execution, attempt_id, coverage, *, outcome, failure_phase=None, failure_code=None):
         with execution.transaction('completion') as connection:
             connection.execute("UPDATE acquisition_tasks SET status=%s,outcome=%s,progress=%s,coverage=%s,failure_phase=%s,failure_code=%s,finished_at=now() WHERE id=%s",
-                               ('failed' if outcome == 'failure' else 'completed', outcome, Jsonb({'phase': 'completed'}), Jsonb(coverage), failure_phase, failure_code, task_id))
+                               ('failed' if outcome == 'failure' else 'completed', outcome, Jsonb({'phase': 'completed'}), Jsonb(coverage), failure_phase, failure_code, execution.task_id))
             phases = connection.execute('SELECT phases FROM acquisition_attempts WHERE id=%s', (attempt_id,)).fetchone()['phases']
             connection.execute('UPDATE acquisition_attempts SET finished_at=now(),phases=%s WHERE id=%s', (Jsonb((phases + ['completed'])[-100:]), attempt_id))
-            if publication_id:
-                connection.execute('INSERT INTO acquisition_task_publications(task_id,publication_id) VALUES (%s,%s) ON CONFLICT DO NOTHING', (task_id, publication_id))
-            connection.execute('INSERT INTO task_completion_events(task_id,created_at) SELECT id,finished_at FROM acquisition_tasks WHERE id=%s ON CONFLICT (task_id) DO NOTHING', (task_id,))
-        self._notify(task_id, actor)
+            connection.execute('INSERT INTO task_completion_events(task_id,created_at) SELECT id,finished_at FROM acquisition_tasks WHERE id=%s ON CONFLICT (task_id) DO NOTHING', (execution.task_id,))
+        self._notify(execution)
 
     @staticmethod
     def _coverage(report, requested_inputs):
@@ -158,13 +156,14 @@ class OfflineTaskWorker:
                     return self.tasks.read(task_id, actor)
                 if self.on_execution:
                     self.on_execution(execution)
-                result = self._run_one(task_id, actor, execution)
+                result = self._run_one(execution)
         except _ObserverFailure as error:
             raise error.cause
         # Waiting/recoverable reads must observe the released ownership session.
         return self.tasks.read(task_id, actor) if result['outcome'] is None else result
 
-    def _run_one(self, task_id, actor, execution):
+    def _run_one(self, execution):
+        task_id, actor = execution.task_id, execution.actor
         with execution.transaction('attempt') as connection:
             row = connection.execute('SELECT * FROM acquisition_tasks WHERE id=%s AND workspace_id=%s FOR UPDATE', (task_id, self.workspace_id)).fetchone()
             if row['outcome'] is not None:
@@ -187,7 +186,7 @@ class OfflineTaskWorker:
                                    (Jsonb(resumed_by), attempt_id))
         registry = AdapterRegistry()
         control = self.costs.route_control('fixture-json', actor)
-        collector = _ControlledCollector(self.collector, self.costs, control, task_id, attempt, actor, execution) if control else self.collector
+        collector = _ControlledCollector(self.collector, self.costs, control, attempt, execution) if control else self.collector
         registry.register('fixture-json', collector, JsonFixtureMapper())
         runner = IngestionRunner(self.evidence, CanonicalWriter(self.db), registry)
         phase = 'collection'
@@ -198,9 +197,12 @@ class OfflineTaskWorker:
         failed_phase, code = row['failure_phase'], row['failure_code']
         try:
             publications = KnowledgePublications(self.db, self.workspace_id)
-            published = publications.find_request(f'task:{task_id}', actor, include_synthetic=True)
+            phase = 'publication'
+            with execution.transaction('publication_recovery') as connection:
+                published = self.tasks.read_committed_publication(task_id, actor, connection=connection)
             if not published:
                 if attempt['publication_support'] is None:
+                    phase = 'collection'
                     with Path(row['manifest_path']).open('rb') as source:
                         raw = source.read(1_048_577)
                     if hashlib.sha256(raw).hexdigest() != row['manifest_hash']:
@@ -208,13 +210,13 @@ class OfflineTaskWorker:
 
                     def committed(commit_phase, observation_id):
                         counts = self._coverage(runner.inspect(run_id), len(row['scope']['references']))
-                        self._checkpoint(task_id, attempt_id, commit_phase, counts, actor, execution, observation_id=observation_id)
+                        self._checkpoint(execution, attempt_id, commit_phase, counts, observation_id=observation_id)
 
                     report = runner.resume(run_id, on_commit=committed, transaction=execution.transaction)
                     phase = 'ingestion'
                     coverage = self._coverage(report, len(row['scope']['references']))
                     if report['waiting']:
-                        self._checkpoint(task_id, attempt_id, 'waiting', coverage, actor, execution, waiting=report['waiting'])
+                        self._checkpoint(execution, attempt_id, 'waiting', coverage, waiting=report['waiting'])
                         return self.tasks.read(task_id, actor)
                     failed_phase = code = None
                     if report['issues'] or report['status'] != 'completed':
@@ -227,30 +229,36 @@ class OfflineTaskWorker:
                     coverage.update(eligible_members=len(support), unchanged_members=len(support) - len(new_support),
                                     ineligible_observations=report['applied'] - len(support), unpublished_members=len(new_support))
                     support = new_support
-                    self._checkpoint(task_id, attempt_id, 'publication_prepared', coverage, actor, execution, support=support,
+                    self._checkpoint(execution, attempt_id, 'publication_prepared', coverage, support=support,
                                      failure_phase=failed_phase, failure_code=code)
                 else:
                     phase = 'publication'
                     support = tuple(SupportReference(s['observation_id'], s['derivation_id'], tuple(s['assertion_ids']), tuple(s['metric_ids'])) for s in attempt['publication_support'])
                 if not support:
-                    self._finish(task_id, attempt_id, coverage, actor, execution, outcome='failure' if code else 'no_usable_update', failure_phase=failed_phase, failure_code=code)
+                    self._finish(execution, attempt_id, coverage, outcome='failure' if code else 'no_usable_update', failure_phase=failed_phase, failure_code=code)
                     return self.tasks.read(task_id, actor)
                 with execution.transaction('publication') as connection:
                     published = publications.publish(support, actor, request_id=f'task:{task_id}', include_synthetic=True, connection=connection)
-                self._notify(task_id, actor, phase='publication_committed', publication_id=published['publication_id'])
+                    if published['status'] != 'published':
+                        raise EvidenceError('publication_request_conflict')
+                    # This task-owned receipt shares the actual publication commit;
+                    # a public caller choosing the request text cannot create it.
+                    connection.execute('INSERT INTO acquisition_task_publications(task_id,publication_id) VALUES (%s,%s)',
+                                       (task_id, published['publication_id']))
+                self._notify(execution, phase='publication_committed', publication_id=published['publication_id'])
                 coverage['published_members'] = len(support)
             else:
                 coverage['published_members'] = published['coverage']['members']
             coverage['unpublished_members'] = 0
-            self._finish(task_id, attempt_id, coverage, actor, execution, outcome='partial_update' if code else 'usable_update',
-                         failure_phase=failed_phase, failure_code=code, publication_id=published['publication_id'])
+            self._finish(execution, attempt_id, coverage, outcome='partial_update' if code else 'usable_update',
+                         failure_phase=failed_phase, failure_code=code)
         except _CostDispatchBlocked as blocked:
             result = blocked.result
             coverage = self._coverage(runner.inspect(run_id), len(row['scope']['references']))
-            self._checkpoint(task_id, attempt_id, 'waiting', coverage, actor, execution,
+            self._checkpoint(execution, attempt_id, 'waiting', coverage,
                              waiting={'reason': result['reason'], 'operation_id': result['operation_id'],
                                       'resumable': result['status'] == 'refused', 'allowance': result['allowance']})
         except (EvidenceError, OSError, ValueError, KeyError, TypeError) as error:
             code = error.code if isinstance(error, EvidenceError) else 'offline_input_unavailable'
-            self._finish(task_id, attempt_id, coverage, actor, execution, outcome='failure', failure_phase=phase, failure_code=code)
+            self._finish(execution, attempt_id, coverage, outcome='failure', failure_phase=phase, failure_code=code)
         return self.tasks.read(task_id, actor)

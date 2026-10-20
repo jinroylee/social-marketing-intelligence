@@ -5,6 +5,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 import uuid
+from contextlib import nullcontext
 from typing import Any
 
 from psycopg.types.json import Jsonb
@@ -15,6 +16,7 @@ from smi_ingestion.contracts import RunLimits
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
+from smi_ingestion.support import IngestedEvidence, SupportReference
 from smi_knowledge import KnowledgePublications
 
 from .contracts import EnrichmentProposal, OfflineRoute, TaskAuthority
@@ -67,9 +69,8 @@ class AcquisitionTasks:
                 return {'status': 'duplicate', 'task_id': str(prior['id'])}
             # Pin admission to a still-current brief without allowing a concurrent edit
             # to authorize work against a different campaign question.
-            current = connection.execute('SELECT brief_version FROM campaigns WHERE id=%s AND workspace_id=%s FOR SHARE', (campaign_id, self.workspace_id)).fetchone()
-            if current is None or current['brief_version'] != brief['version']:
-                raise EvidenceError('brief_version_conflict')
+            CampaignStore(self.db, self.workspace_id).require_current_brief(
+                campaign_id, brief_id, actor, expected_version=brief['version'], connection=connection)
             task_id = str(uuid.uuid4())
             connection.execute('INSERT INTO acquisition_tasks(id,workspace_id,request_id,request_digest,origin,campaign_id,brief_id,initiator_id,initiator_kind,scope_version,scope,limits,manifest_path,manifest_hash) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                                (task_id, self.workspace_id, request_id, request_digest, 'campaign', campaign_id, brief_id, actor.actor_id, actor.kind, self.scope_version, Jsonb(scope), Jsonb(limits), str(path), digest))
@@ -222,7 +223,13 @@ class AcquisitionTasks:
         coverage = dict(row['coverage'])
         publication_ids = [str(p['publication_id']) for p in publications]
         if row['outcome'] is None and progress.get('phase') == 'publication_prepared':
-            committed = KnowledgePublications(self.db, self.workspace_id).find_request(f'task:{task_id}', actor, include_synthetic=True)
+            try:
+                committed = self.read_committed_publication(task_id, actor)
+            except EvidenceError as error:
+                if error.code != 'publication_request_conflict':
+                    raise
+                committed = None
+                publication_ids = []
             if committed:
                 progress = {'phase': 'publication_committed', 'publication_id': committed['publication_id']}
                 coverage.update(published_members=committed['coverage']['members'], unpublished_members=0)
@@ -240,6 +247,39 @@ class AcquisitionTasks:
                 'attempts': [{'attempt_id': str(a['id']), 'number': a['number'], 'run_id': str(a['run_id']),
                               'producer': {'actor_id': a['producer_id'], 'kind': a['producer_kind']}, 'resumed_by': a['resumed_by'], 'recovery_count': a['recovery_count'], 'publication_support': a['publication_support'], 'phases': a['phases'],
                               'started_at': a['started_at'].isoformat(), 'finished_at': a['finished_at'].isoformat() if a['finished_at'] else None} for a in attempts]}
+
+    def read_committed_publication(self, task_id: str, actor: ActorContext, *, connection=None) -> dict[str, Any] | None:
+        """Reopen only a publication receipted by this task's fenced worker commit.
+
+        Exact durable prepared support must match both the publication and the
+        attempt's ingestion run. Request text alone cannot authorize adoption;
+        missing/mismatched ownership raises ``publication_request_conflict``.
+        Source-free validation preserves historical effects after policy changes.
+        """
+        actor.require_workspace(self.workspace_id)
+        task_id = str(uuid.UUID(task_id))
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
+            publication = KnowledgePublications(self.db, self.workspace_id).find_request(
+                f'task:{task_id}', actor, include_synthetic=True, connection=connection)
+            if publication is None:
+                return None
+            attempt = connection.execute(
+                'SELECT a.* FROM acquisition_attempts a JOIN acquisition_tasks t ON t.id=a.task_id '
+                'WHERE t.id=%s AND t.workspace_id=%s ORDER BY a.number DESC LIMIT 1', (task_id, self.workspace_id),
+            ).fetchone()
+            receipt = connection.execute('SELECT publication_id FROM acquisition_task_publications WHERE task_id=%s AND publication_id=%s',
+                                         (task_id, publication['publication_id'])).fetchone()
+            if (receipt is None or attempt is None or not attempt['publication_support']
+                    or publication['support'] != attempt['publication_support'] or publication['interpretation_ids']):
+                raise EvidenceError('publication_request_conflict')
+            support = tuple(SupportReference(s['observation_id'], s['derivation_id'], tuple(s['assertion_ids']), tuple(s['metric_ids']))
+                            for s in attempt['publication_support'])
+            try:
+                IngestedEvidence(self.db, self.workspace_id).require_run_support(
+                    str(attempt['run_id']), support, actor, include_synthetic=True, connection=connection)
+            except EvidenceError as error:
+                raise EvidenceError('publication_request_conflict') from error
+        return publication
 
     def resolve_cost_attribution(self, task_id: str, attempt_id: str, actor: ActorContext) -> dict[str, str]:
         """Validate source-free accounting references through the owning task interface."""

@@ -157,6 +157,12 @@ class ReviewApp:
                 submitted = {**submitted, "text": [""]}
         return self.page("Measurement and learning", planning_views.planning_page(campaign, current, records, self.csrf, submitted, kind, error), status)
 
+    def _task_page(self, campaign_id, submitted=None, error=None, status=200):
+        campaign, brief = self._campaign(campaign_id)
+        if submitted:
+            brief = next((b for b in campaign['briefs'] if b['id'] == one(submitted, 'brief_id')), brief)
+        return self.page("Submit offline acquisition", task_views.submit_form(campaign, brief, self.csrf, self.tasks.route, submitted, error), status)
+
     def handle(self, method: str, target: str, form: dict[str, list[str]] | None = None) -> Response:
         """Route validated requests; surface sanitized errors and preserve recoverable edits."""
         parsed = urlsplit(target)
@@ -172,6 +178,15 @@ class ReviewApp:
             status = 503 if isinstance(error, psycopg.Error) else 404 if code.endswith("not_found") else 409 if "conflict" in code else 422
             if method == "POST" and form is not None and not isinstance(error, psycopg.Error):
                 try:
+                    if path == "/proposals":
+                        return self.page("Supply enrichment proposal", proposal_views.supplied_form(self.csrf, self.tasks.route, form, code), status)
+                    match = re.fullmatch(r"/proposals/([^/]+)/approve", path)
+                    if match:
+                        proposal = self.tasks.read_proposal(identifier(match[1]), self.actor)
+                        return self.page("Review enrichment proposal", proposal_views.detail(proposal, self.csrf, form, code), status)
+                    match = re.fullmatch(r"/campaigns/([^/]+)/tasks", path)
+                    if match:
+                        return self._task_page(identifier(match[1]), form, code, status)
                     if path == "/knowledge/search":
                         return self.page("Search current knowledge", query_views.search_form(self.csrf, form, code), status)
                     if path == "/campaigns":
@@ -223,8 +238,7 @@ class ReviewApp:
             return self.page("Offline acquisition task", task_views.detail(self.tasks.read(identifier(match[1]), self.actor)))
         match = re.fullmatch(r"/campaigns/([^/]+)/tasks/new", path)
         if match:
-            campaign, brief = self._campaign(identifier(match[1]))
-            return self.page("Submit offline acquisition", task_views.submit_form(campaign, brief, self.csrf, self.tasks.route))
+            return self._task_page(identifier(match[1]))
         if path == "/knowledge/search":
             return self.page("Search current knowledge", query_views.search_form(self.csrf))
         match = re.fullmatch(r"/knowledge/results/([^/]+)", path)
