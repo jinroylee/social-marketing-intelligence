@@ -105,3 +105,7 @@ An operator-configured service/provider, currency and accounting period with exp
 
 **Cost operation**:
 A stable workspace/request-bound accounting identity with actor, method and cost scope, optionally validated against an exact acquisition task/attempt. Equivalent model operations retain attribution without requiring an acquisition task.
+
+
+**Synthetic monetary admission**:
+A shared allowance decision for simulated metered work within one explicit cost scope. Its monetary ceiling includes measured spending and all outstanding commitments; task approval remains separate, and forecast-only scopes receive no monetary enforcement claim.

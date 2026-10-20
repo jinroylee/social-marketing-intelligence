@@ -10,7 +10,7 @@ Keep investigations, knowledge search and publication list/detail pages independ
 
 Save supplied immutable proposals and approve their displayed scope only through the configured human action. Reopen approval-only interrupted actions with their durable request identity; render exact task/proposal links and keep conversation generation outside this surface. Submit configured offline campaign tasks through `AcquisitionTasks` and render source-free task/run/publication lineage independently through task list/detail routes. The server chooses the synthetic fixture route, actor and origin; form fields cannot grant origin, approval or live-collector authority. Acknowledgment does not execute the worker.
 
-Render `/costs` and task cost/detail routes through `UsageAccounting`, showing synthetic measurements separately from forecasts, declared commitments and unknown/failure coverage. Compose the task owner's public attribution resolver at this boundary; forms cannot configure rates or assert usage.
+Render `/costs` and task cost/detail routes through `UsageAccounting`, showing synthetic measurements separately from forecasts, declared commitments and unknown/failure coverage. Compose the task owner's public attribution resolver at this boundary; forms cannot configure rates, ceilings or route bindings, or assert usage. Render actual scope allowance and operation admission status; show enforced synthetic control only for configured metered scopes and preserve forecast/unknown coverage.
 
 Render `/inbox` and completion detail through `CompletionInbox`, including only its currently permitted publication links. Keep historical published counts separate from current availability and retain the task link when support becomes unavailable.
 

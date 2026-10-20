@@ -600,6 +600,35 @@ A terminal outcome, attempt completion, task/publication link and one `task_comp
 erDiagram
     cost_scopes ||--o{ cost_operations : classifies
     cost_operations ||--o{ cost_entries : records
+    cost_scopes ||--o| cost_ceilings : controls
+    cost_scopes ||--o{ cost_route_controls : binds
+    cost_operations ||--o| cost_admissions : dispatches
+    cost_ceilings {
+        text workspace_id PK, FK
+        text scope_id PK, FK
+        numeric amount
+        boolean paused
+        text operator_id
+        timestamptz updated_at
+    }
+    cost_route_controls {
+        text workspace_id PK, FK
+        text adapter_id PK
+        text scope_id FK
+        numeric max_units
+        text operator_id
+        timestamptz created_at
+    }
+    cost_admissions {
+        text workspace_id PK, FK
+        uuid operation_id PK, FK
+        numeric max_units
+        numeric reserved_amount
+        text state
+        text reason
+        jsonb dispatched_by
+        timestamptz updated_at
+    }
     cost_scopes {
         text workspace_id PK
         text scope_id PK
@@ -631,11 +660,11 @@ erDiagram
 
 `cost_scopes.configuration` explicitly persists immutable provider/service, metered or forecast-only classification, currency, UTC period, and synthetic unit/rate version/rate where applicable. The configuring human and time are retained. Scope identity is workspace-local; changed configuration conflicts. `cost_operations` pins one workspace/request identity to that scope, actual actor/method and either both exact task/attempt IDs or neither. Task references are logical, validated through the public task owner's injected resolver rather than a cross-owner foreign key or direct SQL. This preserves acyclic module dependencies and equivalent model attribution without a task.
 
-`cost_entries` has a workspace-global measurement identity and composite operation/workspace foreign key. `kind` separates usage, forecast, declared outstanding commitment, unknown and meter failure. The body stores canonical exact decimal strings, actual recorder, provenance and measurement time; usage adds unit/rate/version, derived amount and synthetic basis; forecasts require assumptions. Repeated identities reconcile once and changed reuse conflicts without overwriting history. Totals remain per-operation/currency/period and missing categories remain unknown. Declared commitments remain outstanding until a future explicit reconciliation/release contract; usage does not retire them. No ceiling or admission is installed. See [the accounting contract](costs.md).
+`cost_entries` has a workspace-global measurement identity and composite operation/workspace foreign key. `kind` separates usage, forecast, declared outstanding commitment, unknown and meter failure. The body stores canonical exact decimal strings, actual recorder, provenance and measurement time; usage adds unit/rate/version, derived amount and synthetic basis; forecasts require assumptions. Repeated identities reconcile once and changed reuse conflicts without overwriting history. Totals remain per-operation/currency/period and missing categories remain unknown. Declared commitments remain outstanding until a future explicit reconciliation/release contract; usage does not retire them. `cost_ceilings` holds current trusted amount/pause control for that exact immutable currency/period scope. `cost_route_controls` permanently binds the installed synthetic fixture route to one scope and its one-request service contract. `cost_admissions` has one row per operation and a bounded reservation plus dispatched/settled/refused state, reason and actual dispatcher. The scope row serializes ledger writes, decisions and settlement across connections; no transaction spans simulated I/O. Settlement appends usage and replaces only its own dispatched reservation, never legacy declarations. Session-loss uncertainty retains liabilities and pauses replay. See [the accounting contract](costs.md).
 
 ## Accepted future operational records
 
-These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication, exact query results and campaign and exactly approved assistant offline task/attempt paths. Synthetic accounting is also installed above; ceiling/admission and the broader operational relationships below remain conceptual.
+These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication, exact query results and campaign and exactly approved assistant offline task/attempt paths. Synthetic accounting and bounded ceiling/admission are installed above; commercial reconciliation and the broader operational relationships below remain conceptual.
 
 ```mermaid
 erDiagram
@@ -671,4 +700,4 @@ A ranked recommendation can be saved automatically as a shortlist revision with 
 
 Monitoring observations and alert support have their own bounded lifecycle and source policy. Selected promotion does not require every X post to become a full KB entity. Detection windows retain baseline/method/time/coverage context; an alert investigation can read existing publications without initiating external acquisition.
 
-Spend measurements distinguish actual derived charges from forecasts, with currency, unit/rate versions, accounting periods, task/attempt attribution and meter provenance. Configured metered scopes have ceilings and coordinated in-flight commitments/reconciliation; unmeterable portions retain forecasts. These relationships do not claim current monetary enforcement, particular ceiling amounts or strict bounds for unbounded/delayed provider charges.
+Spend measurements distinguish actual derived charges from forecasts, with currency, unit/rate versions, accounting periods, task/attempt attribution and meter provenance. Configured metered scopes have ceilings and coordinated in-flight commitments/reconciliation; unmeterable portions retain forecasts. These future commercial relationships do not extend the installed bounded synthetic enforcement to unbounded/delayed provider charges or prescribe particular ceiling amounts.

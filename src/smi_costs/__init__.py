@@ -1,6 +1,7 @@
-"""Attributable synthetic usage and separately declared cost uncertainty."""
+"""Attributable synthetic usage and shared bounded dispatch admission."""
 
 from .contracts import CostScope
 from .store import UsageAccounting
+from .admission import SyntheticOperationAdapter, SyntheticResult
 
-__all__ = ['CostScope', 'UsageAccounting']
+__all__ = ['CostScope', 'UsageAccounting', 'SyntheticOperationAdapter', 'SyntheticResult']

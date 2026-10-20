@@ -13,7 +13,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Shared knowledge](knowledge.md) | Brand/Product references, caption interpretations, dependency cleanup and translation-assisted review packets |
 | [Source integrations](source-integrations.md) | Implemented route capabilities, retained verification evidence and remaining discovery/readiness work |
 | [Offline acquisition tasks](tasks.md) | Campaign and exact approved-proposal durable submission, bounded synthetic worker and exact outcomes |
-| [Offline cost accounting](costs.md) | Attributable synthetic measured usage, forecasts, declared commitments, uncertainty and local cost detail |
+| [Offline cost accounting](costs.md) | Attributable synthetic usage, forecasts, shared bounded admission, retained commitments/uncertainty and local cost detail |
 | [Campaign decisions](campaigns.md) | Current versioned campaign workflow and future ranked recommendations with automatic shortlist persistence |
 | [Independent monitoring](monitoring.md) | Investigation scopes, literal snapshot findings, counts and policy-aware history |
 | [Measurement and feedback](planning.md) | Proposed campaign plans and human decision-note revisions |
@@ -26,6 +26,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Automatic shortlist persistence](adr/0003-automatic-shortlist-persistence.md) | Why saving generated recommendations requires no human review or approval |
 | [Lightweight monitoring evidence](adr/0004-lightweight-monitoring-evidence.md) | Why X detection owns bounded recent evidence separately from full KB publication |
 | [Task session effect ownership](adr/0005-task-session-effect-ownership.md) | Why each task's execution lock and effect transactions share one PostgreSQL session |
+| [Bounded synthetic admission](adr/0006-bounded-synthetic-admission.md) | Why scope decisions and ledger writes share a lock while uncertain dispatches keep their commitments |
 
 The root [glossary](../GLOSSARY.md) defines domain language; the [README](../README.md) explains local commands.
 

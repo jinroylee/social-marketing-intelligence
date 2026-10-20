@@ -10,6 +10,7 @@ from typing import Any
 from psycopg.types.json import Jsonb
 
 from smi_campaigns import CampaignStore
+from smi_costs import UsageAccounting
 from smi_ingestion.contracts import RunLimits
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
@@ -33,6 +34,7 @@ class AcquisitionTasks:
         """Install tasks after ingestion, knowledge and campaign migrations."""
         with self.db.connect() as connection:
             connection.execute(Path(__file__).with_name('schema.sql').read_text())
+        UsageAccounting(self.db, self.workspace_id).migrate()
 
     def submit_campaign(self, campaign_id: str, actor: ActorContext, *, brief_id: str, purpose: str, request_id: str) -> dict[str, Any]:
         """Persist acknowledgment before I/O; the trusted campaign establishes origin."""

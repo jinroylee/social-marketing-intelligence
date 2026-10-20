@@ -3,12 +3,14 @@
 from collections.abc import Callable
 from dataclasses import asdict
 import hashlib
+import json
 from pathlib import Path
 import uuid
 from typing import Any
 
 from psycopg.types.json import Jsonb
 
+from smi_costs import UsageAccounting, SyntheticOperationAdapter, SyntheticResult
 from smi_ingestion.adapters.json_fixture import JsonFixtureMapper
 from smi_ingestion.adapters.local import LocalFileCollector
 from smi_ingestion.adapters.registry import AdapterRegistry
@@ -28,6 +30,37 @@ from .execution import TaskExecution
 class _ObserverFailure(Exception):
     def __init__(self, cause: Exception):
         self.cause = cause
+
+
+class _CostDispatchBlocked(RuntimeError):
+    def __init__(self, result):
+        self.result = result
+
+
+class _ControlledCollector:
+    """Composition of exact task authority, execution fencing and one-use cost control."""
+
+    def __init__(self, collector, accounting, control, task_id, attempt, actor, execution):
+        self.collector, self.accounting, self.control = collector, accounting, control
+        self.task_id, self.attempt, self.actor, self.execution = task_id, attempt, actor, execution
+
+    def collect(self, manifest, checkpoint, limits):
+        # One invocation may make at most one synthetic request, including waits.
+        # The persisted checkpoint identifies that dispatch across worker recovery.
+        identity = hashlib.sha256(json.dumps(checkpoint, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+        adapter = SyntheticOperationAdapter(self.accounting, self.control['scope_id'], max_units=self.control['max_units'])
+
+        def call(bound):
+            batch = self.collector.collect(manifest, checkpoint, RunLimits(1, limits.max_pages, limits.max_records, limits.max_bytes))
+            requests = sum(item.request_attempts for item in batch.items) if batch.items else batch.request_attempts
+            return SyntheticResult(batch, requests)
+
+        result = adapter.execute(self.actor, request_id=f'task:{self.task_id}:{identity}', method='fixture-dispatch-v1', call=call,
+                                 task_id=self.task_id, attempt_id=str(self.attempt['id']), transaction=self.execution.transaction,
+                                 operation_actor=ActorContext(self.accounting.workspace_id, self.attempt['producer_id'], self.attempt['producer_kind']))
+        if result['status'] != 'executed':
+            raise _CostDispatchBlocked(result)
+        return result['value']
 
 
 class OfflineTaskWorker:
@@ -50,9 +83,8 @@ class OfflineTaskWorker:
         self.evidence = EvidenceStore(db, evidence_root)
         self.on_progress = on_progress
         self.on_execution, self.before_commit = on_execution, before_commit
-        registry = AdapterRegistry()
-        registry.register('fixture-json', collector or LocalFileCollector('fixture-json'), JsonFixtureMapper())
-        self.runner = IngestionRunner(self.evidence, CanonicalWriter(db), registry)
+        self.collector = collector or LocalFileCollector('fixture-json')
+        self.costs = UsageAccounting(db, workspace_id, task_attribution=self.tasks.resolve_cost_attribution)
 
     def _notify(self, task_id, actor, *, phase=None, publication_id=None):
         if self.on_progress:
@@ -153,6 +185,11 @@ class OfflineTaskWorker:
                 resumed_by = (attempt['resumed_by'] + [{'actor_id': actor.actor_id, 'kind': actor.kind}])[-20:]
                 connection.execute('UPDATE acquisition_attempts SET resumed_by=%s,recovery_count=recovery_count+1 WHERE id=%s',
                                    (Jsonb(resumed_by), attempt_id))
+        registry = AdapterRegistry()
+        control = self.costs.route_control('fixture-json', actor)
+        collector = _ControlledCollector(self.collector, self.costs, control, task_id, attempt, actor, execution) if control else self.collector
+        registry.register('fixture-json', collector, JsonFixtureMapper())
+        runner = IngestionRunner(self.evidence, CanonicalWriter(self.db), registry)
         phase = 'collection'
         coverage = row['coverage'] or {'collected_observations': 0, 'ingested_observations': 0, 'published_members': 0,
                                        'requested_inputs': len(row['scope']['references']),
@@ -170,10 +207,10 @@ class OfflineTaskWorker:
                         raise EvidenceError('input_changed')
 
                     def committed(commit_phase, observation_id):
-                        counts = self._coverage(self.runner.inspect(run_id), len(row['scope']['references']))
+                        counts = self._coverage(runner.inspect(run_id), len(row['scope']['references']))
                         self._checkpoint(task_id, attempt_id, commit_phase, counts, actor, execution, observation_id=observation_id)
 
-                    report = self.runner.resume(run_id, on_commit=committed, transaction=execution.transaction)
+                    report = runner.resume(run_id, on_commit=committed, transaction=execution.transaction)
                     phase = 'ingestion'
                     coverage = self._coverage(report, len(row['scope']['references']))
                     if report['waiting']:
@@ -207,6 +244,12 @@ class OfflineTaskWorker:
             coverage['unpublished_members'] = 0
             self._finish(task_id, attempt_id, coverage, actor, execution, outcome='partial_update' if code else 'usable_update',
                          failure_phase=failed_phase, failure_code=code, publication_id=published['publication_id'])
+        except _CostDispatchBlocked as blocked:
+            result = blocked.result
+            coverage = self._coverage(runner.inspect(run_id), len(row['scope']['references']))
+            self._checkpoint(task_id, attempt_id, 'waiting', coverage, actor, execution,
+                             waiting={'reason': result['reason'], 'operation_id': result['operation_id'],
+                                      'resumable': result['status'] == 'refused', 'allowance': result['allowance']})
         except (EvidenceError, OSError, ValueError, KeyError, TypeError) as error:
             code = error.code if isinstance(error, EvidenceError) else 'offline_input_unavailable'
             self._finish(task_id, attempt_id, coverage, actor, execution, outcome='failure', failure_phase=phase, failure_code=code)

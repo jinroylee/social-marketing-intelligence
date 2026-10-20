@@ -15,7 +15,7 @@ from .contracts import CostScope, amount, decimal, text, timestamp
 
 
 class UsageAccounting:
-    """Persist source-free costs in one workspace, without admitting chargeable work.
+    """Persist source-free costs and authoritative bounded synthetic allowance in one workspace.
 
     Inject the task owner's public attribution resolver when creating task-linked
     operations. Reads need no resolver; immutable attribution remains auditable.
@@ -40,6 +40,88 @@ class UsageAccounting:
             if prior['configuration'] != document:
                 raise EvidenceError('cost_scope_conflict')
         return document
+
+    def _lock_scope(self, connection, scope_id):
+        row = connection.execute('SELECT scope_id FROM cost_scopes WHERE workspace_id=%s AND scope_id=%s FOR UPDATE',
+                                 (self.workspace_id, scope_id)).fetchone()
+        if row is None:
+            raise EvidenceError('cost_scope_not_found')
+
+    def configure_route(self, adapter_id: str, scope_id: str, actor: ActorContext, *, max_units: str | Decimal | int) -> dict:
+        """Bind the synthetic worker route immutably to its trusted one-call meter."""
+        actor.require_workspace(self.workspace_id, importing=True)
+        units = decimal(max_units)
+        if adapter_id != 'fixture-json' or units != 1:
+            raise EvidenceError('unsupported_cost_route_contract')
+        with self.db.connect() as connection:
+            self._lock_scope(connection, scope_id)
+            connection.execute('INSERT INTO cost_route_controls(workspace_id,adapter_id,scope_id,max_units,operator_id) VALUES (%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING',
+                               (self.workspace_id, adapter_id, scope_id, units, actor.actor_id))
+            prior = connection.execute('SELECT * FROM cost_route_controls WHERE workspace_id=%s AND adapter_id=%s',
+                                       (self.workspace_id, adapter_id)).fetchone()
+            if prior['scope_id'] != scope_id or prior['max_units'] != units:
+                raise EvidenceError('cost_route_conflict')
+        return {'adapter_id': adapter_id, 'scope_id': scope_id, 'max_units': amount(units)}
+
+    def route_control(self, adapter_id: str, actor: ActorContext) -> dict | None:
+        """Read persisted operator binding; callers cannot omit it on recovery."""
+        actor.require_workspace(self.workspace_id)
+        with self.db.connect() as connection:
+            row = connection.execute('SELECT * FROM cost_route_controls WHERE workspace_id=%s AND adapter_id=%s',
+                                     (self.workspace_id, adapter_id)).fetchone()
+        return {'adapter_id': adapter_id, 'scope_id': row['scope_id'], 'max_units': amount(row['max_units'])} if row else None
+
+    def configure_ceiling(self, scope_id: str, actor: ActorContext, *, amount: str | Decimal | int,
+                          currency: str, period_start: str, period_end: str, paused: bool = False) -> dict:
+        """Set trusted metered control for the exact immutable currency and period."""
+        actor.require_workspace(self.workspace_id, importing=True)
+        value = decimal(amount)
+        if type(paused) is not bool:
+            raise EvidenceError('invalid_cost_pause')
+        with self.db.connect() as connection:
+            self._lock_scope(connection, scope_id)
+            scope = self._scope(connection, scope_id)
+            if scope['classification'] != 'metered':
+                raise EvidenceError('cost_scope_not_metered')
+            if (currency != scope['currency'] or timestamp(period_start) != timestamp(scope['period_start'])
+                    or timestamp(period_end) != timestamp(scope['period_end'])):
+                raise EvidenceError('cost_ceiling_scope_mismatch')
+            connection.execute('INSERT INTO cost_ceilings(workspace_id,scope_id,amount,paused,operator_id) VALUES (%s,%s,%s,%s,%s) '
+                               'ON CONFLICT (workspace_id,scope_id) DO UPDATE SET amount=excluded.amount,paused=excluded.paused,operator_id=excluded.operator_id,updated_at=now()',
+                               (self.workspace_id, scope_id, value, paused, actor.actor_id))
+            return self._allowance(connection, scope_id)
+
+    def allowance(self, scope_id: str, actor: ActorContext) -> dict:
+        """Read authoritative full-scope spend and all unresolved commitments."""
+        actor.require_workspace(self.workspace_id)
+        with self.db.connect() as connection:
+            self._lock_scope(connection, scope_id)
+            return self._allowance(connection, scope_id)
+
+    def _allowance(self, connection, scope_id):
+        scope = self._scope(connection, scope_id)
+        control = connection.execute('SELECT * FROM cost_ceilings WHERE workspace_id=%s AND scope_id=%s',
+                                     (self.workspace_id, scope_id)).fetchone()
+        entries = connection.execute('SELECT e.kind,e.body FROM cost_entries e JOIN cost_operations o ON o.id=e.operation_id '
+                                     'WHERE o.workspace_id=%s AND o.scope_id=%s', (self.workspace_id, scope_id)).fetchall()
+        pending = connection.execute("SELECT a.reserved_amount FROM cost_admissions a JOIN cost_operations o ON o.id=a.operation_id "
+                                     "WHERE o.workspace_id=%s AND o.scope_id=%s AND a.state='dispatched'", (self.workspace_id, scope_id)).fetchall()
+        with localcontext(Context(prec=80)):
+            actual = sum((Decimal(e['body']['amount']) for e in entries if e['kind'] == 'usage'), Decimal(0))
+            declared = sum((Decimal(e['body']['amount']) for e in entries if e['kind'] == 'commitment'), Decimal(0))
+            outstanding = declared + sum((Decimal(p['reserved_amount']) for p in pending if p['reserved_amount'] is not None), Decimal(0))
+            available = max(Decimal(0), control['amount'] - actual - outstanding) if control else None
+        metered = scope['classification'] == 'metered'
+        reason = ('cost_control_missing' if metered and not control else 'cost_scope_paused' if control and control['paused']
+                  else 'cost_coverage_unavailable' if metered and any(e['kind'] in {'unknown', 'meter_failure'} for e in entries) else None)
+        return {'scope_id': scope_id, 'currency': scope['currency'], 'period_start': scope['period_start'], 'period_end': scope['period_end'],
+                'classification': scope['classification'], 'ceiling_amount': amount(control['amount']) if control else None,
+                'paused': control['paused'] if control else False,
+                'operator_id': control['operator_id'] if control else None,
+                'updated_at': control['updated_at'].isoformat() if control else None,
+                'actual_amount': amount(actual), 'outstanding_amount': amount(outstanding), 'declared_commitment_amount': amount(declared),
+                'available_amount': amount(available) if available is not None else None,
+                'enforced_monetary_control': metered and control is not None, 'blocked_reason': reason}
 
     def begin_operation(self, scope_id: str, actor: ActorContext, *, request_id: str, method: str,
                         task_id: str | None = None, attempt_id: str | None = None) -> dict:
@@ -144,16 +226,22 @@ class UsageAccounting:
     def _record(self, operation_id: str, actor: ActorContext, measurement_id: str, kind: str, body: dict) -> dict:
         actor.require_workspace(self.workspace_id)
         text(measurement_id, 'measurement_id')
-        body = {**body, 'recorder': {'actor_id': actor.actor_id, 'kind': actor.kind}}
         with self.db.connect() as connection:
-            connection.execute('SELECT pg_advisory_xact_lock(hashtext(%s))', (f'cost-measurement:{self.workspace_id}:{measurement_id}',))
-            prior = connection.execute('SELECT * FROM cost_entries WHERE workspace_id=%s AND measurement_id=%s', (self.workspace_id, measurement_id)).fetchone()
-            if prior:
-                if str(prior['operation_id']) != operation_id or prior['kind'] != kind or prior['body'] != body:
-                    raise EvidenceError('cost_measurement_conflict')
-                return {'status': 'duplicate', 'measurement_id': measurement_id}
-            connection.execute('INSERT INTO cost_entries(workspace_id,measurement_id,operation_id,kind,body) VALUES (%s,%s,%s,%s,%s)',
-                               (self.workspace_id, measurement_id, operation_id, kind, Jsonb(body)))
+            operation = connection.execute('SELECT scope_id FROM cost_operations WHERE workspace_id=%s AND id=%s',
+                                           (self.workspace_id, operation_id)).fetchone()
+            self._lock_scope(connection, operation['scope_id'])
+            return self._insert_entry(connection, operation_id, actor, measurement_id, kind, body)
+
+    def _insert_entry(self, connection, operation_id, actor, measurement_id, kind, body):
+        body = {**body, 'recorder': {'actor_id': actor.actor_id, 'kind': actor.kind}}
+        connection.execute('SELECT pg_advisory_xact_lock(hashtext(%s))', (f'cost-measurement:{self.workspace_id}:{measurement_id}',))
+        prior = connection.execute('SELECT * FROM cost_entries WHERE workspace_id=%s AND measurement_id=%s', (self.workspace_id, measurement_id)).fetchone()
+        if prior:
+            if str(prior['operation_id']) != operation_id or prior['kind'] != kind or prior['body'] != body:
+                raise EvidenceError('cost_measurement_conflict')
+            return {'status': 'duplicate', 'measurement_id': measurement_id}
+        connection.execute('INSERT INTO cost_entries(workspace_id,measurement_id,operation_id,kind,body) VALUES (%s,%s,%s,%s,%s)',
+                           (self.workspace_id, measurement_id, operation_id, kind, Jsonb(body)))
         return {'status': 'recorded', 'measurement_id': measurement_id}
 
     def list(self, actor: ActorContext, *, task_id: str | None = None) -> list[dict]:
@@ -180,7 +268,12 @@ class UsageAccounting:
             row = connection.execute('SELECT * FROM cost_operations WHERE workspace_id=%s AND id=%s', (self.workspace_id, operation_id)).fetchone()
             if row is None:
                 raise EvidenceError('cost_operation_not_found')
+            # Keep the displayed admission and full-scope totals on the same
+            # stable ledger frontier as a concurrent reservation settlement.
+            self._lock_scope(connection, row['scope_id'])
             scope = self._scope(connection, row['scope_id'])
+            admission = connection.execute('SELECT max_units,reserved_amount,state,reason FROM cost_admissions WHERE workspace_id=%s AND operation_id=%s', (self.workspace_id, operation_id)).fetchone()
+            allowance = self._allowance(connection, row['scope_id'])
             entries = connection.execute('SELECT * FROM cost_entries WHERE workspace_id=%s AND operation_id=%s ORDER BY recorded_at,measurement_id', (self.workspace_id, operation_id)).fetchall()
         entries = [{'measurement_id': e['measurement_id'], 'kind': e['kind'], **e['body'], 'recorded_at': e['recorded_at'].isoformat()} for e in entries]
         actual = [Decimal(e['amount']) for e in entries if e['kind'] == 'usage']
@@ -198,4 +291,5 @@ class UsageAccounting:
                 'created_at': row['created_at'].isoformat(), 'entries': entries,
                 'actuals': {'amount': total, 'synthetic': True, 'commercial_charge': False},
                 **estimates, 'coverage': {'status': status, 'unknown_cost': status != 'synthetic_measured'},
-                'enforced_monetary_control': False}
+                'admission': {k: amount(v) if isinstance(v, Decimal) else v for k, v in admission.items()} if admission else None,
+                'allowance': allowance, 'enforced_monetary_control': allowance['enforced_monetary_control']}

@@ -109,7 +109,7 @@ The browser sends a form to [`ReviewApp`](../src/smi_review/app.py). That applic
 | **Human inclusion reason / cite relevance support / acknowledge unknowns** | Record why you selected an account, what supports that reason and what you still do not know. Checking an unknown box acknowledges a gap; it does not resolve it. | `views.comparison_page`; `CampaignStore.save_shortlist`; `shortlist_selections` |
 | **Save draft / confirm shortlist** | Save working choices, or explicitly record your reviewed exploratory selection. Confirmation is an internal decision, not creator consent or campaign execution. | `shortlist_revisions`, `shortlist_selections` |
 | **Saved shortlist / successor revision** | Reopen the exact saved membership and reviewer. A later edit creates another revision. Current evidence availability is checked when reopening. | `views.shortlist_page`; `CampaignStore.read_shortlist` |
-| **Costs** | Inspect synthetic measured usage separately from forecasts, declared outstanding commitments and unknown/meter-failure coverage. | [`UsageAccounting`](../src/smi_costs/store.py); immutable `cost_scopes`, `cost_operations`, `cost_entries` |
+| **Costs** | Inspect synthetic measured usage separately from forecasts, declared outstanding commitments and unknown/meter-failure coverage. | [`UsageAccounting`](../src/smi_costs/store.py); scopes/operations/entries plus ceilings, route controls and one-use admissions |
 | **Completion inbox** | Reopen one durable completion per task with actual coverage and current permitted publication navigation. | [`CompletionInbox`](../src/smi_tasks/notifications/store.py); source-free `task_completion_events` |
 | **Knowledge search** | Filter current committed permitted publications, inspect freshness and unknowns, and reopen exact saved support. Scan/result limits are explicit. | [`query_views`](../src/smi_review/query_views.py), [`KnowledgeQueries`](../src/smi_knowledge/queries/store.py) |
 | **Knowledge publications** | Reopen committed bounded selections, exact support and current unavailable/superseded states. Publish explicitly through the operator CLI. | [`publication_views`](../src/smi_review/publication_views.py), [`KnowledgePublications`](../src/smi_knowledge/publications/store.py) |
@@ -166,7 +166,7 @@ Owner: [`smi_tasks`](../src/smi_tasks/schema.sql); [public task contract](tasks.
 | `acquisition_task_publications` | One task's exact committed usable publication link. | Task T produced publication P; fetch-only input produces no such link. |
 | `task_completion_events` | One source-free event identity/task/time, committed with a terminal outcome; one unique event per task. | Reopen usable, partial, no-update or failure in **Inbox** after restart, with historical coverage and current permitted publication links. |
 
-### Offline cost accounting — 3 tables
+### Offline cost accounting — 6 tables
 
 Owner: [`smi_costs`](../src/smi_costs/schema.sql); [public accounting contract](costs.md).
 
@@ -175,6 +175,10 @@ Owner: [`smi_costs`](../src/smi_costs/schema.sql); [public accounting contract](
 | `cost_scopes` | Immutable workspace/scope configuration: provider/service, classification, currency/period, synthetic unit/rate/version, configuring human/time. | An operator's simulated unit rate for one accounting month; no invented commercial price. |
 | `cost_operations` | Stable workspace/request identity with actual actor/method, configured scope and optional validated exact task/attempt pair. | A synthetic model operation with no task, or a measurement attributed to the original worker attempt. |
 | `cost_entries` | Workspace-unique measurement identity, operation, distinct usage/forecast/declared-commitment/unknown/meter-failure kind, exact decimal inputs and provenance/time/recorder. | Three synthetic units at 0.125 derive 0.375; forecasts and unresolved declared commitments remain separate. |
+
+| `cost_ceilings` | Current trusted scope amount, pause state, configuring human/time; scope fixes currency/period. | 0.125 synthetic allowance admits one bounded request costing 0.125. |
+| `cost_route_controls` | Immutable workspace fixture-route binding, exact cost scope and one-request bound. | Every campaign/approved-assistant worker reopens the configured guard after restart. |
+| `cost_admissions` | One bounded dispatch per operation, reserved amount, dispatched/settled/refused state, reason and actual dispatcher. | A lost response retains its commitment; another worker pauses instead of charging again. |
 
 ### Shared business vocabulary, interpretations, publication and queries — 10 tables
 

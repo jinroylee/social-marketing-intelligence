@@ -32,3 +32,35 @@ CREATE TABLE IF NOT EXISTS cost_entries (
     PRIMARY KEY (workspace_id, measurement_id),
     FOREIGN KEY (workspace_id, operation_id) REFERENCES cost_operations(workspace_id, id)
 );
+CREATE TABLE IF NOT EXISTS cost_ceilings (
+    workspace_id text NOT NULL,
+    scope_id text NOT NULL,
+    amount numeric NOT NULL CHECK (amount >= 0),
+    paused boolean NOT NULL DEFAULT false,
+    operator_id text NOT NULL,
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (workspace_id, scope_id),
+    FOREIGN KEY (workspace_id, scope_id) REFERENCES cost_scopes(workspace_id, scope_id)
+);
+CREATE TABLE IF NOT EXISTS cost_admissions (
+    workspace_id text NOT NULL,
+    operation_id uuid NOT NULL,
+    max_units numeric NOT NULL CHECK (max_units >= 0),
+    reserved_amount numeric,
+    state text NOT NULL CHECK (state IN ('dispatched','settled','refused')),
+    reason text,
+    dispatched_by jsonb NOT NULL,
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (workspace_id, operation_id),
+    FOREIGN KEY (workspace_id, operation_id) REFERENCES cost_operations(workspace_id, id)
+);
+CREATE TABLE IF NOT EXISTS cost_route_controls (
+    workspace_id text NOT NULL,
+    adapter_id text NOT NULL,
+    scope_id text NOT NULL,
+    max_units numeric NOT NULL CHECK (max_units = 1),
+    operator_id text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (workspace_id, adapter_id),
+    FOREIGN KEY (workspace_id, scope_id) REFERENCES cost_scopes(workspace_id, scope_id)
+);
