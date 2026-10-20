@@ -1,6 +1,6 @@
 # Proposed operational implementation tickets
 
-Status: draft for breakdown review. None of these tickets has been published or marked ready-for-agent.
+Status: approved breakdown. Tickets 01–10 are resolved; tickets 11–39 are published in issues/ for sequential continuation. Draft files remain historical proposals; issue files own execution state.
 
 Source: [Operational implementation specification](../../docs/implementation-spec.md). Read the accepted requirements and ADRs referenced there when implementing a slice. This breakdown covers the whole spec; it is not permission to implement it during ticket generation.
 

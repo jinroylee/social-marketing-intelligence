@@ -26,3 +26,9 @@
 - Original-baseline standards/spec reviews found three standards findings and one publication-ownership defect; all were repaired in one implementer context and verified with 325 integration tests.
 - Publication recovery now requires an atomic task receipt plus exact prepared support and source-run lineage, while current policy still governs values.
 - Live operations, commercial billing reconciliation and tickets after 10 remain outside this completed batch.
+
+## Remaining-ticket continuation
+
+- Tickets 11–39 are approved and published. The previous first-ten manifest/reports remain completed history.
+- Ticket13 explicitly requires current primary-provider contract verification; no existing model/provider configuration or captured primary model contract was found in repository text. Read-only documentation clarification is pending while ticket11 proceeds offline.
+- Tickets24/25/34 require actual live prerequisites; ticket39 explicitly requires a named real human reviewer. Simulated tests cannot create those readiness/usefulness receipts.

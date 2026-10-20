@@ -1,0 +1,234 @@
+{
+  "status": "active",
+  "original_review_baseline": "6220fff49b5b8e982ef5a8d54b7c788e45b0f648",
+  "continuation_start_commit": "532e6072b37bad64049345bae630ef6fb193a78a",
+  "integration_branch": "integration/operational-tickets-11-39",
+  "prior_batch_manifest": "execution-manifest.json",
+  "approved_tickets": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39
+  ],
+  "preferred_order": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39
+  ],
+  "dependencies": {
+    "11": [
+      10
+    ],
+    "12": [
+      1
+    ],
+    "13": [
+      11,
+      12
+    ],
+    "14": [
+      3,
+      12
+    ],
+    "15": [
+      14
+    ],
+    "16": [
+      13,
+      15
+    ],
+    "17": [
+      15
+    ],
+    "18": [
+      3,
+      6
+    ],
+    "19": [
+      15,
+      18
+    ],
+    "20": [
+      8,
+      19
+    ],
+    "21": [
+      18
+    ],
+    "22": [
+      21
+    ],
+    "23": [
+      18
+    ],
+    "24": [
+      7,
+      11,
+      23
+    ],
+    "25": [
+      22,
+      24
+    ],
+    "26": [
+      24
+    ],
+    "27": [
+      3,
+      13
+    ],
+    "28": [
+      5,
+      8,
+      27
+    ],
+    "29": [
+      1
+    ],
+    "30": [
+      8,
+      29
+    ],
+    "31": [
+      13,
+      30
+    ],
+    "32": [
+      3,
+      30
+    ],
+    "33": [
+      2,
+      29
+    ],
+    "34": [
+      7,
+      11,
+      29
+    ],
+    "35": [
+      3
+    ],
+    "36": [
+      35
+    ],
+    "37": [
+      6,
+      9
+    ],
+    "38": [
+      16,
+      27,
+      31
+    ],
+    "39": [
+      20,
+      28,
+      32,
+      38
+    ]
+  },
+  "ticket_files": [
+    "11-reconcile-delayed-charges-and-failed-meters.md",
+    "12-save-visible-executable-campaign-criteria.md",
+    "13-interpret-natural-language-criteria-with-one-metered-model.md",
+    "14-compare-eligible-accounts-from-current-knowledge.md",
+    "15-automatically-save-an-attributed-ordered-shortlist.md",
+    "16-rank-campaign-candidates-with-supported-llm-assessment.md",
+    "17-curate-generated-shortlists-without-rewriting-history.md",
+    "18-execute-bounded-offline-keyword-discovery.md",
+    "19-queue-discovery-when-campaign-coverage-is-insufficient.md",
+    "20-offer-explicit-regeneration-after-campaign-updates.md",
+    "21-schedule-offline-discovery-for-registered-keywords.md",
+    "22-enforce-the-shared-daily-unique-post-allowance.md",
+    "23-avoid-redundant-discovery-while-preserving-refresh-history.md",
+    "24-enable-one-verified-live-on-demand-discovery-route.md",
+    "25-activate-live-scheduled-discovery-within-daily-bounds.md",
+    "26-supplement-one-valuable-missing-field-and-stop-by-value.md",
+    "27-answer-free-form-questions-from-permitted-knowledge.md",
+    "28-turn-assistant-knowledge-gaps-into-approved-enrichment.md",
+    "29-collect-bounded-recent-x-evidence-offline.md",
+    "30-detect-quantitative-x-anomalies-with-retained-alerts.md",
+    "31-detect-supported-semantic-x-anomalies.md",
+    "32-explain-x-alerts-using-existing-kb-context-only.md",
+    "33-promote-selected-monitoring-evidence-into-knowledge.md",
+    "34-enable-one-verified-live-recent-x-route.md",
+    "35-search-graph-entities-and-inspect-supported-neighbors.md",
+    "36-traverse-and-filter-governed-graph-relationships.md",
+    "37-trace-tasks-through-publications-and-attributable-costs.md",
+    "38-prepare-and-validate-operational-quality-review-packets.md",
+    "39-conduct-one-attributable-operational-marketer-review.md"
+  ],
+  "execution_policy": "One active implementer at a time, fresh context/worktree per ticket, only after dependencies are resolved and integration shared checks pass. Keep external prerequisites explicit; work other dependency-ready tickets if an external gate blocks one.",
+  "testing_boundaries": "Public operations and HTTP; real PostgreSQL; simulated external I/O",
+  "external_io": "Fully offline/local, simulated transports; read-only primary-documentation clarification pending. No live/paid source/model calls or external messages.",
+  "last_verified_runtime": {
+    "checked_commit": "4575fd0ef37b6049211bf83f95940f528932ea07",
+    "integration_evidence_commit": "0bb62aef6419549a2076c98b292be23939459733",
+    "command": "UV_OFFLINE=1 uv run --locked python tools/check.py",
+    "passed_tests": 325,
+    "seconds": 269.09,
+    "focused_repair_tests": 129,
+    "real_postgresql": true,
+    "simulated_external_io": true,
+    "wheel_verified": true
+  },
+  "external_prerequisites": {
+    "13": "Current primary model contract verification and explicit model/cost configuration; documentation lookup clarification pending.",
+    "24": "Verified permitted discovery capability, source/cost configuration and explicit live-operation authorization; no fabricated readiness receipt.",
+    "25": "Verified live route and explicit scheduled-live configuration/authorization.",
+    "34": "Current primary recent-X route contract, permitted policy/configuration and explicit live authorization.",
+    "39": "Named actual human reviewer, permitted reviewed examples and actual feedback; agent output cannot substitute."
+  }
+}

@@ -1,6 +1,6 @@
 # Operational Social Marketing Intelligence — implementation specification
 
-Status: tickets 01–10 and their public-interface testing boundaries are approved for sequential offline implementation; later tickets remain draft. The product requirements below are already accepted. New implementation choices proposed by this synthesis are identified separately; this document does not claim that the target features are implemented.
+Status: all 39 tickets and their public-interface testing boundaries are approved; tickets 01–10 are resolved, and tickets 11–39 are published for sequential dependency-ordered continuation. Execution remains offline/local with simulated I/O; current primary-contract verification, live readiness and actual human review retain their explicit external prerequisites. The product requirements below are already accepted. New implementation choices proposed by this synthesis are identified separately; this document does not claim that the target features are implemented.
 
 ## Problem Statement
 
