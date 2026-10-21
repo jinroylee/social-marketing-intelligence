@@ -10,12 +10,12 @@
 
 **Scope guard:** One configured method/profile and bounded candidate batch using the established model transport; no discovery, model-driven tool loop, or new provider.
 
-- [ ] Deterministic eligibility/requirements run before the bounded LLM assessment; incomplete supported accounts remain eligible subject to explicit unknown handling.
-- [ ] The saved result records actual assessed support, candidate ordering, reasons/gaps, model/method/profile versions, and automated producer.
-- [ ] Generated judgments may cite only permitted support belonging to assessed candidates; invented accounts, unsupported reasons, and malformed output fail or remain explicitly unassessed.
-- [ ] Source content cannot change tools, task origin, approvals, scope, or spending; model failure cannot be mislabeled as successful LLM ranking.
-- [ ] All model calls use the existing metering/admission contract; retrying a completed recommendation reopens its saved revision without another model call.
-- [ ] Public recommendation and UI tests cover missing attributes, constrained criteria, empty candidates, unsupported output, withdrawal, and restart.
+- [x] Deterministic eligibility/requirements run before the bounded LLM assessment; incomplete supported accounts remain eligible subject to explicit unknown handling.
+- [x] The saved result records actual assessed support, candidate ordering, reasons/gaps, model/method/profile versions, and automated producer.
+- [x] Generated judgments may cite only permitted support belonging to assessed candidates; invented accounts, unsupported reasons, and malformed output fail or remain explicitly unassessed.
+- [x] Source content cannot change tools, task origin, approvals, scope, or spending; model failure cannot be mislabeled as successful LLM ranking.
+- [x] All model calls use the existing metering/admission contract; retrying a completed recommendation reopens its saved revision without another model call.
+- [x] Public recommendation and UI tests cover missing attributes, constrained criteria, empty candidates, unsupported output, withdrawal, and restart.
 
 **Spec coverage:** user stories 6, 8, 9, 10, 11, 14, 68; acceptance scenarios T10, T11, T12, T13 (the part exercised by this slice).
 
