@@ -21,6 +21,11 @@ def supplied_form(csrf, route, submitted=None, error=None):
         content += error_message(error)
     if route is None:
         return content + '<p>Offline task route is not configured.</p>'
+    capability = route.capability()
+    if capability['query_discovery']:
+        content += '<p>Bounded offline keyword discovery: one literal all-term caption query, exact subjects and a half-open publication-time window (at most 366 days). Synthetic source response order; market coverage remains unknown.</p>'
+    else:
+        content += f'<p>Supplied-reference collection only. Query discovery unavailable: {e(capability["unavailable_reason"])}</p>'
     content += '<form action="/proposals" method="post">' + hidden('csrf', csrf) + hidden('request_id', value(submitted, 'request_id', str(uuid.uuid4())))
     content += f'<label>Purpose<textarea name="purpose" required maxlength="1000">{e(value(submitted, "purpose"))}</textarea></label>'
     intents = [('refresh', 'Refresh'), ('fill', 'Fill gaps'), ('expansion', 'Expansion')]
@@ -30,6 +35,9 @@ def supplied_form(csrf, route, submitted=None, error=None):
     content += f'<label>Intent<select name="intent">{options(intents, intent)}</select></label>'
     content += f'<label>Subject IDs, one per line<textarea name="subject_ids">{e(value(submitted, "subject_ids"))}</textarea></label>'
     content += f'<label>Search queries, one per line<textarea name="search_queries">{e(value(submitted, "search_queries"))}</textarea></label>'
+    if capability['query_discovery']:
+        for name, label in (('published_from', 'Published from (inclusive, timestamp with timezone)'), ('published_before', 'Published before (exclusive, timestamp with timezone)')):
+            content += f'<label>{e(label)}<input name="{e(name)}" value="{e(value(submitted, name))}" required maxlength="100"></label>'
     return content + '<button type="submit">Save proposal for review</button></form>'
 
 
@@ -43,7 +51,10 @@ def detail(proposal, csrf, submitted=None, error=None):
                          ('Refresh / fill / expansion intent', proposal['scope']['intent']), ('Exact subject / search and input scope', proposal['scope']),
                          ('Limits', proposal['limits']), ('Scope version', proposal['scope_version']), ('Scope digest', proposal['scope_digest'])):
         content += f'<p>{e(label)}: {e(json.dumps(item, ensure_ascii=False))}</p>'
-    content += '<p>The synthetic fixture route reads only the listed supplied references. Search queries describe approved intent; this route does not perform query discovery. Approval does not grant live access or expand task limits.</p>'
+    if proposal['scope'].get('discovery'):
+        content += '<p>Bounded offline keyword discovery · literal-caption-subject-time-v1. All query terms, any exact subject and the half-open publication-time window select the pinned synthetic response in source response order. Capture times remain original; market coverage is unknown. Approval does not grant live access or expand limits.</p>'
+    else:
+        content += '<p>The synthetic fixture route reads only the listed supplied references. Search queries describe approved intent; this route does not perform query discovery. Approval does not grant live access or expand task limits.</p>'
     approval = proposal['approval']
     if approval:
         content += f'<p>Human approval: {e(json.dumps(approval, ensure_ascii=False))}</p>'

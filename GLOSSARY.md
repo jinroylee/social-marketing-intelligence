@@ -49,6 +49,9 @@ An ordered set of candidate accounts assessed against a campaign's criteria, wit
 **Creator discovery**:
 Finding candidate creators who are not already in the marketer's working set for a campaign. Discovery produces candidates for evaluation; it does not establish their suitability or availability.
 
+**Keyword discovery**:
+Finding source records through an explicit query, subject scope and time window with stated selection and coverage limits. A supplied reference or a successful profile lookup does not establish query discovery or complete market coverage.
+
 **Creator comparison**:
 Evaluating candidate creators against the same campaign needs using their available evidence and explicit unknowns. The candidates may come from discovery or the marketer's existing working set.
 

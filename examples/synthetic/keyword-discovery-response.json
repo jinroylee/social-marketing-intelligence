@@ -1,0 +1,37 @@
+{
+  "records": [
+    {
+      "account": {
+        "id": "keyword-creator-1",
+        "handle": "sun-care-fixture"
+      },
+      "video": {
+        "id": "keyword-post-1",
+        "author_id": "keyword-creator-1",
+        "caption": "Daily sunscreen review",
+        "published_at": "2026-10-03T00:00:00Z"
+      },
+      "subjects": [
+        "product:sunscreen"
+      ],
+      "captured_at": "2026-10-04T12:00:00Z",
+      "reference": "synthetic://video/keyword-post-1"
+    },
+    {
+      "account": {
+        "id": "keyword-creator-2"
+      },
+      "video": {
+        "id": "keyword-post-2",
+        "author_id": "keyword-creator-2",
+        "caption": "Foundation tutorial",
+        "published_at": "2026-10-03T00:00:00Z"
+      },
+      "subjects": [
+        "product:foundation"
+      ],
+      "captured_at": null,
+      "reference": "synthetic://video/keyword-post-2"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "purpose": "Find bounded sunscreen evidence",
+  "intent": "expansion",
+  "subject_ids": [
+    "product:sunscreen"
+  ],
+  "search_queries": [
+    "sunscreen review"
+  ],
+  "published_from": "2026-10-01T00:00:00Z",
+  "published_before": "2026-10-10T00:00:00Z"
+}

@@ -1,0 +1,14 @@
+{
+  "adapter": "offline-keyword-json",
+  "provider_id": "offline-synthetic-keyword",
+  "format_version": "v1",
+  "synthetic": true,
+  "policy": {
+    "context_id": "synthetic-keyword-demo",
+    "can_process": true,
+    "can_retain": true,
+    "can_display": true
+  },
+  "response_path": "keyword-discovery-response.json",
+  "response_sha256": "4b2447e0cf5d5a72969277b1fb79a8f7a4deefb34a405a5cd44317aea09c8955"
+}

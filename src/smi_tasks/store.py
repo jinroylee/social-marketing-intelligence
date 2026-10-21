@@ -13,13 +13,14 @@ from psycopg.types.json import Jsonb
 from smi_campaigns import CampaignStore
 from smi_costs import UsageAccounting
 from smi_ingestion.contracts import RunLimits
+from smi_ingestion.adapters.keyword_fixture import ROUTE
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
 from smi_ingestion.support import IngestedEvidence, SupportReference
 from smi_knowledge import KnowledgePublications
 
-from .contracts import EnrichmentProposal, OfflineRoute, TaskAuthority
+from .contracts import EnrichmentProposal, OfflineRoute, TaskAuthority, execution_configuration_digest
 from .execution import execution_is_running
 
 
@@ -53,6 +54,8 @@ class AcquisitionTasks:
         if brief is None:
             raise EvidenceError('campaign_brief_not_found')
         path, digest, manifest = self.route.snapshot()
+        if manifest['adapter'] != 'fixture-json':
+            raise EvidenceError('keyword_discovery_requires_explicit_proposal_scope')
         scope = {'campaign_id': campaign_id, 'brief_id': brief_id, 'brief_version': brief['version'],
                  'purpose': purpose, 'route': 'fixture-json', 'route_version': self.route.version,
                  'manifest_hash': digest, 'references': [item.get('reference', '') for item in manifest['items']]}
@@ -77,17 +80,23 @@ class AcquisitionTasks:
         return {'status': 'accepted', 'task_id': task_id}
 
     def save_proposal(self, proposal: EnrichmentProposal, actor: ActorContext, *, request_id: str) -> dict[str, Any]:
-        """Save an immutable supplied revision with executable fixture scope; submit no work."""
+        """Save an immutable supplied revision with exact executable offline scope; submit no work."""
         actor.require_workspace(self.workspace_id)
         proposal.validate()
         self._request_id(request_id)
         if self.route is None:
             raise EvidenceError('offline_task_route_unconfigured')
         path, manifest_hash, manifest = self.route.snapshot()
-        scope = {**asdict(proposal), 'route': 'fixture-json', 'route_version': self.route.version,
-                 'manifest_hash': manifest_hash, 'references': [i.get('reference', '') for i in manifest['items']]}
+        scope = {**proposal.document(), 'route': manifest['adapter'], 'route_version': self.route.version,
+                 'manifest_hash': manifest_hash, 'references': [i.get('reference', '') for i in manifest.get('items', [])]}
+        if manifest['adapter'] == ROUTE:
+            scope['discovery'] = proposal.keyword_scope()
+        elif proposal.published_from is not None or proposal.published_before is not None:
+            raise EvidenceError('keyword_discovery_unavailable_supplied_reference_route')
         scope = json.loads(json.dumps(scope))
         limits = asdict(self.route.limits)
+        if manifest['adapter'] == ROUTE:
+            scope['execution_digest'] = execution_configuration_digest(scope, limits, str(path))
         digest = self._digest({'workspace_id': self.workspace_id, 'scope': scope, 'limits': limits,
                                'scope_version': 'assistant-offline-v1', 'manifest_path': str(path)})
         with self.db.connect() as connection:

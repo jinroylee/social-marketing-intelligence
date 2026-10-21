@@ -109,7 +109,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--actor", default="local-marketer")
     parser.add_argument("--dsn", default=os.environ.get("SMI_DATABASE_URL", "postgresql://smi:local_only_change_me@127.0.0.1:6543/smi"))
     parser.add_argument("--schema", default=os.environ.get("SMI_DATABASE_SCHEMA"))
-    parser.add_argument("--offline-manifest", type=Path, help="Configure the fixture-json-only synthetic task route")
+    parser.add_argument("--offline-manifest", type=Path, help="Configure a synthetic supplied-reference or offline keyword task route")
     parser.add_argument("--offline-route-version", default="offline-fixture-v1")
     args = parser.parse_args(argv)
     try:

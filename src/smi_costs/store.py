@@ -52,7 +52,7 @@ class UsageAccounting:
         """Bind the synthetic worker route immutably to its trusted one-call meter."""
         actor.require_workspace(self.workspace_id, importing=True)
         units = decimal(max_units)
-        if adapter_id != 'fixture-json' or units != 1:
+        if adapter_id not in {'fixture-json', 'offline-keyword-json'} or units != 1:
             raise EvidenceError('unsupported_cost_route_contract')
         with self.db.connect() as connection:
             self._lock_scope(connection, scope_id)

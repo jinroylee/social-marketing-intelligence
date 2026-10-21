@@ -10,6 +10,7 @@ from ..contracts import ExternalKey, FieldCandidate, MetricCandidate, Normalized
 class JsonFixtureMapper:
     version = "v1"
     supported_format = "v1"
+    namespace = "fixture:public"
 
     def normalize(self, observation: RawObservation, payload: bytes) -> NormalizedBatch:
         if observation.format_version != self.supported_format or not observation.synthetic:
@@ -32,7 +33,7 @@ class JsonFixtureMapper:
             raise ValueError("author_identity_mismatch")
         if author_id is not None and not isinstance(author_id, str):
             raise ValueError("native_ids_must_be_strings")
-        namespace = "fixture:public"
+        namespace = self.namespace
         account_key = ExternalKey("tiktok", namespace, "account", account_id) if account_id else None
         author_key = ExternalKey("tiktok", namespace, "account", author_id) if author_id else None
         post_key = ExternalKey("tiktok", namespace, "content", post_id) if post_id else None

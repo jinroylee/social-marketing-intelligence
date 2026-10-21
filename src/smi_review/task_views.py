@@ -25,6 +25,8 @@ def submit_form(campaign, brief, csrf, route, submitted=None, error=None):
     if route is None:
         return content + '<p>Offline task route is not configured. Ask the local operator to configure a synthetic fixture manifest.</p>'
     _, digest, manifest = route.snapshot()
+    if route.capability()['query_discovery']:
+        return content + '<p>Keyword discovery requires an explicit query, subject and publication-time scope. <a href="/proposals/new">Supply and review an exact discovery proposal.</a></p>'
     content += '<p>This synthetic development route performs local fixture reads only. A separate bounded worker executes the queued task.</p>'
     content += f'<p>Route: fixture-json · configuration {e(route.version)} · manifest {e(digest)}</p>'
     content += f'<p>Limits: {e(json.dumps(asdict(route.limits)))}</p><p>References: {e(json.dumps([i.get("reference", "") for i in manifest["items"]]))}</p>'

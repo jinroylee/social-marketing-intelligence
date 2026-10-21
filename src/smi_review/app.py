@@ -325,11 +325,12 @@ class ReviewApp:
             raise EvidenceError("invalid_form")
         request_id = one(form, "request_id")
         if path == "/proposals":
-            if not form.keys() <= {"csrf", "request_id", "purpose", "intent", "subject_ids", "search_queries"}:
+            if not form.keys() <= {"csrf", "request_id", "purpose", "intent", "subject_ids", "search_queries", "published_from", "published_before"}:
                 raise EvidenceError("invalid_form")
             proposal = EnrichmentProposal(one(form, "purpose"), one(form, "intent"),
                 tuple(v.strip() for v in one(form, "subject_ids").splitlines() if v.strip()),
-                tuple(v.strip() for v in one(form, "search_queries").splitlines() if v.strip()))
+                tuple(v.strip() for v in one(form, "search_queries").splitlines() if v.strip()),
+                one(form, "published_from") or None, one(form, "published_before") or None)
             saved = self.tasks.save_proposal(proposal, self.actor, request_id=request_id)
             return Response(303, location=f"/proposals/{saved['proposal_id']}")
         match = re.fullmatch(r"/proposals/([^/]+)/approve", path)

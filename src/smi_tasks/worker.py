@@ -12,6 +12,7 @@ from psycopg.types.json import Jsonb
 
 from smi_costs import UsageAccounting, SyntheticOperationAdapter, SyntheticResult
 from smi_ingestion.adapters.json_fixture import JsonFixtureMapper
+from smi_ingestion.adapters.keyword_fixture import ROUTE, KeywordFixtureCollector, KeywordFixtureMapper, validate_keyword_scope
 from smi_ingestion.adapters.local import LocalFileCollector
 from smi_ingestion.adapters.registry import AdapterRegistry
 from smi_ingestion.canonical import CanonicalWriter
@@ -24,6 +25,7 @@ from smi_ingestion.support import IngestedEvidence, SupportReference
 from smi_knowledge import KnowledgePublications
 
 from .store import AcquisitionTasks
+from .contracts import OfflineRoute, execution_configuration_digest
 from .execution import TaskExecution
 
 
@@ -55,7 +57,7 @@ class _ControlledCollector:
             requests = sum(item.request_attempts for item in batch.items) if batch.items else batch.request_attempts
             return SyntheticResult(batch, requests)
 
-        result = adapter.execute(self.execution.actor, request_id=f'task:{self.execution.task_id}:{identity}', method='fixture-dispatch-v1', call=call,
+        result = adapter.execute(self.execution.actor, request_id=f'task:{self.execution.task_id}:{identity}', method='fixture-dispatch-v1' if manifest['adapter'] == 'fixture-json' else 'keyword-dispatch-v1', call=call,
                                  task_id=self.execution.task_id, attempt_id=str(self.attempt['id']), transaction=self.execution.transaction,
                                  operation_actor=ActorContext(self.accounting.workspace_id, self.attempt['producer_id'], self.attempt['producer_kind']))
         if result['status'] != 'executed':
@@ -64,7 +66,7 @@ class _ControlledCollector:
 
 
 class OfflineTaskWorker:
-    """Execute/resume one admitted task using only the synthetic fixture route.
+    """Execute/resume one admitted task using only the configured synthetic offline capabilities.
 
     ``on_progress`` observes source-free task snapshots after owner commits. Its
     exceptions propagate, leaving committed work recoverable. Publication commit
@@ -83,7 +85,7 @@ class OfflineTaskWorker:
         self.evidence = EvidenceStore(db, evidence_root)
         self.on_progress = on_progress
         self.on_execution, self.before_commit = on_execution, before_commit
-        self.collector = collector or LocalFileCollector('fixture-json')
+        self.collector = collector
         self.costs = UsageAccounting(db, workspace_id, task_attribution=self.tasks.resolve_cost_attribution)
 
     def _notify(self, execution, *, phase=None, publication_id=None):
@@ -123,14 +125,20 @@ class OfflineTaskWorker:
         self._notify(execution)
 
     @staticmethod
-    def _coverage(report, requested_inputs):
-        return {'collected_observations': report['observations'], 'ingested_observations': report['applied'],
+    def _coverage(report, requested_inputs, discovery=False):
+        coverage = {'collected_observations': report['observations'], 'ingested_observations': report['applied'],
                 'published_members': 0, 'quarantined_observations': report['quarantined'],
                 'requested_inputs': requested_inputs,
                 'remaining_inputs': max(0, requested_inputs - report['observations']) + report['quarantined'] + report['pending'],
                 'input_coverage': report['coverage'], 'scope': 'bounded_requested_input', 'market_coverage': 'unknown',
                 'requests_used': report['requests_used'], 'bytes_used': report['bytes_used'], 'issues': report['issues'],
                 'unresolved': report['unresolved'], 'missing_fields': report['missing_fields']}
+        if discovery:
+            coverage.update(scope='bounded_query_discovery',
+                            remaining_inputs=report['quarantined'] + report['pending'] + int(report['coverage'] != 'complete_for_requested_input'),
+                            latest_captured_at=report['latest_captured_at'],
+                            unassessable_records=sum(issue['code'] == 'discovery_selection_unassessable' for issue in report['issues']))
+        return coverage
 
     def run_one(self, task_id: str, actor: ActorContext) -> dict[str, Any]:
         """Resume the same attempt/run/support, or reopen a terminal outcome.
@@ -168,10 +176,10 @@ class OfflineTaskWorker:
             row = connection.execute('SELECT * FROM acquisition_tasks WHERE id=%s AND workspace_id=%s FOR UPDATE', (task_id, self.workspace_id)).fetchone()
             if row['outcome'] is not None:
                 return self.tasks.read(task_id, actor)
-            if row['origin'] not in {'campaign', 'assistant'} or row['scope']['route'] != 'fixture-json':
+            if row['origin'] not in {'campaign', 'assistant'} or row['scope']['route'] not in {'fixture-json', ROUTE}:
                 raise EvidenceError('unsupported_task_origin_or_route')
             if row['status'] == 'queued':
-                run_id = self.evidence.start_run(Path(row['manifest_path']), row['manifest_hash'], 'fixture-json', RunLimits(**row['limits']), connection=connection, workspace_id=self.workspace_id)
+                run_id = self.evidence.start_run(Path(row['manifest_path']), row['manifest_hash'], row['scope']['route'], RunLimits(**row['limits']), connection=connection, workspace_id=self.workspace_id)
                 attempt_id = str(uuid.uuid4())
                 attempt = connection.execute('INSERT INTO acquisition_attempts(id,task_id,number,run_id,producer_id,producer_kind) VALUES (%s,%s,1,%s,%s,%s) RETURNING *',
                                              (attempt_id, task_id, run_id, actor.actor_id, actor.kind)).fetchone()
@@ -184,18 +192,30 @@ class OfflineTaskWorker:
                 resumed_by = (attempt['resumed_by'] + [{'actor_id': actor.actor_id, 'kind': actor.kind}])[-20:]
                 connection.execute('UPDATE acquisition_attempts SET resumed_by=%s,recovery_count=recovery_count+1 WHERE id=%s',
                                    (Jsonb(resumed_by), attempt_id))
-        registry = AdapterRegistry()
-        control = self.costs.route_control('fixture-json', actor)
-        collector = _ControlledCollector(self.collector, self.costs, control, attempt, execution) if control else self.collector
-        registry.register('fixture-json', collector, JsonFixtureMapper())
-        runner = IngestionRunner(self.evidence, CanonicalWriter(self.db), registry)
+        discovery = row['scope']['route'] == ROUTE
+        requested_inputs = 1 if discovery else len(row['scope']['references'])
         phase = 'collection'
         coverage = row['coverage'] or {'collected_observations': 0, 'ingested_observations': 0, 'published_members': 0,
-                                       'requested_inputs': len(row['scope']['references']),
-                                       'remaining_inputs': len(row['scope']['references']),
-                                       'scope': 'bounded_requested_input', 'market_coverage': 'unknown'}
+                                       'requested_inputs': requested_inputs, 'remaining_inputs': requested_inputs,
+                                       'scope': 'bounded_query_discovery' if discovery else 'bounded_requested_input', 'market_coverage': 'unknown'}
         failed_phase, code = row['failure_phase'], row['failure_code']
         try:
+            OfflineRoute(Path(row['manifest_path']), row['scope']['route_version'], RunLimits(**row['limits'])).validate()
+            if discovery:
+                scope = dict(row['scope'])
+                digest = scope.pop('execution_digest', None)
+                if digest != execution_configuration_digest(scope, row['limits'], row['manifest_path']):
+                    raise EvidenceError('task_configuration_changed')
+                validate_keyword_scope(scope['discovery'])
+                base_collector = self.collector or KeywordFixtureCollector(scope['discovery'], scope['route_version'])
+                mapper = KeywordFixtureMapper()
+            else:
+                base_collector, mapper = self.collector or LocalFileCollector('fixture-json'), JsonFixtureMapper()
+            registry = AdapterRegistry()
+            control = self.costs.route_control(row['scope']['route'], actor)
+            collector = _ControlledCollector(base_collector, self.costs, control, attempt, execution) if control else base_collector
+            registry.register(row['scope']['route'], collector, mapper)
+            runner = IngestionRunner(self.evidence, CanonicalWriter(self.db), registry)
             publications = KnowledgePublications(self.db, self.workspace_id)
             phase = 'publication'
             with execution.transaction('publication_recovery') as connection:
@@ -207,14 +227,17 @@ class OfflineTaskWorker:
                         raw = source.read(1_048_577)
                     if hashlib.sha256(raw).hexdigest() != row['manifest_hash']:
                         raise EvidenceError('input_changed')
+                    _, _, manifest = OfflineRoute(Path(row['manifest_path']), row['scope']['route_version'], RunLimits(**row['limits'])).snapshot()
+                    if manifest['adapter'] != row['scope']['route']:
+                        raise EvidenceError('unsupported_task_route')
 
                     def committed(commit_phase, observation_id):
-                        counts = self._coverage(runner.inspect(run_id), len(row['scope']['references']))
+                        counts = self._coverage(runner.inspect(run_id), requested_inputs, discovery)
                         self._checkpoint(execution, attempt_id, commit_phase, counts, observation_id=observation_id)
 
                     report = runner.resume(run_id, on_commit=committed, transaction=execution.transaction)
                     phase = 'ingestion'
-                    coverage = self._coverage(report, len(row['scope']['references']))
+                    coverage = self._coverage(report, requested_inputs, discovery)
                     if report['waiting']:
                         self._checkpoint(execution, attempt_id, 'waiting', coverage, waiting=report['waiting'])
                         return self.tasks.read(task_id, actor)
@@ -254,7 +277,7 @@ class OfflineTaskWorker:
                          failure_phase=failed_phase, failure_code=code)
         except _CostDispatchBlocked as blocked:
             result = blocked.result
-            coverage = self._coverage(runner.inspect(run_id), len(row['scope']['references']))
+            coverage = self._coverage(runner.inspect(run_id), requested_inputs, discovery)
             self._checkpoint(execution, attempt_id, 'waiting', coverage,
                              waiting={'reason': result['reason'], 'operation_id': result['operation_id'],
                                       'resumable': result['status'] == 'refused', 'allowance': result['allowance']})
