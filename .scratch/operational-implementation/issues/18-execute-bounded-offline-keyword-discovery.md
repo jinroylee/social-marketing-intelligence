@@ -4,7 +4,7 @@
 
 **Blocked by:** 03: Search current knowledge and pin result support; 06: Recover interrupted tasks and expose partial outcomes.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -24,3 +24,10 @@
 ## Comments
 
 - Implementation and frozen offline verification are recorded in [the ticket 18 report](../reports/ticket-18.md). All technical acceptance criteria are demonstrated, including public/HTTP discovery, partial/empty/unchanged/policy outcomes, bounded source-shaped pages and recovery. The worker gate passed 469 tests in 302.95 seconds with real isolated PostgreSQL. Status remains claimed for the merger's integrated shared check and resolution.
+
+## Completion
+
+- Runtime implementation: `4255116ba1924337d6f539073d7806d22950574c`. Frozen worker checked merge: `46ac45930723bd6246f32154ebd2695e34cbb194`. Final worker head and root integrated checked commit: `6f8668e0910500f04d7912cd4c9fb5cb3396996d`, fast-forward integrated into `integration/operational-tickets-11-39`; the final worker commit changes only report/checklist metadata.
+- Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **469 tests in 297.61 seconds**; log `/tmp/smi-ticket-18-integrated-shared.log`. All acceptance criteria are checked.
+- Independently verified the wheel hash and all 27 packaged entries against integrated source bytes, sizes, hashes and declared symlink targets. [The implementation report](../reports/ticket-18.md) preserves existing worker gates and exact integrated evidence.
+- One deterministic offline discovery route uses real PostgreSQL and simulated external I/O. No real provider/model/paid call, readiness or human-quality claim, external message, push, PR or deployment occurred.
