@@ -14,7 +14,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Source integrations](source-integrations.md) | Implemented route capabilities, retained verification evidence and remaining discovery/readiness work |
 | [Offline acquisition tasks](tasks.md) | Campaign and exact approved-proposal durable submission, bounded synthetic worker and exact outcomes |
 | [Offline cost accounting](costs.md) | Attributable synthetic usage, forecasts, shared bounded admission, final-evidence reconciliation, meter recovery and local cost detail |
-| [Campaign decisions](campaigns.md) | Versioned campaign workflow, automatic deterministic shortlist persistence and future LLM ranking |
+| [Campaign decisions](campaigns.md) | Versioned campaign workflow, automatic deterministic/model-ordered shortlist persistence and bounded ranking provenance |
 | [Independent monitoring](monitoring.md) | Investigation scopes, literal snapshot findings, counts and policy-aware history |
 | [Measurement and feedback](planning.md) | Proposed campaign plans and human decision-note revisions |
 | [Local review application](local-review.md) | Browser workflow, named local actor, evidence panels, saves and failure behavior |
@@ -29,6 +29,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Bounded synthetic admission](adr/0006-bounded-synthetic-admission.md) | Why scope decisions and ledger writes share a lock while uncertain dispatches keep their commitments |
 | [Generated criteria preserve human constraints](adr/0008-generated-criteria-preserve-human-constraints.md) | Why generated additions stay separate from human briefs and require exact visible selection |
 | [Final cost evidence and meter recovery](adr/0007-final-cost-evidence-and-meter-recovery.md) | Why named liabilities require final evidence and meter health has separate operator recovery |
+| [Constrained supported ranking](adr/0009-constrained-supported-ranking.md) | Why one bounded model order uses constrained candidate-scoped judgments and durable no-reissue claims |
 
 The root [glossary](../GLOSSARY.md) defines domain language; the [README](../README.md) explains local commands.
 

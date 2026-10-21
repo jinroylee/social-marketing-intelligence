@@ -137,3 +137,30 @@ ALTER TABLE shortlist_revisions ADD COLUMN IF NOT EXISTS ordering TEXT;
 ALTER TABLE shortlist_revisions ADD COLUMN IF NOT EXISTS selection_summary JSONB;
 ALTER TABLE shortlist_selections ADD COLUMN IF NOT EXISTS position INTEGER;
 CREATE UNIQUE INDEX IF NOT EXISTS shortlist_selection_order ON shortlist_selections(revision_id,position);
+
+-- Source-derived inputs and validated judgments share candidate dependency cleanup.
+ALTER TABLE comparison_candidates ADD COLUMN IF NOT EXISTS ranking_input JSONB;
+ALTER TABLE comparison_candidates ADD COLUMN IF NOT EXISTS ranking_judgment JSONB;
+
+CREATE TABLE IF NOT EXISTS campaign_ranking_assessments (
+    id UUID PRIMARY KEY,
+    campaign_id UUID NOT NULL REFERENCES campaigns(id),
+    brief_id UUID NOT NULL REFERENCES campaign_briefs(id),
+    comparison_id UUID NOT NULL UNIQUE REFERENCES comparison_drafts(id),
+    shortlist_id UUID UNIQUE REFERENCES shortlist_revisions(id),
+    request_id TEXT NOT NULL,
+    request_digest TEXT NOT NULL,
+    producer_id TEXT NOT NULL,
+    candidate_ids UUID[] NOT NULL,
+    expected_brief_version INTEGER NOT NULL,
+    expected_shortlist_version INTEGER NOT NULL,
+    include_synthetic BOOLEAN NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('in_progress','succeeded','blocked','invalid','refused','incomplete','meter_failure','transport_uncertain','stale')),
+    reason TEXT,
+    configuration JSONB,
+    operation_id UUID,
+    usage JSONB,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    finished_at TIMESTAMPTZ,
+    UNIQUE (campaign_id, request_id)
+);

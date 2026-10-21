@@ -268,6 +268,10 @@ erDiagram
     campaigns ||--|{ campaign_briefs : described_by
     campaigns ||--o{ comparison_drafts : evaluates
     campaign_briefs ||--o{ comparison_drafts : frames
+    campaigns ||--o{ campaign_ranking_assessments : assesses
+    campaign_briefs ||--o{ campaign_ranking_assessments : pins
+    comparison_drafts ||--o| campaign_ranking_assessments : supplies
+    shortlist_revisions o|--o| campaign_ranking_assessments : saves
     campaigns ||--o{ campaign_criteria_interpretations : interprets
     campaign_briefs ||--o{ campaign_criteria_interpretations : pins
     campaign_criteria_interpretations o|--o{ comparison_drafts : selected_as
@@ -322,6 +326,27 @@ erDiagram
         timestamptz recorded_at
         timestamptz finished_at
     }
+    campaign_ranking_assessments {
+        uuid id PK
+        uuid campaign_id FK
+        uuid brief_id FK
+        uuid comparison_id FK
+        uuid shortlist_id FK
+        text request_id
+        text request_digest
+        text producer_id
+        uuid_array candidate_ids
+        int expected_brief_version
+        int expected_shortlist_version
+        boolean include_synthetic
+        text status
+        text reason
+        jsonb configuration
+        uuid operation_id
+        jsonb usage
+        timestamptz recorded_at
+        timestamptz finished_at
+    }
     comparison_drafts {
         uuid id PK
         uuid knowledge_query_result_id FK
@@ -347,6 +372,8 @@ erDiagram
         uuid account_id FK
         text origin
         jsonb body
+        jsonb ranking_input
+        jsonb ranking_judgment
     }
     comparison_support {
         bigint id PK
@@ -384,7 +411,9 @@ erDiagram
     }
 ```
 
-Campaign heads serialize brief/shortlist saves. Revision/request uniqueness separates a new automated recommendation or human decision from retries. `generated` revisions record the actual automation kind/producer, shortlist method, comparison ordering and source-free candidate/selection/exclusion/deferral summary. Selection positions are unique per revision and pinned in comparison order. Existing human draft/confirmed records retain attribution and null method/order/summary/positions; migration does not infer historical order or review. Each new brief atomically saves the human document (including optional original prose) and its exact structured executable profile, with stable criterion IDs, unknown policies and installed criteria/ranking/coverage versions. The profile is one-to-one with its brief revision and contains its exact ID/version; older rows keep a null profile rather than reconstructed history. Its current ranking is explicitly unranked and coverage descriptive. Comparisons pin exact brief/profile and knowledge IDs plus dataset digest and actual member IDs. Candidate keys retain platform/namespace/native string identity; an absent requested account has no canonical account UUID. Explicit support rows bind copied bodies and automated or human reasons to their source-policy dependencies. Purging removes the source-derived copy, not the selected membership or actor history.
+Campaign heads serialize brief/shortlist saves. Revision/request uniqueness separates a new automated recommendation or human decision from retries. `generated` revisions record the actual automation kind/producer, shortlist method, comparison ordering and source-free candidate/selection/exclusion/deferral summary. Selection positions are unique per revision and pin either deterministic comparison order or validated model assessment order. Existing human draft/confirmed records retain attribution and null method/order/summary/positions; migration does not infer historical order or review. Each new brief atomically saves the human document (including optional original prose) and its exact structured executable profile, with stable criterion IDs, unknown policies and installed criteria/ranking/coverage versions. The profile is one-to-one with its brief revision and contains its exact ID/version; older rows keep a null profile rather than reconstructed history. Its current ranking is explicitly unranked and coverage descriptive. Comparisons pin exact brief/profile and knowledge IDs plus dataset digest and actual member IDs. Candidate keys retain platform/namespace/native string identity; an absent requested account has no canonical account UUID. Explicit support rows bind copied bodies and automated or human reasons to their source-policy dependencies. Purging removes the source-derived copy, not the selected membership or actor history.
+
+`campaign_ranking_assessments` is a durable one-call claim for an exact comparison/brief/producer/request, expected heads and assessed candidate IDs. Its optional shortlist link identifies a validated automatic save; failed/interrupted claims have no saved fallback. Configuration pins actual model/method/schema/ranking profile; logical cost-operation references preserve cost ownership without cross-owner SQL. Candidate `ranking_input` and `ranking_judgment` retain only required governed input components and validated structured judgments; they share `comparison_support` cleanup. No transaction spans provider I/O. Final publication rechecks pinned support and both heads; reported consumption remains accounted for unusable results. See [the ranking contract](campaigns.md#bounded-supported-llm-ranking).
 
 ## Monitoring and planning tables
 

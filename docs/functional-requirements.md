@@ -6,7 +6,7 @@ This is the accepted target contract for the flows in [`FR.md`](../FR.md) and th
 
 | Area | Implemented now | Missing target behavior |
 | --- | --- | --- |
-| Campaign criteria and results | Typed criteria, original prose, visible exact-brief Responses interpretation preserving human constraints and bounded opt-in provider transport (tested with simulated I/O), literal judgments over frozen datasets or bounded current-KB support with incomplete-account eligibility, exact manifests, explicit gaps, automatically saved ordered deterministic shortlists and distinct human selections | Verified live receipts/account readiness and LLM assessment/ranking |
+| Campaign criteria and results | Typed criteria, original prose, visible exact-brief Responses interpretation preserving human constraints and bounded opt-in provider transport (tested with simulated I/O), literal judgments over frozen datasets or bounded current-KB support with incomplete-account eligibility, exact manifests, explicit gaps, automatically saved deterministic or validated bounded model-ordered shortlists with governed exact inputs/judgments and distinct human selections | Verified live receipts/account readiness, human ranking usefulness and richer semantic assessment |
 | Knowledge | Source identities/observations, business vocabulary, provisional span-supported caption interpretations, atomic publication, bounded literal current-KB queries and exact saved result manifests with explicit capture-age freshness | Semantic retrieval, attribute-specific freshness profiles, continuous acquisition and agentic question answering |
 | Acquisition | Bounded adapters for supplied TikTok references, snapshot import, replay/resume, canonical history and durable campaign-authorized and exactly human-approved supplied-proposal synthetic offline tasks with per-task competing-worker fencing, recovery, partial outcomes and simulated waiting | Query discovery and scheduled authority, progressive acquisition and retrieval avoidance |
 | Monitoring | Independent saved snapshot investigations with literal counts and source support | Recent X collection, quantitative/semantic anomaly methods, separate light evidence path and alerts |
@@ -26,7 +26,7 @@ No A/B/C flow is implemented end to end. The physical tables and current interfa
 6. When discovery has produced usable KB updates, notify the user and offer regeneration. Only an explicit regeneration action creates and saves a successor result. Acquisition completion does not silently alter an existing recommendation or shortlist.
 7. A result pins its actual input membership, assertion/support versions, ranking profile and method. Retrieving current knowledge must not rewrite old decisions or change imported evidence-set membership.
 
-See the [campaign contract](campaigns.md) for implemented automatic deterministic persistence, human selections and future LLM ranking. [Automatic shortlist persistence](adr/0003-automatic-shortlist-persistence.md) records the accepted authority decision.
+See the [campaign contract](campaigns.md) for implemented automatic deterministic and bounded model-ordered persistence and human selections. [Automatic shortlist persistence](adr/0003-automatic-shortlist-persistence.md) records the accepted authority decision.
 
 ## B — Agentic knowledge assistant
 

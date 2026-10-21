@@ -123,12 +123,14 @@ class CampaignStore:
             comparisons = connection.execute("SELECT id,brief_id,prepared_at,prepared_by FROM comparison_drafts "
                                              "WHERE campaign_id=%s ORDER BY prepared_at,id", (campaign_id,)).fetchall()
             interpretations = connection.execute("SELECT id FROM campaign_criteria_interpretations WHERE campaign_id=%s ORDER BY recorded_at,id", (campaign_id,)).fetchall()
+            rankings = connection.execute('SELECT id FROM campaign_ranking_assessments WHERE campaign_id=%s ORDER BY recorded_at,id', (campaign_id,)).fetchall()
             shortlists = connection.execute("SELECT id,comparison_id,brief_id,version,status,recorded_by,actor_kind,method_version,ordering,selection_summary,recorded_at "
                                             "FROM shortlist_revisions WHERE campaign_id=%s ORDER BY version", (campaign_id,)).fetchall()
         return {"campaign_id": campaign_id, "owner_id": campaign["owner_id"], "created_at": campaign["created_at"].isoformat(),
                 "brief_version": campaign["brief_version"], "shortlist_version": campaign["shortlist_version"],
                 "briefs": [{"id": str(b["id"]), "version": b["version"], "document": b["document"], "executable_profile": b["executable_profile"],
                             "recorded_by": b["recorded_by"], "recorded_at": b["recorded_at"].isoformat()} for b in briefs],
+                "ranking_assessments": [self.read_ranking_assessment(str(r["id"]), actor) for r in rankings],
                 "interpretations": [self.read_interpretation(str(row["id"]), actor) for row in interpretations],
                 "comparisons": [{**row, "id": str(row["id"]), "brief_id": str(row["brief_id"]),
                                  "prepared_at": row["prepared_at"].isoformat()} for row in comparisons],
@@ -176,7 +178,7 @@ class CampaignStore:
         in progress with unknown outcome; a new identity is an explicit new operation.
         """
         from smi_costs import UsageAccounting
-        from .interpretation import execute, METHOD_VERSION
+        from .interpretation import execute, METHOD_VERSION, SCHEMA_VERSION
         self._human(actor)
         _request(request_id)
         digest = _digest({'brief_id': brief_id, 'expected_version': expected_version, 'method': METHOD_VERSION})
@@ -197,7 +199,7 @@ class CampaignStore:
         try:
             require(self.model_route is not None and self.model_transport is not None, 'model_route_unavailable')
             require(text(self.model_credential), 'model_credential_unavailable')
-            configuration = self.model_route.document()
+            configuration = {**self.model_route.document(), 'method_version': METHOD_VERSION, 'schema_version': SCHEMA_VERSION}
             require(getattr(self.model_transport, 'execution_mode', 'simulated') == self.model_route.execution_mode,
                     'model_transport_classification_mismatch')
             if self.model_route.execution_mode == 'provider':
@@ -440,6 +442,138 @@ class CampaignStore:
             connection.execute('UPDATE campaigns SET shortlist_version=%s WHERE id=%s', (version, campaign_id))
         return {'status': 'generated', 'shortlist_id': revision_id, 'version': version}
 
+    def read_ranking_assessment(self, assessment_id: str, actor: ActorContext, *, include_synthetic: bool = False) -> dict:
+        """Reopen the exact attempt and permitted assessed inputs; retries never reconstruct them."""
+        actor.require_workspace(self.workspace_id)
+        with self.db.connect() as connection:
+            row = connection.execute('SELECT a.* FROM campaign_ranking_assessments a JOIN campaigns c ON c.id=a.campaign_id '
+                                     'WHERE a.id=%s AND c.workspace_id=%s', (assessment_id, self.workspace_id)).fetchone()
+        require(row is not None, 'ranking_assessment_not_found')
+        comparison = self.read_comparison(str(row['comparison_id']), actor, include_synthetic=include_synthetic)
+        ids = {str(cid) for cid in row['candidate_ids']}
+        return {'assessment_id': assessment_id, 'campaign_id': str(row['campaign_id']), 'brief_id': str(row['brief_id']),
+                'comparison_id': str(row['comparison_id']), 'shortlist_id': str(row['shortlist_id']) if row['shortlist_id'] else None,
+                'status': row['status'], 'reason': row['reason'], 'configuration': row['configuration'],
+                'operation_id': str(row['operation_id']) if row['operation_id'] else None, 'usage': row['usage'],
+                'producer': {'actor_id': row['producer_id'], 'kind': 'automation'},
+                'review_required': any(c['support_state'] != 'available' for c in comparison['candidates'] if c['candidate_id'] in ids),
+                'recorded_at': row['recorded_at'].isoformat(), 'finished_at': row['finished_at'].isoformat() if row['finished_at'] else None,
+                'candidates': [{'candidate_id': c['candidate_id'], 'account_key': c['account_key'], 'support_state': c['support_state'],
+                                'input': c['ranking_input'], 'judgment': c['ranking_judgment']} for c in comparison['candidates'] if c['candidate_id'] in ids]}
+
+    def recommend_ranked(
+        self, campaign_id: str, brief_id: str, actor: ActorContext, *, expected_brief_version: int,
+        expected_shortlist_version: int, request_id: str, include_synthetic: bool = False,
+        interpretation_id: str | None = None, max_age_seconds: int | None = None,
+    ) -> dict:
+        """Claim one bounded model assessment and automatically save its validated order.
+
+        Deterministic eligibility precedes dispatch. No transaction spans provider
+        I/O; exact support and both campaign heads are fenced again at publication.
+        Every claimed retry reopens its outcome, including uncertain interruptions.
+        """
+        from smi_costs import UsageAccounting
+        from .ranking import METHOD_VERSION, SCHEMA_VERSION, PROFILE, configuration, execute
+        actor.require_workspace(self.workspace_id)
+        require(actor.kind == 'automation', 'automation_action_required')
+        _request(request_id)
+        require(type(expected_brief_version) is int and expected_brief_version >= 1, 'invalid_expected_brief_version')
+        require(type(expected_shortlist_version) is int and expected_shortlist_version >= 0, 'invalid_shortlist_version')
+        digest = _digest({'brief_id': brief_id, 'expected_brief_version': expected_brief_version,
+                          'expected_shortlist_version': expected_shortlist_version, 'method': METHOD_VERSION,
+                          'interpretation_id': interpretation_id, 'include_synthetic': include_synthetic, 'max_age_seconds': max_age_seconds})
+        with self.db.connect() as connection:
+            campaign = self._campaign(connection, campaign_id, lock=True)
+            prior = connection.execute('SELECT * FROM campaign_ranking_assessments WHERE campaign_id=%s AND request_id=%s',
+                                       (campaign_id, request_id)).fetchone()
+            if prior:
+                require(prior['request_digest'] == digest and prior['producer_id'] == actor.actor_id, 'ranking_request_conflict')
+                assessment_id = str(prior['id'])
+            else:
+                self.require_current_brief(campaign_id, brief_id, actor, expected_version=expected_brief_version, connection=connection)
+                require(campaign['shortlist_version'] == expected_shortlist_version, 'shortlist_version_conflict')
+                active = connection.execute("SELECT id FROM campaign_ranking_assessments WHERE campaign_id=%s AND status='in_progress'",
+                                            (campaign_id,)).fetchone()
+                require(active is None, 'ranking_in_progress_or_uncertain')
+                prepared = self.prepare_current_comparison(campaign_id, brief_id, actor, request_id='ranking:' + str(uuid.uuid4()),
+                    include_synthetic=include_synthetic, interpretation_id=interpretation_id, max_age_seconds=max_age_seconds, connection=connection)
+                comparison_id = prepared['comparison_id']
+                draft = self._comparison(connection, comparison_id)
+                rows = connection.execute('SELECT * FROM comparison_candidates WHERE comparison_id=%s ORDER BY position', (comparison_id,)).fetchall()
+                candidates = []
+                for row in rows:
+                    if row['body']['assessment'] == 'eligible_with_explicit_gaps':
+                        item = {'candidate_id': str(row['id']), 'account_key': row['account_key'], **row['body']}
+                        candidates.append(item)
+                        connection.execute('UPDATE comparison_candidates SET ranking_input=%s WHERE id=%s', (Jsonb(item), row['id']))
+                inputs = {'brief': connection.execute('SELECT document FROM campaign_briefs WHERE id=%s', (brief_id,)).fetchone()['document'],
+                          'executable_profile': draft['executable_profile'], 'ranking_profile': PROFILE, 'candidates': candidates}
+                assessment_id = str(uuid.uuid4())
+                connection.execute('INSERT INTO campaign_ranking_assessments(id,campaign_id,brief_id,comparison_id,request_id,request_digest,producer_id,candidate_ids,expected_brief_version,expected_shortlist_version,include_synthetic,status) '
+                                   "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'in_progress')",
+                                   (assessment_id, campaign_id, brief_id, comparison_id, request_id, digest, actor.actor_id,
+                                    [c['candidate_id'] for c in candidates], expected_brief_version, expected_shortlist_version, include_synthetic))
+        if prior:
+            return self.read_ranking_assessment(assessment_id, actor, include_synthetic=include_synthetic)
+        config = {'method_version': METHOD_VERSION, 'schema_version': SCHEMA_VERSION, 'ranking_profile': PROFILE,
+                  'model_status': 'not_requested' if candidates else 'not_called_empty_batch'}
+        outcome = {'status': 'succeeded', 'reason': None, 'candidates': []}
+        if candidates:
+            try:
+                capability = self.interpretation_capability(actor)
+                require(capability['status'] == 'configured', capability['reason'])
+                config = {**configuration(self.model_route), 'model_status': 'requested'}
+                with self.db.connect() as connection:
+                    connection.execute('UPDATE campaign_ranking_assessments SET configuration=%s WHERE id=%s', (Jsonb(config), assessment_id))
+                def attach_operation(operation_id):
+                    with self.db.connect() as connection:
+                        connection.execute('UPDATE campaign_ranking_assessments SET operation_id=%s WHERE id=%s', (operation_id, assessment_id))
+                outcome = execute(self.model_route, self.model_transport, self.model_credential,
+                                  UsageAccounting(self.db, self.workspace_id), actor, assessment_id, inputs, attach_operation)
+            except EvidenceError as error:
+                reason = str(error)
+                outcome = {'status': 'meter_failure' if reason in {'synthetic_service_bound_violated', 'provider_service_bound_or_meter_violated'} else 'blocked', 'reason': reason}
+            except Exception:
+                outcome = {'status': 'transport_uncertain', 'reason': 'model_transport_outcome_unknown'}
+        with self.db.connect() as connection:
+            campaign = self._campaign(connection, campaign_id, lock=True)
+            draft = self._comparison(connection, comparison_id)
+            statuses = self._statuses(draft, actor, include_synthetic=include_synthetic, connection=connection)
+            supports = self._support(connection, comparison_id)
+            self._purge(connection, supports, statuses)
+            if outcome['status'] == 'succeeded':
+                reason = ('brief_version_conflict' if campaign['brief_version'] != expected_brief_version
+                          else 'shortlist_version_conflict' if campaign['shortlist_version'] != expected_shortlist_version
+                          else 'ranking_support_changed' if any(not statuses[str(s['observation_id'])]['can_process']
+                               or not statuses[str(s['observation_id'])]['can_retain'] or not statuses[str(s['observation_id'])]['current'] for s in supports)
+                          else None)
+                if reason:
+                    outcome = {**outcome, 'status': 'stale', 'reason': reason, 'candidates': []}
+            if outcome['status'] == 'succeeded':
+                summary = {'candidate_count': len(rows), 'selected_count': len(candidates),
+                           'excluded_count': sum(c['body']['assessment'] == 'excluded_on_required_evidence' for c in rows),
+                           'deferred_count': sum(c['body']['assessment'] == 'deferred_unknown_requirements' for c in rows),
+                           'empty_reason': None if candidates else 'required_criteria_not_met' if rows else 'no_supported_candidates_in_scope'}
+                shortlist_id, version = str(uuid.uuid4()), expected_shortlist_version + 1
+                # Shortlist request identity is server owned; outer assessment owns retries.
+                connection.execute('INSERT INTO shortlist_revisions(id,campaign_id,brief_id,comparison_id,version,status,request_id,request_digest,recorded_by,actor_kind,method_version,ordering,selection_summary) '
+                                   "VALUES (%s,%s,%s,%s,%s,'generated',%s,%s,%s,'automation',%s,%s,%s)",
+                                   (shortlist_id, campaign_id, brief_id, comparison_id, version, 'ranking:' + assessment_id, digest, actor.actor_id, METHOD_VERSION, 'llm_assessment_order' if candidates else 'empty_eligible_batch', Jsonb(summary)))
+                for position, judgment in enumerate(outcome['candidates']):
+                    cid = judgment['candidate_id']
+                    reason = 'Generated relative-fit judgment; source interpretations remain provisional. ' + ' '.join(
+                        r['criterion_id'] + ': ' + r['judgment'] + '.' for r in judgment['reasons'])
+                    citations = sorted({sid for r in judgment['reasons'] for sid in r['support_ids']})
+                    connection.execute('UPDATE comparison_candidates SET ranking_judgment=%s WHERE id=%s', (Jsonb(judgment), cid))
+                    connection.execute('INSERT INTO shortlist_selections(id,revision_id,candidate_id,position,reason,reason_basis,support_ids,acknowledged_unknowns) '
+                                       "VALUES (%s,%s,%s,%s,%s,'automated_model_judgment',%s,%s)",
+                                       (str(uuid.uuid4()), shortlist_id, cid, position, reason, citations, Jsonb([])))
+                connection.execute('UPDATE campaigns SET shortlist_version=%s WHERE id=%s', (version, campaign_id))
+                connection.execute('UPDATE campaign_ranking_assessments SET shortlist_id=%s WHERE id=%s', (shortlist_id, assessment_id))
+            connection.execute('UPDATE campaign_ranking_assessments SET status=%s,reason=%s,configuration=%s,usage=%s,finished_at=now() WHERE id=%s',
+                               (outcome['status'], outcome.get('reason'), Jsonb(config), Jsonb(outcome.get('usage')), assessment_id))
+        return self.read_ranking_assessment(assessment_id, actor, include_synthetic=include_synthetic)
+
     def _statuses(self, draft, actor, *, include_synthetic, connection):
         if draft['knowledge_query_result_id'] is None:
             return self.evidence.statuses(draft['dataset_id'], actor, include_synthetic=include_synthetic, connection=connection)
@@ -462,7 +596,7 @@ class CampaignStore:
     def _purge(connection, supports, statuses) -> None:
         affected = {str(s["candidate_id"]) for s in supports if not statuses[str(s["observation_id"])]["can_retain"]}
         if affected:
-            connection.execute("UPDATE comparison_candidates SET body=NULL WHERE id=ANY(%s::uuid[])", (list(affected),))
+            connection.execute("UPDATE comparison_candidates SET body=NULL,ranking_input=NULL,ranking_judgment=NULL WHERE id=ANY(%s::uuid[])", (list(affected),))
             connection.execute("UPDATE shortlist_selections SET reason=NULL,reason_withdrawn=TRUE WHERE candidate_id=ANY(%s::uuid[])",
                                (list(affected),))
 
@@ -500,6 +634,8 @@ class CampaignStore:
             output.append({"candidate_id": cid, "account_key": candidate["account_key"],
                            "account_id": str(candidate["account_id"]) if candidate["account_id"] else None,
                            "origin": candidate["origin"], "support_state": state, "body": body,
+                           "ranking_input": candidate["ranking_input"] if state == "available" else None,
+                           "ranking_judgment": candidate["ranking_judgment"] if state == "available" else None,
                            "evidence": [claims[str(s["interpretation_id"])] for s in dependencies
                                         if state == "available" and s["interpretation_id"] is not None]})
         return {"comparison_id": comparison_id, "campaign_id": str(draft["campaign_id"]), "brief_id": str(draft["brief_id"]),
@@ -601,11 +737,20 @@ class CampaignStore:
                              "support_ids": [str(s) for s in row["support_ids"]], "acknowledged_unknowns": row["acknowledged_unknowns"],
                              "evidence": [c for c in candidate["evidence"] if c["id"] in {str(s) for s in row["support_ids"]} and state == "available"],
                              "review_required": state != "available"})
+        with self.db.connect() as connection:
+            ranking = connection.execute('SELECT id FROM campaign_ranking_assessments WHERE shortlist_id=%s', (shortlist_id,)).fetchone()
+        assessment = self.read_ranking_assessment(str(ranking['id']), actor, include_synthetic=include_synthetic) if ranking else None
+        execution_profile = comparison['execution_profile']
+        if assessment:
+            execution_profile = {**execution_profile, 'method_version': assessment['configuration']['method_version'],
+                                 'ranking': 'validated_llm_assessment' if assessment['candidates'] else 'not_assessed_empty_batch',
+                                 'ranking_profile': assessment['configuration']['ranking_profile'],
+                                 'ordering': revision['ordering']}
         return {"shortlist_id": shortlist_id, "campaign_id": str(revision["campaign_id"]), "brief_id": str(revision["brief_id"]),
                 "comparison_id": str(revision["comparison_id"]), "version": revision["version"], "status": revision["status"],
                 "recorded_by": revision["recorded_by"], "actor_kind": revision["actor_kind"], "recorded_at": revision["recorded_at"].isoformat(),
                 "method_version": revision["method_version"], "ordering": revision["ordering"], "selection_summary": revision["selection_summary"],
-                "executable_profile": comparison["executable_profile"], "execution_profile": comparison["execution_profile"],
+                "executable_profile": comparison["executable_profile"], "execution_profile": execution_profile, "ranking_assessment": assessment,
                 "coverage": comparison["coverage"],
                 "current_shortlist_version": campaign["shortlist_version"], "selected": selected,
                 "exploratory": True, "review_required": any(s["review_required"] for s in selected)}

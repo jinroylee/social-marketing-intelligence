@@ -2,13 +2,13 @@
 
 This guide connects the browser workflow, Python modules and database using the repository's Hero Cushion sample. It describes implemented behavior; the linked contracts and SQL define the precise interfaces.
 
-The [target functional requirements](functional-requirements.md) add ranked recommendations that agents can save as shortlists without human review, an enrichment assistant, background acquisition, lightweight X alerts, graph/lineage interfaces and hybrid spending controls. LLM ranking and those broader surfaces remain future work. The browser already offers automatic deterministic shortlist persistence; the human save/confirmation steps below describe the separate human-selection workflow.
+The [target functional requirements](functional-requirements.md) add ranked recommendations that agents can save as shortlists without human review, an enrichment assistant, background acquisition, lightweight X alerts, graph/lineage interfaces and hybrid spending controls. Those broader surfaces remain future work. The browser offers automatic deterministic shortlists and bounded supported model ranking through an explicitly configured route, verified with simulated I/O; the human save/confirmation steps below describe the separate human-selection workflow.
 
 ## What the application is today
 
 The application is a working local pilot for evidence-backed marketing decisions. Browser forms perform real validation and save durable PostgreSQL records. Closing the browser or restarting the server does not erase saved work. One Python application contains the modules below; they are not separately deployed services.
 
-It can help a marketer ask a question of a selected sample, compare accounts against explicit criteria, automatically save a deterministic shortlist or save a reviewed exploratory selection, and document measurement intentions and decision notes. Its analytical methods are conservative caption rules. It does not yet establish market representativeness, creator quality, audience location or sales performance.
+It can help a marketer ask a question of a selected sample, compare accounts against explicit criteria, automatically save a deterministic or validated model-ordered shortlist, or save a reviewed exploratory selection, and document measurement intentions and decision notes. Its source interpretations use conservative caption rules; the optional model supplies relative fit order over those supported criterion states. It does not yet establish market representativeness, creator quality, audience location or sales performance.
 
 Calling it a prototype is reasonable when discussing product maturity. Calling it a working local pilot is more precise: the workflow and persistence exist, while usefulness and original-language interpretation still need human evaluation. The browser application is not an embedded AI agent.
 
@@ -89,7 +89,7 @@ The set row describes the collection; member rows specify its exact contents. Th
 
 Without fixed membership, a result that queried “all posts currently in the database” could change whenever new posts arrived. Without a pinned derivation, a parser update could silently change what an old analysis meant. The set prevents both substitutions. A changed export requires an explicit new dataset ID; the importer rejects changed bytes under the existing ID.
 
-One evidence set can support many knowledge runs, investigations and campaign comparisons. Each result records which subset its scope actually used. An ingestion run answers **which acquisition/import job ran**; an evidence set answers **which exact inputs this analysis may use**. A shortlist answers **which accounts were recommended or selected for the campaign**; the current pilot records both automatic deterministic recommendations and human selections. They are different objects.
+One evidence set can support many knowledge runs, investigations and campaign comparisons. Each result records which subset its scope actually used. An ingestion run answers **which acquisition/import job ran**; an evidence set answers **which exact inputs this analysis may use**. A shortlist answers **which accounts were recommended or selected for the campaign**; the current pilot records automatic deterministic/model-ordered recommendations and human selections. They are different objects.
 
 Fixed membership does not freeze permission to display evidence. Current source permissions can make a member unavailable; downstream explanations must respect that change. Corrections can also mark pinned support as requiring review rather than silently replacing it. See the [evidence-set contract](evidence-sets.md) and [policy ADR](adr/0002-pinned-support-current-policy.md).
 
@@ -106,6 +106,7 @@ The browser sends a form to [`ReviewApp`](../src/smi_review/app.py). That applic
 | **Prepare rule-based comparison** | Run the fixed caption interpretation and account-comparison pipeline against the chosen brief and dataset. It does not search the internet. | [`KnowledgeStore.prepare`](../src/smi_knowledge/store.py), [`build_comparison`](../src/smi_campaigns/comparison.py), `CampaignStore.prepare_comparison`; knowledge and comparison tables |
 | **Account comparison** | One card per known or dataset-supplied account in scope, showing criterion judgments and missing information. There is no universal quality score or sales ranking. | `views.comparison_page`; `comparison_candidates`, `comparison_support` |
 | **Original captions and provenance** | Inspect the original wording, highlighted supporting spans, source link, publication/capture dates and exact source references. Translation remains pending. | `views.evidence_panel`; [`EvidenceSetReader`](../src/smi_ingestion/evidence_sets/reader.py) and supported knowledge assertions |
+| **Rank and save automatically** | Apply deterministic eligibility, validate one bounded model order and save it with explicit gaps. Failed/unavailable attempts remain visible; empty batches save without a call. | `CampaignStore.recommend_ranked`; `campaign_ranking_assessments` |
 | **Recommend and save automatically** | Compare current KB and save a generated ordered shortlist with actual automation, rationale, gaps and support. Saving requires no human review; encounter order is unranked. | `CampaignStore.recommend`; `shortlist_revisions`; `shortlist_selections.position` |
 | **Human inclusion reason / cite relevance support / acknowledge unknowns** | Record why you selected an account, what supports that reason and what you still do not know. Checking an unknown box acknowledges a gap; it does not resolve it. | `views.comparison_page`; `CampaignStore.save_shortlist`; `shortlist_selections` |
 | **Save draft / confirm shortlist** | Save working choices, or explicitly record your reviewed exploratory selection. Confirmation is an internal decision, not creator consent or campaign execution. | `shortlist_revisions`, `shortlist_selections` |
@@ -132,7 +133,7 @@ The UI does not currently expose a general database browser, ingestion dashboard
 
 ## Table dictionary
 
-There are 45 implemented tables. Most are supporting records for evidence, versions and explanations, not separate user workflows. JSONB columns hold structured documents such as a brief or candidate judgment; UUID references connect those documents to their exact sources.
+There are 52 implemented tables. Most are supporting records for evidence, versions and explanations, not separate user workflows. JSONB columns hold structured documents such as a brief or candidate judgment; UUID references connect those documents to their exact sources.
 
 The examples below describe row shapes. Campaign and investigation examples are illustrative; loading the sample alone does not create them. Full columns and relationships are in the [physical ERD](data-model.md) and linked SQL.
 
@@ -202,7 +203,7 @@ Owner: [`smi_knowledge`](../src/smi_knowledge/schema.sql).
 
 These tables are shared vocabulary and supported interpretations. They are not a vector database, an LLM's memory or an agent's internal reasoning log.
 
-### Campaign questions, comparisons and decisions — 7 tables
+### Campaign questions, comparisons and decisions — 8 tables
 
 Owner: [`smi_campaigns`](../src/smi_campaigns/schema.sql).
 
@@ -210,9 +211,10 @@ Owner: [`smi_campaigns`](../src/smi_campaigns/schema.sql).
 | --- | --- | --- |
 | `campaigns` | A human-owned campaign workspace with current brief/shortlist version counters. | C1: an investigation of potential Hero Cushion accounts for Japan. |
 | `campaign_briefs` | One immutable human question, optional original prose and structured executable-profile snapshot pinned to this exact brief/version, with author/time. Older rows retain a null profile. | Brief v1: stable product/script/audience criteria and unknown policies, `structured-caption-criteria-v1`, unranked ordering and descriptive fixed-observation coverage. |
+| `campaign_ranking_assessments` | One exact-brief/current-KB assessment claim, actual automation, bounded model/method/schema/ranking profile, usage/cost linkage, status and optional saved shortlist. | Completed retries reopen; interrupted attempts never redispatch. Required unknowns can defer all accounts without a model call. |
 | `campaign_criteria_interpretations` | One exact-brief original-prose interpretation attempt, requesting human, generated provenance, sanitized outcome, explicit model/measurement-basis/weight/bounds, usage and logical cost-operation reference. Failed/interrupted attempts cannot be silently retried or assessed. | Responses generated additions preserve human constraints; concrete provider HTTP is opt-in, and all verification is simulated with no live receipt. |
 | `comparison_drafts` | One prepared comparison's exact brief, optional explicitly selected immutable criteria interpretation, either a frozen knowledge run/dataset/digest or current-KB query-result link, actual method/execution profile, coverage and preparation actor/time. | Compare brief v1 against K1, using `campaign-caption-comparison-v1`. |
-| `comparison_candidates` | One account within that comparison: native key, campaign-relative origin, order and structured criterion judgments/unknowns. | A1: origin `both`; product mention satisfied; audience unknown. Order is not a quality ranking. |
+| `comparison_candidates` | One account within that comparison: native key, campaign-relative origin, order and structured criterion judgments/unknowns, plus governed exact ranking inputs and validated judgments when assessed. | A1: origin `both`; product mention satisfied; audience unknown. Order is not a quality ranking. |
 | `comparison_support` | A candidate's dependencies on observations, field assertions and optional knowledge interpretations. | A1's judgment depends on O1's caption interpretation and author identity assertion; metric-only support can omit a field assertion while its query manifest pins metric IDs. |
 | `shortlist_revisions` | One immutable generated, draft or confirmed event pinned to brief/comparison, with actual producer/time and optional method/order/selection outcome. Legacy human order stays unrecorded. | Shortlist v1, confirmed by a named marketer. |
 | `shortlist_selections` | One selected candidate, with generated position/rationale or human reason, cited interpretation IDs and separate human acknowledgements. Generated gaps/support reopen through the pinned comparison. | A1 selected for further investigation; fees and audience remain unknown. |
@@ -257,9 +259,9 @@ There is implemented automation: normalization, literal alias/marker matching, c
 read fixed evidence -> apply caption rules -> build comparison or summary -> save result
 ```
 
-There is no embedded LLM call, translation model, model-driven tool selection, autonomous research loop or scheduled monitoring job. The application's `local-rule-preparation` actor has kind `automation` so attribution and write permissions are explicit; that label does not imply an AI agent. The coding assistant developing this repository is separate from the running application.
+Explicit trusted model configuration enables one bounded criteria call or supported ranking call through the shared Responses route. Default startup has no model route; all verification uses simulated I/O. There is no translation model, model-driven tool selection, autonomous research loop or scheduled monitoring job. The application's `local-rule-preparation` actor has kind `automation` so attribution and write permissions are explicit; that label does not imply an AI agent. The coding assistant developing this repository is separate from the running application.
 
-The accepted target adds current-KB model assessment/ranking, conversational assistant proposals/answers, advanced shared scheduled/on-demand workers, X anomaly alerts and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. The direct supplied-proposal approval, offline task path and source-free synthetic accounting/forecast surface are present; those broader capabilities remain future work. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
+The accepted target adds conversational assistant proposals/answers, advanced shared scheduled/on-demand workers, X anomaly alerts and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. The direct supplied-proposal approval, offline task path and source-free synthetic accounting/forecast surface are present; those broader capabilities remain future work. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
 
 Marketer evaluation is a human assessment of whether the findings and decisions are useful. It is not a runtime agent or a database workflow that can manufacture its own answers. The procedure is in [quality review](evaluation.md); execution records belong in `.scratch/`.
 

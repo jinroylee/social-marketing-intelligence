@@ -2,7 +2,7 @@
 
 [`smi_review`](../src/smi_review/__init__.py) provides independent investigation and campaign workflows over public monitoring, campaign/planning, knowledge and frozen-evidence interfaces. PostgreSQL owns saved revisions; browser state is not durable.
 
-This document describes the current local browser, including automatic deterministic shortlist saves and separate human selections. The [target operational UI](functional-requirements.md) will add LLM ranking, an enrichment assistant, X alerts and graph/lineage explorers.
+This document describes the current local browser, including automatic deterministic and bounded model-ordered shortlist saves and separate human selections. The [target operational UI](functional-requirements.md) will add an enrichment assistant, X alerts and graph/lineage explorers.
 
 ## Knowledge search
 
@@ -15,6 +15,10 @@ A result page reopens exact actual support after restart and shows its producer,
 The main navigation links `/knowledge/publications`, which lists only committed, nonsynthetic publications in the local workspace. `/knowledge/publications/PUBLICATION_ID` reopens the exact selected observations, derivations, assertion/metric IDs and optional existing caption interpretations. It shows actual producer, publication/source times, mapper and interpretation versions, original coverage, current support health and unknown fields. Denied or superseded support displays metadata without source text; later publications do not replace this historical selection.
 
 Publication is an explicit trusted operation through `KnowledgePublications.publish` or the `smi-ingest publish-knowledge` CLI described in the [knowledge contract](knowledge.md#explicit-knowledge-publication). Reading a detail page does not acquire evidence or publish anything. Existing form protections and actor boundaries apply unchanged.
+
+## Bounded model ranking
+
+**Rank and save automatically** posts to same-origin CSRF-protected `/campaigns/CAMPAIGN_ID/ranked-recommendations`. It accepts only exact brief/profile/request identity and both expected heads. The server supplies the automation actor. Deterministic eligibility runs first; one configured bounded Responses call orders eligible supported accounts with constrained candidate-scoped judgments. Valid results redirect to a saved generated shortlist showing actual model/profile/method/schema, exact assessed inputs, generated rationale and unchanged gaps. No human endorsement or acknowledgement is claimed. Empty batches save without a call; failures/unavailable/stale/uncertain attempts remain visible on the campaign, with no deterministic success fallback. Exact retries reopen the original across restart; interrupted claims never redispatch. Stale forms preserve exact retry/profile/head context. Current policy hides or purges governed inputs, judgments and reasons while permitted order/provenance remains. See [the ranking contract](campaigns.md#bounded-supported-llm-ranking).
 
 ## Automatic deterministic recommendations
 
@@ -94,6 +98,7 @@ HTTP boundary errors explain that the request was not saved and provide **Open c
 | `POST /campaigns/{id}/comparisons` | Rule-based knowledge/comparison preparation with optional explicit selection of a visible saved interpretation |
 | `GET /comparisons/{id}` | Exact comparison, current evidence and versioned selection form |
 | `POST /comparisons/{id}/shortlists` | Unconfirmed draft or explicit human confirmation |
+| `POST /campaigns/{id}/ranked-recommendations` | Apply deterministic eligibility, assess one bounded model batch and automatically save valid order; failures remain visible |
 | `POST /campaigns/{id}/recommendations` | Compare current KB and automatically save an attributed ordered generated shortlist |
 | `GET /shortlists/{id}` | Exact saved revision with current support health |
 | `GET /investigations`, `GET /investigations/new`, `POST /investigations` | Independent investigation list and human scope creation |
@@ -109,7 +114,7 @@ Create/revise brief forms save optional original marketer prose alongside stable
 
 ## Accepted future application surfaces
 
-Campaign results will add LLM ranking to the installed deterministic automatic save, retaining KB support, rationale, unknowns/freshness and exact attribution. Optional richer human curation/review is distinct. Insufficient coverage shows the automatically queued discovery status; completion offers explicit regeneration rather than replacing the saved result.
+Campaign results support bounded validated LLM ranking alongside deterministic automatic save, retaining KB support, rationale, unknowns/freshness and exact attribution. Live receipts and human usefulness are not established by simulated verification. Optional richer human curation/review is distinct. Insufficient coverage shows the automatically queued discovery status; completion offers explicit regeneration rather than replacing the saved result.
 
 The assistant accepts free-form KB questions and displays scoped enrichment proposals for approval. Approval precedes task submission and binds its scope server-side. Show acknowledgment/status and completion notifications; answers use published knowledge rather than raw newly fetched tool responses. Spending-ceiling pauses and partial/failed ingestion are visible independently of approval state.
 

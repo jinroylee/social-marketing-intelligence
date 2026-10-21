@@ -4,7 +4,7 @@ The product supports evidence-backed market investigation and marketer-led campa
 
 See the [product documentation](docs/README.md) for the accepted requirements, architecture, ERDs, interface contracts and ADRs. The [source integration guide](docs/source-integrations.md) records implemented acquisition capabilities and unresolved readiness work.
 
-The [target functional requirements](docs/functional-requirements.md) extend this local pilot with KB-wide LLM ranking, an enrichment assistant, background discovery, lightweight X anomaly monitoring, graph/lineage interfaces and hybrid spending controls. Those capabilities are accepted requirements, not features provided by the commands below. The browser already saves ordered deterministic current-KB shortlists automatically with actual automation attribution and no human review or approval; human selections remain a separate workflow.
+The [target functional requirements](docs/functional-requirements.md) extend this local pilot with an enrichment assistant, background discovery, lightweight X anomaly monitoring, graph/lineage interfaces and hybrid spending controls. Those capabilities are accepted requirements, not features provided by the commands below. The browser saves deterministic current-KB shortlists and, through explicitly configured model transport, bounded validated model-ordered shortlists automatically with actual automation attribution and no human review or approval; human selections remain a separate workflow.
 
 Run `uv run --locked python tools/check.py` for lint, documentation consistency and tests. See [development verification](docs/development.md) for PostgreSQL prerequisites and static-only checks.
 
@@ -63,7 +63,7 @@ uv run smi-ingest search-knowledge --text APRILSKIN --platform tiktok --max-age-
 uv run smi-ingest inspect-query RESULT_ID
 ```
 
-The browser’s **Knowledge search** link provides the same bounded filters, capture-age freshness, unknowns and saved result. New searches require process permission plus their output-purpose permission; reopening applies current read policy without changing membership. At most 100 recent publications and 100 support members are included, with scan/result truncation explicit. Semantic search and ranking remain future work; bounded [campaign and approved-proposal offline tasks](docs/tasks.md) is installed. See the [query contract](docs/knowledge.md#bounded-current-knowledge-queries).
+The browser’s **Knowledge search** link provides the same bounded filters, capture-age freshness, unknowns and saved result. New searches require process permission plus their output-purpose permission; reopening applies current read policy without changing membership. At most 100 recent publications and 100 support members are included, with scan/result truncation explicit. Semantic search remains future work; campaign model ranking is a separate bounded operation verified with simulated I/O, and bounded [campaign and approved-proposal offline tasks](docs/tasks.md) is installed. See the [query contract](docs/knowledge.md#bounded-current-knowledge-queries).
 
 ## Offline acquisition tasks
 

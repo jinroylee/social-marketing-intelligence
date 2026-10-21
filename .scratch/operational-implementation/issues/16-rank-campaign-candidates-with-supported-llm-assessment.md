@@ -4,7 +4,7 @@
 
 **Blocked by:** 13: Interpret natural-language criteria with one metered model; 15: Automatically save an attributed ordered shortlist.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 

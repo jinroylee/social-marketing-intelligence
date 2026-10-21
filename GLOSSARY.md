@@ -44,7 +44,7 @@ A person, group, or organization that creates content, distinct from any particu
 A saved campaign-specific collection of recommended or curated platform accounts, optionally associated with corroborated creator identities, with supporting reasons and evidence. It may be saved automatically without human review or approval; inclusion does not mean the creator has agreed to participate or has been contracted.
 
 **Ranked recommendation**:
-An ordered set of candidate accounts assessed against a campaign's criteria, with its ranking basis, supporting evidence and explicit gaps. It can be saved automatically as a shortlist; optional human curation remains a separate judgment.
+An ordered set of candidate accounts assessed against a campaign's criteria, with its ranking basis, supporting evidence and explicit gaps. The installed bounded model method orders deterministically eligible current-KB accounts using constrained supported-criterion judgments; its generated relative fit is distinct from source verification or human endorsement. It can be saved automatically as a shortlist; optional human curation remains a separate judgment.
 
 **Creator discovery**:
 Finding candidate creators who are not already in the marketer's working set for a campaign. Discovery produces candidates for evaluation; it does not establish their suitability or availability.
