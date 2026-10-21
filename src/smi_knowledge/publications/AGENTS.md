@@ -11,3 +11,5 @@ Public list/read operations can join a caller-owned transaction; source and deri
 Use source-owned capture/mapping/selection content identities for `unpublished` comparisons. Require current process permission and current derivations on both sides; ingestion/publication time or new UUIDs alone cannot establish a usable task update. Preserve exact publication membership while lazily filling legacy identity metadata.
 
 Keep frozen datasets unchanged. Acquisition authority, current-KB search and consequential query-result pinning belong to their own workflows. Update the knowledge contract, physical ERD and local publication surface when changing this interface.
+
+`lock_current` serializes the workspace publication frontier through a caller commit. `publish` joins that lock before recording membership; new current-KB searches retain it through dependent comparison commits. Keep this frontier lock separate from immutable historical reads and source-policy locks.

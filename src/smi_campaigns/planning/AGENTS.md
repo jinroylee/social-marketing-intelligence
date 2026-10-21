@@ -7,3 +7,5 @@ Plans pin campaign, exact current brief and relevant shortlist. Keep proposed ou
 Notes pin a historical shortlist and human actor/time. Explicit citations must belong to that selected set; all selected candidate dependencies govern the copied note conservatively, even for uncited human wording. Source withdrawal hides notes and retention withdrawal purges their text. Preserve revision/reviewer/support metadata; permission recovery cannot reconstruct purged notes.
 
 Lock the campaign while checking expected per-record version heads and request retries. Do not call another store's private methods or weaken the human-only write boundary. Update `docs/planning.md`, architecture and ERD with changes. Verify missing outcomes, unrelated references, competing writes, history, policy cleanup and restart behavior.
+
+Read pinned dependencies and current policy through `CampaignStore.shortlist_support(..., connection=...)` for both frozen and current-KB comparisons. Join the note transaction rather than assuming every shortlist has a dataset. Metric-only dependencies can omit a field assertion; observation identity and campaign-owned query pins retain their support.

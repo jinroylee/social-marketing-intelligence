@@ -271,12 +271,13 @@ erDiagram
     campaigns ||--o{ campaign_criteria_interpretations : interprets
     campaign_briefs ||--o{ campaign_criteria_interpretations : pins
     campaign_criteria_interpretations o|--o{ comparison_drafts : selected_as
-    knowledge_runs ||--o{ comparison_drafts : supports
+    knowledge_runs o|--o{ comparison_drafts : supports
+    knowledge_query_results o|--o{ comparison_drafts : pins_current_support
     comparison_drafts ||--o{ comparison_candidates : contains
     canonical_entities o|--o{ comparison_candidates : identifies
     comparison_candidates ||--o{ comparison_support : cites
     source_observations ||--o{ comparison_support : governs
-    field_assertions ||--o{ comparison_support : supports
+    field_assertions o|--o{ comparison_support : supports
     knowledge_assertions o|--o{ comparison_support : interprets
     campaigns ||--o{ shortlist_revisions : records
     campaign_briefs ||--o{ shortlist_revisions : frames
@@ -323,6 +324,7 @@ erDiagram
     }
     comparison_drafts {
         uuid id PK
+        uuid knowledge_query_result_id FK
         uuid criteria_interpretation_id FK
         uuid campaign_id FK
         uuid brief_id FK
@@ -399,7 +401,7 @@ erDiagram
     shortlist_revisions ||--o{ decision_note_revisions : receives
     decision_note_revisions ||--o{ decision_note_support : depends_on
     source_observations ||--o{ decision_note_support : governs
-    field_assertions ||--o{ decision_note_support : supports
+    field_assertions o|--o{ decision_note_support : supports
     knowledge_assertions o|--o{ decision_note_support : interprets
 
     monitoring_investigations {
@@ -744,3 +746,5 @@ Spend measurements distinguish actual derived charges from forecasts, with curre
 Campaign criteria attempts pin exact immutable brief input and retain sanitized outcome/configuration/usage plus only a validated generated profile. `operation_id` is an accounting-owner logical reference, without a cross-owner SQL foreign key. Comparison drafts optionally pin one succeeded interpretation; null retains the original human structured-profile path. Campaign and cost SQL stay with their owners. See [the interpretation contract](campaigns.md#bounded-natural-language-interpretation).
 
 Provider cost provenance shares the same physical accounting tables. Explicit provider-basis final reconciliation and meter recovery preserve named targets, immutable original rates, overage visibility and one-use dispatch without relabelling synthetic evidence. Accounting reports its generic declared bounded-provider contract premise; the interpretation configuration owns exact verified snapshot/input/output provenance.
+
+Current-KB comparison drafts pin `knowledge_query_result_id`; their legacy `knowledge_run_id`, `dataset_id` and `dataset_digest` are null. A database check requires exactly one of these source modes. Frozen drafts keep their original run/dataset fields and a null query link. Draft coverage includes the immutable actual execution profile. `comparison_support.source_assertion_id` and `decision_note_support.source_assertion_id` are nullable for metric-only account support; the observation and linked query manifest retain exact metric/derivation identities.

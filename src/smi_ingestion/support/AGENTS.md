@@ -9,3 +9,5 @@ Expose one-way capture/mapping/selection `content_version` only for permitted su
 `require_run_support` validates exact applied support against its immutable workspace/run lineage without reading values, including after policy withdrawal or derivation supersession; it grants no publication or value-use permission. A caller-owned transaction retains source/derivation share locks through dependent commits. Return denied support as metadata-only tombstones and superseded derivations as review-required. Consumers own their retained copies and must reconcile them under source retention policy.
 
 This interface does not publish knowledge, infer business attributes, or mutate imported evidence-set membership. Update the evidence contract, architecture and physical ERD when changing ownership, limits or transaction behavior.
+
+Denied-support tombstones expose content-free current process/display/retention flags as well as derivation health. Consumers use retention flags to purge their own copies; source values, links and dates remain withheld when the requested purpose is denied.

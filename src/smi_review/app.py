@@ -133,7 +133,7 @@ class ReviewApp:
         comparison = self.campaigns.read_comparison(comparison_id, self.actor)
         campaign, _ = self._campaign(comparison["campaign_id"])
         brief = next(b for b in campaign["briefs"] if b["id"] == comparison["brief_id"])
-        source = self.evidence.read(comparison["dataset_id"], self.actor)
+        source = comparison["knowledge_query"] or self.evidence.read(comparison["dataset_id"], self.actor)
         previous = None
         if one(query, "shortlist_id"):
             previous = self.campaigns.read_shortlist(identifier(one(query, "shortlist_id")), self.actor)
@@ -200,7 +200,7 @@ class ReviewApp:
                         return self.page("Search current knowledge", query_views.search_form(self.csrf, form, code), status)
                     if path == "/campaigns":
                         return self._brief_page(None, {}, form, code, status)
-                    match = re.fullmatch(r"/campaigns/([^/]+)/interpretations", path)
+                    match = re.fullmatch(r"/campaigns/([^/]+)/(?:interpretations|current-comparisons)", path)
                     if match:
                         return self._campaign_page(identifier(match[1]), form, code, status)
                     match = re.fullmatch(r"/campaigns/([^/]+)/briefs", path)
@@ -309,7 +309,7 @@ class ReviewApp:
             campaign, _ = self._campaign(shortlist["campaign_id"])
             brief = next(b for b in campaign["briefs"] if b["id"] == shortlist["brief_id"])
             comparison = self.campaigns.read_comparison(shortlist["comparison_id"], self.actor)
-            source = self.evidence.read(comparison["dataset_id"], self.actor)
+            source = comparison["knowledge_query"] or self.evidence.read(comparison["dataset_id"], self.actor)
             return self.page("Saved shortlist", views.shortlist_page(shortlist, brief, comparison, source))
         raise EvidenceError("record_not_found")
 
@@ -405,6 +405,14 @@ class ReviewApp:
             self.campaigns.interpret_criteria(campaign_id, identifier(one(form, "brief_id")), self.actor,
                                               expected_version=int(one(form, "expected_version")), request_id=request_id)
             return Response(303, location=f"/campaigns/{campaign_id}")
+        match = re.fullmatch(r"/campaigns/([^/]+)/current-comparisons", path)
+        if match:
+            if not form.keys() <= {"csrf", "request_id", "brief_id", "interpretation_id"}:
+                raise EvidenceError("invalid_form")
+            prepared = self.campaigns.prepare_current_comparison(identifier(match[1]), identifier(one(form, "brief_id")),
+                                                                 self.worker, request_id=request_id,
+                                                                 interpretation_id=identifier(one(form, "interpretation_id")) if one(form, "interpretation_id") else None)
+            return Response(303, location=f"/comparisons/{prepared['comparison_id']}")
         match = re.fullmatch(r"/campaigns/([^/]+)/comparisons", path)
         if match:
             if not form.keys() <= {"csrf", "request_id", "brief_id", "dataset_id", "interpretation_id"}:

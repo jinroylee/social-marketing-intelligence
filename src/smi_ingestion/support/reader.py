@@ -160,7 +160,8 @@ class IngestedEvidence:
                 content_version = hashlib.sha256(json.dumps(_json_value(version), sort_keys=True, default=str).encode()).hexdigest()
                 policy = policy_from_json(row['policy'])
                 member = {**asdict(reference), 'support_status': 'current' if row['active'] else 'superseded_review_required',
-                          'availability': 'available' if policy_allows(policy, purpose) else 'unavailable'}
+                          'availability': 'available' if policy_allows(policy, purpose) else 'unavailable',
+                          'policy': {f'can_{p}': policy_allows(policy, p) for p in ('process', 'display', 'retain')}}
                 if member['availability'] == 'unavailable':
                     member['reason'] = 'source_policy_denied'
                 else:

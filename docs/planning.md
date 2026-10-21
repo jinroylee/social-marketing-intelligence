@@ -24,6 +24,6 @@ Current reads hide text under display denial or stale support. Retention withdra
 
 Plan and note heads are separate per-campaign sequences. Saves lock the campaign, check expected versions and commit atomically. Identical requests return original IDs; changed retries/stale saves fail. Successors preserve history.
 
-`CampaignPlanning.read(campaign_id, actor)` returns both histories and version heads with note cleanup. Public `CampaignStore.shortlist_support` supplies content-free pinned dependencies; callers do not query ingestion tables. Writes are human-only and reads are workspace-scoped.
+`CampaignPlanning.read(campaign_id, actor)` returns both histories and version heads with note cleanup. Public `CampaignStore.shortlist_support(..., connection=...)` supplies content-free pinned dependencies and current source-policy/derivation statuses for either frozen or current-KB comparisons, holding source locks through note commits; metric-only support needs no field assertion; callers do not query ingestion tables. Writes are human-only and reads are workspace-scoped.
 
 The [browser application](local-review.md) links measurement/notes from the campaign page, showing proposals/unknowns, human feedback and revision history separately. Recoverable errors preserve edits/version intent; note text is withheld under unavailable support. The HTTP boundary supplies the named human actor.

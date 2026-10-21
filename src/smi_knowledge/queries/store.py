@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
+from contextlib import nullcontext
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any, Literal
@@ -14,6 +15,7 @@ from psycopg.types.json import Jsonb
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
+from smi_ingestion.support import IngestedEvidence, SupportReference
 
 from ..publications import KnowledgePublications
 
@@ -136,7 +138,7 @@ class KnowledgeQueries:
         self.publications.migrate()
 
     def search(self, scope: QueryScope, actor: ActorContext, *, request_id: str,
-               purpose: Literal['display', 'process'] = 'display', include_synthetic: bool = False) -> dict[str, Any]:
+               purpose: Literal['display', 'process'] = 'display', include_synthetic: bool = False, connection=None) -> dict[str, Any]:
         """Pin the actual permitted selection; same producer/request retries stay exact."""
         actor.require_workspace(self.workspace_id)
         if purpose not in {'display', 'process'}:
@@ -146,7 +148,7 @@ class KnowledgeQueries:
         document = {'scope': scope.document(), 'purpose': purpose, 'include_synthetic': include_synthetic,
                     'producer': {'actor_id': actor.actor_id, 'kind': actor.kind}, 'method_version': self.method_version}
         digest = hashlib.sha256(json.dumps(document, sort_keys=True).encode()).hexdigest()
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             connection.execute('SELECT pg_advisory_xact_lock(hashtext(%s))', (f'knowledge-query:{self.workspace_id}:{request_id}',))
             existing = connection.execute('SELECT id,request_digest FROM knowledge_query_results WHERE workspace_id=%s AND request_id=%s', (self.workspace_id, request_id)).fetchone()
             if existing:
@@ -154,6 +156,7 @@ class KnowledgeQueries:
                     raise EvidenceError('knowledge_query_request_conflict')
                 result_id = str(existing['id'])
             else:
+                self.publications.lock_current(actor, connection=connection)
                 result_id = str(uuid.uuid4())
                 queried_at = datetime.now(timezone.utc)
                 publications = self.publications.list(actor, include_synthetic=include_synthetic,
@@ -210,15 +213,15 @@ class KnowledgeQueries:
                     connection.execute('INSERT INTO knowledge_query_members(result_id,position,publication_id,observation_id,derivation_id,assertion_ids,metric_ids,interpretation_ids,versions) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                                        (result_id, position, publication_id, member['observation_id'], member['derivation_id'],
                                         list(member['assertion_ids']), list(member['metric_ids']), [c['id'] for c in claims], Jsonb(versions)))
-        return self.read(result_id, actor, purpose=purpose, include_synthetic=include_synthetic)
+            return self.read(result_id, actor, purpose=purpose, include_synthetic=include_synthetic, connection=connection)
 
     def read(self, result_id: str, actor: ActorContext, *, purpose: Literal['display', 'process'] = 'display',
-             include_synthetic: bool = False) -> dict[str, Any]:
+             include_synthetic: bool = False, connection=None) -> dict[str, Any]:
         """Reopen exact actual support under current purpose policy, never rerunning search."""
         actor.require_workspace(self.workspace_id)
         if purpose not in {'display', 'process'}:
             raise EvidenceError('invalid_evidence_purpose')
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             row = connection.execute('SELECT * FROM knowledge_query_results WHERE id=%s AND workspace_id=%s', (result_id, self.workspace_id)).fetchone()
             if row is None:
                 raise EvidenceError('knowledge_query_result_not_found')
@@ -249,3 +252,46 @@ class KnowledgeQueries:
                 'current_coverage': {'available_members': sum(m['availability'] == 'available' for m in members),
                                      'unavailable_members': sum(m['availability'] != 'available' for m in members),
                                      'superseded_members': sum(m['support_status'] != 'current' for m in members)}}
+
+    def statuses(self, result_id: str, actor: ActorContext, *, include_synthetic: bool = False, connection=None) -> dict[str, dict[str, bool]]:
+        """Lock exact source policy/derivation health without locking interpretation copies."""
+        actor.require_workspace(self.workspace_id)
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
+            row = connection.execute('SELECT synthetic FROM knowledge_query_results WHERE id=%s AND workspace_id=%s', (result_id, self.workspace_id)).fetchone()
+            if row is None:
+                raise EvidenceError('knowledge_query_result_not_found')
+            if row['synthetic'] and not include_synthetic:
+                raise EvidenceError('synthetic_evidence_excluded')
+            rows = connection.execute('SELECT * FROM knowledge_query_members WHERE result_id=%s ORDER BY position', (result_id,)).fetchall()
+            statuses = {}
+            for selected in rows:
+                reference = SupportReference(str(selected['observation_id']), str(selected['derivation_id']),
+                                             tuple(str(i) for i in selected['assertion_ids']), tuple(str(i) for i in selected['metric_ids']))
+                member = IngestedEvidence(self.db, self.workspace_id).read((reference,), actor, include_synthetic=include_synthetic, connection=connection)[0]
+                statuses[member['observation_id']] = {**member['policy'], 'current': member['support_status'] == 'current'}
+        return statuses
+
+    def account_support(self, result: dict[str, Any], actor: ActorContext) -> dict[str, Any]:
+        """Expose stable account keys from permitted exact support, including incomplete profiles.
+
+        The input is a search/read result from this owner. Handles and source URLs
+        never establish account identity. Post author assertions and account subject
+        identities both support eligibility; metrics need no profile assertion.
+        """
+        actor.require_workspace(self.workspace_id)
+        if result['workspace_id'] != self.workspace_id:
+            raise EvidenceError('workspace_access_denied')
+        members = []
+        for member in result['members']:
+            accounts = {}
+            if member['availability'] == 'available' and member['support_status'] == 'current':
+                for item in member['assertions'] + member['metrics']:
+                    key = {field: item[field] for field in ('platform', 'namespace', 'kind', 'native_id')}
+                    if key['kind'] == 'account':
+                        accounts[json.dumps(key, sort_keys=True)] = key
+                    if item.get('field') == 'author_account' and item['state'] == 'observed':
+                        key = item['value']
+                        if isinstance(key, dict) and key.keys() == {'platform', 'namespace', 'kind', 'native_id'} and key['kind'] == 'account' and all(isinstance(v, str) and v for v in key.values()):
+                            accounts[json.dumps(key, sort_keys=True)] = key
+            members.append({**member, 'account_keys': list(accounts.values())})
+        return {**result, 'members': members}

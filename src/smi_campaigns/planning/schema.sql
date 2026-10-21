@@ -35,3 +35,6 @@ CREATE TABLE IF NOT EXISTS decision_note_support (
     source_assertion_id UUID NOT NULL REFERENCES field_assertions(id),
     interpretation_id UUID REFERENCES knowledge_assertions(id)
 );
+
+-- Source-only metric support can govern a note without a profile assertion.
+ALTER TABLE decision_note_support ALTER COLUMN source_assertion_id DROP NOT NULL;

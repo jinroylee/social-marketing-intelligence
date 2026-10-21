@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
@@ -16,9 +17,9 @@ from psycopg.types.json import Jsonb
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
-from smi_knowledge import KnowledgeStore
+from smi_knowledge import KnowledgeQueries, KnowledgeStore, QueryScope
 
-from .comparison import METHOD_VERSION, build_comparison, structured_profile
+from .comparison import CURRENT_METHOD_VERSION, METHOD_VERSION, build_comparison, structured_profile
 from .contracts import Brief, Selection, require, text
 
 
@@ -314,6 +315,74 @@ class CampaignStore:
                                        (candidate_id, dependency["observation_id"], dependency["source_assertion_id"], dependency["interpretation_id"]))
         return {"status": "prepared", "comparison_id": comparison_id, "method": "rule_based", "coverage": coverage}
 
+    def prepare_current_comparison(
+        self, campaign_id: str, brief_id: str, actor: ActorContext, *, request_id: str,
+        include_synthetic: bool = False, interpretation_id: str | None = None,
+        max_age_seconds: int | None = None,
+    ) -> dict[str, Any]:
+        """Pin a bounded current-KB comparison; retries preserve the original selection.
+
+        Publication membership, source policy and derivation health stay locked
+        through commit. No acquisition, model assessment or shortlist save occurs.
+        """
+        actor.require_workspace(self.workspace_id)
+        _request(request_id)
+        digest = _digest({'brief_id': brief_id, 'method': CURRENT_METHOD_VERSION, 'interpretation_id': interpretation_id,
+                          'include_synthetic': include_synthetic, 'max_age_seconds': max_age_seconds})
+        queries = KnowledgeQueries(self.db, self.workspace_id)
+        with self.db.connect() as connection:
+            campaign = self._campaign(connection, campaign_id, lock=True)
+            prior = connection.execute('SELECT * FROM comparison_drafts WHERE campaign_id=%s AND request_id=%s',
+                                       (campaign_id, request_id)).fetchone()
+            if prior:
+                require(prior['request_digest'] == digest and prior['prepared_by'] == actor.actor_id
+                        and prior['actor_kind'] == actor.kind, 'comparison_request_conflict')
+                return {'status': 'duplicate', 'comparison_id': str(prior['id'])}
+            row = connection.execute('SELECT * FROM campaign_briefs WHERE id=%s AND campaign_id=%s', (brief_id, campaign_id)).fetchone()
+            require(row is not None, 'campaign_brief_not_found')
+            require(row['version'] == campaign['brief_version'], 'brief_version_conflict')
+            document = row['document']
+            if interpretation_id is not None:
+                interpretation = self.read_interpretation(interpretation_id, actor)
+                require(interpretation['campaign_id'] == campaign_id and interpretation['brief_id'] == brief_id
+                        and interpretation['status'] == 'succeeded', 'criteria_interpretation_not_executable')
+                document = {**document, 'criteria': [{key: value for key, value in criterion.items() if key not in {'importance', 'basis'}}
+                                                     for criterion in interpretation['executable_profile']['criteria']]}
+            brief = Brief.from_document(document)
+            result = queries.search(QueryScope(platforms=brief.platforms, max_age_seconds=max_age_seconds), actor,
+                                    request_id=f'campaign:{campaign_id}:{_digest(request_id)}', purpose='process',
+                                    include_synthetic=include_synthetic, connection=connection)
+            support = queries.account_support(result, actor)
+            candidates, coverage = build_comparison(brief, support, support, current_knowledge=True)
+            statuses = queries.statuses(result['result_id'], actor, include_synthetic=include_synthetic, connection=connection)
+            require(all(statuses[d['observation_id']]['can_process'] and statuses[d['observation_id']]['can_retain']
+                        and statuses[d['observation_id']]['current'] for c in candidates for d in c['dependencies']),
+                    'comparison_support_changed')
+            profile = interpretation['executable_profile'] if interpretation_id is not None else row['executable_profile']
+            coverage['execution_profile'] = {'method_version': CURRENT_METHOD_VERSION, 'brief_id': brief_id, 'brief_version': row['version'],
+                                             'criteria_profile_version': profile['criteria_profile_version'] if profile else None,
+                                             'criteria_interpretation_id': interpretation_id, 'ranking': 'unranked',
+                                             'ordering': coverage['ordering'], 'coverage': 'bounded_current_knowledge'}
+            comparison_id = str(uuid.uuid4())
+            connection.execute('INSERT INTO comparison_drafts(id,campaign_id,brief_id,knowledge_query_result_id,method_version,request_id,request_digest,coverage,prepared_by,actor_kind,criteria_interpretation_id) '
+                               'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                               (comparison_id, campaign_id, brief_id, result['result_id'], CURRENT_METHOD_VERSION, request_id, digest,
+                                Jsonb(coverage), actor.actor_id, actor.kind, interpretation_id))
+            for position, candidate in enumerate(candidates):
+                candidate_id = str(uuid.uuid4())
+                connection.execute('INSERT INTO comparison_candidates(id,comparison_id,position,account_key,account_id,origin,body) VALUES (%s,%s,%s,%s,%s,%s,%s)',
+                                   (candidate_id, comparison_id, position, Jsonb(candidate['account_key']), candidate['account_id'], candidate['origin'], Jsonb(candidate['body'])))
+                for dependency in candidate['dependencies']:
+                    connection.execute('INSERT INTO comparison_support(candidate_id,observation_id,source_assertion_id,interpretation_id) VALUES (%s,%s,%s,%s)',
+                                       (candidate_id, dependency['observation_id'], dependency['source_assertion_id'], dependency['interpretation_id']))
+        return {'status': 'prepared', 'comparison_id': comparison_id, 'method': 'rule_based', 'coverage': coverage}
+
+    def _statuses(self, draft, actor, *, include_synthetic, connection):
+        if draft['knowledge_query_result_id'] is None:
+            return self.evidence.statuses(draft['dataset_id'], actor, include_synthetic=include_synthetic, connection=connection)
+        return KnowledgeQueries(self.db, self.workspace_id).statuses(str(draft['knowledge_query_result_id']), actor,
+                                                                      include_synthetic=include_synthetic, connection=connection)
+
     def _comparison(self, connection, comparison_id: str):
         row = connection.execute("SELECT d.*,COALESCE(i.executable_profile,b.executable_profile) AS executable_profile FROM comparison_drafts d JOIN campaigns c ON c.id=d.campaign_id "
                                  "JOIN campaign_briefs b ON b.id=d.brief_id LEFT JOIN campaign_criteria_interpretations i ON i.id=d.criteria_interpretation_id "
@@ -340,10 +409,15 @@ class CampaignStore:
         require(purpose in {"display", "process"}, "invalid_evidence_purpose")
         with self.db.connect() as connection:
             draft = self._comparison(connection, comparison_id)
-        knowledge = self.knowledge.read(str(draft["knowledge_run_id"]), actor, purpose=purpose, include_synthetic=include_synthetic)
-        claims = {c["id"]: c for c in knowledge["interpretations"] if c["state"] == "supported"}
-        with self.db.connect() as connection:
-            statuses = self.evidence.statuses(draft["dataset_id"], actor, include_synthetic=include_synthetic, connection=connection)
+            query = None
+            if draft['knowledge_query_result_id'] is not None:
+                query = KnowledgeQueries(self.db, self.workspace_id).read(str(draft['knowledge_query_result_id']), actor,
+                                                                          purpose=purpose, include_synthetic=include_synthetic, connection=connection)
+                knowledge = query
+            else:
+                knowledge = self.knowledge.read(str(draft["knowledge_run_id"]), actor, purpose=purpose, include_synthetic=include_synthetic)
+            claims = {c["id"]: c for c in knowledge["interpretations"] if c["state"] == "supported"}
+            statuses = self._statuses(draft, actor, include_synthetic=include_synthetic, connection=connection)
             supports = self._support(connection, comparison_id)
             self._purge(connection, supports, statuses)
             candidates = connection.execute("SELECT * FROM comparison_candidates WHERE comparison_id=%s ORDER BY position", (comparison_id,)).fetchall()
@@ -366,9 +440,10 @@ class CampaignStore:
                            "evidence": [claims[str(s["interpretation_id"])] for s in dependencies
                                         if state == "available" and s["interpretation_id"] is not None]})
         return {"comparison_id": comparison_id, "campaign_id": str(draft["campaign_id"]), "brief_id": str(draft["brief_id"]),
-                "knowledge_run_id": str(draft["knowledge_run_id"]), "dataset_id": draft["dataset_id"], "digest": draft["dataset_digest"],
+                "source_mode": "current_knowledge" if query else "frozen_dataset", "knowledge_query": query,
+                "knowledge_run_id": str(draft["knowledge_run_id"]) if draft["knowledge_run_id"] else None, "dataset_id": draft["dataset_id"], "digest": draft["dataset_digest"],
                 "method": "rule_based", "method_version": draft["method_version"], "coverage": draft["coverage"],
-                "executable_profile": draft["executable_profile"],
+                "executable_profile": draft["executable_profile"], "execution_profile": draft["coverage"].get("execution_profile"),
                 "criteria_interpretation_id": str(draft["criteria_interpretation_id"]) if draft["criteria_interpretation_id"] else None,
                 "prepared_by": draft["prepared_by"], "actor_kind": draft["actor_kind"], "prepared_at": draft["prepared_at"].isoformat(),
                 "candidates": output}
@@ -402,7 +477,7 @@ class CampaignStore:
             require(campaign["shortlist_version"] == expected_version, "shortlist_version_conflict")
             brief = connection.execute("SELECT version FROM campaign_briefs WHERE id=%s", (draft["brief_id"],)).fetchone()
             require(brief["version"] == campaign["brief_version"], "brief_version_conflict")
-            statuses = self.evidence.statuses(draft["dataset_id"], actor, include_synthetic=include_synthetic, connection=connection)
+            statuses = self._statuses(draft, actor, include_synthetic=include_synthetic, connection=connection)
             supports = self._support(connection, comparison_id)
             view = self.read_comparison(comparison_id, actor, include_synthetic=include_synthetic)
             candidates = {c["candidate_id"]: c for c in view["candidates"]}
@@ -466,16 +541,18 @@ class CampaignStore:
                 "current_shortlist_version": campaign["shortlist_version"], "selected": selected,
                 "exploratory": True, "review_required": any(s["review_required"] for s in selected)}
 
-    def shortlist_support(self, shortlist_id: str, actor: ActorContext) -> dict[str, Any]:
-        """Return content-free pinned dependencies for policy-aware campaign feedback."""
+    def shortlist_support(self, shortlist_id: str, actor: ActorContext, *, connection=None) -> dict[str, Any]:
+        """Return pinned dependencies and current policy, locking them in an optional caller transaction."""
         actor.require_workspace(self.workspace_id)
-        with self.db.connect() as connection:
-            revision = connection.execute("SELECT r.*,d.dataset_id FROM shortlist_revisions r JOIN campaigns c ON c.id=r.campaign_id "
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
+            revision = connection.execute("SELECT r.*,d.dataset_id,d.knowledge_query_result_id FROM shortlist_revisions r JOIN campaigns c ON c.id=r.campaign_id "
                                           "JOIN comparison_drafts d ON d.id=r.comparison_id WHERE r.id=%s AND c.workspace_id=%s",
                                           (shortlist_id, self.workspace_id)).fetchone()
             require(revision is not None, "shortlist_not_found")
             rows = connection.execute("SELECT DISTINCT s.observation_id,s.source_assertion_id,s.interpretation_id FROM comparison_support s "
                                       "JOIN shortlist_selections selected ON selected.candidate_id=s.candidate_id WHERE selected.revision_id=%s",
                                       (shortlist_id,)).fetchall()
+            statuses = self._statuses(revision, actor, include_synthetic=False, connection=connection)
         return {"campaign_id": str(revision["campaign_id"]), "brief_id": str(revision["brief_id"]), "dataset_id": revision["dataset_id"],
+                "statuses": {str(r['observation_id']): statuses[str(r['observation_id'])] for r in rows},
                 "dependencies": [{key: str(v) if v is not None else None for key, v in row.items()} for row in rows]}

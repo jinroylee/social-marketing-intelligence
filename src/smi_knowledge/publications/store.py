@@ -33,6 +33,11 @@ class KnowledgePublications:
         """Install shared knowledge and publication tables after ingestion migrations."""
         KnowledgeStore(self.db, self.workspace_id).migrate()
 
+    def lock_current(self, actor: ActorContext, *, connection) -> None:
+        """Keep the workspace publication frontier fixed through a caller's commit."""
+        actor.require_workspace(self.workspace_id)
+        connection.execute('SELECT pg_advisory_xact_lock(hashtext(%s))', (f'knowledge-current:{self.workspace_id}',))
+
     def publish(self, support: tuple[SupportReference, ...], actor: ActorContext, *, request_id: str,
                 interpretation_ids: tuple[str, ...] = (), include_synthetic: bool = False, connection=None) -> dict[str, Any]:
         """Publish a validated selection, optionally in a caller-owned transaction."""
@@ -44,6 +49,7 @@ class KnowledgePublications:
                     'interpretation_ids': interpretation_ids, 'include_synthetic': include_synthetic}
         digest = hashlib.sha256(json.dumps(document, sort_keys=True).encode()).hexdigest()
         with nullcontext(connection) if connection is not None else self.db.connect() as connection:
+            self.lock_current(actor, connection=connection)
             connection.execute('SELECT pg_advisory_xact_lock(hashtext(%s))', (f'publication:{self.workspace_id}:{request_id}',))
             existing = connection.execute('SELECT id,request_digest FROM knowledge_publications WHERE workspace_id=%s AND request_id=%s', (self.workspace_id, request_id)).fetchone()
             if existing:

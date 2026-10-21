@@ -8,6 +8,7 @@ from typing import Any
 from .contracts import Brief, window_time
 
 
+CURRENT_METHOD_VERSION = "current-kb-caption-comparison-v1"
 METHOD_VERSION = "campaign-caption-comparison-v1"
 BASE_UNKNOWNS = ["audience_geography", "fees", "availability", "sales_effectiveness", "recent_post_history"]
 VALUE_FIELDS = {"brand_mention": "brand_id", "product_mention": "product_id", "topic_mention": "topic_id",
@@ -32,12 +33,14 @@ def account_token(key: dict[str, str]) -> str:
     return json.dumps(key, sort_keys=True, separators=(",", ":"))
 
 
-def build_comparison(brief: Brief, source: dict[str, Any], knowledge: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def build_comparison(brief: Brief, source: dict[str, Any], knowledge: dict[str, Any], *, current_knowledge: bool = False) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Return bounded candidate judgments; absent evidence remains unknown."""
     candidates = {}
-    for key in brief.document()["known_accounts"]:
+    known_tokens = {account_token(key) for key in brief.document()['known_accounts']}
+    for key in ([] if current_knowledge else brief.document()["known_accounts"]):
         candidates[account_token(key)] = {"account_key": key, "account_id": None, "origin": "marketer_known", "members": []}
     eligible = []
+    candidate_limit_reached = False
     start, end = window_time(brief.publication_from), window_time(brief.publication_to)
     for member in source["members"]:
         if (member["availability"] != "available" or not member["policy"]["can_retain"]
@@ -45,25 +48,38 @@ def build_comparison(brief: Brief, source: dict[str, Any], knowledge: dict[str, 
             continue
         fields = {a["field"]: a for a in member["assertions"] if a["state"] == "observed"}
         author = fields.get("author_account")
-        if author is None or author["value"]["platform"] not in brief.platforms:
+        keys = member.get("account_keys", []) if current_knowledge else ([author["value"]] if author else [])
+        keys = [key for key in keys if key["platform"] in brief.platforms]
+        if not keys:
             continue
         published = window_time(fields["published_at"]["value"]) if "published_at" in fields else None
         if (start is not None or end is not None) and (published is None
                 or start is not None and published < start or end is not None and published > end):
             continue
         eligible.append(member["observation_id"])
-        key = author["value"]
-        token = account_token(key)
-        candidate = candidates.setdefault(token, {"account_key": key, "account_id": None, "origin": "retrieved", "members": []})
-        if candidate["origin"] == "marketer_known":
-            candidate["origin"] = "both"
-        candidate["members"].append(member)
-        if "handle" in fields:
-            candidate["account_id"] = fields["handle"]["subject_id"]
+        for key in keys:
+            token = account_token(key)
+            if current_knowledge and token not in candidates and len(candidates) == 100:
+                candidate_limit_reached = True
+                continue
+            known = token in known_tokens
+            candidate = candidates.setdefault(token, {"account_key": key, "account_id": None, "origin": "both" if known else "retrieved", "members": []})
+            if candidate["origin"] == "marketer_known":
+                candidate["origin"] = "both"
+            candidate["members"].append(member)
+            if current_knowledge:
+                candidate['account_id'] = next((item['subject_id'] for item in member['assertions'] + member['metrics']
+                                                if all(item[field] == key[field] for field in ('platform', 'namespace', 'kind', 'native_id'))), candidate['account_id'])
+            elif "handle" in fields:
+                candidate["account_id"] = fields["handle"]["subject_id"]
     output = []
     for candidate in candidates.values():
         member_ids = {m["observation_id"] for m in candidate["members"]}
-        claims = [c for c in knowledge["interpretations"] if c["state"] == "supported" and c["observation_id"] in member_ids]
+        supported_subjects = {a['subject_id'] for m in candidate['members'] for a in m['assertions']
+                              if (a['field'] == 'author_account' and a['state'] == 'observed' and a['value'] == candidate['account_key'])
+                              or all(a[field] == candidate['account_key'][field] for field in ('platform', 'namespace', 'kind', 'native_id'))}
+        claims = [c for c in knowledge["interpretations"] if c["state"] == "supported" and c["observation_id"] in member_ids
+                  and (not current_knowledge or c["catalog_id"] == brief.catalog_id and c["subject_id"] in supported_subjects)]
         judgments = []
         for criterion in brief.criteria:
             field = VALUE_FIELDS.get(criterion.kind)
@@ -83,13 +99,34 @@ def build_comparison(brief: Brief, source: dict[str, Any], knowledge: dict[str, 
                 if assertion["field"] == "author_account" and assertion["state"] == "observed":
                     dependencies.append({"observation_id": member["observation_id"], "source_assertion_id": assertion["assertion_id"],
                                          "interpretation_id": None})
+            if current_knowledge and not any(d['observation_id'] == member['observation_id'] for d in dependencies):
+                dependencies.append({'observation_id': member['observation_id'],
+                                     'source_assertion_id': member['assertion_ids'][0] if member['assertion_ids'] else None,
+                                     'interpretation_id': None})
         supported_ids = {sid for judgment in judgments for sid in judgment["support_ids"]}
         dependencies.extend({"observation_id": c["observation_id"], "source_assertion_id": c["source_assertion_id"],
                              "interpretation_id": c["id"]} for c in claims if c["id"] in supported_ids)
         unknowns = BASE_UNKNOWNS + [f"criterion:{j['criterion_id']}" for j in judgments if j["state"] == "unknown"]
+        if current_knowledge:
+            unknowns = list(dict.fromkeys(unknowns + ['contracts'] + [u for m in candidate['members'] for u in m['unknowns']]))
         output.append({"account_key": candidate["account_key"], "account_id": candidate["account_id"], "origin": candidate["origin"],
                        "body": {"judgments": judgments, "unknowns": unknowns, "coverage": "selected_caption_observations",
                                 "observations": sorted(member_ids), "exploratory": True}, "dependencies": dependencies})
-    return output, {"requested": source["coverage"], "actual_observation_ids": eligible,
+        if current_knowledge:
+            body = output[-1]['body']
+            body['support_manifest'] = [m for m in knowledge['manifest'] if m['observation_id'] in member_ids]
+            body['source_dates'] = [{'observation_id': m['observation_id'], 'captured_at': m['captured_at'],
+                                     'source_as_of': m['source_as_of'], 'ingested_at': m['ingested_at']} for m in candidate['members']]
+            body['coverage'] = 'bounded_current_knowledge'
+            body['assessment'] = ('excluded_on_required_evidence' if any(j['required'] and j['state'] == 'not_satisfied_on_evidence' for j in judgments)
+                                  else 'deferred_unknown_requirements' if any(j['required'] and j['state'] == 'unknown' and j['unknown_handling'] == 'defer' for j in judgments)
+                                  else 'eligible_with_explicit_gaps')
+    coverage = {"requested": source["coverage"], "actual_observation_ids": eligible,
                     "candidate_count": len(output), "requested_publication_from": brief.publication_from,
                     "requested_publication_to": brief.publication_to, "scope": "fixed_selected_observations"}
+    if current_knowledge:
+        tokens = {account_token(c['account_key']) for c in output}
+        coverage.update(scope='bounded_current_knowledge', candidate_limit=100, candidate_limit_reached=candidate_limit_reached, retrieval=knowledge['coverage'], unknowns=knowledge['unknowns'] + ([] if output else ['no_eligible_supported_accounts_in_campaign_scope']),
+                        discovery_seeds=[k for k in brief.document()['known_accounts'] if account_token(k) not in tokens],
+                        ordering='newest_publication_then_member_account_encounter_order', ranking='unranked')
+    return output, coverage

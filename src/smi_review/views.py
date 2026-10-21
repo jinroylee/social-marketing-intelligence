@@ -231,6 +231,12 @@ def campaign_page(campaign, current, datasets, csrf, *, model_configured=False, 
     profiles = [('', 'Human structured profile')] + [(i['interpretation_id'], f"Model interpretation {i['interpretation_id']}")
                  for i in campaign.get('interpretations', []) if i['status'] == 'succeeded' and i['brief_id'] == current['id']]
     profile_select = f'<label>Executable profile<select name="interpretation_id">{options(profiles, "")}</select></label>'
+    selected_profile = value(submitted, 'interpretation_id', '')
+    current_profiles = profiles + ([(selected_profile, 'Submitted saved interpretation (stale or unavailable)')]
+                                   if selected_profile and selected_profile not in {identity for identity, _ in profiles} else [])
+    current_profile_select = f'<label>Executable profile<select name="interpretation_id">{options(current_profiles, selected_profile)}</select></label>'
+    content += '<section class="panel"><h2>Compare current knowledge</h2><p>Compare up to 100 published support bundles with deterministic caption rules. Incomplete supported accounts remain eligible; unsupported references remain discovery gaps. Ordering follows publication encounter order, without ranking.</p>'
+    content += f'<form method="post" action="/campaigns/{e(campaign["campaign_id"])}/current-comparisons">{hidden("csrf",csrf)}{hidden("request_id",retry("request_id",str(uuid.uuid4())))}{hidden("brief_id",retry("brief_id",current["id"]))}{current_profile_select}<button type="submit">Compare current knowledge</button></form></section>'
     content += '<section class="panel"><p class="eyebrow">2 / Prepare an evidence comparison</p><h2>Compare accounts within a frozen dataset</h2><p>Preparation uses caption rules. Results remain provisional, with audience and commercial outcomes unknown.</p>'
     if datasets:
         content += f'<form method="post" action="/campaigns/{e(campaign["campaign_id"])}/comparisons">{hidden("csrf",csrf)}{hidden("request_id",str(uuid.uuid4()))}{hidden("brief_id",current["id"])}{profile_select}<label>Evidence dataset<select name="dataset_id">{options([(d["dataset_id"],f"{d['dataset_id']} · {d['posts']} selected posts") for d in datasets], datasets[0]["dataset_id"])}</select></label><button type="submit">Prepare rule-based comparison</button></form>'
@@ -296,13 +302,12 @@ def evidence_panel(members, claims):
     content = '<details class="evidence"><summary>Original captions and provenance <span class="count">' + str(len(members)) + '</span></summary>'
     for member in members:
         caption = next((a for a in member["assertions"] if a["field"] == "caption" and a["state"] == "observed"), None)
-        if caption is None:
-            continue
-        supported = [c for c in claims if c["source_assertion_id"] == caption["assertion_id"]]
+        supported = [c for c in claims if caption is not None and c["source_assertion_id"] == caption["assertion_id"]]
         published = next((a["value"] for a in member["assertions"] if a["field"] == "published_at" and a["state"] == "observed"), "Unknown")
-        captured = datetime.fromisoformat(member["captured_at"].replace("Z", "+00:00"))
-        age = max(0, (datetime.now(timezone.utc) - captured).days)
-        content += f'<article class="post"><div class="row-title">{source_link(member["source_reference"])}<span class="badge">Observed text</span></div><p class="caption">{marked_caption(caption["value"], supported)}</p><p class="muted">Translation pending. Original-language interpretation remains provisional.</p><dl class="facts"><div><dt>Published</dt><dd>{e(published)}</dd></div><div><dt>Captured</dt><dd>{e(member["captured_at"])} · {age} days ago</dd></div><div><dt>Acquisition</dt><dd>{e(member["provider"])} / {e(member["adapter"])}</dd></div></dl><details><summary>Support references</summary><p>Observation: {e(member["observation_id"])}<br>Caption assertion: {e(caption["assertion_id"])}<br>Original observation: {e(member["origin_observation_id"])}</p></details></article>'
+        captured = datetime.fromisoformat(member["captured_at"].replace("Z", "+00:00")) if member["captured_at"] else None
+        age = f'{max(0, (datetime.now(timezone.utc) - captured).days)} days ago' if captured else 'Unknown capture time'
+        caption_content = f'<p class="caption">{marked_caption(caption["value"], supported)}</p><p class="muted">Translation pending. Original-language interpretation remains provisional.</p>' if caption else '<p>Caption not available in this supporting observation.</p>'
+        content += f'<article class="post"><div class="row-title">{source_link(member["source_reference"])}<span class="badge">Observed text</span></div>{caption_content}<dl class="facts"><div><dt>Published</dt><dd>{e(published)}</dd></div><div><dt>Captured</dt><dd>{e(member["captured_at"])} · {age}</dd></div><div><dt>Acquisition</dt><dd>{e(member["provider"])} / {e(member["adapter"])}</dd></div></dl><details><summary>Support references</summary><p>Observation: {e(member["observation_id"])}<br>Assertion IDs: {e([a["assertion_id"] for a in member["assertions"]])}<br>Metric IDs: {e([m["metric_id"] for m in member["metrics"]])}<br>Original observation: {e(member.get("origin_observation_id", member["observation_id"]))}</p></details></article>'
     return content + '</details>'
 
 
@@ -322,15 +327,19 @@ def comparison_page(comparison, campaign, brief, source, csrf, previous=None, su
     content += brief_summary(brief)
     if comparison.get('criteria_interpretation_id'):
         content += '<section class="panel"><h2>Selected model-generated executable profile</h2>' + profile_summary(comparison['executable_profile']) + '</section>'
-    content += f'<p>{len(comparison["candidates"])} candidates · {len(comparison["coverage"]["actual_observation_ids"])} scoped observations · {source["coverage"]["unavailable_members"]} currently unavailable source observations</p>'
-    content += f'<details class="panel"><summary>Exact evidence and method</summary><p>Dataset: {e(comparison["dataset_id"])}<br>Digest: {e(comparison["digest"])}<br>Knowledge run: {e(comparison["knowledge_run_id"])}<br>Method: {e(comparison["method_version"])}<br>Prepared: {e(comparison["prepared_at"])} by {e(comparison["prepared_by"])}</p></details>'
+    content += f'<p>{len(comparison["candidates"])} candidates · {len(comparison["coverage"]["actual_observation_ids"])} scoped observations · {source.get("current_coverage", source["coverage"])["unavailable_members"]} currently unavailable source observations</p>'
+    source_description = 'Current committed knowledge · bounded, unranked' if comparison.get('knowledge_query') else f'Frozen dataset: {e(comparison["dataset_id"])}<br>Digest: {e(comparison["digest"])}<br>Knowledge run: {e(comparison["knowledge_run_id"])}'
+    content += f'<details class="panel"><summary>Exact evidence and method</summary><p>{source_description}<br>Method: {e(comparison["method_version"])}<br>Prepared: {e(comparison["prepared_at"])} by {e(comparison["prepared_by"])}</p></details>'
+    if comparison.get('knowledge_query'):
+        query = comparison['knowledge_query']
+        content += f'<details class="panel"><summary>Actual retrieved support manifest</summary><p>Query: {e(query["result_id"])} · {e(query["method_version"])} · ordering: unranked publication encounter order</p><pre>{e(query["manifest"])}</pre><p>Coverage: {e(comparison["coverage"])}<br>Freshness without a threshold: not_assessed</p></details>'
     stale = brief["version"] != campaign["brief_version"]
     if stale:
         content += error_message("brief_version_conflict")
     previous_choices = {s["candidate_id"]: s for s in previous["selected"]} if previous else {}
     content += f'<form method="post" action="/comparisons/{e(comparison["comparison_id"])}/shortlists" id="shortlist-form">{hidden("csrf",csrf)}{hidden("request_id",value(submitted,"request_id",str(uuid.uuid4())))}{hidden("expected_version",value(submitted,"expected_version",campaign["shortlist_version"]))}'
     if not comparison["candidates"]:
-        content += '<section class="panel"><h2>No matching observations in this dataset</h2><p>You can save an empty shortlist to record deliberate deferral.</p></section>'
+        content += '<section class="panel"><h2>No eligible supported accounts in this scope</h2><p>You can save an empty shortlist to record deliberate deferral.</p></section>'
     for candidate in comparison["candidates"]:
         cid, body = candidate["candidate_id"], candidate["body"]
         members = members_for(candidate, source)
@@ -341,6 +350,8 @@ def comparison_page(comparison, campaign, brief, source, csrf, previous=None, su
         if not available:
             content += '<div class="notice"><strong>Support unavailable or requires review</strong><p>Source-dependent explanations are withheld. This account can remain in an unconfirmed draft.</p></div></article>'
             continue
+        if 'assessment' in body:
+            content += f'<p>Assessment: {e(body["assessment"])} · provisional, unranked</p><details><summary>Source dates, freshness and gaps</summary><p>{e(body["source_dates"])}</p><p>{e(body["support_manifest"])}</p><p>{e(body["unknowns"])}</p></details>'
         content += '<div class="judgments">'
         for judgment in body["judgments"]:
             content += f'<div class="judgment {e(judgment["state"])}"><strong>{e(judgment["label"])}</strong><span>{e(judgment["state"].replace("_"," "))}</span><p>{e(judgment["reason"])}</p><small>{"Required" if judgment["required"] else "Preference"} · unknown: {e(judgment["unknown_handling"])} · {e(judgment["review_status"])}</small></div>'

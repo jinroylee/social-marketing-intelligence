@@ -92,7 +92,7 @@ class CampaignPlanning:
                 require(prior["request_digest"] == hashed_request and prior["recorded_by"] == actor.actor_id, "planning_request_conflict")
                 return {"status": "duplicate", "note_id": str(prior["id"]), "version": prior["version"]}
             require(self._head(connection, "decision_note_revisions", campaign_id) == expected_version, "decision_note_version_conflict")
-            statuses = self.evidence.statuses(reference["dataset_id"], actor, connection=connection)
+            statuses = self.campaigns.shortlist_support(shortlist_id, actor, connection=connection)["statuses"]
             for dependency in reference["dependencies"]:
                 state = statuses[dependency["observation_id"]]
                 require(state["can_process"] and state["can_display"] and state["can_retain"] and state["current"], "decision_note_support_unavailable")
@@ -118,10 +118,9 @@ class CampaignPlanning:
             notes = connection.execute("SELECT * FROM decision_note_revisions WHERE campaign_id=%s ORDER BY version", (campaign_id,)).fetchall()
         output = []
         for note in notes:
-            reference = self.campaigns.shortlist_support(str(note["shortlist_id"]), actor)
             shortlist = self.campaigns.read_shortlist(str(note["shortlist_id"]), actor)
             with self.db.connect() as connection:
-                statuses = self.evidence.statuses(reference["dataset_id"], actor, connection=connection)
+                statuses = self.campaigns.shortlist_support(str(note["shortlist_id"]), actor, connection=connection)["statuses"]
                 dependencies = connection.execute("SELECT observation_id FROM decision_note_support WHERE note_id=%s", (note["id"],)).fetchall()
                 states = [statuses[str(d["observation_id"])] for d in dependencies]
                 if any(not state["can_retain"] for state in states):

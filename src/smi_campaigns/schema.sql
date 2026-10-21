@@ -111,3 +111,19 @@ CREATE TABLE IF NOT EXISTS campaign_criteria_interpretations (
 
 ALTER TABLE comparison_drafts ADD COLUMN IF NOT EXISTS criteria_interpretation_id UUID
     REFERENCES campaign_criteria_interpretations(id);
+
+-- A comparison pins either a legacy frozen run or an immutable current-KB query.
+ALTER TABLE comparison_drafts ALTER COLUMN knowledge_run_id DROP NOT NULL;
+ALTER TABLE comparison_drafts ALTER COLUMN dataset_id DROP NOT NULL;
+ALTER TABLE comparison_drafts ALTER COLUMN dataset_digest DROP NOT NULL;
+ALTER TABLE comparison_drafts ADD COLUMN IF NOT EXISTS knowledge_query_result_id UUID REFERENCES knowledge_query_results(id);
+ALTER TABLE comparison_support ALTER COLUMN source_assertion_id DROP NOT NULL;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid='comparison_drafts'::regclass AND conname='comparison_source_mode') THEN
+        ALTER TABLE comparison_drafts ADD CONSTRAINT comparison_source_mode CHECK (
+            (knowledge_query_result_id IS NULL AND knowledge_run_id IS NOT NULL AND dataset_id IS NOT NULL AND dataset_digest IS NOT NULL)
+            OR (knowledge_query_result_id IS NOT NULL AND knowledge_run_id IS NULL AND dataset_id IS NULL AND dataset_digest IS NULL)
+        );
+    END IF;
+END $$;

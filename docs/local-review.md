@@ -16,6 +16,12 @@ The main navigation links `/knowledge/publications`, which lists only committed,
 
 Publication is an explicit trusted operation through `KnowledgePublications.publish` or the `smi-ingest publish-knowledge` CLI described in the [knowledge contract](knowledge.md#explicit-knowledge-publication). Reading a detail page does not acquire evidence or publish anything. Existing form protections and actor boundaries apply unchanged.
 
+## Current-KB campaign comparisons
+
+A campaign page offers **Compare current knowledge**, independently of imported datasets. Same-origin CSRF-protected `POST /campaigns/CAMPAIGN_ID/current-comparisons` accepts only request/brief identity and optional explicitly selected saved criteria interpretation. Server actors prepare through `CampaignStore.prepare_current_comparison`; forms cannot choose actors, methods, source/model routes or task authority. Recoverable errors preserve request, exact brief and profile selection.
+
+`GET /comparisons/COMPARISON_ID` reopens the pinned comparison and its current display-policy view. It shows actual retrieval manifests, source dates/freshness, unknowns, discovery gaps, required exclusion/defer assessments, empty outcomes and the unranked deterministic method. Source-only support exposes provenance even without a caption. Historical membership/order/explanations stay fixed after later publications; denied/superseded support withholds dependent explanation text. Preparation does not save a shortlist or call a source/model. Existing frozen comparison forms and explicit human draft/confirmation remain available.
+
 ## Run the application
 
 Start PostgreSQL and load the offline inputs once:
