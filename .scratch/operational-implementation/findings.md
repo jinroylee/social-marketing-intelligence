@@ -41,3 +41,8 @@
 
 - Closed the earlier root scope gap in `2420af1de46a1756d370914a555ae826e574a306`: concrete fixed-host bounded Responses adapter, disabled by default; explicit verified model contract; strict returned model/tier/final-usage handling; separate provider/synthetic basis; exact provider-basis final reconciliation and separate health recovery. Root shared validation passed **381 tests in 253.68 seconds** with all HTTP intercepted simulation.
 - Primary-contract verification and software implementation are complete. Future live enablement, real credentials/rates/configuration, account readiness, live receipts and human quality remain unestablished; no readiness or commercial-invoice claim follows from the simulated tests.
+
+## Coordinator clarification: implementation and live prerequisites
+
+- Re-read published tickets 24, 25 and 34: default tests explicitly simulate transport, and any paid live receipt requires separate authorization. Missing live credentials, source-use policy, required runtime configuration or authorization must keep the live capability unavailable; their absence alone does not block concrete adapter implementation and simulated validation when the current permitted contract is verifiable. Do not preemptively block these implementation tickets solely because no live call is authorized. An inaccessible/unverifiable required contract or other unmet required proof can still be a genuine external blocker. Recorded external runtime prerequisites and absence of readiness receipts remain unchanged.
+- Re-read ticket 39: it requires actual named-human feedback on exact permitted examples. Software simulation or model output cannot complete that human-validation ticket.

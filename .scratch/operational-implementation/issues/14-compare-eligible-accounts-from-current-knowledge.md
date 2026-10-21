@@ -4,7 +4,7 @@
 
 **Blocked by:** 03: Search current knowledge and pin result support; 12: Save visible executable campaign criteria.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -26,3 +26,10 @@
 - Implemented on `smi/operational-ticket-14`; status stays `claimed` until the merger's integration gate.
 - `UV_OFFLINE=1 uv run --locked python tools/check.py`: **391 tests passed in 251.62 seconds**, with static/documentation/symlink checks and real PostgreSQL preflight passed. Focused union: **156 passed**; final ticket file: **10 passed**.
 - Offline wheel built and all **22** changed packaged runtime/schema/guidance files verified byte for byte. See [the implementation report](../reports/ticket-14.md) for scope, red→green evidence, commands and limits.
+
+## Completion
+
+- Implementation and integrated checked commit: `b9f371db5dccf13e13d8491cc31e94745d5b761f`, fast-forward integrated into `integration/operational-tickets-11-39`.
+- Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **391 tests in 251.61 seconds**. All acceptance criteria are checked.
+- The worker wheel matches all 22 changed packaged files in the integrated tree byte for byte; [the implementation report](../reports/ticket-14.md) records focused and integrated verification. Existing worker gates are retained; no passing gate was repeated after integrated verification.
+- Delivery stayed local with real PostgreSQL and simulated external I/O. No new model/source dispatch, automatic shortlist save, live receipt, human-quality claim, external message, push, PR or deployment occurred.

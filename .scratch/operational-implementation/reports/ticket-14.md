@@ -25,3 +25,10 @@ Observed reds included missing current-comparison operation, absent explicit emp
 ## Limits
 
 At most 100 newest publications, 100 support bundles and 100 account candidates; truncation/incomplete-market coverage stays explicit. Freshness without a configured threshold is not assessed. No ranking, discovery/acquisition, automatic shortlist save, new model assessment or live external execution is included. Technical checks do not establish Japanese-language or marketer-usefulness validation. No push, PR, deployment or external message occurred.
+
+## Integrated validation
+
+- Confirmed clean root and ancestry from `f2969b7ae97905f594b8cb0550abb2661fd6747e`, then fast-forward integrated and checked `b9f371db5dccf13e13d8491cc31e94745d5b761f` on `integration/operational-tickets-11-39`.
+- Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **391 tests in 251.61 seconds** on that exact integrated commit. No runtime/test change occurred during the gate; passing worker gates were retained without redundant reruns.
+- Independently compared `/tmp/smi-ticket-14-wheel/smi_ingestion-0.1.0-py3-none-any.whl` with the integrated tree: all 22 changed packaged runtime/schema/guidance files match byte for byte, including six sibling instruction symlinks. The exact list is retained in continuation-manifest.json.
+- Local ticket 14 is resolved; ticket 15 is pending for fresh dispatch. Prior continuation evidence, historical execution-manifest.json and original review baseline are preserved. Only tracker/planning/report metadata changed after verification; no runtime edit, external call/message, new implementation, push, PR, deployment or cleanup occurred.
