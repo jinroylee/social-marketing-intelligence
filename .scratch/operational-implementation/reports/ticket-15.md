@@ -25,3 +25,10 @@ Initial operation red: absent `CampaignStore.recommend`; green: ordered automati
 ## Limits
 
 Uses existing bounded current-KB deterministic rules and exact query support. No LLM ranking/assessment, acquisition/discovery, new source/provider framework or richer human curation is included. No actual provider/source call, external message, push, PR or deployment occurred. Tests do not establish human-language or marketer-usefulness validation.
+
+## Integrated validation
+
+- Confirmed clean root and ancestry from `7f9926491e5fe5cd7d9ec2113da3e4ab1b50924d`, then fast-forward integrated final head `567236079b3573daacbef9bd67379d793e7261f2` on `integration/operational-tickets-11-39`. Runtime implementation is `a80da4dca903b95d2c9aa9fe6bf8f845a6415a4c`; the final worker commit changes only this report and checklist metadata.
+- Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **404 tests in 262.27 seconds** on that exact final head. No runtime/test change occurred during the gate; existing worker gates were retained without redundant reruns.
+- Independently compared `/tmp/smi-ticket-15-wheel/smi_ingestion-0.1.0-py3-none-any.whl` with the integrated tree: all nine changed packaged files match byte for byte, including the two instruction symlinks. The exact list is retained in continuation-manifest.json.
+- Local ticket 15 is resolved; ticket 16 is pending for fresh dispatch. Prior continuation evidence, historical execution-manifest.json and original review baseline are preserved. Only tracker/planning/report metadata changed after verification; no runtime edit, actual provider/source call, external message, new implementation, push, PR, deployment or cleanup occurred.

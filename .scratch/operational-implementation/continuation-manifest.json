@@ -214,44 +214,32 @@
   "testing_boundaries": "Public operations and HTTP; real PostgreSQL; simulated external I/O",
   "external_io": "Local execution with simulated transports. User authorizes read-only primary-documentation lookups only; no live/paid source/model calls or external messages.",
   "last_verified_runtime": {
-    "checked_commit": "b9f371db5dccf13e13d8491cc31e94745d5b761f",
+    "checked_commit": "567236079b3573daacbef9bd67379d793e7261f2",
+    "implementation_commit": "a80da4dca903b95d2c9aa9fe6bf8f845a6415a4c",
     "command": "UV_OFFLINE=1 uv run --locked python tools/check.py",
-    "passed_tests": 391,
-    "seconds": 251.61,
-    "focused_tests": 156,
+    "passed_tests": 404,
+    "seconds": 262.27,
+    "focused_tests": 142,
     "real_postgresql": true,
     "simulated_external_io": true,
     "wheel_verified": true,
     "wheel_evidence": {
-      "artifact": "/tmp/smi-ticket-14-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
-      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-14-wheel",
+      "artifact": "/tmp/smi-ticket-15-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
+      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-15-wheel",
       "exact_integrated_files_matched": [
         "smi_campaigns/AGENTS.md",
         "smi_campaigns/CLAUDE.md",
-        "smi_campaigns/comparison.py",
-        "smi_campaigns/planning/AGENTS.md",
-        "smi_campaigns/planning/CLAUDE.md",
-        "smi_campaigns/planning/schema.sql",
-        "smi_campaigns/planning/store.py",
+        "smi_campaigns/__init__.py",
         "smi_campaigns/schema.sql",
         "smi_campaigns/store.py",
-        "smi_ingestion/support/AGENTS.md",
-        "smi_ingestion/support/CLAUDE.md",
-        "smi_ingestion/support/reader.py",
-        "smi_knowledge/publications/AGENTS.md",
-        "smi_knowledge/publications/CLAUDE.md",
-        "smi_knowledge/publications/store.py",
-        "smi_knowledge/queries/AGENTS.md",
-        "smi_knowledge/queries/CLAUDE.md",
-        "smi_knowledge/queries/store.py",
         "smi_review/AGENTS.md",
         "smi_review/CLAUDE.md",
         "smi_review/app.py",
         "smi_review/views.py"
       ],
-      "evidence_report": "reports/ticket-14.md"
+      "evidence_report": "reports/ticket-15.md"
     },
-    "integration_evidence_report": "reports/ticket-14.md"
+    "integration_evidence_report": "reports/ticket-15.md"
   },
   "external_prerequisites": {
     "13": "Current primary model contract verified on 2026-10-20 and ticket 13 software implemented/validated with intercepted HTTP simulation. Future live operation still requires explicit server enablement, real credentials, model/cost/rate configuration and separate readiness/authorization; these are not supplied or established. No live receipt or human-quality result is claimed.",
@@ -317,6 +305,23 @@
       "focused_seconds": 145.57,
       "final_ticket_tests": 10,
       "final_ticket_seconds": 7.54,
+      "wheel_verified": true
+    },
+    {
+      "ticket": 15,
+      "title": "Automatically save an attributed ordered shortlist",
+      "commit": "a80da4dca903b95d2c9aa9fe6bf8f845a6415a4c",
+      "final_head": "567236079b3573daacbef9bd67379d793e7261f2",
+      "integration_checked_commit": "567236079b3573daacbef9bd67379d793e7261f2",
+      "integration_tests": 404,
+      "integration_seconds": 262.27,
+      "file": "15-automatically-save-an-attributed-ordered-shortlist.md",
+      "report": "reports/ticket-15.md",
+      "focused_tests": 142,
+      "focused_seconds": 148.17,
+      "final_collision_tests": 1,
+      "final_collision_seconds": 0.35,
+      "ticket_tests_in_shared_gate": 13,
       "wheel_verified": true
     }
   ]
