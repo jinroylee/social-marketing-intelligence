@@ -214,32 +214,24 @@
   "testing_boundaries": "Public operations and HTTP; real PostgreSQL; simulated external I/O",
   "external_io": "Local execution with simulated transports. User authorizes read-only primary-documentation lookups only; no live/paid source/model calls or external messages.",
   "last_verified_runtime": {
-    "checked_commit": "650950bf2f80ad53488e3bc11b1fee12063f975b",
-    "implementation_commit": "285d7b2f9f80100f18de48c0356d13d5d597fbe2",
+    "checked_commit": "4a879845fc9b6aba0ad8dc0b600d4daea67fe8d5",
+    "implementation_commit": "f6c0380741b1e0126c0d0864166e1fdb5ff1c14e",
+    "worker_checked_commit": "9fc164fca493a43bc15e26da42a7033bd73fd1c6",
     "command": "UV_OFFLINE=1 uv run --locked python tools/check.py",
-    "passed_tests": 443,
-    "seconds": 511.85,
-    "log": "/tmp/smi-ticket-16-integrated-shared.log",
+    "passed_tests": 452,
+    "seconds": 290.7,
+    "log": "/tmp/smi-ticket-17-integrated-shared.log",
     "real_postgresql": true,
     "simulated_external_io": true,
     "wheel_verified": true,
     "wheel_evidence": {
-      "artifact": "/tmp/smi-ticket-16-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
-      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-16-wheel",
+      "artifact": "/tmp/smi-ticket-17-wheel-9fc164f/smi_ingestion-0.1.0-py3-none-any.whl",
+      "wheel_sha256": "40eccfd74ee5f5fe5f1630ab4a06b44812de14f40070b814578f0eb39bdeb7f1",
+      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-17-wheel-9fc164f",
+      "byte_verification_manifest": "/tmp/smi-ticket-17-wheel-9fc164f/byte-verification.json",
       "exact_integrated_files_matched": [
         "smi_campaigns/AGENTS.md",
         "smi_campaigns/CLAUDE.md",
-        "smi_campaigns/interpretation/AGENTS.md",
-        "smi_campaigns/interpretation/CLAUDE.md",
-        "smi_campaigns/interpretation/__init__.py",
-        "smi_campaigns/interpretation/http.py",
-        "smi_campaigns/ranking/AGENTS.md",
-        "smi_campaigns/ranking/CLAUDE.md",
-        "smi_campaigns/ranking/__init__.py",
-        "smi_campaigns/responses/AGENTS.md",
-        "smi_campaigns/responses/CLAUDE.md",
-        "smi_campaigns/responses/__init__.py",
-        "smi_campaigns/responses/http.py",
         "smi_campaigns/schema.sql",
         "smi_campaigns/store.py",
         "smi_review/AGENTS.md",
@@ -247,9 +239,9 @@
         "smi_review/app.py",
         "smi_review/views.py"
       ],
-      "evidence_report": "reports/ticket-16.md"
+      "evidence_report": "reports/ticket-17.md"
     },
-    "integration_evidence_report": "reports/ticket-16.md"
+    "integration_evidence_report": "reports/ticket-17.md"
   },
   "external_prerequisites": {
     "13": "Current primary model contract verified on 2026-10-20 and ticket 13 software implemented/validated with intercepted HTTP simulation. Future live operation still requires explicit server enablement, real credentials, model/cost/rate configuration and separate readiness/authorization; these are not supplied or established. No live receipt or human-quality result is claimed.",
@@ -349,6 +341,25 @@
       "worker_shared_tests": 443,
       "worker_shared_seconds": 339.66,
       "focused_evidence": "Passing slices and corrected UI-label regression are documented in reports/ticket-16.md; the pre-fix compatibility run is not claimed as a passing gate.",
+      "wheel_verified": true
+    },
+    {
+      "ticket": 17,
+      "title": "Curate generated shortlists without rewriting history",
+      "commit": "f6c0380741b1e0126c0d0864166e1fdb5ff1c14e",
+      "worker_checked_commit": "9fc164fca493a43bc15e26da42a7033bd73fd1c6",
+      "final_head": "4a879845fc9b6aba0ad8dc0b600d4daea67fe8d5",
+      "integration_checked_commit": "4a879845fc9b6aba0ad8dc0b600d4daea67fe8d5",
+      "integration_tests": 452,
+      "integration_seconds": 290.7,
+      "integration_log": "/tmp/smi-ticket-17-integrated-shared.log",
+      "file": "17-curate-generated-shortlists-without-rewriting-history.md",
+      "report": "reports/ticket-17.md",
+      "focused_tests": 12,
+      "focused_seconds": 14.72,
+      "ticket_tests_in_shared_gate": 9,
+      "worker_shared_tests": 452,
+      "worker_shared_seconds": 296.65,
       "wheel_verified": true
     }
   ]
