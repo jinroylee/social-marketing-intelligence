@@ -235,6 +235,8 @@ def campaign_page(campaign, current, datasets, csrf, *, model_configured=False, 
     current_profiles = profiles + ([(selected_profile, 'Submitted saved interpretation (stale or unavailable)')]
                                    if selected_profile and selected_profile not in {identity for identity, _ in profiles} else [])
     current_profile_select = f'<label>Executable profile<select name="interpretation_id">{options(current_profiles, selected_profile)}</select></label>'
+    content += '<section class="panel"><h2>Recommend and save automatically</h2><p>Save supported current-knowledge accounts in deterministic comparison order with rationale and explicit gaps. Required exclusions and deferred unknown requirements remain unselected. This unranked automated result requires no human review.</p>'
+    content += f'<form method="post" action="/campaigns/{e(campaign["campaign_id"])}/recommendations">{hidden("csrf",csrf)}{hidden("request_id",retry("request_id",str(uuid.uuid4())))}{hidden("brief_id",retry("brief_id",current["id"]))}{hidden("expected_brief_version",retry("expected_brief_version",current["version"]))}{hidden("expected_shortlist_version",retry("expected_shortlist_version",campaign["shortlist_version"]))}{current_profile_select}<button type="submit">Recommend and save automatically</button></form></section>'
     content += '<section class="panel"><h2>Compare current knowledge</h2><p>Compare up to 100 published support bundles with deterministic caption rules. Incomplete supported accounts remain eligible; unsupported references remain discovery gaps. Ordering follows publication encounter order, without ranking.</p>'
     content += f'<form method="post" action="/campaigns/{e(campaign["campaign_id"])}/current-comparisons">{hidden("csrf",csrf)}{hidden("request_id",retry("request_id",str(uuid.uuid4())))}{hidden("brief_id",retry("brief_id",current["id"]))}{current_profile_select}<button type="submit">Compare current knowledge</button></form></section>'
     content += '<section class="panel"><p class="eyebrow">2 / Prepare an evidence comparison</p><h2>Compare accounts within a frozen dataset</h2><p>Preparation uses caption rules. Results remain provisional, with audience and commercial outcomes unknown.</p>'
@@ -379,11 +381,17 @@ def comparison_page(comparison, campaign, brief, source, csrf, previous=None, su
 
 def shortlist_page(shortlist, brief, comparison, source):
     content = f'<p><a href="/campaigns/{e(shortlist["campaign_id"])}">← Campaign and revision history</a></p><div class="heading"><div><p class="eyebrow">Saved decision</p><h1>Shortlist revision {shortlist["version"]}</h1><p><span class="badge">{e(shortlist["status"])}</span> Recorded by {e(shortlist["recorded_by"])} · {e(shortlist["recorded_at"])}</p></div><a class="button secondary" href="/comparisons/{e(shortlist["comparison_id"])}?shortlist_id={quote(shortlist["shortlist_id"])}">Create successor revision</a></div>'
-    content += '<p class="lede">This saved account set and reviewer attribution are pinned. Source health below reflects current permissions.</p>' + brief_summary(brief)
+    generated = shortlist["actor_kind"] == "automation"
+    content += '<p class="lede">This saved account set and producer attribution are pinned. Source health below reflects current permissions.</p>' + brief_summary(brief)
+    if generated:
+        content += f'<section class="panel"><h2>Automation provenance</h2><p>Producer: {e(shortlist["actor_kind"])} · {e(shortlist["recorded_by"])}<br>Method: {e(shortlist["method_version"])}<br>Order: {e(shortlist["ordering"])}<br>Execution: {e(shortlist["execution_profile"])}</p><p>Deterministic and unranked. Saving records no human endorsement or acknowledgement.</p><p>Saved selection outcome: {e(shortlist["selection_summary"])}</p><details><summary>Coverage and gaps</summary><pre>{e(shortlist["coverage"])}</pre></details></section>'
+
     if shortlist["version"] != shortlist["current_shortlist_version"]:
         content += '<div class="notice">This is a historical revision. A newer shortlist revision exists in the campaign history.</div>'
     if not shortlist["selected"]:
-        content += '<section class="panel"><h2>No accounts selected</h2><p>This revision records an empty selection or deliberate deferral.</p></section>'
+        explanation = ('This generated revision has no supported candidates meeting the required criteria; the saved selection outcome records why.' if generated
+                       else 'This revision records an empty selection or deliberate deferral.')
+        content += f'<section class="panel"><h2>No accounts selected</h2><p>{explanation}</p></section>'
     candidates = {c["candidate_id"]: c for c in comparison["candidates"]}
     for selection in shortlist["selected"]:
         candidate = candidates[selection["candidate_id"]]
@@ -391,8 +399,14 @@ def shortlist_page(shortlist, brief, comparison, source):
         safe = selection["reason_state"] == "available" and candidate["body"] is not None and (not candidate["body"]["observations"] or bool(members))
         content += f'<article class="panel"><div class="row-title"><h2>{e(account_name(candidate,members if safe else []))}</h2><span class="badge">Selected account</span></div><p>{e(selection["account_key"]["platform"])} · {e(selection["account_key"]["namespace"])} · {e(selection["account_key"]["native_id"])}</p>'
         if safe:
-            content += f'<h3>Human inclusion reason</h3><p>{e(selection["reason"] or "No reason recorded in this draft.")}</p><small>Human supplied; semantic review remains provisional.</small>' + evidence_panel(members, selection["evidence"])
+            if generated:
+                content += f'<h3>Deterministic inclusion rationale</h3><p>{e(selection["reason"])}</p><p>Position: {e(selection["position"])} · {e(selection["reason_basis"])}</p><details><summary>Pinned support manifest</summary><pre>{e(selection["support_manifest"])}</pre></details>' + evidence_panel(members, selection["evidence"])
+            else:
+                content += f'<h3>Human inclusion reason</h3><p>{e(selection["reason"] or "No reason recorded in this draft.")}</p><small>Human supplied; semantic review remains provisional.</small>' + evidence_panel(members, selection["evidence"])
         else:
-            content += '<div class="notice"><strong>Review required</strong><p>Reason and evidence are unavailable under current support health. The saved membership and reviewer remain recorded.</p></div>'
-        content += '<h3>Acknowledged unknowns</h3><ul>' + ''.join('<li>' + e(unknown_label(key,candidate["body"] or {"judgments": []})) + '</li>' for key in selection["acknowledged_unknowns"]) + '</ul></article>'
+            content += '<div class="notice"><strong>Review required</strong><p>Reason and evidence are unavailable under current support health. The saved membership and producer remain recorded.</p></div>'
+        gaps = selection["acknowledged_unknowns"]
+        if generated:
+            gaps = (selection["gaps"] or []) if safe else []
+        content += '<h3>' + ('Explicit gaps' if generated else 'Acknowledged unknowns') + '</h3><ul>' + ''.join('<li>' + e(unknown_label(key,candidate["body"] or {"judgments": []})) + '</li>' for key in gaps) + '</ul></article>'
     return content + f'<details class="panel"><summary>Exact saved references</summary><p>Shortlist: {e(shortlist["shortlist_id"])}<br>Comparison: {e(shortlist["comparison_id"])}<br>Brief: {e(shortlist["brief_id"])}<br>Dataset: {e(comparison["dataset_id"])}<br>Digest: {e(comparison["digest"])}</p></details>'

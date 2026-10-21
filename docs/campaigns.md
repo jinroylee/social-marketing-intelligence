@@ -1,6 +1,6 @@
 # Campaign decision contract
 
-[`smi_campaigns`](../src/smi_campaigns/__init__.py) currently owns internal campaigns, immutable briefs, visible simulated model criteria interpretations, rule-based comparison drafts and human shortlist revisions. The public interface consists of `CampaignStore`, `Brief`, `Criterion` and `Selection`. The sections below describe this implemented contract. The [target requirements](functional-requirements.md#a--campaign-based-recommendations-and-shortlists) additionally permit automatically saved ranked shortlists without human review or approval; that interface is not implemented yet.
+[`smi_campaigns`](../src/smi_campaigns/__init__.py) currently owns internal campaigns, immutable briefs, visible simulated model criteria interpretations, rule-based comparison drafts and attributed automated or human shortlist revisions. The public interface consists of `CampaignStore`, `Brief`, `Criterion` and `Selection`. The sections below describe this implemented contract. The current-KB recommendation operation saves deterministic ordered shortlists automatically without human review or approval. LLM ranking remains [target work](functional-requirements.md#a--campaign-based-recommendations-and-shortlists).
 
 ## Implemented briefs and actors
 
@@ -28,7 +28,7 @@ Known accounts use exact platform/namespace/native string IDs. Handles are not i
 
 `require_current_brief(campaign_id, brief_id, actor, expected_version=..., connection=...)` validates an exact current workspace brief and holds its campaign share lock until the caller's transaction commits. Dependent task admission joins this transaction, so a concurrent brief revision cannot change the authorized campaign question between validation and acknowledgment. Historical or foreign brief/version combinations fail with `brief_version_conflict`; task retries reopen their original acknowledgment before this new-admission check.
 
-The local actor context is supplied by the trusted application boundary. It is not hosted authentication; a future browser server must construct actor kind/identity itself rather than accept those fields from submitted JSON.
+The local actor context is supplied by the trusted application boundary. It is not hosted authentication; the local browser server constructs actor kind/identity itself, and submitted fields cannot grant it.
 
 ## Comparison preparation
 
@@ -64,7 +64,7 @@ Preparation checks process/retention permission and current derivations before c
 
 ## Current-KB comparison
 
-`prepare_current_comparison(campaign_id, brief_id, actor, request_id=..., interpretation_id=None, include_synthetic=False, max_age_seconds=None)` prepares an additional comparison over current committed knowledge. It uses the exact current human brief, optionally the explicitly selected successful immutable model criteria interpretation for that same brief, and the existing deterministic caption criteria. It performs no acquisition, model dispatch, ranking or automatic shortlist save. Legacy `prepare_comparison` and its frozen-dataset behavior remain supported.
+`prepare_current_comparison(campaign_id, brief_id, actor, request_id=..., interpretation_id=None, include_synthetic=False, max_age_seconds=None, connection=None)` prepares an additional comparison over current committed knowledge. It uses the exact current human brief, optionally the explicitly selected successful immutable model criteria interpretation for that same brief, and the existing deterministic caption criteria. It performs no acquisition, model dispatch, ranking or automatic shortlist save. Legacy `prepare_comparison` and its frozen-dataset behavior remain supported.
 
 The campaign owner calls public `KnowledgeQueries.search` and `account_support`; it never queries knowledge or ingestion tables. Retrieval examines at most the 100 newest committed publications and pins at most 100 distinct support bundles. Platform scope is enforced in retrieval and account selection; the brief's inclusive publication window applies to observed source publication dates. A configured window excludes observations whose publication date is unknown. Brand/product needs are evaluated through the recorded criteria, not inferred from language or geography. The result contains at most 100 stable platform/namespace/kind/native account identities, ordered by publication/member/account encounter order, explicitly **unranked**. Candidate and retrieval bounds are reported independently.
 
@@ -76,7 +76,21 @@ Required observed exclusions produce `excluded_on_required_evidence`; required u
 
 Preparation holds the campaign head, workspace publication frontier, source policy and exact derivation locks through the draft/result commit. A concurrent publication or withdrawal serializes before selection or after that commit. Identical retries return the original draft before checking a newer brief or KB; changed retries conflict. Reopening never refreshes membership, order, explanations, brief/profile or support. Current display/process permissions and supersession still govern visibility, and retention withdrawal permanently purges copied bodies and dependent human reasons. An explicit new request can reconsider currently permitted support.
 
-## Shortlist persistence
+## Automatic deterministic shortlist persistence
+
+`recommend(campaign_id, brief_id, automation_actor, expected_brief_version=..., expected_shortlist_version=..., request_id=..., interpretation_id=None, include_synthetic=False, max_age_seconds=None)` compares current permitted KB support and automatically saves an ordered `generated` shortlist revision in one transaction. It requires an existing human-initiated campaign and a trusted automation actor. There is no human save, review, approval, confirmation or unknown-acknowledgement action. The browser constructs its actual producer on the server; form/model strings cannot select identity, status or method.
+
+The operation reuses `prepare_current_comparison(..., connection=...)`, including exact query membership, source-only eligibility, selected human/generated profile, freshness and policy locks. It selects only `eligible_with_explicit_gaps` candidates, retaining their relative comparison order. Required observed exclusions and required unknowns with `defer` stay in the pinned comparison but remain unselected. Unknowns with `acknowledge` remain explicit gaps; automation never represents them as human acknowledgements. No un-ingested reference is added to make a result nonempty.
+
+The revision pins actual `actor_kind=automation`, producer/time, exact brief/comparison/profile, method `current-kb-deterministic-shortlist-v1` and `ordering=comparison_order`. Ordered selections use zero-based positions, `reason_basis=automated_deterministic`, deterministic rationale, interpretation support IDs and empty `acknowledged_unknowns`. Rationale, explicit gaps, exact support manifests and query/source versions reopen through the immutable comparison, with its current policy overlay. The execution profile remains explicitly **unranked**; positions express deterministic encounter order, not an LLM assessment or global creator score.
+
+Every successful request saves a revision, including an empty one. Its source-free `selection_summary` preserves candidate/selected/excluded/deferred counts and the empty reason (`no_supported_candidates_in_scope` or `required_criteria_not_met`). The linked comparison retains discovery seeds and bounded coverage; emptiness does not establish an empty market or trigger acquisition.
+
+The outer shortlist request owns retries; its nested comparison receives a fresh server-created identity, so a client-selected comparison request cannot supply a historical assessment. The campaign head, query selection, comparison, selections and revision commit atomically while holding publication/source locks. A write failure leaves no partial comparison or shortlist. A new request checks both expected heads and the exact current brief. Identical requests reopen the original saved revision before reassessment, even after restart, a newer brief, a successor shortlist or later publications. Changed body, expected versions, profile, freshness, synthetic visibility or actor under that identity raises `shortlist_request_conflict`; stale new requests raise the corresponding brief/shortlist version conflict.
+
+Migration preserves existing human statuses, authors, timestamps, IDs, reasons, acknowledgements and history. Legacy rows receive the factual human producer kind because the prior interface was human-only. Historical method/order/selection-summary and positions remain null; no earlier ordering or endorsement is invented. `read_campaign` exposes actual revision provenance; `read_shortlist` adds order, selected outcome, exact profiles and currently permitted rationale/gaps/manifests.
+
+## Human shortlist persistence
 
 `save_shortlist(comparison_id, selections, actor, confirmed=..., expected_version=..., request_id=...)` saves an unconfirmed human draft or appends a confirmed revision. The initial expected shortlist version is zero. Subsequent saves must name the current head; stale competing edits raise `shortlist_version_conflict`.
 
@@ -95,9 +109,9 @@ Edits, new evidence or changed judgments produce successor brief/comparison/shor
 
 ## Source-policy overlays and cleanup
 
-Comparison candidates retain explicit observation, source assertion and interpretation dependencies. Copied candidate bodies and human reasons inherit that support's policy. A current read checks purpose-specific permission, derivation health and surviving knowledge interpretations.
+Comparison candidates retain explicit observation, source assertion and interpretation dependencies. Copied candidate bodies and automated or human reasons inherit that support's policy. A current read checks purpose-specific permission, derivation health and surviving knowledge interpretations.
 
-Denied support hides the candidate body, reason, evidence excerpts and dependent explanations, returning unavailable metadata. Superseded derivations require review. A retention withdrawal, expiry or revocation purges the stored candidate body and associated saved reasons. Account references, membership, actors, times and permitted audit/support IDs remain. Retrying the same request never rebuilds a purged explanation.
+Denied support hides the candidate body, reason, evidence excerpts and dependent explanations, returning unavailable metadata. Superseded derivations require review. A retention withdrawal, expiry or revocation purges the stored candidate body and associated saved reasons. Account references, membership, order, producer, method, source-free selection counts, times and permitted audit/support IDs remain. Retrying the same request never rebuilds a purged explanation.
 
 Redaction is conservative at candidate scope: if any cited observation is withdrawn, the copied candidate explanation and its saved reasons are withheld rather than guessing which sentences can survive. An explicit successor comparison can reconsider still-permitted evidence with its own provenance. Reconciliation runs synchronously on comparison/shortlist reads and saves. It does not claim a background deletion service or complete cleanup of operator-managed files.
 
@@ -123,7 +137,7 @@ The [local browser surface](local-review.md) implements this workflow over the s
 
 Extend the installed current-KB deterministic comparison and structured/simulated natural-language profiles with live model operation and LLM assessment. The current unranked/descriptive version labels do not claim that assessment or sufficiency checks are implemented. Eligibility requires stable account identity and at least one permitted ingested supporting observation; full profiles/history are not required. Other missing/stale attributes remain visible. The current-KB path already treats unsupported references as discovery inputs; legacy frozen comparisons retain their earlier compatibility behavior.
 
-The agent can save the ordered recommendation as a shortlist without a human save, review, confirmation or approval step. Record actual authorship, ranking/model/method versions, source support, exact brief, rationale and gaps. Optional human curation/review is separately attributed; an automated save cannot claim human confirmation. This deliberately extends the current store's human-only authority, as recorded in [ADR 0003](adr/0003-automatic-shortlist-persistence.md).
+Automatic persistence is installed for deterministic ordered results under [ADR 0003](adr/0003-automatic-shortlist-persistence.md). Future LLM ranking must preserve this exact producer, support and retry contract. Optional richer human curation/review remains separately attributed and cannot be fabricated by the automated save.
 
 Coverage assessment evaluates quantity, relevance and freshness against an explicit profile. Insufficiency automatically requests bounded discovery through the shared task service. The returned/saved recommendation still uses only the current KB. After ingestion/publication, notify and offer regeneration; an explicit regeneration creates a successor and never silently changes saved membership, order or explanations. Current policy still governs the availability of pinned source-dependent text.
 

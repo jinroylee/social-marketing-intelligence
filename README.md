@@ -4,7 +4,7 @@ The product supports evidence-backed market investigation and marketer-led campa
 
 See the [product documentation](docs/README.md) for the accepted requirements, architecture, ERDs, interface contracts and ADRs. The [source integration guide](docs/source-integrations.md) records implemented acquisition capabilities and unresolved readiness work.
 
-The [target functional requirements](docs/functional-requirements.md) extend this local pilot with KB-wide LLM ranking and automatically saved shortlists, an enrichment assistant, background discovery, lightweight X anomaly monitoring, graph/lineage interfaces and hybrid spending controls. Those capabilities are accepted requirements, not features provided by the commands below. The current shortlist store still requires human saves; the target permits automatic saving without human review or approval.
+The [target functional requirements](docs/functional-requirements.md) extend this local pilot with KB-wide LLM ranking, an enrichment assistant, background discovery, lightweight X anomaly monitoring, graph/lineage interfaces and hybrid spending controls. Those capabilities are accepted requirements, not features provided by the commands below. The browser already saves ordered deterministic current-KB shortlists automatically with actual automation attribution and no human review or approval; human selections remain a separate workflow.
 
 Run `uv run --locked python tools/check.py` for lint, documentation consistency and tests. See [development verification](docs/development.md) for PostgreSQL prerequisites and static-only checks.
 

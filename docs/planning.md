@@ -2,7 +2,7 @@
 
 [`smi_campaigns.planning`](../src/smi_campaigns/planning/__init__.py) owns `CampaignPlanning`, `MeasurementPlan` and `DecisionNote`. It extends internal decisions without activating campaigns, acquiring commerce data or computing outcomes.
 
-Plan/note writes below are the implemented human-only interfaces. The [target automatic-shortlist workflow](functional-requirements.md#a--campaign-based-recommendations-and-shortlists) will allow generated saved recommendations to be referenced without requiring optional human review first. That future shortlist authority does not turn proposed plans or human notes into observed results, or change the current plan/note write permissions.
+Plan/note writes below are the implemented human-only interfaces. The [automatic-shortlist operation](campaigns.md#automatic-deterministic-shortlist-persistence) allows generated saved recommendations to be referenced without requiring human review first. Its automation authority does not turn proposed plans or human notes into observed results, or change the current plan/note write permissions.
 
 ## Proposed plans
 

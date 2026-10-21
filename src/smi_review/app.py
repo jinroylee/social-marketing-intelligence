@@ -200,7 +200,7 @@ class ReviewApp:
                         return self.page("Search current knowledge", query_views.search_form(self.csrf, form, code), status)
                     if path == "/campaigns":
                         return self._brief_page(None, {}, form, code, status)
-                    match = re.fullmatch(r"/campaigns/([^/]+)/(?:interpretations|current-comparisons)", path)
+                    match = re.fullmatch(r"/campaigns/([^/]+)/(?:interpretations|current-comparisons|recommendations)", path)
                     if match:
                         return self._campaign_page(identifier(match[1]), form, code, status)
                     match = re.fullmatch(r"/campaigns/([^/]+)/briefs", path)
@@ -405,6 +405,15 @@ class ReviewApp:
             self.campaigns.interpret_criteria(campaign_id, identifier(one(form, "brief_id")), self.actor,
                                               expected_version=int(one(form, "expected_version")), request_id=request_id)
             return Response(303, location=f"/campaigns/{campaign_id}")
+        match = re.fullmatch(r"/campaigns/([^/]+)/recommendations", path)
+        if match:
+            if not form.keys() <= {"csrf", "request_id", "brief_id", "interpretation_id", "expected_brief_version", "expected_shortlist_version"}:
+                raise EvidenceError("invalid_form")
+            saved = self.campaigns.recommend(identifier(match[1]), identifier(one(form, "brief_id")), self.worker,
+                expected_brief_version=int(one(form, "expected_brief_version")),
+                expected_shortlist_version=int(one(form, "expected_shortlist_version")), request_id=request_id,
+                interpretation_id=identifier(one(form, "interpretation_id")) if one(form, "interpretation_id") else None)
+            return Response(303, location=f"/shortlists/{saved['shortlist_id']}")
         match = re.fullmatch(r"/campaigns/([^/]+)/current-comparisons", path)
         if match:
             if not form.keys() <= {"csrf", "request_id", "brief_id", "interpretation_id"}:

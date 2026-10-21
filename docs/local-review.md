@@ -2,7 +2,7 @@
 
 [`smi_review`](../src/smi_review/__init__.py) provides independent investigation and campaign workflows over public monitoring, campaign/planning, knowledge and frozen-evidence interfaces. PostgreSQL owns saved revisions; browser state is not durable.
 
-This document describes the current local browser, including its human-only shortlist saves. The [target operational UI](functional-requirements.md) will add automatically saved ranked recommendations without human review/approval, an enrichment assistant, X alerts and graph/lineage explorers. Those routes and controls do not exist yet.
+This document describes the current local browser, including automatic deterministic shortlist saves and separate human selections. The [target operational UI](functional-requirements.md) will add LLM ranking, an enrichment assistant, X alerts and graph/lineage explorers.
 
 ## Knowledge search
 
@@ -15,6 +15,12 @@ A result page reopens exact actual support after restart and shows its producer,
 The main navigation links `/knowledge/publications`, which lists only committed, nonsynthetic publications in the local workspace. `/knowledge/publications/PUBLICATION_ID` reopens the exact selected observations, derivations, assertion/metric IDs and optional existing caption interpretations. It shows actual producer, publication/source times, mapper and interpretation versions, original coverage, current support health and unknown fields. Denied or superseded support displays metadata without source text; later publications do not replace this historical selection.
 
 Publication is an explicit trusted operation through `KnowledgePublications.publish` or the `smi-ingest publish-knowledge` CLI described in the [knowledge contract](knowledge.md#explicit-knowledge-publication). Reading a detail page does not acquire evidence or publish anything. Existing form protections and actor boundaries apply unchanged.
+
+## Automatic deterministic recommendations
+
+A campaign page offers **Recommend and save automatically**. Same-origin CSRF-protected `POST /campaigns/CAMPAIGN_ID/recommendations` accepts only request/brief identity, an explicitly selected saved criteria interpretation and expected brief/shortlist heads. The server calls `CampaignStore.recommend` using its actual `local-rule-preparation` automation actor. This action immediately redirects to the saved `generated` shortlist; there is no review/approval/confirmation checkbox. Forms cannot claim human authorship, confirmation, origin or method.
+
+The saved page shows deterministic unranked comparison order, actual producer/method, exact brief/profile, rationale, explicit gaps, pinned support and empty-result counts/reasons. Required exclusions and deferred unknown requirements remain unselected; source-only incomplete profiles can be selected. Generated gaps are never presented as human acknowledgements. Identical retries reopen the original across restart and newer knowledge; changed payloads and stale new requests conflict. Recoverable errors retain exact request, brief, profile and both expected heads. Current policy withholds/purges source-dependent explanations while retaining permitted order, membership and producer.
 
 ## Current-KB campaign comparisons
 
@@ -55,13 +61,13 @@ Translations and language adjudication are pending. The application shows origin
 
 Open **Investigations** without starting a campaign. Save product/topic/market/platform scope and optional publication/language constraints, choose a dataset and prepare a pinned snapshot insight. Findings show distinct-post/account counts, literal support, original captions and limits. Scope/answer history survives restarts. A language requirement that cannot be assessed is visible rather than silently ignored; unavailable finding support also withholds aggregate matching counts. See [monitoring](monitoring.md).
 
-From a campaign, open **Measurement plans and decision notes**. A proposed plan pins the current brief and a relevant saved shortlist, with source/owner, product/listing/currency, period/baseline, matching/attribution and gaps. A note records human feedback for any relevant historical shortlist. Plans remain proposed with no outcomes; notes inherit selected-source policy. Separate expected version heads and request IDs protect both histories. See [planning](planning.md).
+From a campaign, open **Measurement plans and decision notes**. A proposed plan pins the current brief and a relevant saved shortlist, with source/owner, product/listing/currency, period/baseline, matching/attribution and gaps. A note records human feedback for any relevant historical shortlist, including a generated revision without first requiring human review. Plans remain proposed with no outcomes; notes inherit selected-source policy. Separate expected version heads and request IDs protect both histories. See [planning](planning.md).
 
 ## Save, failure and support behavior
 
 Forms carry a stable request ID and the expected prior version. Successful actions redirect to the saved database record. Retries return the original revision; stale or changed requests fail visibly. Recoverable brief/selection errors preserve submitted edits and their original expected version, so a conflict cannot silently become an overwrite. Open the campaign history to review the current head before making a successor save.
 
-Rendering uses current display-policy readers. Denied/superseded candidate support withholds captions, copied explanations and saved reasons. A retention withdrawal purges copies through campaign/knowledge reconciliation. An error page also withholds source-dependent submitted reasons when support is unavailable. Selected references and reviewer metadata remain; a permission recovery does not reconstruct purged explanations. The [campaign contract](campaigns.md) defines the durable policy/version invariants.
+Rendering uses current display-policy readers. Denied/superseded candidate support withholds captions, copied explanations and saved reasons. A retention withdrawal purges copies through campaign/knowledge reconciliation. An error page also withholds source-dependent submitted reasons when support is unavailable. Selected references, saved order and producer metadata remain; a permission recovery does not reconstruct purged explanations. The [campaign contract](campaigns.md) defines the durable policy/version invariants.
 
 The server accepts only its loopback Host, same-origin form writes and its CSRF token. Requests have bounded body/field counts; data is HTML-escaped, source links are limited to HTTP(S), and responses use `no-store` and a restrictive content policy. Static routes serve only bundled CSS/JavaScript. A server restart rotates the form token: reopen the saved record to obtain a new form. These are local application boundaries; remote hosting/authentication is not implemented.
 
@@ -84,9 +90,11 @@ HTTP boundary errors explain that the request was not saved and provide **Open c
 | `GET /campaigns/new`, `POST /campaigns` | Human brief form and campaign start |
 | `GET /campaigns/{id}`, `GET /campaigns/{id}/edit`, `POST /campaigns/{id}/briefs` | Current brief, history and successor brief |
 | `POST /campaigns/{id}/interpretations` | Save one exact-brief bounded natural-language interpretation and show its outcome/profile |
+| `POST /campaigns/{id}/current-comparisons` | Pin a deterministic current-KB comparison independently of dataset imports |
 | `POST /campaigns/{id}/comparisons` | Rule-based knowledge/comparison preparation with optional explicit selection of a visible saved interpretation |
 | `GET /comparisons/{id}` | Exact comparison, current evidence and versioned selection form |
 | `POST /comparisons/{id}/shortlists` | Unconfirmed draft or explicit human confirmation |
+| `POST /campaigns/{id}/recommendations` | Compare current KB and automatically save an attributed ordered generated shortlist |
 | `GET /shortlists/{id}` | Exact saved revision with current support health |
 | `GET /investigations`, `GET /investigations/new`, `POST /investigations` | Independent investigation list and human scope creation |
 | `GET /investigations/{id}`, `GET /investigations/{id}/edit`, `POST /investigations/{id}/scopes` | Scope/answer history and revised question |
@@ -101,7 +109,7 @@ Create/revise brief forms save optional original marketer prose alongside stable
 
 ## Accepted future application surfaces
 
-Campaign results show ranked KB-backed accounts, supporting rationale, unknowns/freshness and automatic save attribution. Saving does not require a human approval checkbox. Optional human curation/review is distinct. Insufficient coverage shows the automatically queued discovery status; completion offers explicit regeneration rather than replacing the saved result.
+Campaign results will add LLM ranking to the installed deterministic automatic save, retaining KB support, rationale, unknowns/freshness and exact attribution. Optional richer human curation/review is distinct. Insufficient coverage shows the automatically queued discovery status; completion offers explicit regeneration rather than replacing the saved result.
 
 The assistant accepts free-form KB questions and displays scoped enrichment proposals for approval. Approval precedes task submission and binds its scope server-side. Show acknowledgment/status and completion notifications; answers use published knowledge rather than raw newly fetched tool responses. Spending-ceiling pauses and partial/failed ingestion are visible independently of approval state.
 

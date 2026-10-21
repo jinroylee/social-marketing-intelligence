@@ -4,7 +4,7 @@
 
 **Blocked by:** 14: Compare eligible accounts from current knowledge.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 

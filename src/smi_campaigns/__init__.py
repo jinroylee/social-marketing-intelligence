@@ -1,4 +1,4 @@
-"""Versioned internal campaign planning and human selection decisions."""
+"""Versioned campaign planning, automated recommendations and human selections."""
 
 from .contracts import Brief, Criterion, Selection
 from .store import CampaignStore

@@ -127,3 +127,13 @@ DO $$ BEGIN
         );
     END IF;
 END $$;
+
+-- Legacy human revisions keep their exact status/attribution and unrecorded order.
+ALTER TABLE shortlist_revisions DROP CONSTRAINT IF EXISTS shortlist_revisions_status_check;
+ALTER TABLE shortlist_revisions ADD CONSTRAINT shortlist_revisions_status_check CHECK (status IN ('draft','confirmed','generated'));
+ALTER TABLE shortlist_revisions ADD COLUMN IF NOT EXISTS actor_kind TEXT NOT NULL DEFAULT 'human';
+ALTER TABLE shortlist_revisions ADD COLUMN IF NOT EXISTS method_version TEXT;
+ALTER TABLE shortlist_revisions ADD COLUMN IF NOT EXISTS ordering TEXT;
+ALTER TABLE shortlist_revisions ADD COLUMN IF NOT EXISTS selection_summary JSONB;
+ALTER TABLE shortlist_selections ADD COLUMN IF NOT EXISTS position INTEGER;
+CREATE UNIQUE INDEX IF NOT EXISTS shortlist_selection_order ON shortlist_selections(revision_id,position);

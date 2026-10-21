@@ -1,4 +1,4 @@
-"""Transactional campaign revisions with pinned support and human selection."""
+"""Transactional campaign revisions with pinned support and explicit producer attribution."""
 
 from __future__ import annotations
 
@@ -27,12 +27,15 @@ def _digest(document: Any) -> str:
     return hashlib.sha256(json.dumps(document, sort_keys=True, ensure_ascii=False, allow_nan=False).encode()).hexdigest()
 
 
+RECOMMENDATION_METHOD_VERSION = "current-kb-deterministic-shortlist-v1"
+
+
 def _request(request_id: str) -> None:
     require(text(request_id) and len(request_id) <= 200, "invalid_campaign_request_id")
 
 
 class CampaignStore:
-    """Own briefs, automated comparisons and immutable human shortlist revisions."""
+    """Own human briefs, automated comparisons and attributed shortlist revisions."""
 
     def __init__(self, db: Database, workspace_id: str = "local", *, model_route: ResponsesRoute | None = None, model_transport: ResponsesTransport | None = None, model_credential: str | None = None):
         self.db = db
@@ -120,7 +123,7 @@ class CampaignStore:
             comparisons = connection.execute("SELECT id,brief_id,prepared_at,prepared_by FROM comparison_drafts "
                                              "WHERE campaign_id=%s ORDER BY prepared_at,id", (campaign_id,)).fetchall()
             interpretations = connection.execute("SELECT id FROM campaign_criteria_interpretations WHERE campaign_id=%s ORDER BY recorded_at,id", (campaign_id,)).fetchall()
-            shortlists = connection.execute("SELECT id,comparison_id,brief_id,version,status,recorded_by,recorded_at "
+            shortlists = connection.execute("SELECT id,comparison_id,brief_id,version,status,recorded_by,actor_kind,method_version,ordering,selection_summary,recorded_at "
                                             "FROM shortlist_revisions WHERE campaign_id=%s ORDER BY version", (campaign_id,)).fetchall()
         return {"campaign_id": campaign_id, "owner_id": campaign["owner_id"], "created_at": campaign["created_at"].isoformat(),
                 "brief_version": campaign["brief_version"], "shortlist_version": campaign["shortlist_version"],
@@ -318,19 +321,20 @@ class CampaignStore:
     def prepare_current_comparison(
         self, campaign_id: str, brief_id: str, actor: ActorContext, *, request_id: str,
         include_synthetic: bool = False, interpretation_id: str | None = None,
-        max_age_seconds: int | None = None,
+        max_age_seconds: int | None = None, connection=None,
     ) -> dict[str, Any]:
         """Pin a bounded current-KB comparison; retries preserve the original selection.
 
         Publication membership, source policy and derivation health stay locked
-        through commit. No acquisition, model assessment or shortlist save occurs.
+        through commit, including an optional caller transaction. Preparation alone
+        performs no acquisition, model assessment or shortlist save.
         """
         actor.require_workspace(self.workspace_id)
         _request(request_id)
         digest = _digest({'brief_id': brief_id, 'method': CURRENT_METHOD_VERSION, 'interpretation_id': interpretation_id,
                           'include_synthetic': include_synthetic, 'max_age_seconds': max_age_seconds})
         queries = KnowledgeQueries(self.db, self.workspace_id)
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             campaign = self._campaign(connection, campaign_id, lock=True)
             prior = connection.execute('SELECT * FROM comparison_drafts WHERE campaign_id=%s AND request_id=%s',
                                        (campaign_id, request_id)).fetchone()
@@ -376,6 +380,65 @@ class CampaignStore:
                     connection.execute('INSERT INTO comparison_support(candidate_id,observation_id,source_assertion_id,interpretation_id) VALUES (%s,%s,%s,%s)',
                                        (candidate_id, dependency['observation_id'], dependency['source_assertion_id'], dependency['interpretation_id']))
         return {'status': 'prepared', 'comparison_id': comparison_id, 'method': 'rule_based', 'coverage': coverage}
+
+    def recommend(
+        self, campaign_id: str, brief_id: str, actor: ActorContext, *, expected_brief_version: int,
+        expected_shortlist_version: int, request_id: str, include_synthetic: bool = False,
+        interpretation_id: str | None = None, max_age_seconds: int | None = None,
+    ) -> dict[str, Any]:
+        """Atomically compare current KB support and save an ordered automation revision.
+
+        Exact retries reopen the original revision before any reassessment. New
+        requests require both current heads; deterministic order expresses no score
+        or human endorsement. Required exclusions/deferred unknowns stay unselected.
+        """
+        actor.require_workspace(self.workspace_id)
+        require(actor.kind == 'automation', 'automation_action_required')
+        _request(request_id)
+        require(type(expected_brief_version) is int and expected_brief_version >= 1, 'invalid_expected_brief_version')
+        require(type(expected_shortlist_version) is int and expected_shortlist_version >= 0, 'invalid_shortlist_version')
+        digest = _digest({'brief_id': brief_id, 'expected_brief_version': expected_brief_version,
+                          'expected_shortlist_version': expected_shortlist_version, 'method': RECOMMENDATION_METHOD_VERSION,
+                          'interpretation_id': interpretation_id, 'include_synthetic': include_synthetic,
+                          'max_age_seconds': max_age_seconds})
+        with self.db.connect() as connection:
+            campaign = self._campaign(connection, campaign_id, lock=True)
+            prior = connection.execute('SELECT * FROM shortlist_revisions WHERE campaign_id=%s AND request_id=%s',
+                                       (campaign_id, request_id)).fetchone()
+            if prior:
+                require(prior['request_digest'] == digest and prior['recorded_by'] == actor.actor_id
+                        and prior['actor_kind'] == actor.kind, 'shortlist_request_conflict')
+                return {'status': 'duplicate', 'shortlist_id': str(prior['id']), 'version': prior['version']}
+            self.require_current_brief(campaign_id, brief_id, actor, expected_version=expected_brief_version, connection=connection)
+            require(campaign['shortlist_version'] == expected_shortlist_version, 'shortlist_version_conflict')
+            # The outer revision owns retries. A fresh nested identity prevents
+            # client-chosen comparison IDs from supplying a historical assessment.
+            prepared = self.prepare_current_comparison(campaign_id, brief_id, actor,
+                request_id='recommendation:' + str(uuid.uuid4()), include_synthetic=include_synthetic,
+                interpretation_id=interpretation_id, max_age_seconds=max_age_seconds, connection=connection)
+            comparison_id = prepared['comparison_id']
+            candidates = connection.execute('SELECT * FROM comparison_candidates WHERE comparison_id=%s ORDER BY position',
+                                            (comparison_id,)).fetchall()
+            eligible = [c for c in candidates if c['body']['assessment'] == 'eligible_with_explicit_gaps']
+            summary = {'candidate_count': len(candidates), 'selected_count': len(eligible),
+                       'excluded_count': sum(c['body']['assessment'] == 'excluded_on_required_evidence' for c in candidates),
+                       'deferred_count': sum(c['body']['assessment'] == 'deferred_unknown_requirements' for c in candidates),
+                       'empty_reason': None if eligible else 'required_criteria_not_met' if candidates else 'no_supported_candidates_in_scope'}
+            revision_id, version = str(uuid.uuid4()), expected_shortlist_version + 1
+            connection.execute('INSERT INTO shortlist_revisions(id,campaign_id,brief_id,comparison_id,version,status,request_id,request_digest,recorded_by,actor_kind,method_version,ordering,selection_summary) '
+                               "VALUES (%s,%s,%s,%s,%s,'generated',%s,%s,%s,%s,%s,'comparison_order',%s)",
+                               (revision_id, campaign_id, brief_id, comparison_id, version, request_id, digest,
+                                actor.actor_id, actor.kind, RECOMMENDATION_METHOD_VERSION, Jsonb(summary)))
+            for position, candidate in enumerate(eligible):
+                body = candidate['body']
+                reason = 'Eligible under deterministic caption rules with explicit gaps. ' + ' '.join(
+                    judgment['label'] + ': ' + judgment['reason'] for judgment in body['judgments'])
+                support_ids = sorted({sid for judgment in body['judgments'] for sid in judgment['support_ids']})
+                connection.execute('INSERT INTO shortlist_selections(id,revision_id,candidate_id,position,reason,reason_basis,support_ids,acknowledged_unknowns) '
+                                   "VALUES (%s,%s,%s,%s,%s,'automated_deterministic',%s,%s)",
+                                   (str(uuid.uuid4()), revision_id, candidate['id'], position, reason, support_ids, Jsonb([])))
+            connection.execute('UPDATE campaigns SET shortlist_version=%s WHERE id=%s', (version, campaign_id))
+        return {'status': 'generated', 'shortlist_id': revision_id, 'version': version}
 
     def _statuses(self, draft, actor, *, include_synthetic, connection):
         if draft['knowledge_query_result_id'] is None:
@@ -514,7 +577,7 @@ class CampaignStore:
         return {"status": "confirmed" if confirmed else "draft", "shortlist_id": revision_id, "version": version}
 
     def read_shortlist(self, shortlist_id: str, actor: ActorContext, *, include_synthetic: bool = False) -> dict[str, Any]:
-        """Reopen exact historical membership/reviewer with a current support-health overlay."""
+        """Reopen pinned membership/order/producer with a current support-health overlay."""
         actor.require_workspace(self.workspace_id)
         with self.db.connect() as connection:
             revision = connection.execute("SELECT r.* FROM shortlist_revisions r JOIN campaigns c ON c.id=r.campaign_id "
@@ -523,7 +586,7 @@ class CampaignStore:
         comparison = self.read_comparison(str(revision["comparison_id"]), actor, include_synthetic=include_synthetic)
         candidates = {c["candidate_id"]: c for c in comparison["candidates"]}
         with self.db.connect() as connection:
-            rows = connection.execute("SELECT * FROM shortlist_selections WHERE revision_id=%s ORDER BY id", (shortlist_id,)).fetchall()
+            rows = connection.execute("SELECT * FROM shortlist_selections WHERE revision_id=%s ORDER BY position NULLS LAST,id", (shortlist_id,)).fetchall()
             campaign = self._campaign(connection, str(revision["campaign_id"]))
         selected = []
         for row in rows:
@@ -531,13 +594,19 @@ class CampaignStore:
             state = "unavailable" if row["reason_withdrawn"] else candidate["support_state"]
             selected.append({"candidate_id": str(row["candidate_id"]), "account_key": candidate["account_key"],
                              "account_id": candidate["account_id"], "reason": row["reason"] if state == "available" else None,
-                             "reason_basis": row["reason_basis"], "reason_state": state,
+                             "reason_basis": row["reason_basis"], "reason_state": state, "position": row["position"],
+                             "gaps": candidate["body"]["unknowns"] if state == "available" and candidate["body"] else None,
+                             "support_manifest": candidate["body"].get("support_manifest") if state == "available" and candidate["body"] else None,
+                             "rationale": candidate["body"]["judgments"] if state == "available" and candidate["body"] else None,
                              "support_ids": [str(s) for s in row["support_ids"]], "acknowledged_unknowns": row["acknowledged_unknowns"],
                              "evidence": [c for c in candidate["evidence"] if c["id"] in {str(s) for s in row["support_ids"]} and state == "available"],
                              "review_required": state != "available"})
         return {"shortlist_id": shortlist_id, "campaign_id": str(revision["campaign_id"]), "brief_id": str(revision["brief_id"]),
                 "comparison_id": str(revision["comparison_id"]), "version": revision["version"], "status": revision["status"],
-                "recorded_by": revision["recorded_by"], "recorded_at": revision["recorded_at"].isoformat(),
+                "recorded_by": revision["recorded_by"], "actor_kind": revision["actor_kind"], "recorded_at": revision["recorded_at"].isoformat(),
+                "method_version": revision["method_version"], "ordering": revision["ordering"], "selection_summary": revision["selection_summary"],
+                "executable_profile": comparison["executable_profile"], "execution_profile": comparison["execution_profile"],
+                "coverage": comparison["coverage"],
                 "current_shortlist_version": campaign["shortlist_version"], "selected": selected,
                 "exploratory": True, "review_required": any(s["review_required"] for s in selected)}
 

@@ -1,6 +1,6 @@
 # System architecture
 
-Social Marketing Intelligence supports market investigation and campaign recommendations over shared evidence. In the [target operational contract](functional-requirements.md), an agent can save ranked shortlists without human review or approval; assistant-origin enrichment separately requires approval. Independent X monitoring uses a lightweight evidence path. The implemented local pilot supports bounded current-KB and frozen-evidence comparisons with human-only shortlist saves. Campaign measurement distinguishes observed outcomes, attribution rules and causal effects.
+Social Marketing Intelligence supports market investigation and campaign recommendations over shared evidence. In the [target operational contract](functional-requirements.md), an agent can save ranked shortlists without human review or approval; assistant-origin enrichment separately requires approval. Independent X monitoring uses a lightweight evidence path. The implemented local pilot supports bounded current-KB and frozen-evidence comparisons with automated ordered shortlist saves and distinct human selections. Campaign measurement distinguishes observed outcomes, attribution rules and causal effects.
 
 ## Implemented product boundaries
 
@@ -14,7 +14,7 @@ flowchart LR
     Monitoring --> App[Applications and agents]
     Decisions --> App
     Human[Marketer] --> App
-    App -->|human-confirmed actions| Decisions
+    App -->|human briefs and automated recommendations| Decisions
 ```
 
 These are module boundaries within one Python application and PostgreSQL instance. They do not prescribe separately deployed services. Source adapters depend on ingestion contracts; downstream business modules depend on public evidence interfaces, never adapter internals or direct writes to ingestion tables.
@@ -28,7 +28,7 @@ These are module boundaries within one Python application and PostgreSQL instanc
 | Frozen evidence sets | Validated snapshot import, fixed member/derivation bindings, lineage and workspace/purpose-aware reads | Implemented in `smi_ingestion.evidence_sets` |
 | Shared knowledge | Brand/product references, supported caption interpretations, explicit knowledge publications, bounded current-KB queries and pinned result manifests, method/catalog versions and dependency cleanup | Implemented in `smi_knowledge`; Creator associations and human correction workflows remain future work |
 | Market monitoring | Saved investigations and insight revisions with scoped findings | Implemented in `smi_monitoring`; repeated-capture trend analysis remains future work |
-| Campaign decisions | Briefs, comparisons, human shortlists, proposed measurement plans and decision notes | Implemented in `smi_campaigns` and `smi_campaigns.planning`; observed outcomes/attribution remain future work |
+| Campaign decisions | Briefs, comparisons, automated and human shortlists, proposed measurement plans and decision notes | Implemented in `smi_campaigns` and `smi_campaigns.planning`; observed outcomes/attribution remain future work |
 | Review application | Independent investigation/campaign forms, evidence and uncertainty panels | Implemented in `smi_review`; translation/language and marketer evaluation require actual review |
 
 ## Offline task orchestration
@@ -116,17 +116,17 @@ The rules identify literal mentions and markers. Their output distinguishes prod
 
 `smi_campaigns.interpretation` maps one explicitly configured OpenAI Responses service through a bounded transport port and a disabled-by-default concrete HTTPS adapter. Campaigns own immutable exact-brief interpretation attempts and validated additive generated profiles; accounting owns shared admission, synthetic/provider-reported usage and explicit final evidence/recovery. Generated data preserves human constraints and remains distinct from source facts and task authority. A separate user selection pins a visible successful interpretation to a later comparison. Missing configuration is unavailable; stale/invalid/refused/incomplete/uncertain outcomes remain visible. Provider mode requires explicit server enablement and a verified snapshot context/input/output contract; default verification intercepts all external connections. See [the interpretation contract](campaigns.md#bounded-natural-language-interpretation) and [ADR 0008](adr/0008-generated-criteria-preserve-human-constraints.md).
 
-Request identities make retries safe, and expected-version checks prevent competing edits from overwriting the campaign's brief or shortlist head. Later work creates successor records. Candidate bodies and copied human reasons track their source/interpretation dependencies; current policy can hide/purge explanations while preserving permitted historical membership and reviewer metadata. See the [campaign contract](campaigns.md).
+Request identities make retries safe, and expected-version checks prevent competing edits from overwriting the campaign's brief or shortlist head. Later work creates successor records. Candidate bodies and copied automated or human reasons track their source/interpretation dependencies; current policy can hide/purge explanations while preserving permitted historical membership, order and producer metadata. See the [campaign contract](campaigns.md).
 
-Current-KB preparation shares the knowledge publication-frontier lock and source/derivation locks through its result/draft commit. Exact support manifests, source dates, selected freshness, bounded coverage and actual unranked method/profile versions remain pinned; newer publications only affect explicit successor requests. `shortlist_support` supplies current policy and pinned dependencies to planning in its caller transaction, including source-only metric support without a field assertion.
+`CampaignStore.recommend` composes current-KB preparation and an ordered `generated` shortlist in one transaction, with actual automation producer, exact brief/profile/method, rationale, explicit gaps and pinned support. It filters required exclusions/deferred unknowns, saves empty outcomes explicitly and records source-free selection counts. No human review/endorsement or model assessment is asserted. Identical retries reopen the original before reassessment; new requests check both brief and shortlist heads. Legacy human revisions preserve statuses/attribution and null historical ordering. Current-KB preparation shares the knowledge publication-frontier lock and source/derivation locks through its result/draft commit, including the automatic shortlist transaction. Exact support manifests, source dates, selected freshness, bounded coverage and actual unranked method/profile versions remain pinned; newer publications only affect explicit successor requests. `shortlist_support` supplies current policy and pinned dependencies to planning in its caller transaction, including source-only metric support without a field assertion.
 
 The deterministic method reports criterion states and coverage rather than universal creator scores. Its meaning remains bounded by the provisional caption interpretations actually available. Both the local operator CLI and browser review surface use the same persistence contracts.
 
 ## Local review application
 
-`smi_review` composes public stores into escaped server-rendered forms and policy-aware evidence panels. Its standard-library HTTP server binds to loopback. A configured named human starts/revises briefs and saves/confirms shortlists; a distinct automation context prepares the rule-based knowledge/comparison. Brief editing retains original human prose alongside the campaign-owned immutable executable profile, exact brief revision and truthful installed version labels. Request IDs and expected versions pass through to the domain stores, which own validation and transactions.
+`smi_review` composes public stores into escaped server-rendered forms and policy-aware evidence panels. Its standard-library HTTP server binds to loopback. A configured named human starts/revises briefs and saves/confirms shortlists; a distinct automation context prepares the rule-based knowledge/comparison and saves deterministic generated shortlists. Brief editing retains original human prose alongside the campaign-owned immutable executable profile, exact brief revision and truthful installed version labels. Request IDs and expected versions pass through to the domain stores, which own validation and transactions.
 
-The browser can save/review a supplied immutable enrichment proposal, approve its exact scope and submit its single offline task. It can create a brief, prepare/review a comparison, save a draft, explicitly confirm and reopen exact historical revisions after server restarts. Dataset/catalog/campaign listing interfaces provide navigation without bypassing evidence ownership. Original permitted captions, exact support spans, source/date lineage, provisional judgments and unknowns remain visible. Current-policy withdrawal withholds source-dependent form contents as well as saved explanations. See [local review](local-review.md).
+The browser can save/review a supplied immutable enrichment proposal, approve its exact scope and submit its single offline task. It can create a brief, automatically recommend/save, prepare/review a comparison, save a draft, explicitly confirm and reopen exact historical revisions after server restarts. Dataset/catalog/campaign listing interfaces provide navigation without bypassing evidence ownership. Original permitted captions, exact support spans, source/date lineage, provisional judgments and unknowns remain visible. Current-policy withdrawal withholds source-dependent form contents as well as saved explanations. See [local review](local-review.md).
 
 Same-origin form/Host checks and CSRF tokens protect local writes; the server constructs actor identity and serves only bundled assets. Browser state is not durable. Independent investigations, campaign planning, bounded knowledge search/results and committed publication list/detail pages use the same boundary. Publication details withhold denied and superseded source text while retaining permitted IDs and attribution. Language and marketer usefulness require actual review rather than technical checks.
 
@@ -138,7 +138,7 @@ Same-origin form/Host checks and CSRF tokens protect local writes; the server co
 
 ## Accepted future extensions
 
-The [functional requirements](functional-requirements.md) extend bounded KB retrieval with LLM ranking, automatic shortlist persistence, an enrichment assistant, acquisition tasks/schedules, lightweight X anomaly detection, notifications, graph/lineage interfaces and hybrid spending control. The broader A/B/C workflows remain incomplete; the local task and completion inbox interfaces are described above.
+The [functional requirements](functional-requirements.md) extend bounded KB retrieval with LLM ranking, an enrichment assistant, acquisition tasks/schedules, lightweight X anomaly detection, notifications, graph/lineage interfaces and hybrid spending control. The broader A/B/C workflows remain incomplete; the local task and completion inbox interfaces are described above.
 
 ```mermaid
 flowchart TD
