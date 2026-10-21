@@ -214,22 +214,32 @@
   "testing_boundaries": "Public operations and HTTP; real PostgreSQL; simulated external I/O",
   "external_io": "Local execution with simulated transports. User authorizes read-only primary-documentation lookups only; no live/paid source/model calls or external messages.",
   "last_verified_runtime": {
-    "checked_commit": "567236079b3573daacbef9bd67379d793e7261f2",
-    "implementation_commit": "a80da4dca903b95d2c9aa9fe6bf8f845a6415a4c",
+    "checked_commit": "650950bf2f80ad53488e3bc11b1fee12063f975b",
+    "implementation_commit": "285d7b2f9f80100f18de48c0356d13d5d597fbe2",
     "command": "UV_OFFLINE=1 uv run --locked python tools/check.py",
-    "passed_tests": 404,
-    "seconds": 262.27,
-    "focused_tests": 142,
+    "passed_tests": 443,
+    "seconds": 511.85,
+    "log": "/tmp/smi-ticket-16-integrated-shared.log",
     "real_postgresql": true,
     "simulated_external_io": true,
     "wheel_verified": true,
     "wheel_evidence": {
-      "artifact": "/tmp/smi-ticket-15-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
-      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-15-wheel",
+      "artifact": "/tmp/smi-ticket-16-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
+      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-16-wheel",
       "exact_integrated_files_matched": [
         "smi_campaigns/AGENTS.md",
         "smi_campaigns/CLAUDE.md",
-        "smi_campaigns/__init__.py",
+        "smi_campaigns/interpretation/AGENTS.md",
+        "smi_campaigns/interpretation/CLAUDE.md",
+        "smi_campaigns/interpretation/__init__.py",
+        "smi_campaigns/interpretation/http.py",
+        "smi_campaigns/ranking/AGENTS.md",
+        "smi_campaigns/ranking/CLAUDE.md",
+        "smi_campaigns/ranking/__init__.py",
+        "smi_campaigns/responses/AGENTS.md",
+        "smi_campaigns/responses/CLAUDE.md",
+        "smi_campaigns/responses/__init__.py",
+        "smi_campaigns/responses/http.py",
         "smi_campaigns/schema.sql",
         "smi_campaigns/store.py",
         "smi_review/AGENTS.md",
@@ -237,9 +247,9 @@
         "smi_review/app.py",
         "smi_review/views.py"
       ],
-      "evidence_report": "reports/ticket-15.md"
+      "evidence_report": "reports/ticket-16.md"
     },
-    "integration_evidence_report": "reports/ticket-15.md"
+    "integration_evidence_report": "reports/ticket-16.md"
   },
   "external_prerequisites": {
     "13": "Current primary model contract verified on 2026-10-20 and ticket 13 software implemented/validated with intercepted HTTP simulation. Future live operation still requires explicit server enablement, real credentials, model/cost/rate configuration and separate readiness/authorization; these are not supplied or established. No live receipt or human-quality result is claimed.",
@@ -322,6 +332,23 @@
       "final_collision_tests": 1,
       "final_collision_seconds": 0.35,
       "ticket_tests_in_shared_gate": 13,
+      "wheel_verified": true
+    },
+    {
+      "ticket": 16,
+      "title": "Rank campaign candidates with supported LLM assessment",
+      "commit": "285d7b2f9f80100f18de48c0356d13d5d597fbe2",
+      "final_head": "650950bf2f80ad53488e3bc11b1fee12063f975b",
+      "integration_checked_commit": "650950bf2f80ad53488e3bc11b1fee12063f975b",
+      "integration_tests": 443,
+      "integration_seconds": 511.85,
+      "integration_log": "/tmp/smi-ticket-16-integrated-shared.log",
+      "file": "16-rank-campaign-candidates-with-supported-llm-assessment.md",
+      "report": "reports/ticket-16.md",
+      "ticket_tests_in_shared_gate": 39,
+      "worker_shared_tests": 443,
+      "worker_shared_seconds": 339.66,
+      "focused_evidence": "Passing slices and corrected UI-label regression are documented in reports/ticket-16.md; the pre-fix compatibility run is not claimed as a passing gate.",
       "wheel_verified": true
     }
   ]
