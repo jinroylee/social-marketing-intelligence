@@ -67,6 +67,12 @@ Open **Investigations** without starting a campaign. Save product/topic/market/p
 
 From a campaign, open **Measurement plans and decision notes**. A proposed plan pins the current brief and a relevant saved shortlist, with source/owner, product/listing/currency, period/baseline, matching/attribution and gaps. A note records human feedback for any relevant historical shortlist, including a generated revision without first requiring human review. Plans remain proposed with no outcomes; notes inherit selected-source policy. Separate expected version heads and request IDs protect both histories. See [planning](planning.md).
 
+## Optional shortlist curation
+
+On any saved generated or human shortlist, **Create successor revision** reopens its exact comparison and source shortlist context. Generated/model order is the initial display order; reasons show their original basis. Select accounts, give each selected account a distinct positive position, edit human reasons, cite permitted relevance support and acknowledge declared unknowns. **Save draft** creates an attributable ordered human successor without requiring review. **Confirm shortlist** separately requires the review checkbox and the existing support/unknown checks. Neither action changes the original recommendation or invokes a model/source.
+
+The existing `POST /comparisons/COMPARISON_ID/shortlists` carries the source shortlist ID, retry identity and expected source head. Reopening an older source does not retarget the form to the current head. Invalid order and stale saves preserve permitted edits and original retry/head context; unavailable/purged reasons are withheld from both saved pages and error forms. Saved curation pages link their source revision and show human order/method and whether confirmation actually occurred. Existing human records without a source/order keep their historical meaning.
+
 ## Save, failure and support behavior
 
 Forms carry a stable request ID and the expected prior version. Successful actions redirect to the saved database record. Retries return the original revision; stale or changed requests fail visibly. Recoverable brief/selection errors preserve submitted edits and their original expected version, so a conflict cannot silently become an overwrite. Open the campaign history to review the current head before making a successor save.
@@ -97,7 +103,7 @@ HTTP boundary errors explain that the request was not saved and provide **Open c
 | `POST /campaigns/{id}/current-comparisons` | Pin a deterministic current-KB comparison independently of dataset imports |
 | `POST /campaigns/{id}/comparisons` | Rule-based knowledge/comparison preparation with optional explicit selection of a visible saved interpretation |
 | `GET /comparisons/{id}` | Exact comparison, current evidence and versioned selection form |
-| `POST /comparisons/{id}/shortlists` | Unconfirmed draft or explicit human confirmation |
+| `POST /comparisons/{id}/shortlists` | Human draft/confirmation, optionally ordered curation of an exact source revision |
 | `POST /campaigns/{id}/ranked-recommendations` | Apply deterministic eligibility, assess one bounded model batch and automatically save valid order; failures remain visible |
 | `POST /campaigns/{id}/recommendations` | Compare current KB and automatically save an attributed ordered generated shortlist |
 | `GET /shortlists/{id}` | Exact saved revision with current support health |

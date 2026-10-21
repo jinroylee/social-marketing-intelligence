@@ -4,7 +4,7 @@
 
 **Blocked by:** 15: Automatically save an attributed ordered shortlist.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** S — one bounded user-visible journey or extension in a fresh implementation context.
 

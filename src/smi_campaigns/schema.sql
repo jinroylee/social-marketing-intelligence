@@ -137,6 +137,7 @@ ALTER TABLE shortlist_revisions ADD COLUMN IF NOT EXISTS ordering TEXT;
 ALTER TABLE shortlist_revisions ADD COLUMN IF NOT EXISTS selection_summary JSONB;
 ALTER TABLE shortlist_selections ADD COLUMN IF NOT EXISTS position INTEGER;
 CREATE UNIQUE INDEX IF NOT EXISTS shortlist_selection_order ON shortlist_selections(revision_id,position);
+ALTER TABLE shortlist_revisions ADD COLUMN IF NOT EXISTS source_shortlist_id UUID REFERENCES shortlist_revisions(id);
 
 -- Source-derived inputs and validated judgments share candidate dependency cleanup.
 ALTER TABLE comparison_candidates ADD COLUMN IF NOT EXISTS ranking_input JSONB;

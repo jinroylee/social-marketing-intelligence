@@ -351,16 +351,27 @@ def comparison_page(comparison, campaign, brief, source, csrf, previous=None, su
     if stale:
         content += error_message("brief_version_conflict")
     previous_choices = {s["candidate_id"]: s for s in previous["selected"]} if previous else {}
-    content += f'<form method="post" action="/comparisons/{e(comparison["comparison_id"])}/shortlists" id="shortlist-form">{hidden("csrf",csrf)}{hidden("request_id",value(submitted,"request_id",str(uuid.uuid4())))}{hidden("expected_version",value(submitted,"expected_version",campaign["shortlist_version"]))}'
+    content += f'<form method="post" action="/comparisons/{e(comparison["comparison_id"])}/shortlists" id="shortlist-form">{hidden("csrf",csrf)}{hidden("request_id",value(submitted,"request_id",str(uuid.uuid4())))}{hidden("expected_version",value(submitted,"expected_version",previous["version"] if previous else campaign["shortlist_version"]))}'
+    if previous:
+        content += hidden('source_shortlist_id', previous['shortlist_id'])
+        content += f'<section class="panel"><h2>Optional human curation</h2><p>Starting from <a href="/shortlists/{e(previous["shortlist_id"])}">revision {e(previous["version"])}</a>. Select accounts and give each selected account a distinct position. Saving a draft records your curation without confirming review. Starting reasons retain their original automated or human basis until you save your human input.</p></section>'
+        if previous['version'] != campaign['shortlist_version']:
+            content += error_message('shortlist_version_conflict')
     if not comparison["candidates"]:
         content += '<section class="panel"><h2>No eligible supported accounts in this scope</h2><p>You can save an empty shortlist to record deliberate deferral.</p></section>'
-    for candidate in comparison["candidates"]:
+    candidates = comparison['candidates']
+    if previous and previous['ordering'] is not None:
+        order = {s['candidate_id']: i for i, s in enumerate(previous['selected'])}
+        candidates = sorted(candidates, key=lambda c: order.get(c['candidate_id'], len(order)))
+    for index, candidate in enumerate(candidates):
         cid, body = candidate["candidate_id"], candidate["body"]
         members = members_for(candidate, source)
         available = body is not None and (not body["observations"] or bool(members))
         choice = previous_choices.get(cid, {})
         is_selected = cid in submitted.get("selected", []) if submitted is not None else cid in previous_choices
         content += f'<article class="panel candidate" data-candidate="{e(cid)}"><div class="row-title"><div><h2>{e(account_name(candidate,members))}</h2><small>{e(candidate["account_key"]["platform"])} · {e(candidate["account_key"]["namespace"])} · {e(candidate["account_key"]["native_id"])}</small></div><span class="badge">{e(candidate["origin"].replace("_"," "))}</span></div><label class="check select-candidate"><input type="checkbox" name="selected" value="{e(cid)}"{checked(is_selected)}>Include this account</label>'
+        if previous:
+            content += f'<label>Position in your selected order<input type="number" min="1" name="position_{e(cid)}" value="{e(value(submitted,"position_" + cid,str(index + 1)))}"></label>'
         if not available:
             content += '<div class="notice"><strong>Support unavailable or requires review</strong><p>Source-dependent explanations are withheld. This account can remain in an unconfirmed draft.</p></div></article>'
             continue
@@ -371,6 +382,8 @@ def comparison_page(comparison, campaign, brief, source, csrf, previous=None, su
             content += f'<div class="judgment {e(judgment["state"])}"><strong>{e(judgment["label"])}</strong><span>{e(judgment["state"].replace("_"," "))}</span><p>{e(judgment["reason"])}</p><small>{"Required" if judgment["required"] else "Preference"} · unknown: {e(judgment["unknown_handling"])} · {e(judgment["review_status"])}</small></div>'
         content += '</div>' + evidence_panel(members, candidate["evidence"])
         reason = value(submitted, 'reason_' + cid, choice.get("reason") or "")
+        if choice.get('reason'):
+            content += f'<p>Starting reason basis: {e(choice["reason_basis"])}, from the linked source revision. Your saved reason will be human supplied.</p>'
         content += f'<label>Human inclusion reason<textarea name="reason_{e(cid)}" rows="2" placeholder="Explain why the cited evidence merits further investigation.">{e(reason)}</textarea><small>Human input; its wording is not independently verified.</small></label><fieldset><legend>Cite relevance support</legend>'
         cited = submitted.get('support_' + cid, []) if submitted is not None else choice.get("support_ids", [])
         seen = set()
@@ -404,6 +417,8 @@ def shortlist_page(shortlist, brief, comparison, source):
 
         if ranking:
             content += f'<details class="panel"><summary>Exact assessed inputs and validated model judgments</summary><pre>{e(ranking)}</pre></details>'
+    elif shortlist.get('source_shortlist_id'):
+        content += f'<section class="panel"><h2>Human curation</h2><p>Source: <a href="/shortlists/{e(shortlist["source_shortlist_id"])}">original revision</a><br>Method: {e(shortlist["method_version"])}<br>Order: {e(shortlist["ordering"])}</p><p>{"Separate human confirmation recorded." if shortlist["status"] == "confirmed" else "Unconfirmed human curation; no human review is asserted."}</p></section>'
     if shortlist["version"] != shortlist["current_shortlist_version"]:
         content += '<div class="notice">This is a historical revision. A newer shortlist revision exists in the campaign history.</div>'
     if not shortlist["selected"]:
@@ -420,7 +435,8 @@ def shortlist_page(shortlist, brief, comparison, source):
             if generated:
                 content += f'<h3>{"Generated relative-fit rationale" if ranking else "Deterministic inclusion rationale"}</h3><p>{e(selection["reason"])}</p><p>Position: {e(selection["position"])} · {e(selection["reason_basis"])}</p><details><summary>Pinned support manifest</summary><pre>{e(selection["support_manifest"])}</pre></details>' + evidence_panel(members, selection["evidence"])
             else:
-                content += f'<h3>Human inclusion reason</h3><p>{e(selection["reason"] or "No reason recorded in this draft.")}</p><small>Human supplied; semantic review remains provisional.</small>' + evidence_panel(members, selection["evidence"])
+                position = f'<p>Position: {e(selection["position"])}</p>' if selection['position'] is not None else ''
+                content += f'<h3>Human inclusion reason</h3><p>{e(selection["reason"] or "No reason recorded in this draft.")}</p>{position}<small>Human supplied; semantic review remains provisional.</small>' + evidence_panel(members, selection["evidence"])
         else:
             content += '<div class="notice"><strong>Review required</strong><p>Reason and evidence are unavailable under current support health. The saved membership and producer remain recorded.</p></div>'
         gaps = selection["acknowledged_unknowns"]

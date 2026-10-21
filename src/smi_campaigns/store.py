@@ -124,7 +124,7 @@ class CampaignStore:
                                              "WHERE campaign_id=%s ORDER BY prepared_at,id", (campaign_id,)).fetchall()
             interpretations = connection.execute("SELECT id FROM campaign_criteria_interpretations WHERE campaign_id=%s ORDER BY recorded_at,id", (campaign_id,)).fetchall()
             rankings = connection.execute('SELECT id FROM campaign_ranking_assessments WHERE campaign_id=%s ORDER BY recorded_at,id', (campaign_id,)).fetchall()
-            shortlists = connection.execute("SELECT id,comparison_id,brief_id,version,status,recorded_by,actor_kind,method_version,ordering,selection_summary,recorded_at "
+            shortlists = connection.execute("SELECT id,comparison_id,brief_id,version,status,recorded_by,actor_kind,method_version,ordering,selection_summary,source_shortlist_id,recorded_at "
                                             "FROM shortlist_revisions WHERE campaign_id=%s ORDER BY version", (campaign_id,)).fetchall()
         return {"campaign_id": campaign_id, "owner_id": campaign["owner_id"], "created_at": campaign["created_at"].isoformat(),
                 "brief_version": campaign["brief_version"], "shortlist_version": campaign["shortlist_version"],
@@ -135,6 +135,7 @@ class CampaignStore:
                 "comparisons": [{**row, "id": str(row["id"]), "brief_id": str(row["brief_id"]),
                                  "prepared_at": row["prepared_at"].isoformat()} for row in comparisons],
                 "shortlists": [{**row, "id": str(row["id"]), "brief_id": str(row["brief_id"]),
+                                "source_shortlist_id": str(row['source_shortlist_id']) if row['source_shortlist_id'] else None,
                                 "comparison_id": str(row["comparison_id"]), "recorded_at": row["recorded_at"].isoformat()} for row in shortlists]}
 
     def interpretation_capability(self, actor: ActorContext) -> dict:
@@ -650,8 +651,9 @@ class CampaignStore:
     def save_shortlist(
         self, comparison_id: str, selections: tuple[Selection, ...], actor: ActorContext, *,
         confirmed: bool, expected_version: int, request_id: str, include_synthetic: bool = False,
+        source_shortlist_id: str | None = None,
     ) -> dict[str, Any]:
-        """Append a human draft/confirmation with retry-safe, expected-version checked persistence."""
+        """Append a human draft/confirmation; an exact source revision records ordered curation."""
         self._human(actor)
         _request(request_id)
         require(type(confirmed) is bool and type(expected_version) is int and expected_version >= 0, "invalid_shortlist_version")
@@ -664,6 +666,10 @@ class CampaignStore:
         request = {"comparison_id": comparison_id, "confirmed": confirmed, "expected_version": expected_version,
                    "selections": [{"candidate_id": s.candidate_id, "reason": s.reason, "support_ids": sorted(set(s.support_ids)),
                                    "acknowledged_unknowns": sorted(set(s.acknowledged_unknowns))} for s in selections]}
+        # Omission preserves the retry digest and meaning of historical human saves.
+        if source_shortlist_id is not None:
+            request['source_shortlist_id'] = source_shortlist_id
+            request['include_synthetic'] = include_synthetic
         digest = _digest(request)
         with self.db.connect() as connection:
             draft = self._comparison(connection, comparison_id)
@@ -674,6 +680,11 @@ class CampaignStore:
                 require(prior["request_digest"] == digest and prior["recorded_by"] == actor.actor_id, "shortlist_request_conflict")
                 return {"status": "duplicate", "shortlist_id": str(prior["id"]), "version": prior["version"]}
             require(campaign["shortlist_version"] == expected_version, "shortlist_version_conflict")
+            if source_shortlist_id is not None:
+                source = connection.execute('SELECT * FROM shortlist_revisions WHERE id=%s AND campaign_id=%s',
+                                            (source_shortlist_id, draft['campaign_id'])).fetchone()
+                require(source is not None and str(source['comparison_id']) == comparison_id, 'selection_not_in_comparison')
+                require(source['version'] == expected_version, 'shortlist_version_conflict')
             brief = connection.execute("SELECT version FROM campaign_briefs WHERE id=%s", (draft["brief_id"],)).fetchone()
             require(brief["version"] == campaign["brief_version"], "brief_version_conflict")
             statuses = self._statuses(draft, actor, include_synthetic=include_synthetic, connection=connection)
@@ -684,6 +695,11 @@ class CampaignStore:
                 require(selection.candidate_id in candidates, "selection_not_in_comparison")
                 candidate = candidates[selection.candidate_id]
                 body = candidate["body"]
+                if source_shortlist_id is not None and (selection.reason or selection.support_ids or selection.acknowledged_unknowns):
+                    require(candidate['support_state'] == 'available' and body is not None
+                            and all(statuses[str(s['observation_id'])]['can_process'] and statuses[str(s['observation_id'])]['can_display']
+                                    for s in supports if str(s['candidate_id']) == selection.candidate_id),
+                            'selection_reason_or_support_unavailable')
                 allowed_ids = {c["id"] for c in candidate["evidence"]}
                 require(set(selection.support_ids) <= allowed_ids, "invalid_selection_support")
                 require(set(selection.acknowledged_unknowns) <= set(body["unknowns"] if body else []), "invalid_selection_unknowns")
@@ -698,17 +714,20 @@ class CampaignStore:
                     require(all(statuses[str(s["observation_id"])]["can_process"] and statuses[str(s["observation_id"])]["can_display"]
                                 for s in supports if str(s["candidate_id"]) == selection.candidate_id), "selection_support_not_permitted")
             revision_id, version = str(uuid.uuid4()), expected_version + 1
-            connection.execute("INSERT INTO shortlist_revisions(id,campaign_id,brief_id,comparison_id,version,status,request_id,request_digest,recorded_by) "
-                               "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+            connection.execute("INSERT INTO shortlist_revisions(id,campaign_id,brief_id,comparison_id,version,status,request_id,request_digest,recorded_by,source_shortlist_id,method_version,ordering) "
+                               "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                                (revision_id, draft["campaign_id"], draft["brief_id"], comparison_id, version,
-                                "confirmed" if confirmed else "draft", request_id, digest, actor.actor_id))
-            for selection in selections:
+                                "confirmed" if confirmed else "draft", request_id, digest, actor.actor_id, source_shortlist_id,
+                                'human-shortlist-curation-v1' if source_shortlist_id else None,
+                                'human_selected_order' if source_shortlist_id else None))
+            for position, selection in enumerate(selections):
                 retained = all(statuses[str(s["observation_id"])]["can_retain"] for s in supports
                                if str(s["candidate_id"]) == selection.candidate_id)
-                connection.execute("INSERT INTO shortlist_selections(id,revision_id,candidate_id,reason,support_ids,acknowledged_unknowns,reason_withdrawn) "
-                                   "VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                connection.execute("INSERT INTO shortlist_selections(id,revision_id,candidate_id,reason,support_ids,acknowledged_unknowns,reason_withdrawn,position) "
+                                   "VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
                                    (str(uuid.uuid4()), revision_id, selection.candidate_id, selection.reason if retained else None,
-                                    list(selection.support_ids), Jsonb(list(selection.acknowledged_unknowns)), not retained))
+                                    list(selection.support_ids), Jsonb(list(selection.acknowledged_unknowns)), not retained,
+                                    position if source_shortlist_id else None))
             connection.execute("UPDATE campaigns SET shortlist_version=%s WHERE id=%s", (version, draft["campaign_id"]))
         return {"status": "confirmed" if confirmed else "draft", "shortlist_id": revision_id, "version": version}
 
@@ -746,8 +765,13 @@ class CampaignStore:
                                  'ranking': 'validated_llm_assessment' if assessment['candidates'] else 'not_assessed_empty_batch',
                                  'ranking_profile': assessment['configuration']['ranking_profile'],
                                  'ordering': revision['ordering']}
+        if revision['source_shortlist_id'] is not None:
+            execution_profile = {**(execution_profile or {}), 'method_version': revision['method_version'],
+                                 'ranking': 'human_selection', 'ordering': revision['ordering'],
+                                 'source_shortlist_id': str(revision['source_shortlist_id'])}
         return {"shortlist_id": shortlist_id, "campaign_id": str(revision["campaign_id"]), "brief_id": str(revision["brief_id"]),
                 "comparison_id": str(revision["comparison_id"]), "version": revision["version"], "status": revision["status"],
+                "source_shortlist_id": str(revision['source_shortlist_id']) if revision['source_shortlist_id'] else None,
                 "recorded_by": revision["recorded_by"], "actor_kind": revision["actor_kind"], "recorded_at": revision["recorded_at"].isoformat(),
                 "method_version": revision["method_version"], "ordering": revision["ordering"], "selection_summary": revision["selection_summary"],
                 "executable_profile": comparison["executable_profile"], "execution_profile": execution_profile, "ranking_assessment": assessment,

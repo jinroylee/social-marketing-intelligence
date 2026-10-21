@@ -71,17 +71,23 @@ def brief_from_form(form: dict[str, list[str]]) -> Brief:
 
 def selections_from_form(form: dict[str, list[str]]) -> tuple[Selection, ...]:
     """Parse selected candidates and their individually cited/acknowledged review inputs."""
-    allowed = {"csrf", "request_id", "expected_version", "selected", "action", "reviewed"}
+    allowed = {"csrf", "request_id", "expected_version", "selected", "action", "reviewed", "source_shortlist_id"}
     for key in form:
         if key in allowed:
             continue
         prefix, separator, suffix = key.partition("_")
-        if not separator or prefix not in {"reason", "support", "unknown"}:
+        if not separator or prefix not in {"reason", "support", "unknown", "position"}:
             raise EvidenceError("invalid_form")
         identifier(suffix)
+    selected = form.get('selected', [])
+    if one(form, 'source_shortlist_id'):
+        positions = [int(one(form, 'position_' + cid)) for cid in selected]
+        if any(p < 1 for p in positions) or len(set(positions)) != len(positions):
+            raise EvidenceError('invalid_selection_order')
+        selected = [cid for _, cid in sorted(zip(positions, selected))]
     return tuple(Selection(identifier(cid), one(form, f"reason_{cid}").strip() or None,
                            tuple(form.get(f"support_{cid}", [])), tuple(form.get(f"unknown_{cid}", [])))
-                 for cid in form.get("selected", []))
+                 for cid in selected)
 
 
 class ReviewApp:
@@ -135,8 +141,9 @@ class ReviewApp:
         brief = next(b for b in campaign["briefs"] if b["id"] == comparison["brief_id"])
         source = comparison["knowledge_query"] or self.evidence.read(comparison["dataset_id"], self.actor)
         previous = None
-        if one(query, "shortlist_id"):
-            previous = self.campaigns.read_shortlist(identifier(one(query, "shortlist_id")), self.actor)
+        source_shortlist_id = one(submitted, 'source_shortlist_id') if submitted is not None else one(query, 'shortlist_id')
+        if source_shortlist_id:
+            previous = self.campaigns.read_shortlist(identifier(source_shortlist_id), self.actor)
             if previous["comparison_id"] != comparison_id:
                 raise EvidenceError("selection_not_in_comparison")
         return self.page("Review comparison", views.comparison_page(comparison, campaign, brief, source, self.csrf,
@@ -447,6 +454,7 @@ class ReviewApp:
                 raise EvidenceError("human_review_acknowledgement_required")
             result = self.campaigns.save_shortlist(identifier(match[1]), selections_from_form(form), self.actor,
                                                     confirmed=action == "confirm", expected_version=int(one(form, "expected_version")),
-                                                    request_id=request_id)
+                                                    request_id=request_id,
+                                                    source_shortlist_id=identifier(one(form, 'source_shortlist_id')) if one(form, 'source_shortlist_id') else None)
             return Response(303, location=f"/shortlists/{result['shortlist_id']}")
         raise EvidenceError("record_not_found")

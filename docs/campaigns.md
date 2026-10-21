@@ -108,7 +108,13 @@ Candidate `ranking_input` and `ranking_judgment` copies inherit the exact compar
 
 ## Human shortlist persistence
 
-`save_shortlist(comparison_id, selections, actor, confirmed=..., expected_version=..., request_id=...)` saves an unconfirmed human draft or appends a confirmed revision. The initial expected shortlist version is zero. Subsequent saves must name the current head; stale competing edits raise `shortlist_version_conflict`.
+`save_shortlist(comparison_id, selections, actor, confirmed=..., expected_version=..., request_id=..., source_shortlist_id=None)` saves an unconfirmed human draft or appends a confirmed revision. The initial expected shortlist version is zero. Subsequent saves must name the current head; stale competing edits raise `shortlist_version_conflict`.
+
+Optional curation supplies `source_shortlist_id`, the exact current shortlist revision from the same campaign and comparison. The submitted `Selection` tuple defines the new account order, including an empty deliberate deferral. Saving records a new human revision with that nullable predecessor link, method `human-shortlist-curation-v1`, `ordering=human_selected_order`, zero-based positions and human-supplied reasons/acknowledgements. The execution profile labels the order `human_selection`; the original comparison, generated order/producer, model assessment, exact support and absence of human review remain unchanged. Curation performs no acquisition or model I/O. A draft asserts no human review; `confirmed=True` remains a separate human decision with the requirements below.
+
+New curation checks both the current shortlist head and the source revision's version, plus the comparison's current brief. A historical source cannot be retargeted to a newer head by changing the expected version. Identical retries reopen the original before those new-save checks; changed source, ordered selections, reasons, citations, acknowledgements, synthetic visibility, confirmation, expected head or human actor under that identity conflicts. The source link is returned by both shortlist and campaign-history readers. Saves that omit it preserve the prior human operation's retry identity and unrecorded order/method. Migration adds only the nullable source link; it never infers a predecessor or order for historical rows.
+
+Copied and edited human reasons inherit every pinned candidate dependency, including source-only support without caption interpretations. A new curation can retain unavailable account membership without a reason, citations or acknowledgements; it cannot resubmit source-dependent text when the candidate is unavailable, superseded, unprocessable or undisplayable. Confirmed selections still require positive relevance support. Public reads and retries never reconstruct purged text.
 
 For each confirmed account:
 
@@ -153,7 +159,7 @@ The [local browser surface](local-review.md) implements this workflow over the s
 
 Extend the installed current-KB deterministic comparison and structured/simulated natural-language profiles with live model operation and LLM assessment. The current unranked/descriptive version labels do not claim that assessment or sufficiency checks are implemented. Eligibility requires stable account identity and at least one permitted ingested supporting observation; full profiles/history are not required. Other missing/stale attributes remain visible. The current-KB path already treats unsupported references as discovery inputs; legacy frozen comparisons retain their earlier compatibility behavior.
 
-Automatic persistence is installed for deterministic ordered results under [ADR 0003](adr/0003-automatic-shortlist-persistence.md). Future LLM ranking must preserve this exact producer, support and retry contract. Optional richer human curation/review remains separately attributed and cannot be fabricated by the automated save.
+Automatic persistence is installed for deterministic ordered results under [ADR 0003](adr/0003-automatic-shortlist-persistence.md). Future LLM ranking must preserve this exact producer, support and retry contract. Optional select/reorder curation is implemented through the human save above; its attribution and any separate confirmation cannot be fabricated by the automated save.
 
 Coverage assessment evaluates quantity, relevance and freshness against an explicit profile. Insufficiency automatically requests bounded discovery through the shared task service. The returned/saved recommendation still uses only the current KB. After ingestion/publication, notify and offer regeneration; an explicit regeneration creates a successor and never silently changes saved membership, order or explanations. Current policy still governs the availability of pinned source-dependent text.
 
