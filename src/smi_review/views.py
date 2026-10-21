@@ -404,7 +404,7 @@ def comparison_page(comparison, campaign, brief, source, csrf, previous=None, su
     return content + f'<div class="actions"><button type="submit" name="action" value="draft" class="secondary" formnovalidate{disabled}>Save draft</button><button type="submit" name="action" value="confirm"{disabled}>Confirm shortlist</button></div><small>Expected prior shortlist version: {e(value(submitted,"expected_version",campaign["shortlist_version"]))}. Saving creates a new immutable revision.</small></section></form>'
 
 
-def shortlist_page(shortlist, brief, comparison, source):
+def shortlist_page(shortlist, brief, comparison, source, enrichment=None):
     content = f'<p><a href="/campaigns/{e(shortlist["campaign_id"])}">← Campaign and revision history</a></p><div class="heading"><div><p class="eyebrow">Saved decision</p><h1>Shortlist revision {shortlist["version"]}</h1><p><span class="badge">{e(shortlist["status"])}</span> Recorded by {e(shortlist["recorded_by"])} · {e(shortlist["recorded_at"])}</p></div><a class="button secondary" href="/comparisons/{e(shortlist["comparison_id"])}?shortlist_id={quote(shortlist["shortlist_id"])}">Create successor revision</a></div>'
     generated = shortlist["actor_kind"] == "automation"
     content += '<p class="lede">This saved account set and producer attribution are pinned. Source health below reflects current permissions.</p>' + brief_summary(brief)
@@ -419,6 +419,40 @@ def shortlist_page(shortlist, brief, comparison, source):
             content += f'<details class="panel"><summary>Exact assessed inputs and validated model judgments</summary><pre>{e(ranking)}</pre></details>'
     elif shortlist.get('source_shortlist_id'):
         content += f'<section class="panel"><h2>Human curation</h2><p>Source: <a href="/shortlists/{e(shortlist["source_shortlist_id"])}">original revision</a><br>Method: {e(shortlist["method_version"])}<br>Order: {e(shortlist["ordering"])}</p><p>{"Separate human confirmation recorded." if shortlist["status"] == "confirmed" else "Unconfirmed human curation; no human review is asserted."}</p></section>'
+    coverage = shortlist.get('coverage_assessment')
+    if coverage is not None:
+        profile, result = coverage['profile'], coverage['result']
+        content += f'<section class="panel"><h2>Campaign coverage</h2><p>Assessed at {e(coverage["assessed_at"])}. This bounded KB assessment does not establish market completeness.</p>'
+        if result is None:
+            content += '<p>Coverage explanations unavailable under current support policy.</p>'
+        else:
+            content += '<p>' + ('Sufficient under the recorded policy.' if result['sufficient'] else 'More evidence is needed under the recorded policy.') + '</p><dl>'
+            for label, actual, minimum in (
+                ('Supported candidates', 'eligible_candidates', 'minimum_candidates'),
+                ('Candidates with supported literal relevance', 'relevant_candidates', 'minimum_relevant_candidates'),
+                ('Candidates with recent known captures', 'fresh_candidates', 'minimum_fresh_candidates'),
+            ):
+                content += f'<dt>{label}</dt><dd>{result[actual]} / {profile[minimum]} required</dd>'
+            content += f'</dl><p>Captures must be no more than {profile["maximum_capture_age_seconds"] // 86400} days old. Stale: {result["stale_candidates"]}; unknown or future capture time: {result["unknown_capture_candidates"]}.</p>'
+            labels = {'insufficient_quantity': 'Too few supported eligible candidates.',
+                      'insufficient_relevance': 'Too few candidates with supported literal relevance.',
+                      'insufficient_freshness': 'Too few candidates with recent known capture times.'}
+            content += '<ul>' + ''.join(f'<li>{e(labels[reason])}</li>' for reason in result['reasons']) + '</ul>'
+        if enrichment:
+            content += f'<p>Enrichment: {e(enrichment["status"])}'
+            if enrichment['reason']:
+                content += f' · {e(enrichment["reason"])}'
+            content += '</p>'
+            if enrichment['task_id']:
+                task = enrichment['task']
+                reason = task['progress'].get('reason') or (task['failure'] or {}).get('code')
+                content += f'<p><a href="/tasks/{e(enrichment["task_id"])}">Discovery task</a> · {e(task["execution"]["state"])} · {e(task["outcome"] or "pending")}'
+                if reason:
+                    content += f' · {e(reason)}'
+                content += '</p>'
+        else:
+            content += '<p>Automatic discovery disposition has not been recorded.</p>'
+        content += f'<details><summary>Exact coverage profile and input references</summary><pre>{e(coverage)}</pre></details></section>'
     if shortlist["version"] != shortlist["current_shortlist_version"]:
         content += '<div class="notice">This is a historical revision. A newer shortlist revision exists in the campaign history.</div>'
     if not shortlist["selected"]:

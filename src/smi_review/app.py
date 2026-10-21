@@ -20,7 +20,7 @@ from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore
 from smi_monitoring import MonitoringStore
-from smi_tasks import AcquisitionTasks, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority
+from smi_tasks import AcquisitionTasks, CampaignRecommendations, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority
 
 from . import cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, task_views, views
 from .forms import identifier, one
@@ -105,7 +105,9 @@ class ReviewApp:
         self.evidence = EvidenceSetReader(db, workspace_id)
         self.monitoring = MonitoringStore(db, workspace_id)
         self.planning = CampaignPlanning(db, workspace_id)
-        self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, authority=TaskAuthority.for_human(actor_id))
+        self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, authority=TaskAuthority(campaign_humans=frozenset({actor_id}),
+            campaign_automations=frozenset({self.worker.actor_id}), proposal_approvers=frozenset({actor_id})))
+        self.recommendations = CampaignRecommendations(self.campaigns, self.tasks)
         self.inbox = CompletionInbox(db, workspace_id)
         self.costs = UsageAccounting(db, workspace_id, task_attribution=self.tasks.resolve_cost_attribution)
         self.csrf = secrets.token_urlsafe(32)
@@ -317,7 +319,7 @@ class ReviewApp:
             brief = next(b for b in campaign["briefs"] if b["id"] == shortlist["brief_id"])
             comparison = self.campaigns.read_comparison(shortlist["comparison_id"], self.actor)
             source = comparison["knowledge_query"] or self.evidence.read(comparison["dataset_id"], self.actor)
-            return self.page("Saved shortlist", views.shortlist_page(shortlist, brief, comparison, source))
+            return self.page("Saved shortlist", views.shortlist_page(shortlist, brief, comparison, source, self.tasks.read_campaign_discovery(shortlist["shortlist_id"], self.actor)))
         raise EvidenceError("record_not_found")
 
     def _post(self, path, form):
@@ -417,8 +419,8 @@ class ReviewApp:
         if match:
             if not form.keys() <= {"csrf", "request_id", "brief_id", "interpretation_id", "expected_brief_version", "expected_shortlist_version"}:
                 raise EvidenceError("invalid_form")
-            recommend = self.campaigns.recommend_ranked if match[2] == "ranked-recommendations" else self.campaigns.recommend
-            saved = recommend(identifier(match[1]), identifier(one(form, "brief_id")), self.worker,
+            saved = self.recommendations.recommend(identifier(match[1]), identifier(one(form, "brief_id")), self.worker,
+                ranked=match[2] == "ranked-recommendations",
                 expected_brief_version=int(one(form, "expected_brief_version")),
                 expected_shortlist_version=int(one(form, "expected_shortlist_version")), request_id=request_id,
                 interpretation_id=identifier(one(form, "interpretation_id")) if one(form, "interpretation_id") else None)

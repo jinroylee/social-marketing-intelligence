@@ -36,6 +36,8 @@ def campaigns(stack):
     run = knowledge.prepare(DATASET, BRIEF.catalog_id, HUMAN)
     store = CampaignStore(db)
     store.migrate()
+    from smi_tasks import AcquisitionTasks
+    AcquisitionTasks(db).migrate()
     store.migrate()
     return store, evidence, run["run_id"]
 

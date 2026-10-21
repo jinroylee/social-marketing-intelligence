@@ -165,3 +165,6 @@ CREATE TABLE IF NOT EXISTS campaign_ranking_assessments (
     finished_at TIMESTAMPTZ,
     UNIQUE (campaign_id, request_id)
 );
+
+-- Legacy/human revisions retain an explicitly unrecorded coverage decision.
+ALTER TABLE shortlist_revisions ADD COLUMN IF NOT EXISTS coverage_assessment jsonb;

@@ -20,6 +20,8 @@ def current_campaign(stack, **changes):
     knowledge.register_catalog(Catalog.load(CATALOG_PATH), HUMAN)
     store = CampaignStore(db)
     store.migrate()
+    from smi_tasks import AcquisitionTasks
+    AcquisitionTasks(db).migrate()
     brief = replace(BRIEF, platforms=("test",), known_accounts=(ExternalKey("test", "public", "account", "seed-only"),), **changes)
     return store, store.start(brief, HUMAN, request_id="campaign")
 

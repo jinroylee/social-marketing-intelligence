@@ -6,6 +6,7 @@ import hashlib
 import json
 import uuid
 from contextlib import nullcontext
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
@@ -21,6 +22,7 @@ from smi_knowledge import KnowledgeQueries, KnowledgeStore, QueryScope
 
 from .comparison import CURRENT_METHOD_VERSION, METHOD_VERSION, build_comparison, structured_profile
 from .contracts import Brief, Selection, require, text
+from .coverage import assess
 
 
 def _digest(document: Any) -> str:
@@ -231,8 +233,8 @@ class CampaignStore:
                                 Jsonb(outcome.get('executable_profile')), identity['interpretation_id']))
         return self.read_interpretation(identity['interpretation_id'], actor)
 
-    def require_current_brief(self, campaign_id: str, brief_id: str, actor: ActorContext, *, expected_version: int, connection) -> None:
-        """Validate an exact current brief, locking its campaign until the caller commits.
+    def require_current_brief(self, campaign_id: str, brief_id: str, actor: ActorContext, *, expected_version: int, connection) -> dict:
+        """Return the exact human brief, locking its campaign until the caller commits.
 
         Dependent admission must use this same transaction. A successor brief
         cannot commit between validation and the dependent write; stale or
@@ -241,11 +243,12 @@ class CampaignStore:
         actor.require_workspace(self.workspace_id)
         require(type(expected_version) is int and expected_version >= 1, 'invalid_expected_brief_version')
         row = connection.execute(
-            'SELECT c.brief_version,b.version FROM campaigns c JOIN campaign_briefs b ON b.campaign_id=c.id '
+            'SELECT c.brief_version,b.version,b.document FROM campaigns c JOIN campaign_briefs b ON b.campaign_id=c.id '
             'WHERE c.id=%s AND c.workspace_id=%s AND b.id=%s FOR SHARE OF c',
             (campaign_id, self.workspace_id, brief_id),
         ).fetchone()
         require(row is not None and row['brief_version'] == row['version'] == expected_version, 'brief_version_conflict')
+        return {'brief_id': brief_id, 'version': row['version'], 'document': row['document']}
 
     def list_campaigns(self, actor: ActorContext) -> list[dict[str, Any]]:
         """List campaign heads and human brief context, without source-derived explanations."""
@@ -394,6 +397,7 @@ class CampaignStore:
         Exact retries reopen the original revision before any reassessment. New
         requests require both current heads; deterministic order expresses no score
         or human endorsement. Required exclusions/deferred unknowns stay unselected.
+        Coverage policy, input references and assessment clock commit with the result.
         """
         actor.require_workspace(self.workspace_id)
         require(actor.kind == 'automation', 'automation_action_required')
@@ -432,6 +436,8 @@ class CampaignStore:
                                "VALUES (%s,%s,%s,%s,%s,'generated',%s,%s,%s,%s,%s,'comparison_order',%s)",
                                (revision_id, campaign_id, brief_id, comparison_id, version, request_id, digest,
                                 actor.actor_id, actor.kind, RECOMMENDATION_METHOD_VERSION, Jsonb(summary)))
+            connection.execute('UPDATE shortlist_revisions SET coverage_assessment=%s WHERE id=%s',
+                               (Jsonb(assess(candidates, comparison_id, datetime.now(timezone.utc))), revision_id))
             for position, candidate in enumerate(eligible):
                 body = candidate['body']
                 reason = 'Eligible under deterministic caption rules with explicit gaps. ' + ' '.join(
@@ -471,6 +477,7 @@ class CampaignStore:
 
         Deterministic eligibility precedes dispatch. No transaction spans provider
         I/O; exact support and both campaign heads are fenced again at publication.
+        Successful saves atomically pin the coverage policy, inputs and clock.
         Every claimed retry reopens its outcome, including uncertain interruptions.
         """
         from smi_costs import UsageAccounting
@@ -560,6 +567,8 @@ class CampaignStore:
                 connection.execute('INSERT INTO shortlist_revisions(id,campaign_id,brief_id,comparison_id,version,status,request_id,request_digest,recorded_by,actor_kind,method_version,ordering,selection_summary) '
                                    "VALUES (%s,%s,%s,%s,%s,'generated',%s,%s,%s,'automation',%s,%s,%s)",
                                    (shortlist_id, campaign_id, brief_id, comparison_id, version, 'ranking:' + assessment_id, digest, actor.actor_id, METHOD_VERSION, 'llm_assessment_order' if candidates else 'empty_eligible_batch', Jsonb(summary)))
+                connection.execute('UPDATE shortlist_revisions SET coverage_assessment=%s WHERE id=%s',
+                                   (Jsonb(assess(rows, comparison_id, datetime.now(timezone.utc))), shortlist_id))
                 for position, judgment in enumerate(outcome['candidates']):
                     cid = judgment['candidate_id']
                     reason = 'Generated relative-fit judgment; source interpretations remain provisional. ' + ' '.join(
@@ -731,14 +740,14 @@ class CampaignStore:
             connection.execute("UPDATE campaigns SET shortlist_version=%s WHERE id=%s", (version, draft["campaign_id"]))
         return {"status": "confirmed" if confirmed else "draft", "shortlist_id": revision_id, "version": version}
 
-    def read_shortlist(self, shortlist_id: str, actor: ActorContext, *, include_synthetic: bool = False) -> dict[str, Any]:
+    def read_shortlist(self, shortlist_id: str, actor: ActorContext, *, include_synthetic: bool = False, purpose: str = "display") -> dict[str, Any]:
         """Reopen pinned membership/order/producer with a current support-health overlay."""
         actor.require_workspace(self.workspace_id)
         with self.db.connect() as connection:
             revision = connection.execute("SELECT r.* FROM shortlist_revisions r JOIN campaigns c ON c.id=r.campaign_id "
                                           "WHERE r.id=%s AND c.workspace_id=%s", (shortlist_id, self.workspace_id)).fetchone()
             require(revision is not None, "shortlist_not_found")
-        comparison = self.read_comparison(str(revision["comparison_id"]), actor, include_synthetic=include_synthetic)
+        comparison = self.read_comparison(str(revision["comparison_id"]), actor, include_synthetic=include_synthetic, purpose=purpose)
         candidates = {c["candidate_id"]: c for c in comparison["candidates"]}
         with self.db.connect() as connection:
             rows = connection.execute("SELECT * FROM shortlist_selections WHERE revision_id=%s ORDER BY position NULLS LAST,id", (shortlist_id,)).fetchall()
@@ -769,13 +778,19 @@ class CampaignStore:
             execution_profile = {**(execution_profile or {}), 'method_version': revision['method_version'],
                                  'ranking': 'human_selection', 'ordering': revision['ordering'],
                                  'source_shortlist_id': str(revision['source_shortlist_id'])}
+        coverage = revision['coverage_assessment']
+        if coverage is not None:
+            available = all(c['support_state'] == 'available' for c in candidates.values())
+            coverage = {**coverage, 'support_state': 'available' if available else 'unavailable',
+                        'inputs': coverage['inputs'] if available else None,
+                        'result': coverage['result'] if available else None}
         return {"shortlist_id": shortlist_id, "campaign_id": str(revision["campaign_id"]), "brief_id": str(revision["brief_id"]),
                 "comparison_id": str(revision["comparison_id"]), "version": revision["version"], "status": revision["status"],
                 "source_shortlist_id": str(revision['source_shortlist_id']) if revision['source_shortlist_id'] else None,
                 "recorded_by": revision["recorded_by"], "actor_kind": revision["actor_kind"], "recorded_at": revision["recorded_at"].isoformat(),
                 "method_version": revision["method_version"], "ordering": revision["ordering"], "selection_summary": revision["selection_summary"],
                 "executable_profile": comparison["executable_profile"], "execution_profile": execution_profile, "ranking_assessment": assessment,
-                "coverage": comparison["coverage"],
+                "coverage": comparison["coverage"], "coverage_assessment": coverage,
                 "current_shortlist_version": campaign["shortlist_version"], "selected": selected,
                 "exploratory": True, "review_required": any(s["review_required"] for s in selected)}
 

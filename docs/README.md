@@ -23,6 +23,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Quality review](evaluation.md) | Separate technical, translation-assisted and marketer-usefulness gates |
 | [Canonical evidence ownership](adr/0001-canonical-evidence-ownership.md) | Why source evidence and business decisions have separate owners |
 | [Pinned support and current policy](adr/0002-pinned-support-current-policy.md) | Why reproducible decisions pin support while permissions remain current |
+| [Save before discovery admission](adr/0010-save-before-coverage-discovery-admission.md) | Why immutable recommendations survive automatic discovery refusal and admission retries |
 | [Automatic shortlist persistence](adr/0003-automatic-shortlist-persistence.md) | Why saving generated recommendations requires no human review or approval |
 | [Lightweight monitoring evidence](adr/0004-lightweight-monitoring-evidence.md) | Why X detection owns bounded recent evidence separately from full KB publication |
 | [Task session effect ownership](adr/0005-task-session-effect-ownership.md) | Why each task's execution lock and effect transactions share one PostgreSQL session |

@@ -398,6 +398,7 @@ erDiagram
         text method_version
         text ordering
         jsonb selection_summary
+        jsonb coverage_assessment
         timestamptz recorded_at
     }
     shortlist_selections {
@@ -560,6 +561,8 @@ An optional Creator association carries its own evidence, role and applicable in
 
 ```mermaid
 erDiagram
+    shortlist_revisions ||--o| campaign_discovery_requests : assesses_enrichment
+    acquisition_tasks o|--o| campaign_discovery_requests : enriches
     campaigns ||--o{ acquisition_tasks : authorizes
     campaign_briefs ||--o{ acquisition_tasks : pins
     enrichment_proposals ||--o| enrichment_approvals : receives
@@ -569,6 +572,16 @@ erDiagram
     ingestion_runs ||--o| acquisition_attempts : records
     acquisition_tasks ||--o{ acquisition_task_publications : receipts
     knowledge_publications ||--o{ acquisition_task_publications : makes_usable
+    campaign_discovery_requests {
+        uuid shortlist_id PK, FK
+        text workspace_id
+        text initiator_id
+        text initiator_kind
+        text status
+        text reason
+        uuid task_id FK
+        timestamptz recorded_at
+    }
     enrichment_proposals {
         uuid id PK
         text workspace_id
@@ -784,3 +797,5 @@ Campaign criteria attempts pin exact immutable brief input and retain sanitized 
 Provider cost provenance shares the same physical accounting tables. Explicit provider-basis final reconciliation and meter recovery preserve named targets, immutable original rates, overage visibility and one-use dispatch without relabelling synthetic evidence. Accounting reports its generic declared bounded-provider contract premise; the interpretation configuration owns exact verified snapshot/input/output provenance.
 
 Current-KB comparison drafts pin `knowledge_query_result_id`; their legacy `knowledge_run_id`, `dataset_id` and `dataset_digest` are null. A database check requires exactly one of these source modes. Frozen drafts keep their original run/dataset fields and a null query link. Draft coverage includes the immutable actual execution profile. `comparison_support.source_assertion_id` and `decision_note_support.source_assertion_id` are nullable for metric-only account support; the observation and linked query manifest retain exact metric/derivation identities.
+
+`shortlist_revisions.coverage_assessment` pins the sufficiency policy, clock, exact comparison/candidate input references and historical scalar results. Inputs remain owned by the governed comparison; current support health withholds coverage inputs/results. `campaign_discovery_requests` owns a unique immutable disposition per shortlist; its optional unique task commits atomically with submitted admission. Source/configuration refusal creates no task and never removes the saved recommendation. Task scope JSON pins the human brief, shortlist/coverage clock/profile, catalog digest, explicit derivation/query/subject/window and executable configuration. See [automatic coverage](campaigns.md#automatic-coverage-and-discovery).

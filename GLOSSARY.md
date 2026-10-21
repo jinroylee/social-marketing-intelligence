@@ -46,6 +46,9 @@ A saved campaign-specific collection of recommended or curated platform accounts
 **Ranked recommendation**:
 An ordered set of candidate accounts assessed against a campaign's criteria, with its ranking basis, supporting evidence and explicit gaps. The installed bounded model method orders deterministically eligible current-KB accounts using constrained supported-criterion judgments; its generated relative fit is distinct from source verification or human endorsement. It can be saved automatically as a shortlist; optional human curation remains a separate judgment.
 
+**Campaign coverage assessment**:
+A recorded judgment of whether the supported candidate set meets an explicit quantity, relevance and freshness policy for a campaign. Its reasons and limits describe the assessed evidence; sufficiency does not establish complete market coverage or verified campaign outcomes.
+
 **Creator discovery**:
 Finding candidate creators who are not already in the marketer's working set for a campaign. Discovery produces candidates for evaluation; it does not establish their suitability or availability.
 

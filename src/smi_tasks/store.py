@@ -3,6 +3,7 @@
 import hashlib
 import json
 from dataclasses import asdict
+from datetime import datetime, timedelta
 from pathlib import Path
 import uuid
 from contextlib import nullcontext
@@ -18,7 +19,7 @@ from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
 from smi_ingestion.support import IngestedEvidence, SupportReference
-from smi_knowledge import KnowledgePublications
+from smi_knowledge import KnowledgePublications, KnowledgeStore
 
 from .contracts import EnrichmentProposal, OfflineRoute, TaskAuthority, execution_configuration_digest
 from .execution import execution_is_running
@@ -78,6 +79,107 @@ class AcquisitionTasks:
             connection.execute('INSERT INTO acquisition_tasks(id,workspace_id,request_id,request_digest,origin,campaign_id,brief_id,initiator_id,initiator_kind,scope_version,scope,limits,manifest_path,manifest_hash) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                                (task_id, self.workspace_id, request_id, request_digest, 'campaign', campaign_id, brief_id, actor.actor_id, actor.kind, self.scope_version, Jsonb(scope), Jsonb(limits), str(path), digest))
         return {'status': 'accepted', 'task_id': task_id}
+
+    def submit_campaign_discovery(self, shortlist_id: str, actor: ActorContext, *, include_synthetic: bool = False) -> dict[str, Any]:
+        """Admit one exact saved coverage need under operator-owned campaign authority.
+
+        The recommendation already committed. Persist refusals without changing it;
+        retries reopen the original disposition before inspecting changed inputs.
+        Only this trusted operation derives scope from the pinned human brief.
+        """
+        actor.require_workspace(self.workspace_id)
+        self.authority.require_campaign(actor)
+        shortlist_id = str(uuid.UUID(shortlist_id))
+        campaigns = CampaignStore(self.db, self.workspace_id)
+        with self.db.connect() as connection:
+            connection.execute('SELECT pg_advisory_xact_lock(hashtext(%s))', (f'campaign-discovery:{self.workspace_id}:{shortlist_id}',))
+            prior = connection.execute('SELECT * FROM campaign_discovery_requests WHERE shortlist_id=%s AND workspace_id=%s',
+                                       (shortlist_id, self.workspace_id)).fetchone()
+            if prior:
+                if prior['initiator_id'] != actor.actor_id or prior['initiator_kind'] != actor.kind:
+                    raise EvidenceError('campaign_discovery_actor_conflict')
+            else:
+                saved = campaigns.read_shortlist(shortlist_id, actor, include_synthetic=include_synthetic, purpose='process')
+                coverage = saved['coverage_assessment']
+                status, reason, task_id = 'refused', None, None
+                try:
+                    if coverage is None:
+                        raise EvidenceError('campaign_coverage_unrecorded')
+                    if coverage['result'] is None:
+                        raise EvidenceError('campaign_coverage_support_unavailable')
+                    if coverage['result']['sufficient']:
+                        status = 'not_needed'
+                    else:
+                        brief = campaigns.require_current_brief(saved['campaign_id'], saved['brief_id'], actor,
+                            expected_version=saved['execution_profile']['brief_version'], connection=connection)
+                        if self.route is None:
+                            raise EvidenceError('offline_task_route_unconfigured')
+                        path, manifest_hash, manifest = self.route.snapshot()
+                        if manifest['adapter'] != ROUTE:
+                            raise EvidenceError('keyword_discovery_unavailable_supplied_reference_route')
+                        policy = manifest.get('policy')
+                        if not isinstance(policy, dict) or not all(policy.get(p) is True for p in ('can_process', 'can_retain')):
+                            raise EvidenceError('source_policy_disallows_discovery')
+                        document = brief['document']
+                        if 'tiktok' not in document['platforms']:
+                            raise EvidenceError('keyword_discovery_unavailable_campaign_platform')
+                        catalog = KnowledgeStore(self.db, self.workspace_id).catalog(document['catalog_id'], actor)
+                        # One declared literal name, never free-form objective/model text.
+                        product = document['product_ids'][0] if document['product_ids'] else None
+                        entries = catalog.document['products'] if product else catalog.document['brands']
+                        subject = product or document['brand_id']
+                        query = next(e['name'] for e in entries if e['id'] == subject)
+                        end = datetime.fromisoformat(coverage['assessed_at'])
+                        start = end - timedelta(days=30)
+                        if document.get('publication_from'):
+                            start = max(start, datetime.fromisoformat(document['publication_from'].replace('Z', '+00:00')))
+                        if document.get('publication_to'):
+                            end = min(end, datetime.fromisoformat(document['publication_to'].replace('Z', '+00:00')))
+                        if start >= end:
+                            raise EvidenceError('campaign_discovery_window_unavailable')
+                        proposal = EnrichmentProposal('Fill saved campaign coverage', 'fill',
+                            (('product:' if product else 'brand:') + subject,), (query,),
+                            start.isoformat(), end.isoformat())
+                        proposal.validate()
+                        scope = {**proposal.document(), 'discovery': proposal.keyword_scope(),
+                                 'campaign_id': saved['campaign_id'], 'brief_id': saved['brief_id'],
+                                 'brief_version': brief['version'], 'shortlist_id': shortlist_id,
+                                 'platforms': ['tiktok'], 'unsearched_platforms': [p for p in document['platforms'] if p != 'tiktok'],
+                                 'coverage_profile': coverage['profile']['version'], 'coverage_assessed_at': coverage['assessed_at'],
+                                 'query_derivation': coverage['profile']['discovery'], 'catalog_digest': catalog.digest,
+                                 'route': ROUTE, 'route_version': self.route.version, 'manifest_hash': manifest_hash, 'references': []}
+                        scope = json.loads(json.dumps(scope))
+                        limits = asdict(self.route.limits)
+                        scope['execution_digest'] = execution_configuration_digest(scope, limits, str(path))
+                        # The disposition owns retries; callers cannot preclaim its nested task.
+                        request_id = 'campaign-discovery:' + str(uuid.uuid4())
+                        digest = self._digest({'scope': scope, 'limits': limits, 'manifest_path': str(path),
+                                               'initiator': {'actor_id': actor.actor_id, 'kind': actor.kind}, 'origin': 'campaign'})
+                        task_id = str(uuid.uuid4())
+                        connection.execute('INSERT INTO acquisition_tasks(id,workspace_id,request_id,request_digest,origin,campaign_id,brief_id,initiator_id,initiator_kind,scope_version,scope,limits,manifest_path,manifest_hash) '
+                                           "VALUES (%s,%s,%s,%s,'campaign',%s,%s,%s,%s,'campaign-coverage-discovery-v1',%s,%s,%s,%s)",
+                                           (task_id, self.workspace_id, request_id, digest, saved['campaign_id'], saved['brief_id'],
+                                            actor.actor_id, actor.kind, Jsonb(scope), Jsonb(limits), str(path), manifest_hash))
+                        status = 'submitted'
+                except EvidenceError as error:
+                    reason = error.code
+                connection.execute('INSERT INTO campaign_discovery_requests(shortlist_id,workspace_id,initiator_id,initiator_kind,status,reason,task_id) VALUES (%s,%s,%s,%s,%s,%s,%s)',
+                                   (shortlist_id, self.workspace_id, actor.actor_id, actor.kind, status, reason, task_id))
+        return self.read_campaign_discovery(shortlist_id, actor)
+
+    def read_campaign_discovery(self, shortlist_id: str, actor: ActorContext) -> dict[str, Any] | None:
+        """Read the historical admission disposition and current worker waiting/outcome."""
+        actor.require_workspace(self.workspace_id)
+        with self.db.connect() as connection:
+            row = connection.execute('SELECT * FROM campaign_discovery_requests WHERE shortlist_id=%s AND workspace_id=%s',
+                                     (shortlist_id, self.workspace_id)).fetchone()
+        if row is None:
+            return None
+        task_id = str(row['task_id']) if row['task_id'] else None
+        return {'shortlist_id': str(row['shortlist_id']), 'status': row['status'], 'reason': row['reason'],
+                'task_id': task_id, 'task': self.read(task_id, actor) if task_id else None,
+                'initiator': {'actor_id': row['initiator_id'], 'kind': row['initiator_kind']},
+                'recorded_at': row['recorded_at'].isoformat()}
 
     def save_proposal(self, proposal: EnrichmentProposal, actor: ActorContext, *, request_id: str) -> dict[str, Any]:
         """Save an immutable supplied revision with exact executable offline scope; submit no work."""

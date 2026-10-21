@@ -112,3 +112,16 @@ CREATE TABLE IF NOT EXISTS task_completion_events (
 INSERT INTO task_completion_events(task_id,created_at)
 SELECT id,coalesce(finished_at,submitted_at) FROM acquisition_tasks WHERE outcome IS NOT NULL ORDER BY id
 ON CONFLICT (task_id) DO NOTHING;
+
+-- One logical automatic enrichment disposition per immutable saved result.
+CREATE TABLE IF NOT EXISTS campaign_discovery_requests (
+    shortlist_id uuid PRIMARY KEY REFERENCES shortlist_revisions(id),
+    workspace_id text NOT NULL,
+    initiator_id text NOT NULL,
+    initiator_kind text NOT NULL CHECK (initiator_kind IN ('human','automation')),
+    status text NOT NULL CHECK (status IN ('not_needed','refused','submitted')),
+    reason text,
+    task_id uuid UNIQUE REFERENCES acquisition_tasks(id),
+    recorded_at timestamptz NOT NULL DEFAULT now(),
+    CHECK ((status='submitted') = (task_id IS NOT NULL))
+);

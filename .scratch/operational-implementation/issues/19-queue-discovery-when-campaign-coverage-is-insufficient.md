@@ -4,7 +4,7 @@
 
 **Blocked by:** 15: Automatically save an attributed ordered shortlist; 18: Execute bounded offline keyword discovery.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
