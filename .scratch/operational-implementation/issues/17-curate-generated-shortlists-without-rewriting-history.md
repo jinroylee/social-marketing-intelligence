@@ -10,12 +10,12 @@
 
 **Scope guard:** Extend existing human selection/history forms to generated ordered revisions; do not add a mandatory review gate.
 
-- [ ] Human curation can select/reorder accounts and record supported reasons/acknowledged unknowns as a new revision with actual human attribution.
-- [ ] The original automated rank, producer, support, and lack of human review remain unchanged.
-- [ ] Stale heads and conflicting retry identities fail visibly; an identical human save retries safely.
-- [ ] Current source-policy restrictions and inherited support apply to copied human reasons and submitted forms.
-- [ ] Existing historical human selections, confirmations, plans, and notes reopen with their original meaning after upgrade.
-- [ ] HTTP and public-store tests demonstrate optional curation and history without requiring a curation action before automated saving.
+- [x] Human curation can select/reorder accounts and record supported reasons/acknowledged unknowns as a new revision with actual human attribution.
+- [x] The original automated rank, producer, support, and lack of human review remain unchanged.
+- [x] Stale heads and conflicting retry identities fail visibly; an identical human save retries safely.
+- [x] Current source-policy restrictions and inherited support apply to copied human reasons and submitted forms.
+- [x] Existing historical human selections, confirmations, plans, and notes reopen with their original meaning after upgrade.
+- [x] HTTP and public-store tests demonstrate optional curation and history without requiring a curation action before automated saving.
 
 **Spec coverage:** user stories 12, 13, 14, 19, 20, 69; acceptance scenarios T09, T13, T29 (the part exercised by this slice).
 
