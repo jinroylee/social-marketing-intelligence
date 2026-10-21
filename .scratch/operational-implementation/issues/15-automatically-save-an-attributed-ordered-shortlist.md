@@ -10,12 +10,12 @@
 
 **Scope guard:** Implement automated save authority and ordered persistence using the existing deterministic assessment; semantic LLM ranking and optional human curation are separate.
 
-- [ ] A recommendation operation automatically persists the actual automation producer, exact brief/profile/method, candidate order, rationale, gaps, and pinned support.
-- [ ] An empty eligible result is saved explicitly; no un-ingested account or fabricated evidence is inserted to avoid an empty shortlist.
-- [ ] Saving requires no human approval/review/confirmation and never fabricates human authorship or endorsement.
-- [ ] Identical requests reopen the original saved revision without reassessment; changed payload under a request identity and stale revision updates conflict.
-- [ ] Existing human shortlist records and their statuses/attribution survive schema upgrade and restart unchanged.
-- [ ] Saved explanations enforce current policy and retention withdrawal while permitted historical membership and producer attribution remain pinned.
+- [x] A recommendation operation automatically persists the actual automation producer, exact brief/profile/method, candidate order, rationale, gaps, and pinned support.
+- [x] An empty eligible result is saved explicitly; no un-ingested account or fabricated evidence is inserted to avoid an empty shortlist.
+- [x] Saving requires no human approval/review/confirmation and never fabricates human authorship or endorsement.
+- [x] Identical requests reopen the original saved revision without reassessment; changed payload under a request identity and stale revision updates conflict.
+- [x] Existing human shortlist records and their statuses/attribution survive schema upgrade and restart unchanged.
+- [x] Saved explanations enforce current policy and retention withdrawal while permitted historical membership and producer attribution remain pinned.
 
 **Spec coverage:** user stories 8, 11, 12, 14, 20, 69; acceptance scenarios T03, T09, T13, T14, T29 (the part exercised by this slice).
 
