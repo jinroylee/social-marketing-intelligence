@@ -1,6 +1,6 @@
 # Ticket 21 — Registered offline keyword schedules
 
-Only published ticket 21 is implemented. The precreated worktree was clean on `smi/operational-ticket-21` at exact verified integration base `2ead234ab43c7d05cdd66f3849a012f285fed3f3`. Ticket 18 is resolved and the existing integrated gate passed before dispatch. Ticket 21 remains **claimed** for the merger's integration check and resolution. Runtime/frozen/final hashes and final verification are recorded below after completion.
+Only published ticket 21 is implemented. The precreated worktree was clean on `smi/operational-ticket-21` at exact verified integration base `2ead234ab43c7d05cdd66f3849a012f285fed3f3`. Ticket 18 is resolved and the existing integrated gate passed before dispatch. Ticket 21 remains **claimed** for the merger's integration check and resolution. Runtime implementation: `de7d01220109d4db200b6b66e17209f871803681`. Latest integration metadata `ed08e02dc058cce943b665a08666825d2ce96c51` was merged before freezing clean checked head `b027f0f6e9ed615a5452ebcd406344d0ee1ae801`. Final worker HEAD is supplied in the handoff; only this report/checklist changes after the frozen gate.
 
 ## Delivered
 
@@ -36,3 +36,12 @@ Static checks passed Ruff, documentation links, physical ERD coverage and relati
 Fixed-timezone daily/current-day-only cadence and recorded refusals are the installed local scope. Configuration versions do not create new accounting days. A distinct registration key represents a distinct keyword, while the future consumption ledger must still coordinate all keywords/configurations within the stable workspace/day. No atomic new-post counting/admission, live route, deployment scheduler, daemon, external cron or provider fallback is installed. No promise of complete market coverage, daily fill, per-keyword yield, human language validation or marketer usefulness is made.
 
 No actual source/model/paid call, external message, push, PR, deployment, cleanup or subagent occurred. Root-owned plans/findings/progress/manifests, other tickets and their reports were not edited. No external blocker is known. Root owns integrated validation and ticket resolution.
+
+
+## Frozen verification and artifact
+
+- Clean frozen checked head: `b027f0f6e9ed615a5452ebcd406344d0ee1ae801`; runtime/tests/docs commit: `de7d01220109d4db200b6b66e17209f871803681`. The latest integration metadata was merged before freezing. No runtime/test/product-doc/guidance edit followed gate start.
+- `UV_OFFLINE=1 uv run --locked python tools/check.py` passed with **exit 0**, including Ruff, documentation links, physical ERD table coverage, relative instruction symlinks, real PostgreSQL preflight and **535 tests in 459.49 seconds**. Exact log `/tmp/smi-ticket-21-shared-check.log`; completed exec session `23842`. The passing frozen gate is preserved without a redundant broad rerun.
+- `UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket-21-wheel` passed offline. Artifact `/tmp/smi-ticket-21-wheel/smi_ingestion-0.1.0-py3-none-any.whl`; SHA-256 `7abcbbf1a55a03d2734e58be2539a486e9ffc63497685f781e87ff8f6d32b1ff`. Byte verification passed **24 unique packaged entries**: every changed packaged runtime/guidance file, all eight SQL schemas, both review assets and all three affected instruction symlink targets. Each entry records exact source/archive bytes, size, SHA-256 and relative symlink target where applicable.
+- Exact manifest `/tmp/smi-ticket-21-wheel-files.json`; full archive contents `/tmp/smi-ticket-21-wheel-contents.txt`; build log `/tmp/smi-ticket-21-wheel-build.log`; verifier log `/tmp/smi-ticket-21-wheel-verify.log`; repeatable verifier `/tmp/smi-ticket-21-wheel-verify.py`. The manifest binds the wheel to the frozen checked SHA above.
+- All six technical ticket criteria are checked after this evidence. Ticket status remains **claimed** for merger-owned integrated shared validation/resolution. No external blocker is known. Only this report and the claimed ticket checklist change after the passing frozen gate.
