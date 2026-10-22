@@ -1,0 +1,38 @@
+"""Escaped operator configuration and source-free daily occurrence/task status."""
+
+import json
+
+from .views import e, error_message, hidden, value
+
+
+def settings(schedule, csrf, can_configure, submitted=None, error=None):
+    """Show honest offline capability, separate allowance metadata and durable history."""
+    content = '<h1>Offline registered keyword discovery</h1><p>Live activation is disabled. These keywords are independent of monitoring topics.</p>'
+    content += '<p>The configurable daily new-post admission allowance is initially 50 total across at most 10 registered keywords. It is not throughput, a per-keyword yield, a request count or a cost estimate. Atomic new-post allowance enforcement is not installed.</p>'
+    content += '<p>Daily local-time cadence; accounting days begin at local midnight. The accounting timezone is fixed after the first save. A due tick acknowledges bounded offline tasks; execute each through the separate existing worker. Earlier missed days are not replayed.</p>'
+    if error:
+        content += error_message(error)
+    document = schedule['document'] or {'timezone': 'UTC', 'daily_at': '09:00', 'lookback_days': 7, 'daily_allowance': 50, 'keywords': []}
+    if can_configure:
+        content += '<form action="/schedules" method="post">' + hidden('csrf', csrf)
+        content += hidden('expected_version', value(submitted, 'expected_version', str(schedule['version'])))
+        for name, label in (('timezone', 'IANA accounting timezone'), ('daily_at', 'Daily local time (HH:MM)'),
+                            ('lookback_days', 'Publication lookback days (1–30)'), ('daily_allowance', 'Daily admission allowance (metadata until enforcement is installed)')):
+            content += f'<label>{e(label)}<input name="{name}" required value="{e(value(submitted, name, str(document[name])))}"></label>'
+        content += '<p>Keywords JSON: at most 10 objects, each with a stable key, one literal query and subject_ids. Preserve the key when editing; an empty list pauses future occurrences.</p>'
+        content += f'<label>Registered keywords<textarea name="keywords" required>{e(value(submitted, "keywords", json.dumps(document["keywords"], ensure_ascii=False, indent=2)))}</textarea></label><button type="submit">Save successor configuration</button></form>'
+        if schedule['version']:
+            content += '<form action="/schedules/tick" method="post">' + hidden('csrf', csrf) + '<button type="submit">Acknowledge due offline tasks</button></form>'
+    else:
+        content += '<p>A trusted configured operator role is required to change settings or acknowledge due tasks.</p>'
+    content += f'<p>Configuration version: {e(schedule["version"])} · Last tick: {e(schedule["last_tick_at"] or "None")}</p>'
+    for occurrence in schedule['occurrences']:
+        content += f'<p>{e(occurrence["accounting_day"])} · {e(occurrence["keyword_key"])} · configuration {e(occurrence["configuration_version"])} · {e(occurrence["status"])} · {e(occurrence["reason"] or "")}'
+        if occurrence['task']:
+            task = occurrence['task']
+            content += f' · <a href="/tasks/{e(task["task_id"])}">Offline task</a> · {e(task["status"])} · {e(task["outcome"] or "Pending")}'
+        content += '</p>'
+    content += '<details><summary>Configuration history</summary>'
+    for configuration in schedule['configurations']:
+        content += f'<pre>{e(json.dumps(configuration, ensure_ascii=False, indent=2))}</pre>'
+    return content + '</details>'

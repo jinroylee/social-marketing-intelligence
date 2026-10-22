@@ -79,6 +79,8 @@ class TaskAuthority:
     campaign_humans: frozenset[str] = frozenset()
     campaign_automations: frozenset[str] = frozenset()
     proposal_approvers: frozenset[str] = frozenset()
+    schedule_operators: frozenset[str] = frozenset()
+    schedule_automations: frozenset[str] = frozenset()
 
     @classmethod
     def for_human(cls, actor_id: str) -> 'TaskAuthority':
@@ -95,6 +97,18 @@ class TaskAuthority:
         """A submitted human label alone never grants proposal approval authority."""
         if actor.kind != 'human' or actor.actor_id not in self.proposal_approvers:
             raise EvidenceError('proposal_human_approval_required')
+
+
+    def require_schedule_operator(self, actor: ActorContext) -> None:
+        """Only an operator-configured human may change registered keyword authority."""
+        if actor.kind != 'human' or actor.actor_id not in self.schedule_operators:
+            raise EvidenceError('schedule_operator_authority_required')
+
+    def require_schedule_tick(self, actor: ActorContext) -> None:
+        """Tick authority is a configured human operator or an exact scheduled service."""
+        allowed = self.schedule_operators if actor.kind == 'human' else self.schedule_automations
+        if actor.actor_id not in allowed:
+            raise EvidenceError('schedule_tick_authority_required')
 
 
 @dataclass(frozen=True)

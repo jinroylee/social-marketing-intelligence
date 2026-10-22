@@ -7,7 +7,7 @@ This document describes implemented acquisition capabilities and the evidence st
 | Route | Supported input and result | Important boundary |
 | --- | --- | --- |
 | Offline snapshot | Import the frozen sample with exact observation/derivation membership and preserved capture times | Reproducible downstream development; no live discovery or fresh source measurement |
-| Offline keyword JSON | Deterministic all-term caption query plus exact subject and half-open publication window over a pinned synthetic corpus | Bounded local pages through approved tasks/normal ingestion/publication; original capture/missingness and query/selection lineage; no provider readiness or complete market claim |
+| Offline keyword JSON | Deterministic all-term caption query plus exact subject and half-open publication window over a pinned synthetic corpus | Bounded local pages through configured schedule, campaign or approved tasks/normal ingestion/publication; original capture/missingness and query/selection lineage; no provider readiness or complete market claim |
 | TikTok public web | Collect explicitly supplied references and interpret available source fields in `web:public` | Challenges and partial coverage are explicit; selected post success does not establish complete profiles/history |
 | TikTok oEmbed | Resolve supplied video/profile references as bounded availability/operational observations | Not a retained creator-history or engagement feed; no canonical post/account facts are inferred from the embed response |
 | Bright Data TikTok | Collect a supplied creator profile and requested posts in `tiktok:public`, with bounded provider-snapshot polling/resume | Supplied-profile collection, not arbitrary keyword/creator discovery or an application job queue |

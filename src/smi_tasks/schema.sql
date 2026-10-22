@@ -68,17 +68,20 @@ CREATE TABLE IF NOT EXISTS acquisition_task_publications (
     PRIMARY KEY(task_id,publication_id)
 );
 
+ALTER TABLE acquisition_tasks ADD COLUMN IF NOT EXISTS schedule_occurrence_id uuid UNIQUE;
+
 -- Explicit upgrade of the original campaign-only task contract. Existing rows
 -- retain their required campaign/brief basis through the origin-basis check.
 ALTER TABLE acquisition_tasks ADD COLUMN IF NOT EXISTS approval_id uuid UNIQUE REFERENCES enrichment_approvals(id);
 ALTER TABLE acquisition_tasks ALTER COLUMN campaign_id DROP NOT NULL;
 ALTER TABLE acquisition_tasks ALTER COLUMN brief_id DROP NOT NULL;
 ALTER TABLE acquisition_tasks DROP CONSTRAINT IF EXISTS acquisition_tasks_origin_check;
-ALTER TABLE acquisition_tasks ADD CONSTRAINT acquisition_tasks_origin_check CHECK (origin IN ('campaign','assistant'));
+ALTER TABLE acquisition_tasks ADD CONSTRAINT acquisition_tasks_origin_check CHECK (origin IN ('campaign','assistant','schedule'));
 ALTER TABLE acquisition_tasks DROP CONSTRAINT IF EXISTS acquisition_tasks_origin_basis_check;
 ALTER TABLE acquisition_tasks ADD CONSTRAINT acquisition_tasks_origin_basis_check CHECK (
-    (origin = 'campaign' AND campaign_id IS NOT NULL AND brief_id IS NOT NULL AND approval_id IS NULL)
-    OR (origin = 'assistant' AND campaign_id IS NULL AND brief_id IS NULL AND approval_id IS NOT NULL)
+    (origin = 'campaign' AND campaign_id IS NOT NULL AND brief_id IS NOT NULL AND approval_id IS NULL AND schedule_occurrence_id IS NULL)
+    OR (origin = 'assistant' AND campaign_id IS NULL AND brief_id IS NULL AND approval_id IS NOT NULL AND schedule_occurrence_id IS NULL)
+    OR (origin = 'schedule' AND campaign_id IS NULL AND brief_id IS NULL AND approval_id IS NULL AND schedule_occurrence_id IS NOT NULL)
 );
 
 -- Durable restart frontier; phase metadata contains no source values.

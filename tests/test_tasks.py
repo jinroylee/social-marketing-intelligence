@@ -203,7 +203,7 @@ def test_local_form_establishes_authority_and_reopens_task_publication_after_res
         assert status == 200
         assert 'queued' in queued
         assert 'configured-marketer' in queued
-        assert 'schedule' not in queued
+        assert 'Origin: &quot;campaign&quot;' in queued
         assert '&lt;script&gt;Research account coverage&lt;/script&gt;' in queued
         assert '<script>Research account coverage</script>' not in queued
     task_id = task_path.rsplit('/', 1)[1]

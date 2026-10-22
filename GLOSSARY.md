@@ -55,6 +55,15 @@ Finding candidate creators who are not already in the marketer's working set for
 **Keyword discovery**:
 Finding source records through an explicit query, subject scope and time window with stated selection and coverage limits. A supplied reference or a successful profile lookup does not establish query discovery or complete market coverage.
 
+**Registered scheduled keyword**:
+An operator-authorized recurring discovery query with an explicit subject scope and a stable identity. It is independent of monitoring topics and does not restrict separately approved on-demand investigation.
+
+**Scheduled occurrence**:
+One keyword's due discovery within a particular accounting day, retaining the configuration and initiating authority that applied to it. Later keyword or configuration changes do not replace its history.
+
+**Scheduled new-post allowance**:
+The shared daily admission limit for unique eligible new posts found across registered scheduled keywords. It is distinct from requests, measured cost, per-keyword yield and guaranteed throughput.
+
 **Creator comparison**:
 Evaluating candidate creators against the same campaign needs using their available evidence and explicit unknowns. The candidates may come from discovery or the marketer's existing working set.
 

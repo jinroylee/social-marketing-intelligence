@@ -2,7 +2,7 @@
 
 ## Implemented relational model
 
-The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql), [offline tasks](../src/smi_tasks/schema.sql) and [offline costs](../src/smi_costs/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
+The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql) and [offline costs](../src/smi_costs/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
 
 ```mermaid
 erDiagram
@@ -530,7 +530,7 @@ Monitoring has no campaign foreign key. Its scope and insight heads preserve ind
 
 ## Product domain model
 
-This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, scheduled acquisition authority, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams describe implemented tables, including task execution ownership and independent synthetic accounting below.
+This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, operational ranking/automatic shortlist saving, live scheduled acquisition and atomic new-post admission, lightweight X alerts, spending controls and actual outcomes/attribution remain accepted future design; the physical diagrams describe implemented tables, including task execution ownership and independent synthetic accounting below.
 
 ```mermaid
 erDiagram
@@ -561,6 +561,38 @@ An optional Creator association carries its own evidence, role and applicable in
 
 ```mermaid
 erDiagram
+    keyword_schedules ||--|{ keyword_schedule_configurations : versions
+    keyword_schedules ||--o{ keyword_schedule_occurrences : records
+    keyword_schedule_configurations ||--o{ keyword_schedule_occurrences : authorizes
+    acquisition_tasks o|--o| keyword_schedule_occurrences : acknowledges
+    keyword_schedules {
+        text workspace_id PK
+        text accounting_timezone
+        int current_version
+        timestamptz last_tick_at
+    }
+    keyword_schedule_configurations {
+        text workspace_id PK, FK
+        int version PK
+        jsonb document
+        text digest
+        text operator_id
+        timestamptz recorded_at
+    }
+    keyword_schedule_occurrences {
+        uuid id PK
+        text workspace_id FK
+        int configuration_version FK
+        text keyword_key
+        date accounting_day
+        jsonb context
+        text initiator_id
+        text initiator_kind
+        text status
+        text reason
+        uuid task_id FK
+        timestamptz recorded_at
+    }
     shortlist_revisions ||--o| campaign_discovery_requests : assesses_enrichment
     acquisition_tasks o|--o| campaign_discovery_requests : enriches
     campaigns ||--o{ acquisition_tasks : authorizes
@@ -617,6 +649,7 @@ erDiagram
         uuid campaign_id FK
         uuid brief_id FK
         uuid approval_id FK
+        uuid schedule_occurrence_id
         text initiator_id
         text initiator_kind
         text scope_version
@@ -676,7 +709,7 @@ erDiagram
     }
 ```
 
-Task admission persists its campaign/brief or exact proposal/approval basis, configuration and resource limits before returning. Proposal IDs identify immutable supplied revisions; each pins purpose, refresh/fill/expansion intent, subject/search and input scope, route/configuration and limits. Approval records the configured human, exact digest and request identity; one proposal permits at most one approval and one approval at most one task. The origin-basis constraint requires campaign plus brief for campaign tasks, or approval with no campaign/brief for assistant tasks. The migration preserves original campaign-only rows. Workspace/request identity binds the full scope and initiator. Only server-established campaign/assistant origins and the synthetic supplied-reference/query-discovery routes are installed. Discovery uses existing JSONB ownership: proposal/task `scope.discovery` pins query, subject IDs and a half-open publication-time window; `scope.execution_digest` binds the complete selection/route/limits/path. `source_observations.coverage.discovery` retains permitted source-owned query/route/method/selection lineage and bounded corpus counts; task coverage retains sanitized counts/unknown market coverage. No tables or relational edges are added, and legacy scopes/hashes remain intact. Actor roles come from trusted server configuration, separately from submitted identity metadata. Attempts retain exact run IDs, initial automation producers, recovery actors, committed phases and the exact prepared source-support selection; task/publication links are task-owned receipts committed atomically with the actual publication, before terminal acknowledgment. Task data copies no source wording. Current-policy publication reads remain responsible for values. Publication support's source-owned `content_version` fingerprint compares capture/mapping/selection identity across new run UUIDs without copying payloads; denied or superseded support does not suppress a newly usable publication. See [the task contract](tasks.md) for installed lifecycle and recovery limits. Task `progress` records the durable phase/observation frontier. A publication committed before task acknowledgment is reopened through the publication owner by request identity only after validating the task receipt, exact prepared support and source-owned attempt/run lineage. Ingestion-run `waiting` stores only a bounded reason/resumability pair; the opaque operation handle remains in its checkpoint. No-observation waits and their request usage commit together. These columns upgrade existing rows without changing their IDs or authority basis.
+Task admission persists its exact schedule occurrence, campaign/brief or proposal/approval basis, configuration and resource limits before returning. Proposal IDs identify immutable supplied revisions; each pins purpose, refresh/fill/expansion intent, subject/search and input scope, route/configuration and limits. Approval records the configured human, exact digest and request identity; one proposal permits at most one approval and one approval at most one task. The origin-basis constraint requires campaign plus brief for campaign tasks, approval with no campaign/brief for assistant tasks, or a schedule occurrence with no campaign/brief/approval for scheduled tasks. The migration preserves original campaign-only rows. Workspace/request identity binds the full scope and initiator. Only server-established schedule/campaign/assistant origins and the synthetic supplied-reference/query-discovery routes are installed. Discovery uses existing JSONB ownership: proposal/task `scope.discovery` pins query, subject IDs and a half-open publication-time window; `scope.execution_digest` binds the complete selection/route/limits/path. `source_observations.coverage.discovery` retains permitted source-owned query/route/method/selection lineage and bounded corpus counts; task coverage retains sanitized counts/unknown market coverage. The query route reuses existing JSONB scope/coverage ownership; registered schedules add their separate configuration/occurrence tables above. Legacy scopes/hashes remain intact. Actor roles come from trusted server configuration, separately from submitted identity metadata. Attempts retain exact run IDs, initial automation producers, recovery actors, committed phases and the exact prepared source-support selection; task/publication links are task-owned receipts committed atomically with the actual publication, before terminal acknowledgment. Task data copies no source wording. Current-policy publication reads remain responsible for values. Publication support's source-owned `content_version` fingerprint compares capture/mapping/selection identity across new run UUIDs without copying payloads; denied or superseded support does not suppress a newly usable publication. See [the task contract](tasks.md) for installed lifecycle and recovery limits. Task `progress` records the durable phase/observation frontier. A publication committed before task acknowledgment is reopened through the publication owner by request identity only after validating the task receipt, exact prepared support and source-owned attempt/run lineage. Ingestion-run `waiting` stores only a bounded reason/resumability pair; the opaque operation handle remains in its checkpoint. No-observation waits and their request usage commit together. These columns upgrade existing rows without changing their IDs or authority basis.
 
 Task `execution_id`, `execution_backend_pid` and `execution_actor` identify the latest claim. Their metadata grants no ownership by itself: the exact backend's task-specific session lock determines running state. Owner transactions validate the execution ID and nonterminal task under its row lock and use that same connection for all dependent owner mutations. Disconnected sessions become recoverable without creating another attempt. `recovery_count` retains total handoffs; `resumed_by` keeps the most recent 20 actors and `phases` the most recent 100 entries. Migration truncates legacy arrays while preserving the original producer, IDs, exact support and total known recovery count. See [ADR 0005](adr/0005-task-session-effect-ownership.md).
 
@@ -770,7 +803,7 @@ erDiagram
 
 ## Accepted future operational records
 
-These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication, exact query results and campaign and exactly approved assistant offline task/attempt paths. Synthetic accounting and bounded ceiling/admission are installed above; commercial reconciliation and the broader operational relationships below remain conceptual.
+These are conceptual relationships for the [operational requirements](functional-requirements.md), not installed tables or a migration specification. The physical ERDs above describe the installed schema, including explicit knowledge publication, exact query results and configured schedule, campaign and exactly approved assistant offline task/attempt paths. Synthetic accounting and bounded ceiling/admission are installed above; commercial reconciliation and the broader operational relationships below remain conceptual.
 
 ```mermaid
 erDiagram
@@ -818,3 +851,6 @@ Current-KB comparison drafts pin `knowledge_query_result_id`; their legacy `know
 
 
 `campaign_regeneration_requests` retains an explicit human action's exact source-free body/digest, actual initiator/automation producer, exact completion/original-shortlist references, saved method choice and unique server-owned nested recommendation identity. Claim commit precedes assessment; no lock/transaction spans model I/O. Nullable `outcome` holds only status/IDs/reason/cost link, never candidate/source bodies. Completed retries reopen the same result before current-context checks; unfinished receipts reopen the existing campaign-owned assessment/save. The saved successor is linked through its outcome ID and retains campaign-owned immutable support/order/producer and head fencing. Notifications remain identity/task/time only. See [regeneration](campaigns.md#explicit-regeneration-after-discovery).
+
+
+The schedule owner retains one fixed accounting timezone per workspace and immutable configuration JSON/digests/operator times. Each occurrence has a composite configuration foreign key and unique workspace/local-date/keyword key, regardless of configuration edits; its exact UTC day bounds, cadence, publication window and allowance version remain in `context`. Its optional task FK binds the submitted task atomically. Tasks retain the unique logical `schedule_occurrence_id` plus immutable `scope.schedule`; public admission validates it through the schedule owner rather than foreign-table SQL. Origin constraints distinguish schedule authority from exact campaign and human approval bases. Refused dispositions persist without a task; `pending` is transaction-local. Settings/day history does not implement a unique-new-post consumption ledger or activate live collection. See [the schedule contract](tasks.md#registered-offline-keyword-schedule).

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import re
+from collections.abc import Callable
+from datetime import datetime
 import secrets
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,9 +23,10 @@ from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore
 from smi_monitoring import MonitoringStore
+from smi_tasks.schedules import ScheduledDiscovery
 from smi_tasks import AcquisitionTasks, CampaignRecommendations, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority
 
-from . import cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, task_views, views
+from . import cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
 from .forms import identifier, one
 
 
@@ -94,6 +98,7 @@ class ReviewApp:
     """One trusted local marketer's browser application; all saves go through domain stores."""
 
     def __init__(self, db: Database, actor_id: str = "local-marketer", workspace_id: str = "local", *, offline_route: OfflineRoute | None = None,
+                 schedule_operator: bool = False, schedule_clock: Callable[[], datetime] | None = None,
                  model_route: ResponsesRoute | None = None, model_transport: ResponsesTransport | None = None, model_credential: str | None = None):
         self.actor = ActorContext(workspace_id, actor_id, "human")
         self.actor.require_workspace(workspace_id)
@@ -106,7 +111,9 @@ class ReviewApp:
         self.monitoring = MonitoringStore(db, workspace_id)
         self.planning = CampaignPlanning(db, workspace_id)
         self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, authority=TaskAuthority(campaign_humans=frozenset({actor_id}),
-            campaign_automations=frozenset({self.worker.actor_id}), proposal_approvers=frozenset({actor_id})))
+            campaign_automations=frozenset({self.worker.actor_id}), proposal_approvers=frozenset({actor_id}), schedule_operators=frozenset({actor_id}) if schedule_operator else frozenset()))
+        self.schedules = ScheduledDiscovery(self.tasks, clock=schedule_clock)
+        self.schedule_operator = schedule_operator
         self.recommendations = CampaignRecommendations(self.campaigns, self.tasks)
         self.inbox = CompletionInbox(db, workspace_id)
         self.costs = UsageAccounting(db, workspace_id, task_attribution=self.tasks.resolve_cost_attribution)
@@ -204,6 +211,10 @@ class ReviewApp:
                     if match:
                         allowed = {"csrf", "request_id", "brief_id", "interpretation_id", "expected_brief_version", "expected_shortlist_version"}
                         return self._regeneration_page(identifier(match[1]), {k: v for k, v in form.items() if k in allowed}, code, status)
+                    if path == "/schedules":
+                        allowed = {"expected_version", "timezone", "daily_at", "lookback_days", "daily_allowance", "keywords"}
+                        return self.page("Offline keyword schedule", schedule_views.settings(self.schedules.read(self.actor), self.csrf,
+                            self.schedule_operator, {k: v for k, v in form.items() if k in allowed}, code), status)
                     if path == "/proposals":
                         return self.page("Supply enrichment proposal", proposal_views.supplied_form(self.csrf, self.tasks.route, form, code), status)
                     match = re.fullmatch(r"/proposals/([^/]+)/approve", path)
@@ -239,6 +250,8 @@ class ReviewApp:
             return self.page("Action needs attention", views.error_message(code), status)
 
     def _get(self, path, query):
+        if path == "/schedules":
+            return self.page("Offline keyword schedule", schedule_views.settings(self.schedules.read(self.actor), self.csrf, self.schedule_operator))
         if path == "/costs":
             return self.page("Usage and costs", cost_views.index(self.costs.list(self.actor)))
         match = re.fullmatch(r"/costs/([^/]+)", path)
@@ -337,6 +350,19 @@ class ReviewApp:
         if not secrets.compare_digest(one(form, "csrf").encode(), self.csrf.encode()):
             raise EvidenceError("invalid_form")
         request_id = one(form, "request_id")
+        if path == "/schedules":
+            if not form.keys() <= {"csrf", "expected_version", "timezone", "daily_at", "lookback_days", "daily_allowance", "keywords"}:
+                raise EvidenceError("invalid_form")
+            document = {'timezone': one(form, 'timezone'), 'daily_at': one(form, 'daily_at'),
+                        'lookback_days': int(one(form, 'lookback_days')), 'daily_allowance': int(one(form, 'daily_allowance')),
+                        'keywords': json.loads(one(form, 'keywords'))}
+            self.schedules.configure(document, self.actor, expected_version=int(one(form, 'expected_version')))
+            return Response(303, location='/schedules')
+        if path == "/schedules/tick":
+            if not form.keys() <= {"csrf"}:
+                raise EvidenceError("invalid_form")
+            self.schedules.tick(self.actor)
+            return Response(303, location='/schedules')
         match = re.fullmatch(r"/inbox/([^/]+)/regenerate", path)
         if match:
             if not form.keys() <= {"csrf", "request_id", "brief_id", "interpretation_id", "expected_brief_version", "expected_shortlist_version"}:

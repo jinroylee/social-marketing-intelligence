@@ -176,7 +176,7 @@ class OfflineTaskWorker:
             row = connection.execute('SELECT * FROM acquisition_tasks WHERE id=%s AND workspace_id=%s FOR UPDATE', (task_id, self.workspace_id)).fetchone()
             if row['outcome'] is not None:
                 return self.tasks.read(task_id, actor)
-            if row['origin'] not in {'campaign', 'assistant'} or row['scope']['route'] not in {'fixture-json', ROUTE}:
+            if row['origin'] not in {'campaign', 'assistant', 'schedule'} or row['scope']['route'] not in {'fixture-json', ROUTE}:
                 raise EvidenceError('unsupported_task_origin_or_route')
             if row['status'] == 'queued':
                 run_id = self.evidence.start_run(Path(row['manifest_path']), row['manifest_hash'], row['scope']['route'], RunLimits(**row['limits']), connection=connection, workspace_id=self.workspace_id)
