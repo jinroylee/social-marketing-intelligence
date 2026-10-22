@@ -11,7 +11,7 @@ from typing import Any
 
 from .adapters.registry import AdapterRegistry
 from .canonical import CanonicalWriter
-from .contracts import RawObservation, RunLimits
+from .contracts import CanonicalAdmission, RawObservation, RunLimits
 from .evidence import EvidenceError, EvidenceStore
 
 
@@ -46,7 +46,7 @@ class IngestionRunner:
         run_id = self.evidence.start_run(manifest_path, digest, manifest["adapter"], selected_limits)
         return self.resume(run_id)
 
-    def _process(self, observation: RawObservation, transient_payload: bytes | None = None, *, transaction=None) -> bool:
+    def _process(self, observation: RawObservation, transient_payload: bytes | None = None, *, transaction=None, admission: CanonicalAdmission | None = None) -> bool:
         try:
             if transient_payload is None:
                 observation, payload = self.evidence.load(observation.id)
@@ -55,7 +55,7 @@ class IngestionRunner:
             _, mapper = self.registry.resolve(observation.adapter_id)
             batch = mapper.normalize(observation, payload)
             with _transaction(transaction, 'canonical') as connection:
-                self.writer.apply(observation.id, batch, f"{observation.adapter_id}:{mapper.version}", connection=connection)
+                self.writer.apply(observation.id, batch, f"{observation.adapter_id}:{mapper.version}", connection=connection, admission=admission)
             return True
         except (EvidenceError, ValueError, KeyError, UnicodeError, json.JSONDecodeError) as error:
             code = error.code if isinstance(error, EvidenceError) else "normalization_failed"
@@ -137,7 +137,7 @@ class IngestionRunner:
             "run_id": run_id, "status": status, "waiting": run["waiting"],
             "coverage": "complete_for_requested_input" if completed_input else "partial",
             "observations": sum(by_status.values()), "applied": by_status.get("applied", 0),
-            "quarantined": by_status.get("quarantined", 0),
+            "quarantined": by_status.get("quarantined", 0), "skipped": by_status.get("skipped", 0),
             "unresolved": unresolved,
             "missing_fields": [{"field": row["field"], "state": row["state"], "count": row["n"]} for row in missing],
             "latest_captured_at": latest_capture.isoformat() if latest_capture else None,
@@ -153,7 +153,7 @@ class IngestionRunner:
         return self._report(run_id, self.evidence.run(run_id)["input_complete"], finish=False)
 
     def resume(self, run_id: str, *, on_commit: Callable[[str, str], None] | None = None,
-               transaction: TransactionScope | None = None) -> dict[str, Any]:
+               transaction: TransactionScope | None = None, admission: CanonicalAdmission | None = None) -> dict[str, Any]:
         """Resume checkpoints; notify after durable evidence/canonical commits.
 
         The callback receives a phase and observation ID. Callback exceptions
@@ -161,6 +161,8 @@ class IngestionRunner:
         A supplied transaction scope yields the owner's connection for every
         mutation and commits before notification. Collector I/O and normalization
         run outside it; a disconnected owner cannot persist their late results.
+        Optional admission joins canonical application after normalization and
+        policy validation; excluded records remain explicit skipped observations.
         """
         run = self.evidence.run(run_id)
         manifest, digest = self._manifest(Path(run["manifest_path"]))
@@ -172,7 +174,7 @@ class IngestionRunner:
         with _transaction(transaction, 'reconcile') as connection:
             self.writer.reconcile_applied(run_id, connection=connection)
         for observation in self.evidence.pending(run_id):
-            if self._process(observation, transaction=transaction) and on_commit:
+            if self._process(observation, transaction=transaction, admission=admission) and on_commit:
                 on_commit("canonical_committed", observation.id)
         if run["status"] == "completed" or run["input_complete"]:
             return self._report(run_id, True, transaction=transaction)
@@ -238,7 +240,7 @@ class IngestionRunner:
                     return self._report(run_id, False, transaction=transaction)
                 if on_commit:
                     on_commit("evidence_committed", observation.id)
-                if self._process(observation, None if observation.payload_path else draft.payload, transaction=transaction) and on_commit:
+                if self._process(observation, None if observation.payload_path else draft.payload, transaction=transaction, admission=admission) and on_commit:
                     on_commit("canonical_committed", observation.id)
             if batch.complete:
                 completed_input = True

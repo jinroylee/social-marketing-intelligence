@@ -46,7 +46,7 @@ def test_operator_versions_configuration_separate_from_actor_labels_and_monitori
     assert saved['accounting_timezone'] == 'Asia/Seoul'
     assert saved['cadence'] == 'daily-local-v1'
     assert saved['live_activation'] is False
-    assert saved['allowance_enforcement'] == 'not_installed'
+    assert saved['allowance_enforcement'] == 'atomic_unique_new_posts'
     assert tasks.list(HUMAN) == []
     reopened = ScheduledDiscovery(AcquisitionTasks(tasks.db)).read(HUMAN)
     assert reopened['configurations'] == saved['configurations']
@@ -115,7 +115,7 @@ def test_http_operator_configures_offline_schedule_then_acknowledges_tasks_witho
         assert 'Offline registered keyword discovery' in page
         assert 'Live activation is disabled' in page
         assert 'admission allowance' in page
-        assert 'not installed' in page
+        assert 'Atomic unique new-post admission is enforced' in page
         supplied = form(page, '/schedules')
         supplied.update(timezone=['Asia/Seoul'], daily_at=['09:00'], lookback_days=['7'], daily_allowance=['50'],
                         keywords=[json.dumps(config()['keywords'])])
@@ -173,7 +173,10 @@ def test_concurrent_restart_and_edits_keep_one_occurrence_and_prior_authority(st
     assert tomorrow['accounting_day'] == '2026-10-05'
     assert tomorrow['configuration_version'] == 4
     assert tomorrow['task_id'] != original['task_id']
-    assert owner.read_occurrence(original['occurrence_id'], HUMAN) == original
+    reopened = owner.read_occurrence(original['occurrence_id'], HUMAN)
+    assert reopened['context'] == original['context']
+    assert reopened['task']['scope'] == original['task']['scope']
+    assert reopened['task']['daily_allowance']['allowance_version'] == 4
     assert owner.read(HUMAN)['accounting_timezone'] == 'Asia/Seoul'
 
 

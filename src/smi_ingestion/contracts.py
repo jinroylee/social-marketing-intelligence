@@ -148,3 +148,14 @@ class Mapper(Protocol):
     version: str
 
     def normalize(self, observation: RawObservation, payload: bytes) -> NormalizedBatch: ...
+
+
+class CanonicalAdmission(Protocol):
+    """Decide admission after policy/mapping checks and canonical identity locks.
+
+    False durably skips canonical writes. The callback's effects and canonical
+    application commit or roll back together on the supplied owner connection.
+    """
+
+    def __call__(self, observation_id: str, batch: NormalizedBatch, known: frozenset[ExternalKey],
+                 synthetic: bool, *, connection: Any) -> bool: ...

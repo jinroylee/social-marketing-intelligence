@@ -4,6 +4,7 @@ import json
 import uuid
 from dataclasses import asdict
 
+from .schedule_views import allowance_panel
 from .views import e, error_message, hidden, value
 
 
@@ -45,6 +46,8 @@ def detail(task):
                         ('Scope version', task['scope_version']), ('Immutable scope', task['scope']), ('Limits', task['limits']),
                         ('Attempt limit', task['attempt_limit']), ('Execution', task['execution']), ('Progress', task['progress']), ('Coverage', task['coverage']), ('Failure', task['failure']), ('Attempts', task['attempts'])):
         content += f'<p>{e(label)}: {e(json.dumps(item, ensure_ascii=False))}</p>'
+    if task['daily_allowance']:
+        content += allowance_panel(task['daily_allowance'])
     if task['proposal_approval']:
         proposal_id = task['proposal_approval']['proposal_id']
         content += f'<p><a href="/proposals/{e(proposal_id)}">Exact approved proposal</a></p>'

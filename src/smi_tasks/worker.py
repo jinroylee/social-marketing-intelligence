@@ -1,6 +1,7 @@
 """Fenced task execution composed from public ingestion/publication operations."""
 
 from collections.abc import Callable
+from functools import partial
 from dataclasses import asdict
 import hashlib
 import json
@@ -27,6 +28,7 @@ from smi_knowledge import KnowledgePublications
 from .store import AcquisitionTasks
 from .contracts import OfflineRoute, execution_configuration_digest
 from .execution import TaskExecution
+from .schedules.allowance import ScheduledPostAllowance
 
 
 class _ObserverFailure(Exception):
@@ -235,7 +237,8 @@ class OfflineTaskWorker:
                         counts = self._coverage(runner.inspect(run_id), requested_inputs, discovery)
                         self._checkpoint(execution, attempt_id, commit_phase, counts, observation_id=observation_id)
 
-                    report = runner.resume(run_id, on_commit=committed, transaction=execution.transaction)
+                    admission = partial(ScheduledPostAllowance(self.db, self.workspace_id).admit, row['scope']['schedule']['occurrence_id']) if row['origin'] == 'schedule' else None
+                    report = runner.resume(run_id, on_commit=committed, transaction=execution.transaction, admission=admission)
                     phase = 'ingestion'
                     coverage = self._coverage(report, requested_inputs, discovery)
                     if report['waiting']:

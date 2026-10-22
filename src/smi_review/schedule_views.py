@@ -6,18 +6,20 @@ from .views import e, error_message, hidden, value
 
 
 def settings(schedule, csrf, can_configure, submitted=None, error=None):
-    """Show honest offline capability, separate allowance metadata and durable history."""
+    """Show offline capability, shared allowance and durable history."""
     content = '<h1>Offline registered keyword discovery</h1><p>Live activation is disabled. These keywords are independent of monitoring topics.</p>'
-    content += '<p>The configurable daily new-post admission allowance is initially 50 total across at most 10 registered keywords. It is not throughput, a per-keyword yield, a request count or a cost estimate. Atomic new-post allowance enforcement is not installed.</p>'
+    content += '<p>The configurable daily new-post admission allowance is initially 50 total across at most 10 registered keywords. It is not throughput, a per-keyword yield, a request count or a cost estimate. Atomic unique new-post admission is enforced at canonical ingestion. Fewer records can be returned because of overlap, ineligible records, source coverage or limits.</p>'
     content += '<p>Daily local-time cadence; accounting days begin at local midnight. The accounting timezone is fixed after the first save. A due tick acknowledges bounded offline tasks; execute each through the separate existing worker. Earlier missed days are not replayed.</p>'
     if error:
         content += error_message(error)
+    if schedule['daily_allowance']:
+        content += allowance_panel(schedule['daily_allowance'])
     document = schedule['document'] or {'timezone': 'UTC', 'daily_at': '09:00', 'lookback_days': 7, 'daily_allowance': 50, 'keywords': []}
     if can_configure:
         content += '<form action="/schedules" method="post">' + hidden('csrf', csrf)
         content += hidden('expected_version', value(submitted, 'expected_version', str(schedule['version'])))
         for name, label in (('timezone', 'IANA accounting timezone'), ('daily_at', 'Daily local time (HH:MM)'),
-                            ('lookback_days', 'Publication lookback days (1–30)'), ('daily_allowance', 'Daily admission allowance (metadata until enforcement is installed)')):
+                            ('lookback_days', 'Publication lookback days (1–30)'), ('daily_allowance', 'Daily admission allowance')):
             content += f'<label>{e(label)}<input name="{name}" required value="{e(value(submitted, name, str(document[name])))}"></label>'
         content += '<p>Keywords JSON: at most 10 objects, each with a stable key, one literal query and subject_ids. Preserve the key when editing; an empty list pauses future occurrences.</p>'
         content += f'<label>Registered keywords<textarea name="keywords" required>{e(value(submitted, "keywords", json.dumps(document["keywords"], ensure_ascii=False, indent=2)))}</textarea></label><button type="submit">Save successor configuration</button></form>'
@@ -36,3 +38,12 @@ def settings(schedule, csrf, can_configure, submitted=None, error=None):
     for configuration in schedule['configurations']:
         content += f'<pre>{e(json.dumps(configuration, ensure_ascii=False, indent=2))}</pre>'
     return content + '</details>'
+
+
+def allowance_panel(allowance):
+    """Render actual shared consumption separately from immutable task authority."""
+    return (f'<section class="panel"><h2>Shared daily new-post allowance</h2><p>Day: {e(allowance["accounting_day"])} '
+            f'· {e(allowance["accounting_timezone"])} · Limit: {e(allowance["limit"])} · Used: {e(allowance["used"])} '
+            f'· Remaining: {e(allowance["remaining"])}</p><p>Fewer records can be returned because of overlap, '
+            'ineligible records, source coverage or limits. This allowance is independent of requests, record caps and costs.</p>'
+            f'<pre>{e(json.dumps(allowance, ensure_ascii=False))}</pre></section>')

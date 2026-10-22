@@ -62,7 +62,7 @@ An operator-authorized recurring discovery query with an explicit subject scope 
 One keyword's due discovery within a particular accounting day, retaining the configuration and initiating authority that applied to it. Later keyword or configuration changes do not replace its history.
 
 **Scheduled new-post allowance**:
-The shared daily admission limit for unique eligible new posts found across registered scheduled keywords. It is distinct from requests, measured cost, per-keyword yield and guaranteed throughput.
+The shared daily admission limit for unique eligible new posts found across registered scheduled keywords. A new post is a previously unknown eligible post identity; a later observation of known content is a refresh. Repeated identities consume no additional admission. The allowance is distinct from requests, measured cost, per-keyword yield and guaranteed throughput.
 
 **Creator comparison**:
 Evaluating candidate creators against the same campaign needs using their available evidence and explicit unknowns. The candidates may come from discovery or the marketer's existing working set.

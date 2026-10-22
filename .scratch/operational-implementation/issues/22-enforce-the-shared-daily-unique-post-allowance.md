@@ -4,7 +4,7 @@
 
 **Blocked by:** 21: Schedule offline discovery for registered keywords.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 

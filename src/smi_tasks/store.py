@@ -388,8 +388,10 @@ class AcquisitionTasks:
                 progress = {'phase': 'publication_committed', 'publication_id': committed['publication_id']}
                 coverage.update(published_members=committed['coverage']['members'], unpublished_members=0)
                 publication_ids = [committed['publication_id']]
+        from .schedules.allowance import ScheduledPostAllowance
+        allowance = ScheduledPostAllowance(self.db, self.workspace_id).read(row['scope']['schedule']['accounting_day'], actor, occurrence_id=str(row['schedule_occurrence_id'])) if row['origin'] == 'schedule' else None
         return {'task_id': task_id, 'workspace_id': self.workspace_id, 'request_id': row['request_id'],
-                'origin': row['origin'], 'initiator': {'actor_id': row['initiator_id'], 'kind': row['initiator_kind']},
+                'daily_allowance': allowance, 'origin': row['origin'], 'initiator': {'actor_id': row['initiator_id'], 'kind': row['initiator_kind']},
                 'scope_version': row['scope_version'], 'scope': row['scope'], 'limits': row['limits'], 'attempt_limit': row['attempt_limit'],
                 'status': row['status'], 'progress': progress, 'outcome': row['outcome'], 'coverage': coverage,
                 'execution': {'state': 'completed' if row['outcome'] is not None else 'running' if running else 'queued' if row['status'] == 'queued' else 'waiting' if row['status'] == 'waiting' else 'recoverable',

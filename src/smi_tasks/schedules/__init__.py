@@ -12,6 +12,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from psycopg.types.json import Jsonb
 
+from .allowance import ScheduledPostAllowance
+
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
@@ -118,6 +120,7 @@ class ScheduledDiscovery:
             connection.execute('INSERT INTO keyword_schedule_configurations(workspace_id,version,document,digest,operator_id,recorded_at) VALUES (%s,%s,%s,%s,%s,%s)',
                                (self.workspace_id, version, Jsonb(document), digest, actor.actor_id, now))
             connection.execute('UPDATE keyword_schedules SET current_version=%s WHERE workspace_id=%s', (version, self.workspace_id))
+            ScheduledPostAllowance.configure_day(connection, self.workspace_id, now.astimezone(ZoneInfo(document['timezone'])).date(), document, version)
         return self.read(actor)
 
     def read(self, actor: ActorContext) -> dict[str, Any]:
@@ -128,13 +131,15 @@ class ScheduledDiscovery:
             schedule = connection.execute('SELECT * FROM keyword_schedules WHERE workspace_id=%s', (self.workspace_id,)).fetchone()
             configurations = connection.execute('SELECT * FROM keyword_schedule_configurations WHERE workspace_id=%s ORDER BY version', (self.workspace_id,)).fetchall()
             occurrences = connection.execute('SELECT * FROM keyword_schedule_occurrences WHERE workspace_id=%s ORDER BY accounting_day DESC,keyword_key LIMIT 100', (self.workspace_id,)).fetchall()
+            daily_allowance = ScheduledPostAllowance(self.db, self.workspace_id).read(
+                self._now().astimezone(ZoneInfo(schedule['accounting_timezone'])).date(), actor, connection=connection) if schedule else None
         versions = [{'version': c['version'], 'document': c['document'], 'digest': c['digest'],
                      'operator_id': c['operator_id'], 'recorded_at': c['recorded_at'].isoformat()} for c in configurations]
         return {'workspace_id': self.workspace_id, 'version': schedule['current_version'] if schedule else 0,
                 'document': versions[-1]['document'] if versions else None,
                 'accounting_timezone': schedule['accounting_timezone'] if schedule else None,
                 'last_tick_at': schedule['last_tick_at'].isoformat() if schedule and schedule['last_tick_at'] else None,
-                'cadence': 'daily-local-v1', 'live_activation': False, 'allowance_enforcement': 'not_installed',
+                'cadence': 'daily-local-v1', 'live_activation': False, 'allowance_enforcement': 'atomic_unique_new_posts', 'daily_allowance': daily_allowance,
                 'catch_up': 'current_day_only', 'configurations': versions,
                 'occurrences': [self._occurrence(row, actor) for row in occurrences]}
 
@@ -180,6 +185,7 @@ class ScheduledDiscovery:
             document = configuration['document']
             zone = ZoneInfo(schedule['accounting_timezone'])
             day = now.astimezone(zone).date()
+            ScheduledPostAllowance.configure_day(connection, self.workspace_id, day, document, configuration['version'])
             # fold=0 chooses the earlier overlap; UTC roundtrip shifts a gap forward.
             due_local = datetime.combine(day, time.fromisoformat(document['daily_at']), zone)
             due = due_local.astimezone(timezone.utc)
@@ -200,7 +206,7 @@ class ScheduledDiscovery:
                                'day_end': datetime.combine(day + timedelta(days=1), time(), zone).astimezone(timezone.utc).isoformat(),
                                'due_at': due.isoformat(), 'published_from': (due_local - timedelta(days=document['lookback_days'])).astimezone(timezone.utc).isoformat(),
                                'published_before': due.isoformat(), 'daily_allowance': document['daily_allowance'],
-                               'allowance_version': configuration['version'], 'allowance_enforcement': 'not_installed'}
+                               'allowance_version': configuration['version'], 'allowance_enforcement': 'atomic_unique_new_posts'}
                     connection.execute('INSERT INTO keyword_schedule_occurrences(id,workspace_id,configuration_version,keyword_key,accounting_day,context,initiator_id,initiator_kind,status,recorded_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                                        (occurrence_id, self.workspace_id, configuration['version'], keyword['key'], day, Jsonb(context), actor.actor_id, actor.kind, 'pending', now))
                     status, reason, task_id = 'submitted', None, None

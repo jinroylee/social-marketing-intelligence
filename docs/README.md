@@ -23,6 +23,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Quality review](evaluation.md) | Separate technical, translation-assisted and marketer-usefulness gates |
 | [Canonical evidence ownership](adr/0001-canonical-evidence-ownership.md) | Why source evidence and business decisions have separate owners |
 | [Pinned support and current policy](adr/0002-pinned-support-current-policy.md) | Why reproducible decisions pin support while permissions remain current |
+| [Atomic scheduled post admission](adr/0012-atomic-scheduled-post-admission.md) | Why daily new-post consumption commits with canonical effects while refreshes remain separate |
 | [Stable schedule accounting day](adr/0011-stable-schedule-accounting-day.md) | Why daily keyword history and accounting boundaries survive configuration edits |
 | [Save before discovery admission](adr/0010-save-before-coverage-discovery-admission.md) | Why immutable recommendations survive automatic discovery refusal and admission retries |
 | [Automatic shortlist persistence](adr/0003-automatic-shortlist-persistence.md) | Why saving generated recommendations requires no human review or approval |

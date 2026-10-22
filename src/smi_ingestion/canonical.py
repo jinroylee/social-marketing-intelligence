@@ -11,7 +11,7 @@ from typing import Any
 
 from psycopg.types.json import Jsonb
 
-from .contracts import ExternalKey, NormalizedBatch
+from .contracts import CanonicalAdmission, ExternalKey, NormalizedBatch
 from .db import Database
 from .evidence import EvidenceError, policy_allows, policy_from_json
 
@@ -59,9 +59,13 @@ class CanonicalWriter:
 
     def apply(
         self, observation_id: str, batch: NormalizedBatch, mapper_key: str,
-        policy_version: str = "canonical-v1", *, connection=None,
+        policy_version: str = "canonical-v1", *, connection=None, admission: CanonicalAdmission | None = None,
     ) -> dict[str, Any]:
-        """Apply a mapping atomically, optionally inside the caller's transaction."""
+        """Apply mapping and optional admission atomically on the caller connection.
+
+        Admission receives observation ID, batch, locked known content keys,
+        synthetic flag and connection. False skips canonical effects durably.
+        """
         with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             observation = connection.execute(
                 "SELECT * FROM source_observations WHERE id=%s FOR UPDATE", (observation_id,)
@@ -77,6 +81,22 @@ class CanonicalWriter:
             if existing:
                 return {"status": "duplicate", "derivation_id": str(existing["id"]),
                         "entities": 0, "fields": 0, "metrics": 0}
+            keys = set(batch.entities)
+            keys.update(field.subject for field in batch.fields)
+            keys.update(metric.subject for metric in batch.metrics)
+            if admission:
+                known = set()
+                for key in sorted(keys, key=lambda k: (k.platform, k.namespace, k.kind, k.native_id)):
+                    if key.kind not in {"account", "content"} or not key.native_id:
+                        raise ValueError("invalid_external_identity")
+                    lock_name = "|".join(str(value) for value in _key_params(key, observation["synthetic"]))
+                    connection.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (lock_name,))
+                    if connection.execute("SELECT 1 FROM external_identities WHERE platform=%s AND namespace=%s AND kind=%s AND native_id=%s AND synthetic=%s",
+                                          _key_params(key, observation["synthetic"])).fetchone():
+                        known.add(key)
+                if not admission(observation_id, batch, frozenset(known), observation["synthetic"], connection=connection):
+                    connection.execute("UPDATE source_observations SET status='skipped' WHERE id=%s", (observation_id,))
+                    return {"status": "skipped", "entities": 0, "fields": 0, "metrics": 0}
             connection.execute(
                 "UPDATE derivations SET active=FALSE WHERE observation_id=%s AND active=TRUE",
                 (observation_id,)
