@@ -4,7 +4,7 @@
 
 **Blocked by:** 15: Automatically save an attributed ordered shortlist; 18: Execute bounded offline keyword discovery.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -24,3 +24,10 @@
 ## Comments
 
 - All technical acceptance criteria are demonstrated in [the ticket 19 report](../reports/ticket-19.md). Runtime/tests/docs commit `f715f4151460e64adcc8e69a6548db8018e4a885`; frozen checked merge `c1fdf76f0c88a0388f6f3f3e0de6b3e0676d21bc` includes latest integration metadata. Shared offline check passed **490 tests in 327.81s** with real isolated PostgreSQL; wheel byte verification passed all 24 required packaged entries. Status remains claimed for root integrated verification and resolution. No actual source/model/paid execution or human-usefulness validation is claimed.
+
+## Completion
+
+- Runtime implementation: `f715f4151460e64adcc8e69a6548db8018e4a885`. Frozen worker checked merge: `c1fdf76f0c88a0388f6f3f3e0de6b3e0676d21bc`. Final worker head and root integrated checked commit: `4c2d844418115c239bcadca4c93a378b9b4f7bae`, fast-forward integrated into `integration/operational-tickets-11-39`; the final worker commit changes only report/checklist metadata.
+- Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **490 tests in 321.22 seconds**; log `/tmp/smi-ticket-19-integrated-shared.log`. The gate completed during the usage interruption and was preserved without rerun. All acceptance criteria are checked.
+- The independent wheel hash and 24-entry byte/size/hash/declared-symlink verification passed before the interruption and remains valid for the unchanged integrated tree. [The implementation report](../reports/ticket-19.md) preserves exact worker and root evidence.
+- Verification used real PostgreSQL and simulated external I/O. Existing saved recommendations remain immutable; no real source/model/paid call, readiness or human-quality claim, external message, push, PR or deployment occurred.
