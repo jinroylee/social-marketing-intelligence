@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 22 in its fresh context/worktree, then merge and validate before advancing. Tickets 11–21 are integrated and resolved.
+Dispatch ticket 23 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–22 are integrated and resolved; ticket 23 is pending.
 
 ## Current Phase
 
-Phase 26 — ticket 22 in progress after successful ticket 21 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 27 — ticket 23 pending after successful ticket 22 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -194,9 +194,9 @@ Fast-forward integrated final head `dbadd45a9327b02fd9ca707aea65bc5001b0614c` (r
 
 ### Phase 26 — Implement ticket 22
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final head `5cc5aa245d77e66f9bb739d3b9eda8d425b210ec` with final corrected runtime/frozen commit `cfceca281bcf0310cd16350707fdc36d7a1df4f7`. Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed all static checks, PostgreSQL preflight and **549 tests in 510.97 seconds**; final wheel size/hash and all 27 entries match integrated bytes, sizes, hashes and declared symlink targets. All acceptance criteria are checked and local ticket 22 is resolved. The superseded initial gate is not completion evidence.
 
 ### Phase 27 — Implement ticket 23
 

@@ -4,7 +4,7 @@
 
 **Blocked by:** 21: Schedule offline discovery for registered keywords.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -25,3 +25,10 @@
 
 - All six technical criteria are proven in [the ticket 22 report](../reports/ticket-22.md): final 38-test schedule/allowance public/HTTP coverage, preserved 201-test compatibility pass, frozen shared checks with 549 tests in 532.33 seconds and exact 27-entry offline wheel verification. Initial runtime `41e10cba9ef741c355a17b6ea3301e6e336759e1`; final runtime/frozen checked head `cfceca281bcf0310cd16350707fdc36d7a1df4f7`. Status stays claimed for merger-owned integrated validation/resolution.
 - New-post admission commits atomically with fenced canonical effects. Known refreshes, deduplication, invalid/denied/excluded records, cap edits, restart, stable day rollover and pre-tick reads retain separate observable semantics. Existing authority, policy, cost/no-reissue, session ownership and receipt recovery remain intact. Verification uses real local PostgreSQL and simulated I/O; no live route, daemon, paid execution, guaranteed fill, readiness or human-quality claim is made.
+
+## Completion
+
+- Final corrected runtime and frozen checked commit: `cfceca281bcf0310cd16350707fdc36d7a1df4f7` (includes the before-first-tick view fix after initial implementation `41e10cba9ef741c355a17b6ea3301e6e336759e1`). Final worker head and root integrated checked commit: `5cc5aa245d77e66f9bb739d3b9eda8d425b210ec`, fast-forward integrated into `integration/operational-tickets-11-39`; the final worker commit changes only report/checklist metadata.
+- Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **549 tests in 510.97 seconds**; log `/tmp/smi-ticket-22-integrated-shared.log`. All acceptance criteria are checked. The earlier interrupted/superseded gate at the initial runtime is not a full PASS and is not used for completion.
+- Independently verified the final wheel size (**278200 bytes**), SHA-256 and all 27 packaged entries against integrated bytes, sizes, hashes and declared symlink targets. [The implementation report](../reports/ticket-22.md) retains exact corrected-worker and root evidence.
+- Verification used real PostgreSQL and simulated external I/O. Scheduled unique-post enforcement remains distinct from requests, refreshes and costs; no live activation, actual provider/model/paid call, readiness or human-quality claim, external message, push, PR or deployment occurred.
