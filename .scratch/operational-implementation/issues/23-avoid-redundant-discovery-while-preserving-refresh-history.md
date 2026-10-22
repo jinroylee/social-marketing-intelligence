@@ -10,13 +10,17 @@
 
 **Scope guard:** One discovery route's query/retrieval history and explicit freshness/processing policy; no global cross-provider identity merge or automatic fallback.
 
-- [ ] Persist prior query/retrieval scope, source identity, capture time, failures, usable publication, and method/version context needed for an explicit avoidance decision.
-- [ ] Repeated unchanged work within the configured freshness policy can be skipped with an inspectable reason rather than re-fetched or re-published as a new update.
-- [ ] Stale captures, changed source observations, required mapper revisions, and recoverable failed work remain eligible for appropriate new processing.
-- [ ] Unknown or unavailable freshness stays explicit; import/publication time cannot make old captures current.
-- [ ] Source namespaces, metric definitions, conflict history, and old result pins remain separate across refresh and deduplication.
-- [ ] Public task/KB tests count simulated retrievals and verify skip/refresh/failure behavior and historical support after restart.
+- [x] Persist prior query/retrieval scope, source identity, capture time, failures, usable publication, and method/version context needed for an explicit avoidance decision.
+- [x] Repeated unchanged work within the configured freshness policy can be skipped with an inspectable reason rather than re-fetched or re-published as a new update.
+- [x] Stale captures, changed source observations, required mapper revisions, and recoverable failed work remain eligible for appropriate new processing.
+- [x] Unknown or unavailable freshness stays explicit; import/publication time cannot make old captures current.
+- [x] Source namespaces, metric definitions, conflict history, and old result pins remain separate across refresh and deduplication.
+- [x] Public task/KB tests count simulated retrievals and verify skip/refresh/failure behavior and historical support after restart.
 
 **Spec coverage:** user stories 43, 44, 45, 46; acceptance scenarios T06, T19, T20 (the part exercised by this slice).
 
 **Verification:** Use the owning public operations and the existing integration/HTTP test conventions where applicable. Keep real PostgreSQL/policy behavior; simulate external I/O by default. Update the corresponding product contracts, physical ERD, and local module instructions when their behavior or ownership changes. Run the shared locked checks. A passing test suite does not establish human language or marketer-usefulness validation.
+
+## Implementation validation
+
+Worker runtime/frozen head `195eb279a1ce5a4bab52347fcd890c0c8699eee2` passed 291 focused compatibility tests in 274.77 seconds and the shared locked check with 577 tests in 583.94 seconds (exit 0). Exact report and retained artifact/byte-manifest evidence: [ticket 23 report](../reports/ticket-23.md). Status remains **claimed** pending the merger's separate integrated shared gate and resolution.
