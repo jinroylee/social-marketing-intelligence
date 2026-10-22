@@ -46,6 +46,16 @@ def detail(task):
                         ('Scope version', task['scope_version']), ('Immutable scope', task['scope']), ('Limits', task['limits']),
                         ('Attempt limit', task['attempt_limit']), ('Execution', task['execution']), ('Progress', task['progress']), ('Coverage', task['coverage']), ('Failure', task['failure']), ('Attempts', task['attempts'])):
         content += f'<p>{e(label)}: {e(json.dumps(item, ensure_ascii=False))}</p>'
+    history = task['discovery_history']
+    if history:
+        content += '<h2>Discovery retrieval history</h2>'
+        content += f'<p>{e(json.dumps(history, ensure_ascii=False))}</p>'
+        if history['decision'] == 'skip':
+            content += '<p>No new publication was created by this avoidance decision.</p>'
+        if history['prior_task_id']:
+            content += f'<p><a href="/tasks/{e(history["prior_task_id"])}">Prior retrieval task</a></p>'
+        if history['prior_publication_id']:
+            content += f'<p><a href="/knowledge/publications/{e(history["prior_publication_id"])}?include_synthetic=yes">Prior publication (current permissions apply)</a></p>'
     if task['daily_allowance']:
         content += allowance_panel(task['daily_allowance'])
     if task['proposal_approval']:

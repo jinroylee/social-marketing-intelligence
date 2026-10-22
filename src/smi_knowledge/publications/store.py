@@ -99,21 +99,45 @@ class KnowledgePublications:
             members = self.evidence.read(support, actor, purpose='process', include_synthetic=include_synthetic, connection=connection)
             if any(m['availability'] != 'available' or m['support_status'] != 'current' for m in members):
                 raise EvidenceError('publication_support_unavailable')
-            versions = {m['content_version'] for m in members}
-            existing_versions = set()
-            rows = connection.execute(
-                'SELECT s.* FROM knowledge_publication_support s JOIN knowledge_publications p ON p.id=s.publication_id '
-                'WHERE p.workspace_id=%s AND (NOT p.synthetic OR %s) AND (s.content_version=ANY(%s) OR s.content_version IS NULL)',
-                (self.workspace_id, include_synthetic, list(versions)),
-            ).fetchall()
-            for row in rows:
-                reference = SupportReference(str(row['observation_id']), str(row['derivation_id']), tuple(str(i) for i in row['assertion_ids']), tuple(str(i) for i in row['metric_ids']))
-                member = self.evidence.read((reference,), actor, purpose='process', include_synthetic=include_synthetic, connection=connection)[0]
-                if member['availability'] == 'available' and member['support_status'] == 'current':
-                    existing_versions.add(member['content_version'])
-                    if row['content_version'] is None:
-                        connection.execute('UPDATE knowledge_publication_support SET content_version=%s WHERE publication_id=%s AND position=%s', (member['content_version'], row['publication_id'], row['position']))
-        return tuple(reference for reference, member in zip(support, members) if member['content_version'] not in existing_versions)
+            existing = self._usable_versions(members, actor, include_synthetic, connection)
+        return tuple(reference for reference, member in zip(support, members) if member['content_version'] not in existing)
+
+    def usable_publications(self, support: tuple[SupportReference, ...], actor: ActorContext, *, include_synthetic: bool = False, connection=None) -> tuple[str, ...]:
+        """Resolve publication IDs covering every exact current capture/mapping.
+
+        Returns empty when any selected content is unpublished or unavailable. These are links
+        to usable evidence, not a caller's ownership receipt or a new publication.
+        Policy and derivation locks remain held on the optional caller connection.
+        """
+        actor.require_workspace(self.workspace_id)
+        if not support:
+            return ()
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
+            members = self.evidence.read(support, actor, purpose='process', include_synthetic=include_synthetic, connection=connection)
+            if any(m['availability'] != 'available' or m['support_status'] != 'current' for m in members):
+                return ()
+            existing = self._usable_versions(members, actor, include_synthetic, connection)
+        if any(m['content_version'] not in existing for m in members):
+            return ()
+        return tuple(dict.fromkeys(existing[m['content_version']] for m in members))
+
+    def _usable_versions(self, members, actor, include_synthetic, connection):
+        versions = {m['content_version'] for m in members}
+        existing = {}
+        rows = connection.execute(
+            'SELECT s.* FROM knowledge_publication_support s JOIN knowledge_publications p ON p.id=s.publication_id '
+            'WHERE p.workspace_id=%s AND (NOT p.synthetic OR %s) AND (s.content_version=ANY(%s) OR s.content_version IS NULL) '
+            'ORDER BY p.published_at,p.id,s.position',
+            (self.workspace_id, include_synthetic, list(versions)),
+        ).fetchall()
+        for row in rows:
+            reference = SupportReference(str(row['observation_id']), str(row['derivation_id']), tuple(str(i) for i in row['assertion_ids']), tuple(str(i) for i in row['metric_ids']))
+            member = self.evidence.read((reference,), actor, purpose='process', include_synthetic=include_synthetic, connection=connection)[0]
+            if member['availability'] == 'available' and member['support_status'] == 'current':
+                existing.setdefault(member['content_version'], str(row['publication_id']))
+                if row['content_version'] is None:
+                    connection.execute('UPDATE knowledge_publication_support SET content_version=%s WHERE publication_id=%s AND position=%s', (member['content_version'], row['publication_id'], row['position']))
+        return existing
 
     def find_request(self, request_id: str, actor: ActorContext, *, include_synthetic: bool = False, connection=None) -> dict[str, Any] | None:
         """Find committed source-free metadata after a lost publication acknowledgment.

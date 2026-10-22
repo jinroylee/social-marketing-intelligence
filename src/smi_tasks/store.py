@@ -23,6 +23,7 @@ from smi_knowledge import KnowledgePublications, KnowledgeStore
 
 from .contracts import EnrichmentProposal, OfflineRoute, TaskAuthority, execution_configuration_digest
 from .execution import execution_is_running
+from .discovery import DiscoveryHistory
 
 
 class AcquisitionTasks:
@@ -41,6 +42,7 @@ class AcquisitionTasks:
         UsageAccounting(self.db, self.workspace_id).migrate()
         from .schedules import migrate
         migrate(self.db)
+        DiscoveryHistory(self.db, self.workspace_id).migrate()
 
     def submit_campaign(self, campaign_id: str, actor: ActorContext, *, brief_id: str, purpose: str, request_id: str) -> dict[str, Any]:
         """Persist acknowledgment before I/O; the trusted campaign establishes origin."""
@@ -150,6 +152,7 @@ class AcquisitionTasks:
                                  'coverage_profile': coverage['profile']['version'], 'coverage_assessed_at': coverage['assessed_at'],
                                  'query_derivation': coverage['profile']['discovery'], 'catalog_digest': catalog.digest,
                                  'route': ROUTE, 'route_version': self.route.version, 'manifest_hash': manifest_hash, 'references': []}
+                        scope.update(self.route.discovery_configuration(manifest))
                         scope = json.loads(json.dumps(scope))
                         limits = asdict(self.route.limits)
                         scope['execution_digest'] = execution_configuration_digest(scope, limits, str(path))
@@ -214,6 +217,7 @@ class AcquisitionTasks:
             proposal.validate()
             scope = {**proposal.document(), 'discovery': proposal.keyword_scope(), 'schedule': context,
                      'route': ROUTE, 'route_version': self.route.version, 'manifest_hash': manifest_hash, 'references': []}
+            scope.update(self.route.discovery_configuration(manifest))
             scope = json.loads(json.dumps(scope))
             limits = asdict(self.route.limits)
             scope['execution_digest'] = execution_configuration_digest(scope, limits, str(path))
@@ -236,6 +240,7 @@ class AcquisitionTasks:
                  'manifest_hash': manifest_hash, 'references': [i.get('reference', '') for i in manifest.get('items', [])]}
         if manifest['adapter'] == ROUTE:
             scope['discovery'] = proposal.keyword_scope()
+            scope.update(self.route.discovery_configuration(manifest))
         elif proposal.published_from is not None or proposal.published_before is not None:
             raise EvidenceError('keyword_discovery_unavailable_supplied_reference_route')
         scope = json.loads(json.dumps(scope))
@@ -391,6 +396,7 @@ class AcquisitionTasks:
         from .schedules.allowance import ScheduledPostAllowance
         allowance = ScheduledPostAllowance(self.db, self.workspace_id).read(row['scope']['schedule']['accounting_day'], actor, occurrence_id=str(row['schedule_occurrence_id'])) if row['origin'] == 'schedule' else None
         return {'task_id': task_id, 'workspace_id': self.workspace_id, 'request_id': row['request_id'],
+                'discovery_history': DiscoveryHistory(self.db, self.workspace_id).read(task_id, actor),
                 'daily_allowance': allowance, 'origin': row['origin'], 'initiator': {'actor_id': row['initiator_id'], 'kind': row['initiator_kind']},
                 'scope_version': row['scope_version'], 'scope': row['scope'], 'limits': row['limits'], 'attempt_limit': row['attempt_limit'],
                 'status': row['status'], 'progress': progress, 'outcome': row['outcome'], 'coverage': coverage,

@@ -13,3 +13,5 @@ Use source-owned capture/mapping/selection content identities for `unpublished` 
 Keep frozen datasets unchanged. Acquisition authority, current-KB search and consequential query-result pinning belong to their own workflows. Update the knowledge contract, physical ERD and local publication surface when changing this interface.
 
 `lock_current` serializes the workspace publication frontier through a caller commit. `publish` joins that lock before recording membership; new current-KB searches retain it through dependent comparison commits. Keep this frontier lock separate from immutable historical reads and source-policy locks.
+
+`usable_publications` resolves current exact capture/mapping publication links for every selected support bundle, returning empty if any member is unpublished/unavailable/superseded. These links do not establish caller task ownership. Share capture-content comparison with `unpublished` and retain source policy/derivation locks on caller transactions; historical receipt recovery remains independent of current usability.

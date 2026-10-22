@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from functools import partial
 from dataclasses import asdict
+from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
@@ -26,6 +27,7 @@ from smi_ingestion.support import IngestedEvidence, SupportReference
 from smi_knowledge import KnowledgePublications
 
 from .store import AcquisitionTasks
+from .discovery import DiscoveryHistory
 from .contracts import OfflineRoute, execution_configuration_digest
 from .execution import TaskExecution
 from .schedules.allowance import ScheduledPostAllowance
@@ -81,13 +83,16 @@ class OfflineTaskWorker:
     def __init__(self, db: Database, evidence_root: Path, workspace_id: str = 'local', *,
                  collector: Collector | None = None, on_progress: Callable[[dict[str, Any]], None] | None = None,
                  on_execution: Callable[[TaskExecution], None] | None = None,
-                 before_commit: Callable[[str], None] | None = None):
+                 before_commit: Callable[[str], None] | None = None,
+                 clock: Callable[[], datetime] | None = None):
         self.db, self.workspace_id = db, workspace_id
         self.tasks = AcquisitionTasks(db, workspace_id)
         self.evidence = EvidenceStore(db, evidence_root)
         self.on_progress = on_progress
         self.on_execution, self.before_commit = on_execution, before_commit
         self.collector = collector
+        self.clock = clock or (lambda: datetime.now(timezone.utc))
+        self.history = DiscoveryHistory(db, workspace_id)
         self.costs = UsageAccounting(db, workspace_id, task_attribution=self.tasks.resolve_cost_attribution)
 
     def _notify(self, execution, *, phase=None, publication_id=None):
@@ -117,8 +122,11 @@ class OfflineTaskWorker:
                 connection.execute('UPDATE acquisition_attempts SET publication_support=%s WHERE id=%s', (Jsonb([asdict(s) for s in support]), attempt_id))
         self._notify(execution)
 
-    def _finish(self, execution, attempt_id, coverage, *, outcome, failure_phase=None, failure_code=None):
+    def _finish(self, execution, attempt_id, coverage, *, outcome, failure_phase=None, failure_code=None, publication_id=None):
         with execution.transaction('completion') as connection:
+            self.history.complete(execution.task_id, execution.actor, outcome=outcome,
+                failure={'phase': failure_phase, 'code': failure_code} if failure_code else None,
+                publication_id=publication_id, coverage=coverage, connection=connection)
             connection.execute("UPDATE acquisition_tasks SET status=%s,outcome=%s,progress=%s,coverage=%s,failure_phase=%s,failure_code=%s,finished_at=now() WHERE id=%s",
                                ('failed' if outcome == 'failure' else 'completed', outcome, Jsonb({'phase': 'completed'}), Jsonb(coverage), failure_phase, failure_code, execution.task_id))
             phases = connection.execute('SELECT phases FROM acquisition_attempts WHERE id=%s', (attempt_id,)).fetchone()['phases']
@@ -211,6 +219,17 @@ class OfflineTaskWorker:
                 validate_keyword_scope(scope['discovery'])
                 base_collector = self.collector or KeywordFixtureCollector(scope['discovery'], scope['route_version'])
                 mapper = KeywordFixtureMapper()
+                with execution.transaction('discovery_decision') as connection:
+                    decision = self.history.decide(task_id, row['scope'], row['limits'], f'{ROUTE}:{mapper.version}',
+                        actor, now=self.clock(), connection=connection)
+                if decision == 'skip':
+                    coverage.update(collected_observations=0, ingested_observations=0, published_members=0,
+                        remaining_inputs=0, requests_used=0, bytes_used=0, retrieval_skipped=True)
+                    with execution.transaction('discovery_skipped') as connection:
+                        self.evidence.advance(run_id, {}, complete=True, connection=connection)
+                        self.evidence.finish(run_id, 'completed', connection=connection)
+                    self._finish(execution, attempt_id, coverage, outcome='no_usable_update')
+                    return self.tasks.read(task_id, actor)
             else:
                 base_collector, mapper = self.collector or LocalFileCollector('fixture-json'), JsonFixtureMapper()
             registry = AdapterRegistry()
@@ -238,7 +257,8 @@ class OfflineTaskWorker:
                         self._checkpoint(execution, attempt_id, commit_phase, counts, observation_id=observation_id)
 
                     admission = partial(ScheduledPostAllowance(self.db, self.workspace_id).admit, row['scope']['schedule']['occurrence_id']) if row['origin'] == 'schedule' else None
-                    report = runner.resume(run_id, on_commit=committed, transaction=execution.transaction, admission=admission)
+                    report = runner.resume(run_id, on_commit=committed, transaction=execution.transaction, admission=admission,
+                        policy_version=row['scope'].get('discovery_policy', {}).get('processing_revision', 'canonical-v1'))
                     phase = 'ingestion'
                     coverage = self._coverage(report, requested_inputs, discovery)
                     if report['waiting']:
@@ -251,6 +271,8 @@ class OfflineTaskWorker:
                     support = IngestedEvidence(self.db, self.workspace_id).select_run(run_id, actor, include_synthetic=True)
                     phase = 'publication'
                     with execution.transaction('selection') as connection:
+                        if discovery:
+                            self.history.record_support(task_id, support, actor, connection=connection)
                         new_support = publications.unpublished(support, actor, include_synthetic=True, connection=connection)
                     coverage.update(eligible_members=len(support), unchanged_members=len(support) - len(new_support),
                                     ineligible_observations=report['applied'] - len(support), unpublished_members=len(new_support))
@@ -277,7 +299,7 @@ class OfflineTaskWorker:
                 coverage['published_members'] = published['coverage']['members']
             coverage['unpublished_members'] = 0
             self._finish(execution, attempt_id, coverage, outcome='partial_update' if code else 'usable_update',
-                         failure_phase=failed_phase, failure_code=code)
+                         failure_phase=failed_phase, failure_code=code, publication_id=published['publication_id'])
         except _CostDispatchBlocked as blocked:
             result = blocked.result
             coverage = self._coverage(runner.inspect(run_id), requested_inputs, discovery)

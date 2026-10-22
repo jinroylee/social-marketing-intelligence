@@ -1,6 +1,6 @@
 """Supplied proposals and operator-owned offline capabilities and origin authority."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import hashlib
 import json
 from pathlib import Path
@@ -11,6 +11,8 @@ from smi_ingestion.adapters.keyword_fixture import ROUTE, validate_keyword_scope
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
 
+from .discovery import DiscoveryPolicy
+
 
 @dataclass(frozen=True)
 class OfflineRoute:
@@ -19,9 +21,22 @@ class OfflineRoute:
     manifest_path: Path
     version: str = 'offline-fixture-v1'
     limits: RunLimits = RunLimits(max_requests=10, max_pages=10, max_records=10)
+    discovery_policy: DiscoveryPolicy | None = None
+
+    def discovery_configuration(self, manifest: dict[str, Any]) -> dict[str, Any]:
+        """Pin input identity and explicit policy on newly admitted discovery only."""
+        result = {'discovery_context': {'response_sha256': manifest['response_sha256'],
+                  'provider_id': manifest.get('provider_id'), 'format_version': manifest.get('format_version')}}
+        if self.discovery_policy is not None:
+            result['discovery_policy'] = asdict(self.discovery_policy)
+        return result
 
     def validate(self) -> None:
         """Validate immutable operator version and hard limits without touching input files."""
+        if self.discovery_policy is not None:
+            if not isinstance(self.discovery_policy, DiscoveryPolicy):
+                raise EvidenceError('invalid_discovery_policy')
+            self.discovery_policy.validate()
         if (not isinstance(self.version, str) or not self.version.strip() or len(self.version) > 100
                 or not isinstance(self.limits, RunLimits)):
             raise EvidenceError('invalid_offline_route')

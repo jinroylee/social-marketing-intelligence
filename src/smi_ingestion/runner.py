@@ -46,7 +46,7 @@ class IngestionRunner:
         run_id = self.evidence.start_run(manifest_path, digest, manifest["adapter"], selected_limits)
         return self.resume(run_id)
 
-    def _process(self, observation: RawObservation, transient_payload: bytes | None = None, *, transaction=None, admission: CanonicalAdmission | None = None) -> bool:
+    def _process(self, observation: RawObservation, transient_payload: bytes | None = None, *, transaction=None, admission: CanonicalAdmission | None = None, policy_version: str = "canonical-v1") -> bool:
         try:
             if transient_payload is None:
                 observation, payload = self.evidence.load(observation.id)
@@ -55,7 +55,7 @@ class IngestionRunner:
             _, mapper = self.registry.resolve(observation.adapter_id)
             batch = mapper.normalize(observation, payload)
             with _transaction(transaction, 'canonical') as connection:
-                self.writer.apply(observation.id, batch, f"{observation.adapter_id}:{mapper.version}", connection=connection, admission=admission)
+                self.writer.apply(observation.id, batch, f"{observation.adapter_id}:{mapper.version}", policy_version, connection=connection, admission=admission)
             return True
         except (EvidenceError, ValueError, KeyError, UnicodeError, json.JSONDecodeError) as error:
             code = error.code if isinstance(error, EvidenceError) else "normalization_failed"
@@ -153,7 +153,8 @@ class IngestionRunner:
         return self._report(run_id, self.evidence.run(run_id)["input_complete"], finish=False)
 
     def resume(self, run_id: str, *, on_commit: Callable[[str, str], None] | None = None,
-               transaction: TransactionScope | None = None, admission: CanonicalAdmission | None = None) -> dict[str, Any]:
+               transaction: TransactionScope | None = None, admission: CanonicalAdmission | None = None,
+               policy_version: str = "canonical-v1") -> dict[str, Any]:
         """Resume checkpoints; notify after durable evidence/canonical commits.
 
         The callback receives a phase and observation ID. Callback exceptions
@@ -163,7 +164,12 @@ class IngestionRunner:
         run outside it; a disconnected owner cannot persist their late results.
         Optional admission joins canonical application after normalization and
         policy validation; excluded records remain explicit skipped observations.
+        ``policy_version`` pins canonical processing independently of the actual
+        mapper software. It applies to new/pending observations, not already
+        applied observations in this run.
         """
+        if not isinstance(policy_version, str) or not policy_version.strip() or len(policy_version) > 100:
+            raise EvidenceError('invalid_processing_policy_version')
         run = self.evidence.run(run_id)
         manifest, digest = self._manifest(Path(run["manifest_path"]))
         if digest != run["manifest_hash"]:
@@ -174,7 +180,7 @@ class IngestionRunner:
         with _transaction(transaction, 'reconcile') as connection:
             self.writer.reconcile_applied(run_id, connection=connection)
         for observation in self.evidence.pending(run_id):
-            if self._process(observation, transaction=transaction, admission=admission) and on_commit:
+            if self._process(observation, transaction=transaction, admission=admission, policy_version=policy_version) and on_commit:
                 on_commit("canonical_committed", observation.id)
         if run["status"] == "completed" or run["input_complete"]:
             return self._report(run_id, True, transaction=transaction)
@@ -240,7 +246,7 @@ class IngestionRunner:
                     return self._report(run_id, False, transaction=transaction)
                 if on_commit:
                     on_commit("evidence_committed", observation.id)
-                if self._process(observation, None if observation.payload_path else draft.payload, transaction=transaction, admission=admission) and on_commit:
+                if self._process(observation, None if observation.payload_path else draft.payload, transaction=transaction, admission=admission, policy_version=policy_version) and on_commit:
                     on_commit("canonical_committed", observation.id)
             if batch.complete:
                 completed_input = True

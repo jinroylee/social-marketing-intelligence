@@ -62,6 +62,8 @@ Publication stores IDs and count metadata, with no extra source text copies. Sel
 
 Operators can use `smi-ingest publish-knowledge RUN_ID --request-id ID`, optionally repeating `--observation-id` to select a bounded subset and `--interpretation-id` to include existing claims. `inspect-publication PUBLICATION_ID` reopens it. Both use a named local human actor; workers use the trusted Python interface with their actual automation context. The local browser links committed publications at `/knowledge/publications` and exact details at `/knowledge/publications/PUBLICATION_ID`. Search, task submission and acquisition are separate operations.
 
+`KnowledgePublications.usable_publications(support, actor, include_synthetic=False, connection=None)` resolves publication IDs covering every exact capture/mapping/selection under current process permission and derivation health. It returns empty when any selected support is unavailable, superseded or unpublished, while preserving policy locks on a caller-owned connection. These links establish current usability, never caller task ownership or a new publication. The offline discovery history uses them to recognize successful already-published no-update retrievals; [avoidance](tasks.md#capture-based-discovery-avoidance) leaves exact older results and source metric definitions intact.
+
 ## Accepted future assistant and recommendation boundary
 
 The bounded query implementation below supplies exact published support across acquisitions. Future assistant answers and recommendations must retain that actual membership and current policy contract while adding their own versioned methods and attribute-specific coverage profiles.

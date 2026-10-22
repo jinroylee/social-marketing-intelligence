@@ -2,7 +2,7 @@
 
 ## Implemented relational model
 
-The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql) and [offline costs](../src/smi_costs/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
+The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql) and [offline costs](../src/smi_costs/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
 
 ```mermaid
 erDiagram
@@ -628,6 +628,31 @@ erDiagram
     shortlist_revisions ||--o{ campaign_regeneration_requests : preserves_source
     acquisition_tasks ||--o| task_completion_events : completes
     acquisition_tasks ||--o{ acquisition_attempts : executes
+    acquisition_tasks ||--o| discovery_history : explains_avoidance
+    discovery_history o|--o{ discovery_history : cites_prior_retrieval
+    knowledge_publications o|--o{ discovery_history : identifies_usable_basis
+    discovery_history {
+        uuid task_id PK,FK
+        bigint sequence UK
+        text workspace_id
+        text query_key
+        jsonb query_scope
+        jsonb retrieval_context
+        jsonb policy
+        text decision
+        text reason
+        text freshness
+        uuid prior_task_id FK
+        uuid prior_publication_id FK
+        timestamptz decided_at
+        jsonb support
+        uuid publication_id FK
+        jsonb usable_publication_ids
+        boolean processing_complete
+        text outcome
+        jsonb failure
+        timestamptz completed_at
+    }
     ingestion_runs ||--o| acquisition_attempts : records
     acquisition_tasks ||--o{ acquisition_task_publications : receipts
     knowledge_publications ||--o{ acquisition_task_publications : makes_usable
@@ -879,3 +904,5 @@ Current-KB comparison drafts pin `knowledge_query_result_id`; their legacy `know
 
 
 The schedule owner retains one fixed accounting timezone per workspace and immutable configuration JSON/digests/operator times. Each occurrence has a composite configuration foreign key and unique workspace/local-date/keyword key, regardless of configuration edits; its exact UTC day bounds, cadence, publication window and allowance version remain in `context`. Its optional task FK binds the submitted task atomically. Tasks retain the unique logical `schedule_occurrence_id` plus immutable `scope.schedule`; public admission validates it through the schedule owner rather than foreign-table SQL. Origin constraints distinguish schedule authority from exact campaign and human approval bases. Refused dispositions persist without a task; `pending` is transaction-local. The schedule-owned `scheduled_post_days` row keys shared workspace/day consumption and effective configuration cap. `scheduled_post_admissions` records one disposition per observation, with a partial unique index preventing a second successful new admission of the same day/platform/namespace/native/synthetic identity. The canonical owner supplies locked identity knowledge through its public admission callback; only schedule SQL lives here. Admission and canonical effects share the fenced worker transaction, while skipped observations retain no canonical derivation. Cap edits preserve used history and historical day bounds; known refresh/dedup dispositions do not debit new-post usage. Legacy day metadata is bootstrapped from the latest configuration before its recorded day end; no pre-enforcement debit is invented. No live collection is activated. See [the schedule contract](tasks.md#registered-offline-keyword-schedule).
+
+`discovery_history` is owned by `smi_tasks.discovery`, with one decision per task and monotonic sequence for prior retrieval ordering independently of capture/clock dates. Exact query/window, input/provider/format, manifest/route/bounds and mapper/canonical-processing context are immutable decision inputs. JSON support stores only exact source IDs; source captures, namespace/native identities and metric definitions stay with ingestion and are read under current policy. Prior/usable publication links explain usable evidence separately from this task's optional actual publication receipt. `processing_complete` requires complete eligible support for every retrieved observation, successful no-failure completion and no remainder; daily exclusions and partial work cannot certify a whole query. Decisions commit before I/O and completion joins the task/event transaction. Capture-based freshness never uses `completed_at` or publication/import times; old task scopes/results remain unchanged. See [the avoidance contract](tasks.md#capture-based-discovery-avoidance).

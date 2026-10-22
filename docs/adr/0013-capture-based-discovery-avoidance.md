@@ -1,0 +1,9 @@
+# Base discovery avoidance on captures and usable support
+
+Status: accepted
+
+A recently imported old response can still be stale, and unchanged mapping UUIDs do not establish new evidence. For the bounded offline keyword route, record an immutable per-task avoidance decision using the exact query, input context, mapper software and explicit canonical-processing revision. An operator-configured age bound applies to every original capture, including unknown/future dates. Import, publication and prior skip times never extend freshness.
+
+Keep history as references to source-owned evidence and current usable publication links, rather than a cache of unrestricted source values or a new task's ownership receipt. Successful no-update retrievals can therefore support later avoidance when their exact complete support is already published. Excluded, failed, partial or empty processing cannot establish that a whole query is reusable. A permitted fresh repeat finishes without source/cost dispatch, canonical admission or a new publication; it explains the prior basis while retaining the new task's exact original authority. Reprocessing-policy revisions remain distinct from actual mapper software versions and reach the existing canonical policy-version field.
+
+This deliberately conservative comparison forgoes overlap/semantic deduplication and concurrent cross-task exactly-once retrieval. Changed queries, input/configuration or processing versions remain eligible, as do stale/unknown captures and incomplete work. Withdrawn matching input stays unavailable instead of being reconstructed from an old fixture. Historical outcomes and saved result pins remain exact while current permissions govern evidence use. There is no cross-provider identity merge, automatic fallback or live-route guarantee.
