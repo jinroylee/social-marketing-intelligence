@@ -4,7 +4,7 @@
 
 **Blocked by:** 18: Execute bounded offline keyword discovery.
 
-**Status:** claimed
+**Status:** resolved
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
@@ -24,3 +24,10 @@
 ## Implementation validation
 
 Worker runtime/frozen head `195eb279a1ce5a4bab52347fcd890c0c8699eee2` passed 291 focused compatibility tests in 274.77 seconds and the shared locked check with 577 tests in 583.94 seconds (exit 0). Exact report and retained artifact/byte-manifest evidence: [ticket 23 report](../reports/ticket-23.md). Status remains **claimed** pending the merger's separate integrated shared gate and resolution.
+
+## Completion
+
+- Runtime implementation and frozen worker checked commit: `195eb279a1ce5a4bab52347fcd890c0c8699eee2`. Final worker head and root integrated checked commit: `74ac5997380b67c6a417b72475a9be9b4f483b10`, fast-forward integrated into `integration/operational-tickets-11-39`; the final worker commit changes only report/checklist metadata.
+- Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed Ruff, documentation links, physical ERD coverage, relative instruction symlinks, PostgreSQL preflight and **577 tests in 615.05 seconds**; log `/tmp/smi-ticket-23-integrated-shared.log`. All acceptance criteria are checked. Existing passing worker gates are preserved without rerun.
+- Independently verified final wheel size (**288380 bytes**), SHA-256 and all 31 packaged entries against integrated bytes, sizes, hashes and declared symlink targets. [The implementation report](../reports/ticket-23.md) retains exact worker and root evidence.
+- Avoidance is conservative exact query/input/context comparison with capture-based freshness; no concurrent cross-task exactly-once retrieval or semantic-overlap guarantee is claimed. Verification used real PostgreSQL and simulated external I/O, with no live provider/source execution, readiness or human-quality claim, external message, push, PR or deployment.
