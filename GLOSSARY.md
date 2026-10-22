@@ -64,6 +64,9 @@ A provisional comparison of candidate accounts against an exact campaign brief a
 **Shortlist revision**:
 A saved version of a campaign's recommended or curated candidate accounts, their ordering where applicable, and the decision basis. Its automated or human authorship and any optional human review remain explicit; later changes create a successor revision.
 
+**Recommendation regeneration**:
+An explicit marketer request to assess current permitted knowledge against the current campaign needs and save a successor shortlist revision. It preserves earlier recommendations and does not promise a better result or imply human endorsement.
+
 **Enrichment proposal**:
 An assistant's proposed acquisition of missing, stale or incomplete knowledge, with a stated purpose, refresh/fill/expansion intent and subject/search scope. An immutable saved revision identifies the exact scope and resource limits a human can approve. It requires attributable human approval before becoming a submitted enrichment task.
 

@@ -4,7 +4,7 @@
 
 **Blocked by:** 08: Deliver durable task completion notifications; 19: Queue discovery when campaign coverage is insufficient.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** S — one bounded user-visible journey or extension in a fresh implementation context.
 

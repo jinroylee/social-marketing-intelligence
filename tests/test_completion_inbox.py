@@ -189,6 +189,7 @@ def test_upgrade_and_concurrent_reconciliation_backfill_old_outcomes_once(stack,
     completed = OfflineTaskWorker(tasks.db, evidence.root).run_one(task_id, WORKER)
     # Restore the pre-inbox schema as upgrade input, without asserting on tables.
     with tasks.db.connect() as connection:
+        connection.execute('DROP TABLE campaign_regeneration_requests')
         connection.execute('DROP TABLE task_completion_events')
     tasks.migrate()
     upgraded = CompletionInbox(tasks.db).list(HUMAN)

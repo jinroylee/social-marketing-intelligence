@@ -740,6 +740,34 @@ class CampaignStore:
             connection.execute("UPDATE campaigns SET shortlist_version=%s WHERE id=%s", (version, draft["campaign_id"]))
         return {"status": "confirmed" if confirmed else "draft", "shortlist_id": revision_id, "version": version}
 
+    def read_shortlist_context(self, shortlist_id: str, actor: ActorContext) -> dict[str, Any]:
+        """Return source-free saved method and current human context, without opening evidence.
+
+        Method identity survives withdrawal and synthetic display exclusion; this
+        navigation metadata grants no permission to read or process pinned support.
+        """
+        actor.require_workspace(self.workspace_id)
+        with self.db.connect() as connection:
+            row = connection.execute(
+                'SELECT r.campaign_id,r.brief_id,r.version,r.method_version,c.shortlist_version,b.id AS current_brief_id,b.version AS brief_version,b.document,b.executable_profile,b.recorded_by,b.recorded_at, '
+                'EXISTS(SELECT 1 FROM campaign_ranking_assessments a WHERE a.shortlist_id=r.id) AS ranked '
+                'FROM shortlist_revisions r JOIN campaigns c ON c.id=r.campaign_id '
+                'JOIN campaign_briefs b ON b.campaign_id=c.id AND b.version=c.brief_version '
+                'WHERE r.id=%s AND c.workspace_id=%s', (shortlist_id, self.workspace_id),
+            ).fetchone()
+            require(row is not None, 'shortlist_not_found')
+            interpretations = connection.execute(
+                "SELECT id FROM campaign_criteria_interpretations WHERE campaign_id=%s AND brief_id=%s AND status='succeeded' ORDER BY recorded_at,id",
+                (row['campaign_id'], row['current_brief_id']),
+            ).fetchall()
+        return {'shortlist_id': shortlist_id, 'brief_id': str(row['brief_id']), 'version': row['version'],
+                'method_version': row['method_version'], 'ranked': row['ranked'],
+                'campaign': {'campaign_id': str(row['campaign_id']), 'shortlist_version': row['shortlist_version'],
+                    'briefs': [{'id': str(row['current_brief_id']), 'version': row['brief_version'],
+                                'document': row['document'], 'executable_profile': row['executable_profile'],
+                                'recorded_by': row['recorded_by'], 'recorded_at': row['recorded_at'].isoformat()}],
+                    'interpretations': [self.read_interpretation(str(i['id']), actor) for i in interpretations]}}
+
     def read_shortlist(self, shortlist_id: str, actor: ActorContext, *, include_synthetic: bool = False, purpose: str = "display") -> dict[str, Any]:
         """Reopen pinned membership/order/producer with a current support-health overlay."""
         actor.require_workspace(self.workspace_id)

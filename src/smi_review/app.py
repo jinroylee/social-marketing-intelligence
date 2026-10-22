@@ -125,6 +125,10 @@ class ReviewApp:
         return self.page("Campaign", views.campaign_page(campaign, current, self.evidence.list_sets(self.actor), self.csrf,
                                                          model_configured=capability['status'] == 'configured', model_mode=capability['execution_mode'], submitted=submitted, error=error), status)
 
+    def _regeneration_page(self, event_id, submitted=None, error=None, status=200):
+        offer = self.recommendations.regeneration_offer(event_id, self.actor)
+        return self.page("Regenerate campaign recommendations", inbox_views.regeneration(offer, self.csrf, submitted, error), status)
+
     def _brief_page(self, campaign_id: str | None, query, submitted=None, error=None, status=200):
         campaign, current = self._campaign(campaign_id) if campaign_id else (None, None)
         catalogs = self.knowledge.list_catalogs(self.actor)
@@ -196,6 +200,10 @@ class ReviewApp:
             status = 503 if isinstance(error, psycopg.Error) else 404 if code.endswith("not_found") else 409 if "conflict" in code else 422
             if method == "POST" and form is not None and not isinstance(error, psycopg.Error):
                 try:
+                    match = re.fullmatch(r"/inbox/([^/]+)/regenerate", path)
+                    if match:
+                        allowed = {"csrf", "request_id", "brief_id", "interpretation_id", "expected_brief_version", "expected_shortlist_version"}
+                        return self._regeneration_page(identifier(match[1]), {k: v for k, v in form.items() if k in allowed}, code, status)
                     if path == "/proposals":
                         return self.page("Supply enrichment proposal", proposal_views.supplied_form(self.csrf, self.tasks.route, form, code), status)
                     match = re.fullmatch(r"/proposals/([^/]+)/approve", path)
@@ -240,6 +248,9 @@ class ReviewApp:
         if match:
             task = self.tasks.read(identifier(match[1]), self.actor)
             return self.page("Task costs", cost_views.index(self.costs.list(self.actor, task_id=task['task_id'])))
+        match = re.fullmatch(r"/inbox/([^/]+)/regenerate", path)
+        if match:
+            return self._regeneration_page(identifier(match[1]))
         if path == "/inbox":
             return self.page("Completion inbox", inbox_views.index(self.inbox.list(self.actor)))
         match = re.fullmatch(r"/inbox/([^/]+)", path)
@@ -326,6 +337,17 @@ class ReviewApp:
         if not secrets.compare_digest(one(form, "csrf").encode(), self.csrf.encode()):
             raise EvidenceError("invalid_form")
         request_id = one(form, "request_id")
+        match = re.fullmatch(r"/inbox/([^/]+)/regenerate", path)
+        if match:
+            if not form.keys() <= {"csrf", "request_id", "brief_id", "interpretation_id", "expected_brief_version", "expected_shortlist_version"}:
+                raise EvidenceError("invalid_form")
+            event_id = identifier(match[1])
+            saved = self.recommendations.regenerate(event_id, self.actor, producer=self.worker,
+                brief_id=identifier(one(form, "brief_id")), request_id=request_id,
+                expected_brief_version=int(one(form, "expected_brief_version")),
+                expected_shortlist_version=int(one(form, "expected_shortlist_version")),
+                interpretation_id=identifier(one(form, "interpretation_id")) if one(form, "interpretation_id") else None)
+            return Response(303, location=f"/shortlists/{saved['shortlist_id']}" if saved.get('shortlist_id') else f"/inbox/{event_id}/regenerate")
         if path == "/proposals":
             if not form.keys() <= {"csrf", "request_id", "purpose", "intent", "subject_ids", "search_queries", "published_from", "published_before"}:
                 raise EvidenceError("invalid_form")

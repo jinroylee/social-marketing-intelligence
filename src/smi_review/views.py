@@ -23,6 +23,8 @@ ERRORS = {
     "brief_version_conflict": "The brief changed while this page was open. Open the current campaign and prepare a comparison for the new brief.",
     "shortlist_version_conflict": "Another shortlist revision was saved while this page was open. Your edits remain below. Reopen the latest revision before saving again.",
     "shortlist_request_conflict": "This request was already used for a different save. Open the latest revision to begin another edit.",
+    "campaign_regeneration_unavailable": "This completion has no currently usable published support. Reopen its task outcome or current campaign context before requesting another assessment.",
+    "campaign_regeneration_request_conflict": "This request already belongs to different context or actors. Reopen the saved action, or reload current context for a new request.",
     "campaign_request_conflict": "This request was already used for a different brief. Open the campaign or start a new form.",
     "selection_reason_or_support_unavailable": "Each confirmed account needs an inclusion reason and currently available evidence.",
     "selection_requires_relevance_support": "Cite at least one positive relevance interpretation for every confirmed account.",

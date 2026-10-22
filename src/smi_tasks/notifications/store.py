@@ -74,7 +74,13 @@ class CompletionInbox:
             message += f' Failure: {task["failure"]["phase"]} / {task["failure"]["code"]}.'
         if unavailable:
             message += f' Support unavailable: {unavailable} member(s).'
+        campaign = None
+        if task['origin'] == 'campaign' and task['scope_version'] == 'campaign-coverage-discovery-v1':
+            can_regenerate = task['outcome'] in {'usable_update', 'partial_update'} and available > 0
+            campaign = {'campaign_id': task['scope']['campaign_id'], 'shortlist_id': task['scope']['shortlist_id'],
+                        'regeneration_href': f"/inbox/{row['id']}/regenerate" if can_regenerate else None,
+                        'reason': None if can_regenerate else 'published_support_unavailable' if available == 0 and task['publication_ids'] else 'no_new_usable_evidence'}
         return {'event_id': str(row['id']), 'task_id': task['task_id'], 'task_href': f'/tasks/{task["task_id"]}',
                 'created_at': row['created_at'].isoformat(), 'outcome': task['outcome'], 'message': message,
-                'coverage': coverage, 'failure': task['failure'], 'publications': publications,
+                'coverage': coverage, 'failure': task['failure'], 'publications': publications, 'campaign_discovery': campaign,
                 'current_coverage': {'available_members': available, 'unavailable_members': unavailable}}

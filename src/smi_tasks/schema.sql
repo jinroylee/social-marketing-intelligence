@@ -125,3 +125,20 @@ CREATE TABLE IF NOT EXISTS campaign_discovery_requests (
     recorded_at timestamptz NOT NULL DEFAULT now(),
     CHECK ((status='submitted') = (task_id IS NOT NULL))
 );
+
+-- Explicit human regeneration owns a server-created recommendation retry identity.
+CREATE TABLE IF NOT EXISTS campaign_regeneration_requests (
+    workspace_id text NOT NULL,
+    request_id text NOT NULL,
+    event_id uuid NOT NULL REFERENCES task_completion_events(id),
+    source_shortlist_id uuid NOT NULL REFERENCES shortlist_revisions(id),
+    request_digest text NOT NULL,
+    body jsonb NOT NULL,
+    initiator_id text NOT NULL,
+    producer_id text NOT NULL,
+    ranked boolean NOT NULL,
+    recommendation_request_id text NOT NULL UNIQUE,
+    outcome jsonb,
+    recorded_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY(workspace_id,request_id)
+);

@@ -567,6 +567,8 @@ erDiagram
     campaign_briefs ||--o{ acquisition_tasks : pins
     enrichment_proposals ||--o| enrichment_approvals : receives
     enrichment_approvals o|--o| acquisition_tasks : authorizes_assistant
+    task_completion_events ||--o{ campaign_regeneration_requests : offers_action
+    shortlist_revisions ||--o{ campaign_regeneration_requests : preserves_source
     acquisition_tasks ||--o| task_completion_events : completes
     acquisition_tasks ||--o{ acquisition_attempts : executes
     ingestion_runs ||--o| acquisition_attempts : records
@@ -648,6 +650,20 @@ erDiagram
         jsonb publication_support
         timestamptz started_at
         timestamptz finished_at
+    }
+    campaign_regeneration_requests {
+        text workspace_id PK
+        text request_id PK
+        uuid event_id FK
+        uuid source_shortlist_id FK
+        text request_digest
+        jsonb body
+        text initiator_id
+        text producer_id
+        boolean ranked
+        text recommendation_request_id UK
+        jsonb outcome
+        timestamptz recorded_at
     }
     task_completion_events {
         uuid id PK
@@ -799,3 +815,6 @@ Provider cost provenance shares the same physical accounting tables. Explicit pr
 Current-KB comparison drafts pin `knowledge_query_result_id`; their legacy `knowledge_run_id`, `dataset_id` and `dataset_digest` are null. A database check requires exactly one of these source modes. Frozen drafts keep their original run/dataset fields and a null query link. Draft coverage includes the immutable actual execution profile. `comparison_support.source_assertion_id` and `decision_note_support.source_assertion_id` are nullable for metric-only account support; the observation and linked query manifest retain exact metric/derivation identities.
 
 `shortlist_revisions.coverage_assessment` pins the sufficiency policy, clock, exact comparison/candidate input references and historical scalar results. Inputs remain owned by the governed comparison; current support health withholds coverage inputs/results. `campaign_discovery_requests` owns a unique immutable disposition per shortlist; its optional unique task commits atomically with submitted admission. Source/configuration refusal creates no task and never removes the saved recommendation. Task scope JSON pins the human brief, shortlist/coverage clock/profile, catalog digest, explicit derivation/query/subject/window and executable configuration. See [automatic coverage](campaigns.md#automatic-coverage-and-discovery).
+
+
+`campaign_regeneration_requests` retains an explicit human action's exact source-free body/digest, actual initiator/automation producer, exact completion/original-shortlist references, saved method choice and unique server-owned nested recommendation identity. Claim commit precedes assessment; no lock/transaction spans model I/O. Nullable `outcome` holds only status/IDs/reason/cost link, never candidate/source bodies. Completed retries reopen the same result before current-context checks; unfinished receipts reopen the existing campaign-owned assessment/save. The saved successor is linked through its outcome ID and retains campaign-owned immutable support/order/producer and head fencing. Notifications remain identity/task/time only. See [regeneration](campaigns.md#explicit-regeneration-after-discovery).
