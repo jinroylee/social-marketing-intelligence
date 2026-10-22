@@ -85,7 +85,11 @@ class ScheduledPostAllowance:
         return disposition not in {'limit_excluded_posts', 'ineligible_posts'}
 
     def read(self, day: date | str, actor: ActorContext, *, occurrence_id: str | None = None, connection=None) -> dict[str, Any] | None:
-        """Reopen shared consumption and optional occurrence counts, including historical days."""
+        """Read shared consumption, projecting an unconsumed day without admitting work.
+
+        With no day row, its admission foreign key guarantees zero usage. Read
+        the applicable configuration and fixed bounds without creating a row.
+        """
         actor.require_workspace(self.workspace_id)
         own_connection = connection is None
         with nullcontext(connection) if connection is not None else self.db.connect() as connection:
@@ -93,7 +97,20 @@ class ScheduledPostAllowance:
                 connection.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY')
             row = connection.execute('SELECT * FROM scheduled_post_days WHERE workspace_id=%s AND accounting_day=%s', (self.workspace_id, day)).fetchone()
             if row is None:
-                return None
+                schedule = connection.execute('SELECT accounting_timezone FROM keyword_schedules WHERE workspace_id=%s', (self.workspace_id,)).fetchone()
+                if schedule is None:
+                    return None
+                accounting_day = date.fromisoformat(day) if isinstance(day, str) else day
+                zone = ZoneInfo(schedule['accounting_timezone'])
+                start = datetime.combine(accounting_day, time(), zone).astimezone(timezone.utc)
+                end = datetime.combine(accounting_day + timedelta(days=1), time(), zone).astimezone(timezone.utc)
+                configuration = connection.execute('SELECT version,document FROM keyword_schedule_configurations WHERE workspace_id=%s AND recorded_at < %s ORDER BY version DESC LIMIT 1',
+                                                   (self.workspace_id, end)).fetchone()
+                if configuration is None:
+                    return None
+                row = {'accounting_day': accounting_day, 'accounting_timezone': schedule['accounting_timezone'],
+                       'day_start': start, 'day_end': end, 'allowance_limit': configuration['document']['daily_allowance'],
+                       'allowance_version': configuration['version']}
             rows = connection.execute('SELECT disposition,count(*) AS n FROM scheduled_post_admissions WHERE workspace_id=%s AND accounting_day=%s GROUP BY disposition',
                                       (self.workspace_id, day)).fetchall()
             counts = {r['disposition']: r['n'] for r in rows}

@@ -328,3 +328,27 @@ def test_session_loss_at_canonical_admission_rolls_back_debit_and_fences_old_wor
     assert result['daily_allowance']['used'] == 1
     assert result['daily_allowance']['occurrence_counts']['new_posts'] == 1
     assert result['coverage']['requests_used'] == 1
+
+
+def test_new_day_before_tick_shows_zero_used_and_applicable_remaining_without_admitting_work(stack, tmp_path):
+    from datetime import datetime
+    from smi_review import ReviewApp
+    from test_review import request, running
+    clock = Clock()
+    owner, tasks, evidence, _ = allowance_setup(stack, tmp_path, [record('one')], clock=clock)
+    original = owner.tick(WORKER)['created_occurrences'][0]
+    OfflineTaskWorker(tasks.db, evidence.root).run_one(original['task_id'], WORKER)
+    clock.at = datetime.fromisoformat('2026-10-04T15:00:00+00:00')
+    view = owner.read(HUMAN)
+    assert view['daily_allowance']['accounting_day'] == '2026-10-05'
+    assert view['daily_allowance']['used'] == 0
+    assert view['daily_allowance']['remaining'] == 1
+    assert view['daily_allowance']['day_start'] == '2026-10-04T15:00:00+00:00'
+    assert owner.tick(WORKER)['created_occurrences'] == []
+    assert len(tasks.list(HUMAN)) == 1
+    assert tasks.read(original['task_id'], HUMAN)['daily_allowance']['used'] == 1
+    with running(ReviewApp(tasks.db, actor_id=HUMAN.actor_id, schedule_clock=clock)) as url:
+        status, _, page = request(url, path='/schedules')
+        assert status == 200
+        assert 'Used: 0' in page
+        assert 'Remaining: 1' in page
