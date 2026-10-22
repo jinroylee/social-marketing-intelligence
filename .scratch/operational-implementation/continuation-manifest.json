@@ -214,25 +214,24 @@
   "testing_boundaries": "Public operations and HTTP; real PostgreSQL; simulated external I/O",
   "external_io": "Local execution with simulated transports. User authorizes read-only primary-documentation lookups only; no live/paid source/model calls or external messages.",
   "last_verified_runtime": {
-    "checked_commit": "4c2d844418115c239bcadca4c93a378b9b4f7bae",
-    "implementation_commit": "f715f4151460e64adcc8e69a6548db8018e4a885",
-    "worker_checked_commit": "c1fdf76f0c88a0388f6f3f3e0de6b3e0676d21bc",
+    "checked_commit": "b22bdf316710f161f092b2959f113ea1285e06ef",
+    "implementation_commit": "c81b5e02cd052bf66f317dd53abdbe9a2ff51ba6",
+    "worker_checked_commit": "44409a4e42a2281aed19837e903ba628adb97e85",
     "command": "UV_OFFLINE=1 uv run --locked python tools/check.py",
-    "passed_tests": 490,
-    "seconds": 321.22,
-    "log": "/tmp/smi-ticket-19-integrated-shared.log",
+    "passed_tests": 511,
+    "seconds": 369.33,
+    "log": "/tmp/smi-ticket-20-integrated-shared.log",
     "real_postgresql": true,
     "simulated_external_io": true,
     "wheel_verified": true,
     "wheel_evidence": {
-      "artifact": "/tmp/smi-ticket19-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
-      "wheel_sha256": "d934698e9915fc943c1f9fcf4f06ef5653fe35c246d4aea3ebd677f6fab8276c",
-      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket19-wheel",
-      "byte_verification_manifest": "/tmp/smi-ticket19-wheel-files.json",
+      "artifact": "/tmp/smi-ticket20-wheel/smi_ingestion-0.1.0-py3-none-any.whl",
+      "wheel_sha256": "49c86fd83bd16da0300e49dec11eb542f30ca811731eda964ae38a2f90d46c6b",
+      "build_command": "UV_OFFLINE=1 uv build --wheel --out-dir /tmp/smi-ticket20-wheel",
+      "byte_verification_manifest": "/tmp/smi-ticket20-wheel-files.json",
       "exact_integrated_files_matched": [
         "smi_campaigns/AGENTS.md",
         "smi_campaigns/CLAUDE.md",
-        "smi_campaigns/coverage.py",
         "smi_campaigns/planning/schema.sql",
         "smi_campaigns/schema.sql",
         "smi_campaigns/store.py",
@@ -243,17 +242,17 @@
         "smi_review/AGENTS.md",
         "smi_review/CLAUDE.md",
         "smi_review/app.py",
+        "smi_review/inbox_views.py",
         "smi_review/static/review.css",
         "smi_review/static/review.js",
         "smi_review/views.py",
-        "smi_tasks/AGENTS.md",
-        "smi_tasks/CLAUDE.md",
-        "smi_tasks/__init__.py",
         "smi_tasks/campaigns/AGENTS.md",
         "smi_tasks/campaigns/CLAUDE.md",
         "smi_tasks/campaigns/__init__.py",
-        "smi_tasks/schema.sql",
-        "smi_tasks/store.py"
+        "smi_tasks/notifications/AGENTS.md",
+        "smi_tasks/notifications/CLAUDE.md",
+        "smi_tasks/notifications/store.py",
+        "smi_tasks/schema.sql"
       ],
       "verified_dimensions": [
         "bytes",
@@ -261,9 +260,9 @@
         "sha256",
         "declared_symlink_target"
       ],
-      "evidence_report": "reports/ticket-19.md"
+      "evidence_report": "reports/ticket-20.md"
     },
-    "integration_evidence_report": "reports/ticket-19.md"
+    "integration_evidence_report": "reports/ticket-20.md"
   },
   "external_prerequisites": {
     "13": "Current primary model contract verified on 2026-10-20 and ticket 13 software implemented/validated with intercepted HTTP simulation. Future live operation still requires explicit server enablement, real credentials, model/cost/rate configuration and separate readiness/authorization; these are not supplied or established. No live receipt or human-quality result is claimed.",
@@ -422,6 +421,28 @@
       "final_ticket_seconds": 13.49,
       "worker_shared_tests": 490,
       "worker_shared_seconds": 327.81,
+      "wheel_verified": true
+    },
+    {
+      "ticket": 20,
+      "title": "Offer explicit regeneration after campaign updates",
+      "commit": "c81b5e02cd052bf66f317dd53abdbe9a2ff51ba6",
+      "worker_checked_commit": "44409a4e42a2281aed19837e903ba628adb97e85",
+      "final_head": "b22bdf316710f161f092b2959f113ea1285e06ef",
+      "integration_checked_commit": "b22bdf316710f161f092b2959f113ea1285e06ef",
+      "integration_tests": 511,
+      "integration_seconds": 369.33,
+      "integration_log": "/tmp/smi-ticket-20-integrated-shared.log",
+      "file": "20-offer-explicit-regeneration-after-campaign-updates.md",
+      "report": "reports/ticket-20.md",
+      "focused_tests": 133,
+      "focused_seconds": 122.03,
+      "final_ticket_tests": 21,
+      "final_ticket_seconds": 23.23,
+      "final_method_regression_tests": 1,
+      "final_method_regression_seconds": 1.15,
+      "worker_shared_tests": 511,
+      "worker_shared_seconds": 358.85,
       "wheel_verified": true
     }
   ]
