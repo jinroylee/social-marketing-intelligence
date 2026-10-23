@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 26 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–25 are integrated and resolved; ticket 26 is pending. Recorded live schedule activation software is complete, with actual live runtime prerequisites and receipt still unmet.
+Implement ticket 26 in its fresh context/worktree: one supported missing-field case and existing supplementary route, explicit information-value selection/stopping, preserved parent authority and remaining limits. Tickets 11–25 are integrated and resolved; validate and merge before advancing.
 
 ## Current Phase
 
-Phase 30 — ticket 26 pending after successful ticket 25 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 30 — ticket 26 in progress after successful ticket 25 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -218,7 +218,7 @@ Fast-forward integrated runtime/frozen `df3b65255120c9bde828a6d809834b089b55b6aa
 
 ### Phase 30 — Implement ticket 26
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
