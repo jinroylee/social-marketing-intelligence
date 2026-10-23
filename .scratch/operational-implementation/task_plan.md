@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 24 in a fresh implementer context/worktree based on the verified integration tip, retaining its current permitted-contract and external runtime prerequisites. Tickets 11–23 are integrated and resolved; ticket 24 is pending.
+Implement ticket 24 in its fresh context/worktree, verify its primary contract and simulated concrete adapter, then merge and validate before advancing. Tickets 11–23 are integrated and resolved; live execution retains separate unmet configuration/authorization gates.
 
 ## Current Phase
 
-Phase 28 — ticket 24 pending after successful ticket 23 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 28 — ticket 24 in progress after successful ticket 23 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -206,7 +206,7 @@ Fast-forward integrated final head `74ac5997380b67c6a417b72475a9be9b4f483b10` wi
 
 ### Phase 28 — Implement ticket 24
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
