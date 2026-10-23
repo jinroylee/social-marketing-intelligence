@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 25 in its fresh context/worktree, connect explicit live schedule activation to existing allowance/spending/freshness controls, then merge and validate before advancing. Tickets 11–24 are integrated and resolved; actual live runtime prerequisites remain separate and unmet.
+Dispatch ticket 26 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–25 are integrated and resolved; ticket 26 is pending. Recorded live schedule activation software is complete, with actual live runtime prerequisites and receipt still unmet.
 
 ## Current Phase
 
-Phase 29 — ticket 25 in progress after successful ticket 24 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 30 — ticket 26 pending after successful ticket 25 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -212,9 +212,9 @@ Fast-forward integrated final head `9e9b604dd8f17b9a1449f3d260939ded6206439f` wi
 
 ### Phase 29 — Implement ticket 25
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated runtime/frozen `df3b65255120c9bde828a6d809834b089b55b6aa` and metadata handoff/full-gate head `f89ad86378510b1e642f0485c4d45324475b7309`. Required root shared checks passed all static stages, PostgreSQL preflight and **630 tests in 679.94 seconds**. Follow-up `1c167a908c567a08a840d8de14833f52cc580714` changes only two product-document sentences and passed independent root static checks; runtime/test/package bytes are unchanged. Wheel size/hash and all 60 entries match integrated source/archive bytes, sizes, hashes and relative symlink targets. All six technical criteria are checked and ticket 25 is resolved. Recorded live schedule activation software is complete; actual runtime gates and live receipt remain unmet, without readiness or human-quality claims.
 
 ### Phase 30 — Implement ticket 26
 
