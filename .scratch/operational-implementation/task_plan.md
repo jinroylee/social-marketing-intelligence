@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 24 in its fresh context/worktree, verify its primary contract and simulated concrete adapter, then merge and validate before advancing. Tickets 11–23 are integrated and resolved; live execution retains separate unmet configuration/authorization gates.
+Dispatch ticket 25 in a fresh implementer context/worktree based on the verified integration tip, preserving separate live schedule configuration/authorization gates. Tickets 11–24 are integrated and resolved; ticket 25 is pending. Ticket 24 primary-contract/software work is complete, with actual runtime prerequisites and live receipt still unmet.
 
 ## Current Phase
 
-Phase 28 — ticket 24 in progress after successful ticket 23 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 29 — ticket 25 pending after successful ticket 24 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -206,9 +206,9 @@ Fast-forward integrated final head `74ac5997380b67c6a417b72475a9be9b4f483b10` wi
 
 ### Phase 28 — Implement ticket 24
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final head `9e9b604dd8f17b9a1449f3d260939ded6206439f` with corrected runtime/frozen `7308c5cb7645302859c9058d8e626cffdef54d4e`. Root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed all static checks, PostgreSQL preflight and **619 tests in 624.35 seconds**; final wheel size/hash and all 41 entries match integrated source/archive bytes, sizes, hashes and declared symlink targets. All technical criteria are checked and local ticket 24 is resolved. Primary-contract/software verification is complete; actual runtime gates and live receipt remain unmet, without readiness or human-quality claims.
 
 ### Phase 29 — Implement ticket 25
 
