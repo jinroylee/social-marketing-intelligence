@@ -261,7 +261,8 @@ def test_valid_out_of_scope_return_is_counted_without_claiming_source_failure_or
 
 @pytest.mark.parametrize('response', [(301, {'location': 'https://elsewhere.invalid/dummy-secret'}),
     (401, {'error': 'dummy-secret'}), (429, {'error': 'rate limited'}), (500, {'error': 'dummy-secret'}),
-    (202, {'snapshot_id': '../../invalid'}), (200, {'unexpected': 'dummy-secret'}),
+    (202, {'snapshot_id': '../../invalid'}),
+    (202, {'snapshot_id': 'sd_bad_delay'}, {'Retry-After': '9' * 5000}), (200, {'unexpected': 'dummy-secret'}),
     (200, [post(), post(post_id='5555')]), (200, ['x' * 70000])])
 def test_ambiguous_or_unbounded_response_retains_liability_and_never_blindly_retries(stack, tmp_path, monkeypatch, response):
     tasks, evidence = live_setup(stack, tmp_path)

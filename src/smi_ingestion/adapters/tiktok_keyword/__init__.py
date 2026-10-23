@@ -133,14 +133,14 @@ class TikTokKeywordCollector:
             if not isinstance(snapshot, str) or re.fullmatch(r'[A-Za-z0-9_-]{1,128}', snapshot) is None:
                 return wait(consumed=len(raw))
             following.update(phase='progress', snapshot_id=snapshot)
-            if not isinstance(retry_after, str) or not retry_after.isdigit() or not 1 <= int(retry_after) <= 3600:
+            if not isinstance(retry_after, str) or re.fullmatch(r'[0-9]{1,4}', retry_after) is None or not 1 <= int(retry_after) <= 3600:
                 return wait(consumed=len(raw))
             following.update(not_before=(self.clock() + timedelta(seconds=int(retry_after))).isoformat())
             return wait('provider_pending', len(raw))
         if phase == 'download' and status == 202:
             if (not isinstance(records, dict) or not isinstance(records.get('status'), str)
                     or not 1 <= len(records['status']) <= 64 or not isinstance(retry_after, str)
-                    or not retry_after.isdigit() or not 1 <= int(retry_after) <= 3600):
+                    or re.fullmatch(r'[0-9]{1,4}', retry_after) is None or not 1 <= int(retry_after) <= 3600):
                 return wait(consumed=len(raw))
             following['not_before'] = (self.clock() + timedelta(seconds=int(retry_after))).isoformat()
             return wait('provider_pending', len(raw))
@@ -154,7 +154,7 @@ class TikTokKeywordCollector:
             if records['status'] in {'failed', 'canceled'}:
                 terminal = records['status']
             else:
-                if not isinstance(retry_after, str) or not retry_after.isdigit() or not 1 <= int(retry_after) <= 3600:
+                if not isinstance(retry_after, str) or re.fullmatch(r'[0-9]{1,4}', retry_after) is None or not 1 <= int(retry_after) <= 3600:
                     return wait(consumed=len(raw))
                 following['phase'] = 'download' if records['status'] == 'ready' else 'progress'
                 following['not_before'] = (self.clock() + timedelta(seconds=0 if records['status'] == 'ready' else int(retry_after))).isoformat()
