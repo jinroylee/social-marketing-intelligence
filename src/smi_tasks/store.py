@@ -15,6 +15,7 @@ from smi_campaigns import CampaignStore
 from smi_costs import UsageAccounting
 from smi_ingestion.contracts import RunLimits
 from smi_ingestion.adapters.keyword_fixture import ROUTE
+from smi_ingestion.adapters.tiktok_keyword import ROUTE as LIVE_ROUTE
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
@@ -31,9 +32,10 @@ class AcquisitionTasks:
 
     scope_version = 'campaign-offline-v1'
 
-    def __init__(self, db: Database, workspace_id: str = 'local', *, route: OfflineRoute | None = None, authority: TaskAuthority | None = None):
+    def __init__(self, db: Database, workspace_id: str = 'local', *, route: OfflineRoute | None = None, authority: TaskAuthority | None = None, live_discovery_enabled: bool = False):
         self.db, self.workspace_id, self.route = db, workspace_id, route
         self.authority = authority or TaskAuthority()
+        self.live_discovery_enabled = live_discovery_enabled
 
     def migrate(self) -> None:
         """Install tasks after ingestion, knowledge and campaign migrations."""
@@ -236,16 +238,18 @@ class AcquisitionTasks:
         if self.route is None:
             raise EvidenceError('offline_task_route_unconfigured')
         path, manifest_hash, manifest = self.route.snapshot()
+        if manifest['adapter'] == LIVE_ROUTE and self.live_discovery_enabled is not True:
+            raise EvidenceError('live_discovery_disabled')
         scope = {**proposal.document(), 'route': manifest['adapter'], 'route_version': self.route.version,
                  'manifest_hash': manifest_hash, 'references': [i.get('reference', '') for i in manifest.get('items', [])]}
-        if manifest['adapter'] == ROUTE:
+        if manifest['adapter'] in {ROUTE, LIVE_ROUTE}:
             scope['discovery'] = proposal.keyword_scope()
             scope.update(self.route.discovery_configuration(manifest))
         elif proposal.published_from is not None or proposal.published_before is not None:
             raise EvidenceError('keyword_discovery_unavailable_supplied_reference_route')
         scope = json.loads(json.dumps(scope))
         limits = asdict(self.route.limits)
-        if manifest['adapter'] == ROUTE:
+        if manifest['adapter'] in {ROUTE, LIVE_ROUTE}:
             scope['execution_digest'] = execution_configuration_digest(scope, limits, str(path))
         digest = self._digest({'workspace_id': self.workspace_id, 'scope': scope, 'limits': limits,
                                'scope_version': 'assistant-offline-v1', 'manifest_path': str(path)})
@@ -348,6 +352,8 @@ class AcquisitionTasks:
                     raise EvidenceError('task_request_conflict')
                 return {'status': 'duplicate', 'task_id': str(prior['id'])}
             proposal = connection.execute('SELECT * FROM enrichment_proposals WHERE id=%s AND workspace_id=%s', (proposal_id, self.workspace_id)).fetchone()
+            if proposal['scope']['route'] == LIVE_ROUTE and self.live_discovery_enabled is not True:
+                raise EvidenceError('live_discovery_disabled')
             # Review pins configuration as well as words. A replaced fixture must
             # receive a fresh proposal, rather than changing approved work silently.
             _, manifest_hash, _ = OfflineRoute(Path(proposal['manifest_path']), proposal['scope']['route_version'], RunLimits(**proposal['limits'])).snapshot()

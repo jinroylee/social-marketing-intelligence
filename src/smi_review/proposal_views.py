@@ -14,7 +14,7 @@ def index(proposals):
     return content
 
 
-def supplied_form(csrf, route, submitted=None, error=None):
+def supplied_form(csrf, route, submitted=None, error=None, *, live_enabled=False):
     """Accept direct supplied scope; route and authority remain server configuration."""
     content = '<h1>Supply an enrichment proposal</h1><p>Save a supplied proposal for review. Saving does not approve or submit acquisition. Each saved revision is immutable; changes need a new proposal.</p>'
     if error:
@@ -22,7 +22,11 @@ def supplied_form(csrf, route, submitted=None, error=None):
     if route is None:
         return content + '<p>Offline task route is not configured.</p>'
     capability = route.capability()
-    if capability['query_discovery']:
+    if capability['route'] == 'brightdata-tiktok-keyword' and live_enabled is not True:
+        return content + '<p>Live discovery admission is disabled in this review server.</p>'
+    if capability['route'] == 'brightdata-tiktok-keyword':
+        content += '<p>Bright Data TikTok keyword discovery: one keyword input, at most one returned post, and local all-term caption/time eligibility. Subject IDs identify the approved investigation context. Source use, execution authorization, credentials and cost admission remain required; configuration is not live readiness. Capture times may be unknown; market coverage remains unknown.</p>'
+    elif capability['query_discovery']:
         content += '<p>Bounded offline keyword discovery: one literal all-term caption query, exact subjects and a half-open publication-time window (at most 366 days). Synthetic source response order; market coverage remains unknown.</p>'
     else:
         content += f'<p>Supplied-reference collection only. Query discovery unavailable: {e(capability["unavailable_reason"])}</p>'
@@ -51,7 +55,9 @@ def detail(proposal, csrf, submitted=None, error=None):
                          ('Refresh / fill / expansion intent', proposal['scope']['intent']), ('Exact subject / search and input scope', proposal['scope']),
                          ('Limits', proposal['limits']), ('Scope version', proposal['scope_version']), ('Scope digest', proposal['scope_digest'])):
         content += f'<p>{e(label)}: {e(json.dumps(item, ensure_ascii=False))}</p>'
-    if proposal['scope'].get('discovery'):
+    if proposal['scope']['route'] == 'brightdata-tiktok-keyword':
+        content += '<p>Bright Data TikTok keyword discovery · brightdata-keyword-caption-time-v1. At most one returned post; local all-term caption and half-open publication-time eligibility. Subjects remain approved investigation context. Capture/measurement times and final charges may remain unknown. Human proposal approval does not supply server enablement, source-use permission, execution authorization or cost configuration.</p>'
+    elif proposal['scope'].get('discovery'):
         content += '<p>Bounded offline keyword discovery · literal-caption-subject-time-v1. All query terms, any exact subject and the half-open publication-time window select the pinned synthetic response in source response order. Capture times remain original; market coverage is unknown. Approval does not grant live access or expand limits.</p>'
     else:
         content += '<p>The synthetic fixture route reads only the listed supplied references. Search queries describe approved intent; this route does not perform query discovery. Approval does not grant live access or expand task limits.</p>'
@@ -63,4 +69,4 @@ def detail(proposal, csrf, submitted=None, error=None):
     content += f'<form action="/proposals/{e(proposal["proposal_id"])}/approve" method="post">'
     content += hidden('csrf', csrf) + hidden('request_id', approval['request_id'] if approval else value(submitted, 'request_id', str(uuid.uuid4()))) + hidden('scope_digest', proposal['scope_digest'])
     content += f'<label><input type="checkbox" name="reviewed" value="yes"{checked(value(submitted, "reviewed") == "yes")} required>I approve this exact proposal revision, scope and limits in this workspace.</label>'
-    return content + '<button type="submit">Approve exact scope and submit offline task</button></form>'
+    return content + '<button type="submit">Approve exact scope and submit task</button></form>'

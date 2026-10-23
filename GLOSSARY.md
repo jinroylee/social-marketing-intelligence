@@ -55,6 +55,9 @@ Finding candidate creators who are not already in the marketer's working set for
 **Keyword discovery**:
 Finding source records through an explicit query, subject scope and time window with stated selection and coverage limits. A supplied reference or a successful profile lookup does not establish query discovery or complete market coverage.
 
+**Source retrieval receipt**:
+A record of the source operation and evidence actually returned, with its coverage and unknowns. It is distinct from a final billing report, source-use permission and a usable knowledge publication.
+
 **Discovery avoidance decision**:
 A recorded choice to omit unnecessary retrieval or processing based on the exact prior query, source context, capture freshness and usable evidence. Avoidance creates no new source observation or knowledge publication and grants no broader acquisition authority.
 

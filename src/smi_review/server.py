@@ -109,13 +109,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--actor", default="local-marketer")
     parser.add_argument("--dsn", default=os.environ.get("SMI_DATABASE_URL", "postgresql://smi:local_only_change_me@127.0.0.1:6543/smi"))
     parser.add_argument("--schema", default=os.environ.get("SMI_DATABASE_SCHEMA"))
-    parser.add_argument("--offline-manifest", type=Path, help="Configure a synthetic supplied-reference or offline keyword task route")
+    parser.add_argument("--offline-manifest", type=Path, help="Configure a fixture or explicitly enabled live keyword task route")
+    parser.add_argument("--enable-live-discovery", action="store_true", help="Enable review/admission for the configured live keyword route; execution needs separate source/operation/credential/cost gates")
     parser.add_argument("--schedule-operator", action="store_true", help="Grant the named local human keyword configuration and offline tick authority")
     parser.add_argument("--offline-route-version", default="offline-fixture-v1")
     args = parser.parse_args(argv)
     try:
         route = OfflineRoute(args.offline_manifest, args.offline_route_version) if args.offline_manifest else None
-        app = ReviewApp(Database(args.dsn, args.schema), args.actor, offline_route=route, schedule_operator=args.schedule_operator)
+        app = ReviewApp(Database(args.dsn, args.schema), args.actor, offline_route=route, live_discovery_enabled=args.enable_live_discovery, schedule_operator=args.schedule_operator)
         with make_server(app, args.port) as server:
             print(f"Local campaign review: {server.url} · reviewer: {app.actor.actor_id}", flush=True)
             server.serve_forever()

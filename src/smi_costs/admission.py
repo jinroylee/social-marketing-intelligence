@@ -33,6 +33,13 @@ class ProviderResult(SyntheticResult):
     token_usage: dict | None = None
 
 
+@dataclass(frozen=True)
+class DeferredProviderResult:
+    """Returned source work with no final billing measurement; retain its admission."""
+
+    value: Any
+
+
 class SyntheticOperationAdapter:
     """Run one simulated call at most once for a stable operation identity.
 
@@ -51,7 +58,7 @@ class SyntheticOperationAdapter:
         self.accounting, self.scope_id = accounting, scope_id
         self.max_units = amount(decimal(max_units))
 
-    def execute(self, actor: ActorContext, *, request_id: str, method: str, call: Callable[[str], SyntheticResult],
+    def execute(self, actor: ActorContext, *, request_id: str, method: str, call: Callable[[str], SyntheticResult | DeferredProviderResult],
                 task_id: str | None = None, attempt_id: str | None = None,
                 transaction: Callable[[str], AbstractContextManager] | None = None,
                 operation_actor: ActorContext | None = None) -> dict:
@@ -98,6 +105,11 @@ class SyntheticOperationAdapter:
         if reason:
             return {'status': 'refused', 'reason': reason, 'operation_id': oid, 'allowance': allowance}
         result = call(self.max_units)
+        if isinstance(result, DeferredProviderResult) and isinstance(self, DeferredProviderOperationAdapter):
+            # A response/record count is not a final provider bill. Keep this
+            # exact reservation available for explicit final reconciliation.
+            return {'status': 'executed', 'reason': 'awaiting_final_measurement',
+                    'operation_id': oid, 'allowance': costs.allowance(self.scope_id, actor), 'value': result.value}
         try:
             valid = isinstance(result, SyntheticResult) and decimal(result.units) <= Decimal(self.max_units)
             if self.measurement_basis == 'provider_reported':
@@ -165,3 +177,14 @@ class ProviderOperationAdapter(SyntheticOperationAdapter):
     measurement_basis = 'provider_reported'
     provenance = 'openai-responses-reported-usage-v1'
     failure_reason = 'provider_service_bound_or_meter_violated'
+
+
+class DeferredProviderOperationAdapter(SyntheticOperationAdapter):
+    """Admit one provider attempt without manufacturing a final usage measurement.
+
+    The configured maximum is a declared commitment, not a verified invoice cap.
+    A returned response retains it; explicit provider-basis final reconciliation
+    owns settlement. Same-operation replay never obtains another dispatch grant.
+    """
+
+    measurement_basis = 'provider_reported'

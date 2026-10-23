@@ -98,7 +98,7 @@ class ReviewApp:
     """One trusted local marketer's browser application; all saves go through domain stores."""
 
     def __init__(self, db: Database, actor_id: str = "local-marketer", workspace_id: str = "local", *, offline_route: OfflineRoute | None = None,
-                 schedule_operator: bool = False, schedule_clock: Callable[[], datetime] | None = None,
+                 live_discovery_enabled: bool = False, schedule_operator: bool = False, schedule_clock: Callable[[], datetime] | None = None,
                  model_route: ResponsesRoute | None = None, model_transport: ResponsesTransport | None = None, model_credential: str | None = None):
         self.actor = ActorContext(workspace_id, actor_id, "human")
         self.actor.require_workspace(workspace_id)
@@ -110,7 +110,7 @@ class ReviewApp:
         self.evidence = EvidenceSetReader(db, workspace_id)
         self.monitoring = MonitoringStore(db, workspace_id)
         self.planning = CampaignPlanning(db, workspace_id)
-        self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, authority=TaskAuthority(campaign_humans=frozenset({actor_id}),
+        self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, live_discovery_enabled=live_discovery_enabled, authority=TaskAuthority(campaign_humans=frozenset({actor_id}),
             campaign_automations=frozenset({self.worker.actor_id}), proposal_approvers=frozenset({actor_id}), schedule_operators=frozenset({actor_id}) if schedule_operator else frozenset()))
         self.schedules = ScheduledDiscovery(self.tasks, clock=schedule_clock)
         self.schedule_operator = schedule_operator
@@ -216,7 +216,7 @@ class ReviewApp:
                         return self.page("Offline keyword schedule", schedule_views.settings(self.schedules.read(self.actor), self.csrf,
                             self.schedule_operator, {k: v for k, v in form.items() if k in allowed}, code), status)
                     if path == "/proposals":
-                        return self.page("Supply enrichment proposal", proposal_views.supplied_form(self.csrf, self.tasks.route, form, code), status)
+                        return self.page("Supply enrichment proposal", proposal_views.supplied_form(self.csrf, self.tasks.route, form, code, live_enabled=self.tasks.live_discovery_enabled), status)
                     match = re.fullmatch(r"/proposals/([^/]+)/approve", path)
                     if match:
                         proposal = self.tasks.read_proposal(identifier(match[1]), self.actor)
@@ -272,7 +272,7 @@ class ReviewApp:
         if path == "/proposals":
             return self.page("Enrichment proposals", proposal_views.index(self.tasks.list_proposals(self.actor)))
         if path == "/proposals/new":
-            return self.page("Supply enrichment proposal", proposal_views.supplied_form(self.csrf, self.tasks.route))
+            return self.page("Supply enrichment proposal", proposal_views.supplied_form(self.csrf, self.tasks.route, live_enabled=self.tasks.live_discovery_enabled))
         match = re.fullmatch(r"/proposals/([^/]+)", path)
         if match:
             return self.page("Review enrichment proposal", proposal_views.detail(self.tasks.read_proposal(identifier(match[1]), self.actor), self.csrf))

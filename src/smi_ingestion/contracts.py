@@ -65,6 +65,7 @@ class CollectedBatch:
     complete: bool
     waiting: Literal['provider_pending', 'provider_operation_ambiguous'] | None = None
     request_attempts: int = 0
+    response_bytes: int = 0  # No-observation HTTP responses still consume the byte budget.
 
 
 @dataclass(frozen=True)

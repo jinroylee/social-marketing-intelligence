@@ -1,0 +1,9 @@
+# Preserve live discovery identity across response and billing uncertainty
+
+Status: accepted
+
+Use one explicitly gated Bright Data TikTok keyword route with a single returned-record cap and the existing task, source checkpoint, canonical publication and cost owners. A successful HTTP response is independent of a final provider charge, source permission, eligible canonical record and usable publication. Every HTTP attempt receives a shared declared bounded commitment before dispatch; responses retain that liability until explicit final provider-basis evidence reconciles it. This conservatively reserves even progress/download attempts rather than assuming undocumented free work or deriving a whole invoice from output rows.
+
+A saved provider handle permits only bounded GET progress/download of that same operation, honoring its persisted not-before time. A lost response before checkpoint commit cannot establish a handle, so the stable dispatched accounting identity stops blind paid reissue. Final accounting does not restore the response. This trades automatic recovery of some transient failures for avoiding duplicate uncertain spending; provider idempotency or operator response recovery needs a separately verified contract.
+
+Preserve unknown capture/measurement times because the selected schema does not guarantee them. Download/import time cannot refresh source evidence or certify a repeated query as fresh. A keyword result with only documented URLs is truthful unavailable evidence, not an invented account/post; full schema, identity, local query/time eligibility and current policy must pass normal ingestion/publication. Schedules remain offline and live execution remains disabled by default. See [the source contract](../source-integrations.md#bounded-live-tiktok-keyword-discovery).

@@ -38,10 +38,14 @@ def submit_form(campaign, brief, csrf, route, submitted=None, error=None):
 
 def detail(task):
     """Show exact attribution, phases, counts and permitted-publication navigation."""
-    content = f'<h1>Offline acquisition task</h1><p>{e(task["task_id"])}</p><p><a href="/tasks">All tasks</a></p>'
+    title = 'Acquisition task' if task['scope']['route'] == 'brightdata-tiktok-keyword' else 'Offline acquisition task'
+    content = f'<h1>{title}</h1><p>{e(task["task_id"])}</p><p><a href="/tasks">All tasks</a></p>'
     content += f'<p><a href="/tasks/{e(task["task_id"])}/costs">Usage and costs</a></p>'
     content += f'<p>Status: {e(task["status"])} · Outcome: {e(task["outcome"] or "Pending")}</p>'
-    content += '<p>Synthetic development inputs. Retrieved material becomes usable only after ingestion and publication. No usable update does not establish market absence.</p>'
+    if task['scope']['route'] == 'brightdata-tiktok-keyword':
+        content += '<p>Bright Data TikTok keyword discovery. Original capture/measurement times may be unknown; pending final charges retain commitments. Publication describes the actual bounded eligible update; market coverage remains unknown.</p>'
+    else:
+        content += '<p>Synthetic development inputs. Retrieved material becomes usable only after ingestion and publication. No usable update does not establish market absence.</p>'
     for label, item in (('Workspace', task['workspace_id']), ('Origin', task['origin']), ('Proposal approval', task['proposal_approval']), ('Initiator', task['initiator']), ('Submitted', task['submitted_at']),
                         ('Scope version', task['scope_version']), ('Immutable scope', task['scope']), ('Limits', task['limits']),
                         ('Attempt limit', task['attempt_limit']), ('Execution', task['execution']), ('Progress', task['progress']), ('Coverage', task['coverage']), ('Failure', task['failure']), ('Attempts', task['attempts'])):

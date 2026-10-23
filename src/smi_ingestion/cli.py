@@ -13,7 +13,7 @@ from smi_knowledge import Catalog, KnowledgePublications, KnowledgeQueries, Know
 from smi_campaigns import Brief, CampaignStore, Selection
 from smi_monitoring import MonitoringStore
 from smi_costs import UsageAccounting
-from smi_tasks import AcquisitionTasks, CompletionInbox, EnrichmentProposal, OfflineRoute, OfflineTaskWorker, TaskAuthority, TaskExecutionLost
+from smi_tasks import AcquisitionTasks, CompletionInbox, EnrichmentProposal, LiveDiscoveryConfig, OfflineRoute, OfflineTaskWorker, TaskAuthority, TaskExecutionLost
 
 from .adapters.registry import default_registry
 from .canonical import CanonicalReader, CanonicalWriter
@@ -139,6 +139,12 @@ def main(argv: list[str] | None = None) -> int:
     task_run = commands.add_parser("run-offline-task", help="Execute or resume one fixture-json task; live collectors are unavailable")
     task_run.add_argument("task_id")
     task_run.add_argument("--worker-id", default="local-offline-task-worker")
+    live_run = commands.add_parser("run-live-discovery-task", help="Resume one explicitly authorized bounded keyword task; defaults disable HTTP")
+    live_run.add_argument("task_id")
+    live_run.add_argument("--worker-id", default="local-live-discovery-worker")
+    live_run.add_argument("--enable-live-discovery", action="store_true")
+    live_run.add_argument("--authorize-live-operation", action="store_true")
+    live_run.add_argument("--authorize-source-use", action="store_true")
     task_inspect = commands.add_parser("inspect-task", help="Reopen durable phase/outcome, exact runs and publication links")
     task_inspect.add_argument("task_id")
     task_inspect.add_argument("--actor", default="local-marketer")
@@ -152,6 +158,7 @@ def main(argv: list[str] | None = None) -> int:
     proposal_save.add_argument("proposal", type=Path)
     proposal_save.add_argument("--offline-manifest", type=Path, required=True)
     proposal_save.add_argument("--offline-route-version", default="offline-fixture-v1")
+    proposal_save.add_argument("--enable-live-discovery", action="store_true")
     proposal_save.add_argument("--request-id", required=True)
     proposal_save.add_argument("--actor", default="local-assistant")
     proposal_inspect = commands.add_parser("inspect-proposal", help="Review exact proposal scope, limits and human approval")
@@ -167,6 +174,7 @@ def main(argv: list[str] | None = None) -> int:
     proposal_submit.add_argument("proposal_id")
     proposal_submit.add_argument("--approval-id", required=True)
     proposal_submit.add_argument("--scope-digest", required=True)
+    proposal_submit.add_argument("--enable-live-discovery", action="store_true")
     proposal_submit.add_argument("--request-id", required=True)
     proposal_submit.add_argument("--actor", default="local-assistant")
     args = parser.parse_args(argv)
@@ -183,7 +191,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command in {"save-proposal", "inspect-proposal", "approve-proposal", "submit-approved-task"}:
             route = OfflineRoute(args.offline_manifest, args.offline_route_version) if args.command == "save-proposal" else None
             authority = TaskAuthority.for_human(args.actor) if args.command == "approve-proposal" else TaskAuthority()
-            tasks = AcquisitionTasks(db, route=route, authority=authority)
+            tasks = AcquisitionTasks(db, route=route, authority=authority, live_discovery_enabled=getattr(args, 'enable_live_discovery', False))
             kind = "automation" if args.command in {"save-proposal", "submit-approved-task"} else "human"
             actor = ActorContext("local", args.actor, kind)
             if args.command == "save-proposal":
@@ -196,8 +204,14 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 result = tasks.submit_approved(args.proposal_id, actor, approval_id=args.approval_id,
                                                scope_digest=args.scope_digest, request_id=args.request_id)
-        elif args.command in {"submit-campaign-task", "run-offline-task", "inspect-task"}:
-            if args.command == "run-offline-task":
+        elif args.command in {"submit-campaign-task", "run-offline-task", "run-live-discovery-task", "inspect-task"}:
+            if args.command == "run-live-discovery-task":
+                config = LiveDiscoveryConfig(args.enable_live_discovery, args.authorize_live_operation,
+                    args.authorize_source_use, os.environ.get('BRIGHT_DATA_API_TOKEN')
+                    if args.enable_live_discovery and args.authorize_live_operation and args.authorize_source_use else None)
+                result = OfflineTaskWorker(db, args.evidence_dir, live_discovery=config).run_one(
+                    args.task_id, ActorContext('local', args.worker_id, 'automation'))
+            elif args.command == "run-offline-task":
                 result = OfflineTaskWorker(db, args.evidence_dir).run_one(args.task_id, ActorContext("local", args.worker_id, "automation"))
             elif args.command == "submit-campaign-task":
                 tasks = AcquisitionTasks(db, route=OfflineRoute(args.offline_manifest, args.offline_route_version), authority=TaskAuthority.for_human(args.actor))

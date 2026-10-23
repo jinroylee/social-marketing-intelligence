@@ -277,3 +277,6 @@ For a first reading, follow the real post through capture → source field → p
 
 
 The **Offline schedule** navigation opens `/schedules`. A server started with `--schedule-operator` can save explicit keyword JSON/settings and acknowledge due offline tasks; ordinary startup can inspect history only. Tick acknowledges work without collecting, and links the existing task/status/publication surfaces. The initial configurable daily target is 50 unique eligible new posts total across up to ten keywords; atomic enforcement is not yet installed, so this is neither throughput nor per-keyword yield. Live activation stays disabled. See [the schedule contract](tasks.md#registered-offline-keyword-schedule) for day/timezone/cadence and immutable history.
+
+
+One [live-capable TikTok keyword route](source-integrations.md#bounded-live-tiktok-keyword-discovery) is now implemented behind explicit server/worker/source/operation/cost gates. It accepts at most one returned post per approved query. All verification is simulated: actual source capture times, current live availability and final commercial charges remain unverified. Existing review/task pages still reopen without configured source inputs.

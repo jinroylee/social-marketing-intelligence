@@ -23,6 +23,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Quality review](evaluation.md) | Separate technical, translation-assisted and marketer-usefulness gates |
 | [Canonical evidence ownership](adr/0001-canonical-evidence-ownership.md) | Why source evidence and business decisions have separate owners |
 | [Pinned support and current policy](adr/0002-pinned-support-current-policy.md) | Why reproducible decisions pin support while permissions remain current |
+| [Live discovery uncertainty](adr/0014-live-discovery-response-and-billing-identity.md) | Why source response recovery and final billing retain separate stable identities |
 | [Capture-based discovery avoidance](adr/0013-capture-based-discovery-avoidance.md) | Why original captures, complete support and current permissions govern reuse without transferring task receipts |
 | [Atomic scheduled post admission](adr/0012-atomic-scheduled-post-admission.md) | Why daily new-post consumption commits with canonical effects while refreshes remain separate |
 | [Stable schedule accounting day](adr/0011-stable-schedule-accounting-day.md) | Why daily keyword history and accounting boundaries survive configuration edits |

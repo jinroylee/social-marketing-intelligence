@@ -106,6 +106,9 @@ class IngestionRunner:
                 "dataset_kind": row["coverage"].get("dataset_kind"),
                 "request_phase": row["coverage"].get("request_phase"),
                 "row_count": row["coverage"].get("row_count"),
+                "returned_records": row["coverage"].get("returned_records", 0),
+                "eligible_records": row["coverage"].get("eligible_records", 0),
+                "failed_records": row["coverage"].get("failed_records", 0),
                 "error_rows": row["coverage"].get("error_rows"),
                 "posts_observed": row["coverage"].get("posts_observed"),
                 "unavailable_fields": row["coverage"].get("unavailable_fields", []),
@@ -117,7 +120,7 @@ class IngestionRunner:
             "rate_limited", "source_error", "oversized_response", "invalid_response",
             "provider_error", "partial_rows", "unexpected_row_count", "partial_result",
             "challenge", "authentication_failed", "payment_required", "snapshot_failed",
-            "snapshot_pending_limit",
+            "snapshot_pending_limit", "snapshot_canceled",
         }
         # Async provider observations form a sequence for one dataset. An
         # initial 202 is superseded by its retrieved snapshot on resume.
@@ -221,7 +224,7 @@ class IngestionRunner:
             if not batch.items:
                 with _transaction(transaction, 'collection_frontier') as connection:
                     self.evidence.advance(run_id, batch.next_checkpoint, complete=batch.complete,
-                                          waiting=batch.waiting, request_attempts=batch.request_attempts, connection=connection)
+                                          waiting=batch.waiting, request_attempts=batch.request_attempts, response_bytes=batch.response_bytes, connection=connection)
                 completed_input = batch.complete
                 break
             if len(batch.items) != 1:

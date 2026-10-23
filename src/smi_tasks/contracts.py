@@ -8,6 +8,7 @@ from typing import Any
 
 from smi_ingestion.contracts import RunLimits
 from smi_ingestion.adapters.keyword_fixture import ROUTE, validate_keyword_scope
+from smi_ingestion.adapters.tiktok_keyword import ROUTE as LIVE_ROUTE, FORMAT
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
 
@@ -16,7 +17,7 @@ from .discovery import DiscoveryPolicy
 
 @dataclass(frozen=True)
 class OfflineRoute:
-    """Operator-selected synthetic fixture input and hard execution bounds."""
+    """Operator-selected source manifest and hard bounds; live execution needs separate gates."""
 
     manifest_path: Path
     version: str = 'offline-fixture-v1'
@@ -25,7 +26,7 @@ class OfflineRoute:
 
     def discovery_configuration(self, manifest: dict[str, Any]) -> dict[str, Any]:
         """Pin input identity and explicit policy on newly admitted discovery only."""
-        result = {'discovery_context': {'response_sha256': manifest['response_sha256'],
+        result = {'discovery_context': {'response_sha256': manifest.get('response_sha256'),
                   'provider_id': manifest.get('provider_id'), 'format_version': manifest.get('format_version')}}
         if self.discovery_policy is not None:
             result['discovery_policy'] = asdict(self.discovery_policy)
@@ -49,9 +50,9 @@ class OfflineRoute:
     def capability(self) -> dict[str, Any]:
         """Report configured query capability without pretending supplied references are a search."""
         _, _, manifest = self.snapshot()
-        discovery = manifest['adapter'] == ROUTE
+        discovery = manifest['adapter'] in {ROUTE, LIVE_ROUTE}
         return {'route': manifest['adapter'], 'query_discovery': discovery,
-                'method': 'literal-caption-subject-time-v1' if discovery else 'supplied-reference-fixture-v1',
+                'method': 'brightdata-keyword-caption-time-v1' if manifest['adapter'] == LIVE_ROUTE else 'literal-caption-subject-time-v1' if discovery else 'supplied-reference-fixture-v1',
                 'unavailable_reason': None if discovery else 'keyword_discovery_unavailable_supplied_reference_route'}
 
     def snapshot(self) -> tuple[Path, str, dict[str, Any]]:
@@ -63,9 +64,25 @@ class OfflineRoute:
                 raise EvidenceError('invalid_offline_route')
             raw = path.read_bytes()
             manifest = json.loads(raw)
-            if (not isinstance(manifest, dict) or manifest.get('adapter') not in {'fixture-json', ROUTE}
-                    or manifest.get('synthetic') is not True):
+            if (not isinstance(manifest, dict) or manifest.get('adapter') not in {'fixture-json', ROUTE, LIVE_ROUTE}
+                    or manifest.get('synthetic') is not (manifest.get('adapter') != LIVE_ROUTE)):
                 raise EvidenceError('unsupported_task_route')
+            if manifest['adapter'] == LIVE_ROUTE:
+                if (manifest.get('provider_id') != 'brightdata' or manifest.get('format_version') != FORMAT
+                        or set(manifest) != {'adapter', 'provider_id', 'format_version', 'synthetic', 'policy'}
+                        or not isinstance(manifest.get('policy'), dict)):
+                    raise EvidenceError('invalid_live_discovery_route')
+                policy = manifest['policy']
+                if (not isinstance(policy.get('context_id'), str) or not policy['context_id'].strip() or len(policy['context_id']) > 200
+                        or not {'context_id', 'can_process', 'can_retain', 'can_display'} <= policy.keys()
+                        or not policy.keys() <= {'context_id', 'can_process', 'can_retain', 'can_display', 'expires_at', 'revoked'}
+                        or any(type(policy[k]) is not bool for k in ('can_process', 'can_retain', 'can_display'))
+                        or type(policy.get('revoked', False)) is not bool
+                        or policy.get('expires_at') is not None and not isinstance(policy['expires_at'], str)):
+                    raise EvidenceError('invalid_live_discovery_route')
+                from smi_ingestion.adapters.local import parse_time
+                parse_time(policy.get('expires_at'))
+                return path, hashlib.sha256(raw).hexdigest(), manifest
             if manifest['adapter'] == ROUTE:
                 if (not isinstance(manifest.get('response_path'), str) or not manifest['response_path']
                         or not isinstance(manifest.get('response_sha256'), str)
