@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS keyword_schedule_configurations (
     recorded_at timestamptz NOT NULL,
     PRIMARY KEY(workspace_id,version)
 );
+ALTER TABLE keyword_schedule_configurations ADD COLUMN IF NOT EXISTS route_authority jsonb;
 CREATE TABLE IF NOT EXISTS keyword_schedule_occurrences (
     id uuid PRIMARY KEY,
     workspace_id text NOT NULL REFERENCES keyword_schedules(workspace_id),

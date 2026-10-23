@@ -14,6 +14,7 @@ from psycopg.types.json import Jsonb
 
 from .allowance import ScheduledPostAllowance
 
+from smi_ingestion.adapters.tiktok_keyword import ROUTE as LIVE_ROUTE
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
@@ -92,18 +93,32 @@ class ScheduledDiscovery:
             queries.add(keyword['query'].strip().casefold())
         return json.loads(json.dumps(document))
 
-    def configure(self, document: dict[str, Any], actor: ActorContext, *, expected_version: int) -> dict[str, Any]:
+    def configure(self, document: dict[str, Any], actor: ActorContext, *, expected_version: int, live: bool = False) -> dict[str, Any]:
         """Save a successor configuration under operator authority, retaining every old version.
 
         The accounting timezone is fixed by the first configuration. Stable keyword
         keys and day identities survive query edits, removal and later re-registration.
+        Explicit live activation pins exact operator route configuration; the default
+        saves offline authority, independently of the process route or runtime gates.
         """
         actor.require_workspace(self.workspace_id)
         self.tasks.authority.require_schedule_operator(actor)
         document = self._validate(document)
         if type(expected_version) is not int or expected_version < 0:
             raise EvidenceError('schedule_configuration_conflict')
-        digest = hashlib.sha256(json.dumps(document, sort_keys=True).encode()).hexdigest()
+        if type(live) is not bool:
+            raise EvidenceError('invalid_live_schedule_activation')
+        route_authority = None
+        if live:
+            if self.tasks.live_discovery_enabled is not True:
+                raise EvidenceError('live_discovery_disabled')
+            if self.tasks.route is None:
+                raise EvidenceError('offline_task_route_unconfigured')
+            route_authority = self.tasks.route.discovery_authority()
+            if route_authority['route'] != LIVE_ROUTE:
+                raise EvidenceError('live_schedule_route_required')
+        digest_input = {'document': document, 'route_authority': route_authority} if live else document
+        digest = hashlib.sha256(json.dumps(digest_input, sort_keys=True).encode()).hexdigest()
         with self.db.connect() as connection:
             connection.execute('SELECT pg_advisory_xact_lock(hashtext(%s))', ('keyword-schedule:' + self.workspace_id,))
             connection.execute('INSERT INTO keyword_schedules(workspace_id,accounting_timezone) VALUES (%s,%s) ON CONFLICT DO NOTHING',
@@ -117,8 +132,8 @@ class ScheduledDiscovery:
             if schedule['last_tick_at'] and now < schedule['last_tick_at']:
                 raise EvidenceError('schedule_clock_regressed')
             version = expected_version + 1
-            connection.execute('INSERT INTO keyword_schedule_configurations(workspace_id,version,document,digest,operator_id,recorded_at) VALUES (%s,%s,%s,%s,%s,%s)',
-                               (self.workspace_id, version, Jsonb(document), digest, actor.actor_id, now))
+            connection.execute('INSERT INTO keyword_schedule_configurations(workspace_id,version,document,digest,operator_id,recorded_at,route_authority) VALUES (%s,%s,%s,%s,%s,%s,%s)',
+                               (self.workspace_id, version, Jsonb(document), digest, actor.actor_id, now, Jsonb(route_authority)))
             connection.execute('UPDATE keyword_schedules SET current_version=%s WHERE workspace_id=%s', (version, self.workspace_id))
             ScheduledPostAllowance.configure_day(connection, self.workspace_id, now.astimezone(ZoneInfo(document['timezone'])).date(), document, version)
         return self.read(actor)
@@ -134,12 +149,12 @@ class ScheduledDiscovery:
             daily_allowance = ScheduledPostAllowance(self.db, self.workspace_id).read(
                 self._now().astimezone(ZoneInfo(schedule['accounting_timezone'])).date(), actor, connection=connection) if schedule else None
         versions = [{'version': c['version'], 'document': c['document'], 'digest': c['digest'],
-                     'operator_id': c['operator_id'], 'recorded_at': c['recorded_at'].isoformat()} for c in configurations]
+                     'operator_id': c['operator_id'], 'recorded_at': c['recorded_at'].isoformat(), 'route_authority': c['route_authority']} for c in configurations]
         return {'workspace_id': self.workspace_id, 'version': schedule['current_version'] if schedule else 0,
                 'document': versions[-1]['document'] if versions else None,
                 'accounting_timezone': schedule['accounting_timezone'] if schedule else None,
                 'last_tick_at': schedule['last_tick_at'].isoformat() if schedule and schedule['last_tick_at'] else None,
-                'cadence': 'daily-local-v1', 'live_activation': False, 'allowance_enforcement': 'atomic_unique_new_posts', 'daily_allowance': daily_allowance,
+                'cadence': 'daily-local-v1', 'live_activation': bool(configurations and configurations[-1]['route_authority']), 'allowance_enforcement': 'atomic_unique_new_posts', 'daily_allowance': daily_allowance,
                 'catch_up': 'current_day_only', 'configurations': versions,
                 'occurrences': [self._occurrence(row, actor) for row in occurrences]}
 
@@ -207,6 +222,8 @@ class ScheduledDiscovery:
                                'due_at': due.isoformat(), 'published_from': (due_local - timedelta(days=document['lookback_days'])).astimezone(timezone.utc).isoformat(),
                                'published_before': due.isoformat(), 'daily_allowance': document['daily_allowance'],
                                'allowance_version': configuration['version'], 'allowance_enforcement': 'atomic_unique_new_posts'}
+                    if configuration['route_authority'] is not None:
+                        context['route_authority'] = configuration['route_authority']
                     connection.execute('INSERT INTO keyword_schedule_occurrences(id,workspace_id,configuration_version,keyword_key,accounting_day,context,initiator_id,initiator_kind,status,recorded_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                                        (occurrence_id, self.workspace_id, configuration['version'], keyword['key'], day, Jsonb(context), actor.actor_id, actor.kind, 'pending', now))
                     status, reason, task_id = 'submitted', None, None

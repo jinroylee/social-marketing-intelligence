@@ -32,6 +32,13 @@ class OfflineRoute:
             result['discovery_policy'] = asdict(self.discovery_policy)
         return result
 
+    def discovery_authority(self) -> dict[str, Any]:
+        """Snapshot exact operator route context for recorded schedule activation."""
+        path, manifest_hash, manifest = self.snapshot()
+        return {'route': manifest['adapter'], 'route_version': self.version,
+                'manifest_hash': manifest_hash, 'manifest_path': str(path),
+                'limits': asdict(self.limits), **self.discovery_configuration(manifest)}
+
     def validate(self) -> None:
         """Validate immutable operator version and hard limits without touching input files."""
         if self.discovery_policy is not None:

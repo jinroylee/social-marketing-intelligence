@@ -212,8 +212,8 @@ class ReviewApp:
                         allowed = {"csrf", "request_id", "brief_id", "interpretation_id", "expected_brief_version", "expected_shortlist_version"}
                         return self._regeneration_page(identifier(match[1]), {k: v for k, v in form.items() if k in allowed}, code, status)
                     if path == "/schedules":
-                        allowed = {"expected_version", "timezone", "daily_at", "lookback_days", "daily_allowance", "keywords"}
-                        return self.page("Offline keyword schedule", schedule_views.settings(self.schedules.read(self.actor), self.csrf,
+                        allowed = {"expected_version", "timezone", "daily_at", "lookback_days", "daily_allowance", "keywords", "execution_mode"}
+                        return self.page("Keyword schedule", schedule_views.settings(self.schedules.read(self.actor), self.csrf,
                             self.schedule_operator, {k: v for k, v in form.items() if k in allowed}, code), status)
                     if path == "/proposals":
                         return self.page("Supply enrichment proposal", proposal_views.supplied_form(self.csrf, self.tasks.route, form, code, live_enabled=self.tasks.live_discovery_enabled), status)
@@ -251,7 +251,7 @@ class ReviewApp:
 
     def _get(self, path, query):
         if path == "/schedules":
-            return self.page("Offline keyword schedule", schedule_views.settings(self.schedules.read(self.actor), self.csrf, self.schedule_operator))
+            return self.page("Keyword schedule", schedule_views.settings(self.schedules.read(self.actor), self.csrf, self.schedule_operator))
         if path == "/costs":
             return self.page("Usage and costs", cost_views.index(self.costs.list(self.actor)))
         match = re.fullmatch(r"/costs/([^/]+)", path)
@@ -351,12 +351,15 @@ class ReviewApp:
             raise EvidenceError("invalid_form")
         request_id = one(form, "request_id")
         if path == "/schedules":
-            if not form.keys() <= {"csrf", "expected_version", "timezone", "daily_at", "lookback_days", "daily_allowance", "keywords"}:
+            if not form.keys() <= {"csrf", "expected_version", "timezone", "daily_at", "lookback_days", "daily_allowance", "keywords", "execution_mode"}:
                 raise EvidenceError("invalid_form")
             document = {'timezone': one(form, 'timezone'), 'daily_at': one(form, 'daily_at'),
                         'lookback_days': int(one(form, 'lookback_days')), 'daily_allowance': int(one(form, 'daily_allowance')),
                         'keywords': json.loads(one(form, 'keywords'))}
-            self.schedules.configure(document, self.actor, expected_version=int(one(form, 'expected_version')))
+            mode = one(form, 'execution_mode') or 'offline'
+            if mode not in {'offline', 'live'}:
+                raise EvidenceError('invalid_live_schedule_activation')
+            self.schedules.configure(document, self.actor, expected_version=int(one(form, 'expected_version')), live=mode == 'live')
             return Response(303, location='/schedules')
         if path == "/schedules/tick":
             if not form.keys() <= {"csrf"}:

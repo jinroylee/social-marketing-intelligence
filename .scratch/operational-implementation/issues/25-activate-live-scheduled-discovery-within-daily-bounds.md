@@ -4,7 +4,7 @@
 
 **Blocked by:** 22: Enforce the shared daily unique-post allowance; 24: Enable one verified live on-demand discovery route.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** S — one bounded user-visible journey or extension in a fresh implementation context.
 

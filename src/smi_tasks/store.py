@@ -208,7 +208,16 @@ class AcquisitionTasks:
             if self.route is None:
                 raise EvidenceError('offline_task_route_unconfigured')
             path, manifest_hash, manifest = self.route.snapshot()
-            if manifest['adapter'] != ROUTE:
+            live = context.get('route_authority') is not None
+            if live:
+                if self.live_discovery_enabled is not True:
+                    raise EvidenceError('live_discovery_disabled')
+                authority = {'route': manifest['adapter'], 'route_version': self.route.version,
+                             'manifest_hash': manifest_hash, 'manifest_path': str(path),
+                             'limits': asdict(self.route.limits), **self.route.discovery_configuration(manifest)}
+                if manifest['adapter'] != LIVE_ROUTE or authority != context['route_authority']:
+                    raise EvidenceError('live_schedule_route_configuration_changed')
+            elif manifest['adapter'] != ROUTE:
                 raise EvidenceError('keyword_discovery_unavailable_supplied_reference_route')
             policy = manifest.get('policy')
             if not isinstance(policy, dict) or not all(policy.get(p) is True for p in ('can_process', 'can_retain')):
@@ -218,7 +227,7 @@ class AcquisitionTasks:
                 tuple(keyword['subject_ids']), (keyword['query'],), context['published_from'], context['published_before'])
             proposal.validate()
             scope = {**proposal.document(), 'discovery': proposal.keyword_scope(), 'schedule': context,
-                     'route': ROUTE, 'route_version': self.route.version, 'manifest_hash': manifest_hash, 'references': []}
+                     'route': manifest['adapter'], 'route_version': self.route.version, 'manifest_hash': manifest_hash, 'references': []}
             scope.update(self.route.discovery_configuration(manifest))
             scope = json.loads(json.dumps(scope))
             limits = asdict(self.route.limits)
@@ -227,7 +236,7 @@ class AcquisitionTasks:
             task_id = str(uuid.uuid4())
             connection.execute('INSERT INTO acquisition_tasks(id,workspace_id,request_id,request_digest,origin,schedule_occurrence_id,initiator_id,initiator_kind,scope_version,scope,limits,manifest_path,manifest_hash) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                                (task_id, self.workspace_id, 'scheduled:' + occurrence_id, digest, 'schedule', occurrence_id,
-                                actor.actor_id, actor.kind, 'schedule-offline-v1', Jsonb(scope), Jsonb(limits), str(path), manifest_hash))
+                                actor.actor_id, actor.kind, 'schedule-live-v1' if live else 'schedule-offline-v1', Jsonb(scope), Jsonb(limits), str(path), manifest_hash))
         return {'status': 'accepted', 'task_id': task_id}
 
     def save_proposal(self, proposal: EnrichmentProposal, actor: ActorContext, *, request_id: str) -> dict[str, Any]:

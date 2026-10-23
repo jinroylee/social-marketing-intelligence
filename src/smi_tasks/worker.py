@@ -48,17 +48,26 @@ class _CostDispatchBlocked(RuntimeError):
 class _ControlledCollector:
     """Composition of exact task authority, execution fencing and one-use cost control."""
 
-    def __init__(self, collector, accounting, control, attempt, execution):
+    def __init__(self, collector, accounting, control, attempt, execution, schedule_context=None):
         self.collector, self.accounting, self.control = collector, accounting, control
         self.attempt, self.execution = attempt, execution
+        self.schedule_context = schedule_context
 
     def collect(self, manifest, checkpoint, limits):
-        # One invocation may make at most one synthetic request, including waits.
+        # One invocation may make at most one bounded provider request, including waits.
         # The persisted checkpoint identifies that dispatch across worker recovery.
         identity = hashlib.sha256(json.dumps(checkpoint, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
         live = manifest['adapter'] == LIVE_ROUTE
         if live:
             self.collector.require_available(manifest, checkpoint)
+            if self.schedule_context and checkpoint.get('phase', 'start') == 'start':
+                # A pending snapshot already has a paid dispatch identity. Its GET
+                # recovery remains metered; only new POST work stops at this cap.
+                with self.execution.transaction('scheduled_dispatch') as connection:
+                    allowance = ScheduledPostAllowance(self.accounting.db, self.accounting.workspace_id).read(
+                        self.schedule_context['accounting_day'], self.execution.actor, connection=connection)
+                    if allowance is None or allowance['remaining'] == 0:
+                        raise LiveDiscoveryUnavailable('scheduled_daily_new_post_allowance_exhausted')
         adapter_class = DeferredProviderOperationAdapter if live else SyntheticOperationAdapter
         adapter = adapter_class(self.accounting, self.control['scope_id'], max_units=self.control['max_units'])
 
@@ -229,13 +238,18 @@ class OfflineTaskWorker:
         try:
             OfflineRoute(Path(row['manifest_path']), row['scope']['route_version'], RunLimits(**row['limits'])).validate()
             control = self.costs.route_control(row['scope']['route'], actor)
-            if live and row['origin'] == 'schedule':
-                raise EvidenceError('live_schedule_activation_unavailable')
             if discovery:
                 scope = dict(row['scope'])
                 digest = scope.pop('execution_digest', None)
                 if digest != execution_configuration_digest(scope, row['limits'], row['manifest_path']):
                     raise EvidenceError('task_configuration_changed')
+                if live and row['origin'] == 'schedule':
+                    authority = {key: scope[key] for key in ('route', 'route_version', 'manifest_hash', 'discovery_context')}
+                    if 'discovery_policy' in scope:
+                        authority['discovery_policy'] = scope['discovery_policy']
+                    authority.update(limits=row['limits'], manifest_path=row['manifest_path'])
+                    if row['scope_version'] != 'schedule-live-v1' or scope['schedule'].get('route_authority') != authority:
+                        raise EvidenceError('live_schedule_authority_required')
                 validate_keyword_scope(scope['discovery'])
                 base_collector = TikTokKeywordCollector(scope['discovery'], self.live_discovery, cost_configured=control is not None, clock=self.clock) if live else self.collector or KeywordFixtureCollector(scope['discovery'], scope['route_version'])
                 mapper = TikTokKeywordMapper() if live else KeywordFixtureMapper()
@@ -253,7 +267,7 @@ class OfflineTaskWorker:
             else:
                 base_collector, mapper = self.collector or LocalFileCollector('fixture-json'), JsonFixtureMapper()
             registry = AdapterRegistry()
-            collector = _ControlledCollector(base_collector, self.costs, control, attempt, execution) if control else base_collector
+            collector = _ControlledCollector(base_collector, self.costs, control, attempt, execution, row['scope'].get('schedule')) if control else base_collector
             registry.register(row['scope']['route'], collector, mapper)
             runner = IngestionRunner(self.evidence, CanonicalWriter(self.db), registry)
             publications = KnowledgePublications(self.db, self.workspace_id)
