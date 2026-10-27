@@ -22,6 +22,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Agent workflow configuration](agents/issue-tracker.md) | Local ticket publication, dependency gates, claiming, validation and resolution |
 | [Quality review](evaluation.md) | Separate technical, translation-assisted and marketer-usefulness gates |
 | [Canonical evidence ownership](adr/0001-canonical-evidence-ownership.md) | Why source evidence and business decisions have separate owners |
+| [Explicit assistant gap scope](adr/0018-explicit-assistant-gap-scope.md) | Why explicit keyword bounds and task-side linkage preserve exact approval and answer history |
 | [Pinned support and current policy](adr/0002-pinned-support-current-policy.md) | Why reproducible decisions pin support while permissions remain current |
 | [Exact supplementary profile authority](adr/0016-explicit-bounded-profile-supplementation.md) | Why one approved nickname fill shares parent limits while retaining separate source identity |
 | [Recorded live schedule authority](adr/0015-recorded-live-schedule-authority.md) | Why explicit operator activation pins a route independently of process switches and preserves bounded snapshot recovery |

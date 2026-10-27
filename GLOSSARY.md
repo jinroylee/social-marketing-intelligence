@@ -103,6 +103,9 @@ A durable identity for one enrichment task’s terminal outcome, committed with 
 **Knowledge answer**:
 A response to a marketer’s question with identified knowledge support, relevant dates, uncertainty and missing information. Relevance selection and a source claim do not establish independent verification or complete coverage.
 
+**Assistant knowledge gap**:
+Missing, ambiguous, stale or currently unavailable knowledge support that prevents a bounded answer from meeting a question. It may motivate explicitly scoped research; a model or configuration failure alone does not establish a knowledge gap.
+
 **Knowledge publication**:
 A versioned availability of ingested evidence and supported interpretations for knowledge-base queries. It identifies the source support and transformations that make an update usable.
 

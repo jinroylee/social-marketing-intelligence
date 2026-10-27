@@ -2,7 +2,7 @@
 
 ## Implemented relational model
 
-The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql) [offline costs](../src/smi_costs/schema.sql) and [knowledge answers](../src/smi_assistant/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
+The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql), [offline costs](../src/smi_costs/schema.sql), [knowledge answers](../src/smi_assistant/schema.sql) and [assistant enrichment linkage](../src/smi_tasks/assistant/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
 
 ```mermaid
 erDiagram
@@ -952,3 +952,30 @@ erDiagram
 ```
 
 `input_support_ids` records every actual model-input fact, including unselected support; `query_result_id` retains the full original query manifest. The immutable configuration pins method/schema/model/measurement and bounds. Claims precede I/O and exact retries never redispatch. Shared cost admission checks exact current support under source locks through dispatch commit, then finalization checks again. Current process/display permission or support loss withholds the entire derived selection without rewriting historical model/input/accounting context. Values are read afresh, so the answer table has no source text cache to purge. See [the answer interface](knowledge.md#bounded-free-form-knowledge-answers).
+
+
+## Assistant enrichment linkage
+
+The [task-side assistant schema](../src/smi_tasks/assistant/schema.sql) links a human's saved answer to an exact proposal through public owners. Existing proposal, approval, task, publication and completion relationships remain unchanged.
+
+```mermaid
+erDiagram
+    knowledge_answers ||--o{ assistant_enrichment_requests : motivates
+    enrichment_proposals o|--o| assistant_enrichment_requests : exact_saved_revision
+    assistant_enrichment_requests {
+        uuid id PK
+        text workspace_id
+        text request_id UK
+        text request_digest
+        uuid answer_id FK
+        text requester_id
+        boolean include_synthetic
+        text gap
+        jsonb proposal_body
+        text proposal_request_id UK
+        uuid proposal_id FK,UK
+        timestamptz created_at
+    }
+```
+
+One workspace/request pins the original answer/requester, fixed gap code, exact human-supplied intent/query/subject/window body and synthetic visibility in its digest. The body contains a source-free template purpose, not copied evidence or model answer prose. A fresh nested request commits before proposal save; nullable `proposal_id` allows recovery after either save boundary. The parent owner resolves that exact proposer-bound request without rebinding saved route files. Approval and submission retain their original request identities and task bounds. No completion copy or source-value/permission cache is added; the application composes exact task/event reads and current-policy answer/publication support. See [the public contract](tasks.md#assistant-knowledge-gap-enrichment).

@@ -11,3 +11,5 @@ Limit question UTF-8 bytes, members, facts, context/request/response bytes and o
 Commit the claim before I/O; exact retries reopen without redispatch, even after interruption. The shared admission guard rechecks full exact inputs and current process/display/derivation health after allowance evaluation, retaining source locks through dispatch commit. Finalization repeats the check. Hold no transaction across model I/O. Any unavailable/superseded actual input withholds the derived selection on reopening; later publications affect only new questions.
 
 Verify via public question/read, retrieval, accounting and loopback HTTP operations, with real PostgreSQL and simulated external I/O. Technical checks establish neither language quality nor marketer usefulness. Update knowledge, architecture, physical ERD, local-review and coverage summaries with interface changes.
+
+The separate [task-side journey](../smi_tasks/assistant/AGENTS.md) composes these public answers into explicit gap proposals and human approval. Preserve this dependency direction: the answer owner neither imports tasks nor grants enrichment authority.

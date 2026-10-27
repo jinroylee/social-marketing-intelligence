@@ -51,6 +51,15 @@ class CompletionInbox:
             raise EvidenceError('completion_event_not_found')
         return self._view(row, actor)
 
+    def read_task(self, task_id: str, actor: ActorContext) -> dict[str, Any] | None:
+        """Read one task's logical completion even beyond the newest-100 inbox window."""
+        actor.require_workspace(self.workspace_id)
+        AcquisitionTasks(self.db, self.workspace_id).read(task_id, actor)
+        with self.db.connect() as connection:
+            row = connection.execute('SELECT e.* FROM task_completion_events e JOIN acquisition_tasks t ON t.id=e.task_id WHERE t.id=%s AND t.workspace_id=%s',
+                                     (task_id, self.workspace_id)).fetchone()
+        return self._view(row, actor) if row else None
+
     def _view(self, row, actor):
         task = AcquisitionTasks(self.db, self.workspace_id).read(str(row['task_id']), actor)
         publications = []

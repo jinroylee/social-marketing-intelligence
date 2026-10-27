@@ -276,6 +276,24 @@ class AcquisitionTasks:
                                (proposal_id, self.workspace_id, request_id, digest, Jsonb(scope), 'assistant-offline-v1', Jsonb(limits), str(path), manifest_hash, actor.actor_id, actor.kind))
         return {'status': 'saved', 'proposal_id': proposal_id}
 
+    def find_proposal(self, request_id: str, actor: ActorContext) -> dict[str, Any] | None:
+        """Recover this proposer's exact saved request without reopening route inputs.
+
+        A trusted composing owner may retain its fresh nested request identity before
+        saving the proposal. Reopening grants no approval or task authority and does
+        not change the original configuration when route files are gone or replaced.
+        """
+        actor.require_workspace(self.workspace_id)
+        self._request_id(request_id)
+        with self.db.connect() as connection:
+            row = connection.execute('SELECT id,proposer_id,proposer_kind FROM enrichment_proposals WHERE workspace_id=%s AND request_id=%s',
+                                     (self.workspace_id, request_id)).fetchone()
+        if row is None:
+            return None
+        if row['proposer_id'] != actor.actor_id or row['proposer_kind'] != actor.kind:
+            raise EvidenceError('proposal_request_conflict')
+        return self.read_proposal(str(row['id']), actor)
+
     @staticmethod
     def _request_id(request_id: str) -> None:
         if not isinstance(request_id, str) or not request_id.strip() or len(request_id) > 200:

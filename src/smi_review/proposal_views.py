@@ -49,7 +49,7 @@ def supplied_form(csrf, route, submitted=None, error=None, *, live_enabled=False
     return content + '<button type="submit">Save proposal for review</button></form>'
 
 
-def detail(proposal, csrf, submitted=None, error=None):
+def detail(proposal, csrf, submitted=None, error=None, *, approval_action=None, include_synthetic=False):
     """Display the exact revision/configuration and an explicit approval interaction."""
     content = f'<h1>Review enrichment proposal</h1><p>Immutable proposal revision {e(proposal["proposal_id"])}</p><p><a href="/proposals">All proposals</a></p>'
     if error:
@@ -70,7 +70,10 @@ def detail(proposal, csrf, submitted=None, error=None):
         content += f'<p>Human approval: {e(json.dumps(approval, ensure_ascii=False))}</p>'
         if approval['task_id']:
             return content + f'<p><a href="/tasks/{e(approval["task_id"])}">Resulting acquisition task</a></p>'
-    content += f'<form action="/proposals/{e(proposal["proposal_id"])}/approve" method="post">'
+    action = approval_action or f'/proposals/{proposal["proposal_id"]}/approve'
+    content += f'<form action="{e(action)}" method="post">'
+    if approval_action:
+        content += hidden('include_synthetic', 'yes' if include_synthetic else '')
     content += hidden('csrf', csrf) + hidden('request_id', approval['request_id'] if approval else value(submitted, 'request_id', str(uuid.uuid4()))) + hidden('scope_digest', proposal['scope_digest'])
     content += f'<label><input type="checkbox" name="reviewed" value="yes"{checked(value(submitted, "reviewed") == "yes")} required>I approve this exact proposal revision, scope and limits in this workspace.</label>'
     return content + '<button type="submit">Approve exact scope and submit task</button></form>'

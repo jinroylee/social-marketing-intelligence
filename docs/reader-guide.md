@@ -2,7 +2,7 @@
 
 This guide connects the browser workflow, Python modules and database using the repository's Hero Cushion sample. It describes implemented behavior; the linked contracts and SQL define the precise interfaces.
 
-The [target functional requirements](functional-requirements.md) add ranked recommendations that agents can save as shortlists without human review, an enrichment assistant, background acquisition, lightweight X alerts, graph/lineage interfaces and hybrid spending controls. Conversational enrichment generation, X alerts and explorer surfaces remain future work; bounded extractive knowledge answers are installed. The browser offers automatic deterministic shortlists and bounded supported model ranking through an explicitly configured route, verified with simulated I/O; the human save/confirmation steps below describe the separate human-selection workflow.
+The [target functional requirements](functional-requirements.md) add ranked recommendations that agents can save as shortlists without human review, an enrichment assistant, background acquisition, lightweight X alerts, graph/lineage interfaces and hybrid spending controls. Bounded extractive knowledge answers and explicit gap/proposal/approval/task follow-up are installed; autonomous research, X alerts and explorer surfaces remain future work. The browser offers automatic deterministic shortlists and bounded supported model ranking through an explicitly configured route, verified with simulated I/O; the human save/confirmation steps below describe the separate human-selection workflow.
 
 ## What the application is today
 
@@ -235,7 +235,7 @@ Owner: [`smi_assistant`](../src/smi_assistant/schema.sql).
 | --- | --- | --- |
 | `knowledge_answers` | Human question/request identity, pinned query and all actual model-input IDs, source-free selected IDs, fixed uncertainty, immutable model/method/bounds, attributable usage/cost and outcome. | A model selects observed source values relevant to a question; withdrawing any input withholds the derived selection without rewriting history. |
 
-The browser's **Ask knowledge** form needs no enrichment approval. It selects exact published findings with dates and explicit limits; it provides no semantic search, unconstrained synthesis, independent verification or enrichment submission. Read [the answer contract](knowledge.md#bounded-free-form-knowledge-answers).
+The browser's **Ask knowledge** form needs no enrichment approval. It selects exact published findings with dates and explicit limits; it provides no semantic search, unconstrained synthesis or independent verification. A supported gap offers separate exact keyword/subject/window scope, saved proposal review, actual human approval, immediate task status and durable actual completion. Model/configuration failure alone offers no acquisition gap; only a later explicit question uses newly usable publications. Read [the answer contract](knowledge.md#bounded-free-form-knowledge-answers).
 
 ### Independent questions and snapshot answers — 5 tables
 
@@ -279,7 +279,7 @@ read fixed evidence -> apply caption rules -> build comparison or summary -> sav
 
 Explicit trusted model configuration enables one bounded criteria, supported ranking or extractive knowledge-answer call through the shared Responses route. Default startup has no model route; all verification uses simulated I/O. There is no translation model, model-driven tool selection, autonomous research loop or scheduled monitoring job. The application's `local-rule-preparation` actor has kind `automation` so attribution and write permissions are explicit; that label does not imply an AI agent. The coding assistant developing this repository is separate from the running application.
 
-The accepted target adds conversational enrichment proposals, broader assistant-driven acquisition, X anomaly alerts and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. The direct supplied-proposal approval, offline task path, atomic shared scheduled new-post allowance and source-free synthetic accounting/forecast surface are present; those broader capabilities remain future work. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
+The accepted target adds broader autonomous assistant research, X anomaly alerts and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. The direct supplied-proposal and assistant-gap exact approval journeys, offline task path, atomic shared scheduled new-post allowance and source-free synthetic accounting/forecast surface are present; those broader capabilities remain future work. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
 
 Marketer evaluation is a human assessment of whether the findings and decisions are useful. It is not a runtime agent or a database workflow that can manufacture its own answers. The procedure is in [quality review](evaluation.md); execution records belong in `.scratch/`.
 
@@ -292,3 +292,10 @@ The **Keyword schedule** navigation opens `/schedules`. A server started with `-
 One [live-capable TikTok keyword route](source-integrations.md#bounded-live-tiktok-keyword-discovery) is now implemented behind explicit server/worker/source/operation/cost gates. It accepts at most one returned post per approved query. All verification is simulated: actual source capture times, current live availability and final commercial charges remain unverified. Existing review/task pages still reopen without configured source inputs.
 
 For the optional [one-field supplementation journey](tasks.md#one-missing-profile-nickname), an operator configures nickname policy and a marketer approves an exact profile URL/native ID with the discovery proposal. Task detail explains the choice to continue or stop. The KB shows an independently sourced `tiktok:public` nickname observation, unknown original capture time and unestablished equivalence to the primary keyword account; additional metrics or creator facts are not inferred. Existing permitted nickname support prevents another profile request. This is installed library-configured behavior with simulated verification; it establishes no actual source readiness or human-usefulness result.
+
+
+Owner: [`smi_tasks.assistant`](../src/smi_tasks/assistant/schema.sql).
+
+| Table | Meaning | Public use |
+| --- | --- | --- |
+| `assistant_enrichment_requests` | One human request links the original answer, fixed gap code and explicit keyword/subject/window input to a fresh nested proposal request and its exact immutable revision. | Reopen pending scope, review/approve once, follow task and actual completion without copying source values or changing the old answer. |

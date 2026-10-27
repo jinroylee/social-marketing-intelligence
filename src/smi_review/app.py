@@ -14,6 +14,7 @@ from urllib.parse import parse_qs, urlsplit
 import psycopg
 
 from smi_assistant import KnowledgeAssistant
+from smi_tasks.assistant import AssistantEnrichment
 from smi_costs import UsageAccounting
 from smi_campaigns import Brief, CampaignStore, Criterion, Selection
 from smi_campaigns.interpretation import ResponsesRoute, ResponsesTransport
@@ -27,7 +28,7 @@ from smi_monitoring import MonitoringStore
 from smi_tasks.schedules import ScheduledDiscovery
 from smi_tasks import AcquisitionTasks, CampaignRecommendations, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority, ProfileSupplement
 
-from . import answer_views, cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
+from . import enrichment_views, answer_views, cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
 from .forms import identifier, one
 
 
@@ -114,6 +115,7 @@ class ReviewApp:
         self.planning = CampaignPlanning(db, workspace_id)
         self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, live_discovery_enabled=live_discovery_enabled, authority=TaskAuthority(campaign_humans=frozenset({actor_id}),
             campaign_automations=frozenset({self.worker.actor_id}), proposal_approvers=frozenset({actor_id}), schedule_operators=frozenset({actor_id}) if schedule_operator else frozenset()))
+        self.enrichment = AssistantEnrichment(self.assistant, self.tasks)
         self.schedules = ScheduledDiscovery(self.tasks, clock=schedule_clock)
         self.schedule_operator = schedule_operator
         self.recommendations = CampaignRecommendations(self.campaigns, self.tasks)
@@ -226,6 +228,17 @@ class ReviewApp:
                     match = re.fullmatch(r"/campaigns/([^/]+)/tasks", path)
                     if match:
                         return self._task_page(identifier(match[1]), form, code, status)
+                    match = re.fullmatch(r"/knowledge/answers/([^/]+)/enrichments", path)
+                    if match:
+                        allowed = {"request_id", "intent", "subject_ids", "search_query", "published_from", "published_before", "include_synthetic"}
+                        synthetic = one(form, "include_synthetic") == "yes"
+                        context = self.enrichment.context(identifier(match[1]), self.actor, include_synthetic=synthetic)
+                        return self.page("Propose bounded enrichment", enrichment_views.proposal_form(context, self.csrf, {k: v for k, v in form.items() if k in allowed}, code, include_synthetic=synthetic), status)
+                    match = re.fullmatch(r"/assistant-enrichments/([^/]+)/approve", path)
+                    if match:
+                        synthetic = one(form, "include_synthetic") == "yes"
+                        journey = self.enrichment.read(identifier(match[1]), self.actor, include_synthetic=synthetic)
+                        return self.page("Assistant enrichment journey", enrichment_views.detail(journey, self.csrf, form, code, include_synthetic=synthetic), status)
                     if path == "/knowledge/questions":
                         allowed = {"request_id", "question", "text", "include_synthetic"}
                         return self.page("Ask current knowledge", answer_views.question_form(self.csrf, {k: v for k, v in form.items() if k in allowed}, code), status)
@@ -291,12 +304,23 @@ class ReviewApp:
         match = re.fullmatch(r"/campaigns/([^/]+)/tasks/new", path)
         if match:
             return self._task_page(identifier(match[1]))
+        match = re.fullmatch(r"/knowledge/answers/([^/]+)/enrichment/new", path)
+        if match:
+            synthetic = one(query, "include_synthetic") == "yes"
+            return self.page("Propose bounded enrichment", enrichment_views.proposal_form(self.enrichment.context(identifier(match[1]), self.actor, include_synthetic=synthetic), self.csrf, include_synthetic=synthetic))
+        match = re.fullmatch(r"/assistant-enrichments/([^/]+)", path)
+        if match:
+            synthetic = one(query, "include_synthetic") == "yes"
+            return self.page("Assistant enrichment journey", enrichment_views.detail(self.enrichment.read(identifier(match[1]), self.actor, include_synthetic=synthetic), self.csrf, include_synthetic=synthetic))
         if path == "/knowledge/questions":
             return self.page("Ask current knowledge", answer_views.question_form(self.csrf))
         match = re.fullmatch(r"/knowledge/answers/([^/]+)", path)
         if match:
             include_synthetic = one(query, "include_synthetic") == "yes"
-            return self.page("Saved KB answer", answer_views.detail(self.assistant.read(identifier(match[1]), self.actor, include_synthetic=include_synthetic), include_synthetic=include_synthetic))
+            answer_id = identifier(match[1])
+            answer = self.assistant.read(answer_id, self.actor, include_synthetic=include_synthetic)
+            actions = enrichment_views.answer_actions(self.enrichment.context(answer_id, self.actor, include_synthetic=include_synthetic), include_synthetic=include_synthetic) if answer['requested_by']['actor_id'] == self.actor.actor_id else ''
+            return self.page("Saved KB answer", answer_views.detail(answer, include_synthetic=include_synthetic) + actions)
         if path == "/knowledge/search":
             return self.page("Search current knowledge", query_views.search_form(self.csrf))
         match = re.fullmatch(r"/knowledge/results/([^/]+)", path)
@@ -417,6 +441,26 @@ class ReviewApp:
             submitted = self.tasks.submit_campaign(identifier(match[1]), self.actor, brief_id=identifier(one(form, "brief_id")),
                                                     purpose=one(form, "purpose"), request_id=request_id)
             return Response(303, location=f"/tasks/{submitted['task_id']}")
+        match = re.fullmatch(r"/knowledge/answers/([^/]+)/enrichments", path)
+        if match:
+            if not form.keys() <= {"csrf", "request_id", "intent", "subject_ids", "search_query", "published_from", "published_before", "include_synthetic"} or one(form, "include_synthetic") not in {"", "yes"}:
+                raise EvidenceError("invalid_form")
+            synthetic = one(form, "include_synthetic") == "yes"
+            saved = self.enrichment.propose(identifier(match[1]), self.actor, request_id=request_id,
+                intent=one(form, "intent"), subject_ids=tuple(v.strip() for v in one(form, "subject_ids").splitlines() if v.strip()),
+                search_query=one(form, "search_query"), published_from=one(form, "published_from"), published_before=one(form, "published_before"), include_synthetic=synthetic)
+            suffix = "?include_synthetic=yes" if synthetic else ""
+            return Response(303, location=f"/assistant-enrichments/{saved['journey_id']}{suffix}")
+        match = re.fullmatch(r"/assistant-enrichments/([^/]+)/approve", path)
+        if match:
+            if not form.keys() <= {"csrf", "request_id", "scope_digest", "reviewed", "include_synthetic"} or one(form, "include_synthetic") not in {"", "yes"}:
+                raise EvidenceError("invalid_form")
+            if one(form, "reviewed") != "yes":
+                raise EvidenceError("proposal_human_approval_required")
+            synthetic = one(form, "include_synthetic") == "yes"
+            saved = self.enrichment.approve(identifier(match[1]), self.actor, scope_digest=one(form, "scope_digest"), request_id=request_id, include_synthetic=synthetic)
+            suffix = "?include_synthetic=yes" if synthetic else ""
+            return Response(303, location=f"/assistant-enrichments/{saved['journey_id']}{suffix}")
         if path == "/knowledge/questions":
             if not form.keys() <= {"csrf", "request_id", "question", "text", "include_synthetic"} or one(form, "include_synthetic") not in {"", "yes"}:
                 raise EvidenceError("invalid_form")

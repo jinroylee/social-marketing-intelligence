@@ -147,6 +147,11 @@ def test_local_question_surface_reopens_after_restart_and_withdrawal_and_rejects
     db, evidence, _, _ = stack
     _, observation = publish(stack, value='<script>Untrusted source</script>')
     assistant, _, model = configured(db)
+    from smi_campaigns import CampaignStore
+    from smi_tasks import AcquisitionTasks
+    from smi_tasks.assistant import AssistantEnrichment
+    CampaignStore(db).migrate()
+    AssistantEnrichment(assistant, AcquisitionTasks(db)).migrate()
     app = ReviewApp(db, model_route=assistant.model_route, model_transport=model, model_credential='synthetic-test-key')
     with running(app) as url:
         status, _, page = request(url, path='/knowledge/questions')
