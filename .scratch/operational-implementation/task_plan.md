@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 28 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–27 are integrated and resolved; ticket 28 is pending. The bounded extractive answer software is complete; actual model runtime prerequisites and independent semantic/human-quality validation remain unestablished.
+Implement ticket 28 in its fresh context/worktree: compose assistant gaps, exact proposal approval, task status/completion and later explicit queries over actual publications. Tickets 11–27 are integrated and resolved; validate and merge before advancing. No new acquisition/model provider or authority from generated text.
 
 ## Current Phase
 
-Phase 32 — ticket 28 pending after successful ticket 27 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 32 — ticket 28 in progress after successful ticket 27 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -230,7 +230,7 @@ Fast-forward integrated final handoff/root checked `c37f76a71d2a739c6c44936dd27b
 
 ### Phase 32 — Implement ticket 28
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
