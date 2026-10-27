@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 30 in its fresh context/worktree: one configured quantitative method over comparable recent-X baseline/detection windows, retained alerts and durable local inbox delivery. Tickets 11–29 are integrated and resolved; validate and merge before advancing. Semantic detection and external investigation remain outside this ticket.
+Dispatch ticket 31 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–30 are integrated and resolved; ticket 31 is pending. The offline configured sample-volume alert software is complete without independent statistical-significance, market-completeness, live-readiness or human-usefulness claims; worker artifacts remain preserved for verified archival before eventual cleanup.
 
 ## Current Phase
 
-Phase 34 — ticket 30 in progress after successful ticket 29 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 35 — ticket 31 pending after successful ticket 30 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -242,9 +242,9 @@ Fast-forward integrated final handoff/root checked `80c3329e8428efcebe3fa1f0fba6
 
 ### Phase 34 — Implement ticket 30
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final handoff/root checked `c9d456fe85d9597c1dea7eea409e2a0318f9f63d`, runtime/frozen `2132df92c4df6c77948169701ef1ad4710f63172`. Required root shared checks passed all static/preflight stages and **722 tests in 489.96 seconds**, exit 0; durable evidence is under `verification/ticket-30-integrated/`. Wheel identity and all 76 source/archive pairs match root bytes, sizes, hashes and relative symlink targets, including thirteen SQL schemas, both assets and all 26 guidance pairs. All six criteria are checked and ticket 30 is resolved. Root review reported no blocking issue; public real-PG/HTTP suites cover comparable and insufficient baselines, policy/retention, atomic alert/notification commits, retries/concurrency/authority and inbox/restart. Separate source-free alert history reopens current counts/evidence through the recent owner. Configured offline sample-volume thresholds do not establish independent statistical significance, market completeness, live readiness or human usefulness. The completed worker PASS survived interruption without rerun; artifacts remain preserved.
 
 ### Phase 35 — Implement ticket 31
 
