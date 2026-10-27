@@ -86,3 +86,7 @@ Both interfaces are target behavior. Current evidence panels and run reports are
 Validate ranking relevance, language interpretation and monitoring methods against attributable reviewed examples, while testing approval, budget, versioning, policy and publication boundaries independently. Human evaluation of product quality remains necessary evidence of usefulness; it is not mandatory review before each runtime shortlist save.
 
 Model/provider choice, coverage/freshness thresholds, anomaly parameters, ceiling amounts/periods and retention settings need explicit configuration and validation during implementation. Their precise values are not fixed by these requirements. No creator contact, publishing, media buying, external campaign activation or claim of measured sales lift is introduced. Existing measurement plans/notes remain supported; actual outcomes, attribution and causal estimation remain longer-term work.
+
+## Installed bounded question journey
+
+The current local pilot implements free-form questions with one extractive model relevance selection over exact current permitted published knowledge, with source dates, full input/model provenance, current-policy reopening and explicit missing/stale/ambiguous limits. It shares metered admission and never submits enrichment or searches externally. Model-selected exact findings establish neither semantic entailment nor human usefulness. Conversational enrichment proposal generation remains future work; see [the installed answer contract](knowledge.md#bounded-free-form-knowledge-answers).

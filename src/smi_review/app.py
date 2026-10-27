@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, urlsplit
 
 import psycopg
 
+from smi_assistant import KnowledgeAssistant
 from smi_costs import UsageAccounting
 from smi_campaigns import Brief, CampaignStore, Criterion, Selection
 from smi_campaigns.interpretation import ResponsesRoute, ResponsesTransport
@@ -21,12 +22,12 @@ from smi_ingestion.contracts import ExternalKey
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
-from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore
+from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
 from smi_monitoring import MonitoringStore
 from smi_tasks.schedules import ScheduledDiscovery
 from smi_tasks import AcquisitionTasks, CampaignRecommendations, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority, ProfileSupplement
 
-from . import cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
+from . import answer_views, cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
 from .forms import identifier, one
 
 
@@ -107,6 +108,7 @@ class ReviewApp:
         self.knowledge = KnowledgeStore(db, workspace_id)
         self.publications = KnowledgePublications(db, workspace_id)
         self.queries = KnowledgeQueries(db, workspace_id)
+        self.assistant = KnowledgeAssistant(db, workspace_id, model_route=model_route, model_transport=model_transport, model_credential=model_credential)
         self.evidence = EvidenceSetReader(db, workspace_id)
         self.monitoring = MonitoringStore(db, workspace_id)
         self.planning = CampaignPlanning(db, workspace_id)
@@ -224,6 +226,9 @@ class ReviewApp:
                     match = re.fullmatch(r"/campaigns/([^/]+)/tasks", path)
                     if match:
                         return self._task_page(identifier(match[1]), form, code, status)
+                    if path == "/knowledge/questions":
+                        allowed = {"request_id", "question", "text", "include_synthetic"}
+                        return self.page("Ask current knowledge", answer_views.question_form(self.csrf, {k: v for k, v in form.items() if k in allowed}, code), status)
                     if path == "/knowledge/search":
                         return self.page("Search current knowledge", query_views.search_form(self.csrf, form, code), status)
                     if path == "/campaigns":
@@ -286,6 +291,12 @@ class ReviewApp:
         match = re.fullmatch(r"/campaigns/([^/]+)/tasks/new", path)
         if match:
             return self._task_page(identifier(match[1]))
+        if path == "/knowledge/questions":
+            return self.page("Ask current knowledge", answer_views.question_form(self.csrf))
+        match = re.fullmatch(r"/knowledge/answers/([^/]+)", path)
+        if match:
+            include_synthetic = one(query, "include_synthetic") == "yes"
+            return self.page("Saved KB answer", answer_views.detail(self.assistant.read(identifier(match[1]), self.actor, include_synthetic=include_synthetic), include_synthetic=include_synthetic))
         if path == "/knowledge/search":
             return self.page("Search current knowledge", query_views.search_form(self.csrf))
         match = re.fullmatch(r"/knowledge/results/([^/]+)", path)
@@ -406,6 +417,14 @@ class ReviewApp:
             submitted = self.tasks.submit_campaign(identifier(match[1]), self.actor, brief_id=identifier(one(form, "brief_id")),
                                                     purpose=one(form, "purpose"), request_id=request_id)
             return Response(303, location=f"/tasks/{submitted['task_id']}")
+        if path == "/knowledge/questions":
+            if not form.keys() <= {"csrf", "request_id", "question", "text", "include_synthetic"} or one(form, "include_synthetic") not in {"", "yes"}:
+                raise EvidenceError("invalid_form")
+            include_synthetic = one(form, "include_synthetic") == "yes"
+            answer = self.assistant.ask(one(form, "question"), self.actor, request_id=request_id,
+                scope=QueryScope(text=one(form, "text"), limit=20, max_age_seconds=2592000), include_synthetic=include_synthetic)
+            suffix = "?include_synthetic=yes" if include_synthetic else ""
+            return Response(303, location=f"/knowledge/answers/{answer['answer_id']}{suffix}")
         if path == "/knowledge/search":
             include_synthetic = one(form, "include_synthetic") == "yes"
             result = self.queries.search(query_views.scope_from_form(form), self.actor, request_id=request_id, include_synthetic=include_synthetic)

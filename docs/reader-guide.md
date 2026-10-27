@@ -2,7 +2,7 @@
 
 This guide connects the browser workflow, Python modules and database using the repository's Hero Cushion sample. It describes implemented behavior; the linked contracts and SQL define the precise interfaces.
 
-The [target functional requirements](functional-requirements.md) add ranked recommendations that agents can save as shortlists without human review, an enrichment assistant, background acquisition, lightweight X alerts, graph/lineage interfaces and hybrid spending controls. Those broader surfaces remain future work. The browser offers automatic deterministic shortlists and bounded supported model ranking through an explicitly configured route, verified with simulated I/O; the human save/confirmation steps below describe the separate human-selection workflow.
+The [target functional requirements](functional-requirements.md) add ranked recommendations that agents can save as shortlists without human review, an enrichment assistant, background acquisition, lightweight X alerts, graph/lineage interfaces and hybrid spending controls. Conversational enrichment generation, X alerts and explorer surfaces remain future work; bounded extractive knowledge answers are installed. The browser offers automatic deterministic shortlists and bounded supported model ranking through an explicitly configured route, verified with simulated I/O; the human save/confirmation steps below describe the separate human-selection workflow.
 
 ## What the application is today
 
@@ -227,6 +227,16 @@ Owner: [`smi_campaigns`](../src/smi_campaigns/schema.sql).
 | `shortlist_revisions` | One immutable generated, draft or confirmed event pinned to brief/comparison, with actual producer/time, optional method/order/selection outcome and a nullable exact curation-source revision. Generated coverage pins its explicit policy/clock, comparison input references, counts and reasons; legacy/human coverage stays unrecorded. Legacy human order/source stays unrecorded. | Shortlist v1, confirmed by a named marketer. |
 | `shortlist_selections` | One selected candidate, with generated position/rationale or human curation position/reason, cited interpretation IDs and separate human acknowledgements. Legacy human positions remain null. Generated gaps/support reopen through the pinned comparison. | A1 selected for further investigation; fees and audience remain unknown. |
 
+### Bounded free-form KB answers — 1 table
+
+Owner: [`smi_assistant`](../src/smi_assistant/schema.sql).
+
+| Table | What one row stores | Example |
+| --- | --- | --- |
+| `knowledge_answers` | Human question/request identity, pinned query and all actual model-input IDs, source-free selected IDs, fixed uncertainty, immutable model/method/bounds, attributable usage/cost and outcome. | A model selects observed source values relevant to a question; withdrawing any input withholds the derived selection without rewriting history. |
+
+The browser's **Ask knowledge** form needs no enrichment approval. It selects exact published findings with dates and explicit limits; it provides no semantic search, unconstrained synthesis, independent verification or enrichment submission. Read [the answer contract](knowledge.md#bounded-free-form-knowledge-answers).
+
 ### Independent questions and snapshot answers — 5 tables
 
 Owner: [`smi_monitoring`](../src/smi_monitoring/schema.sql).
@@ -267,9 +277,9 @@ There is implemented automation: normalization, literal alias/marker matching, c
 read fixed evidence -> apply caption rules -> build comparison or summary -> save result
 ```
 
-Explicit trusted model configuration enables one bounded criteria call or supported ranking call through the shared Responses route. Default startup has no model route; all verification uses simulated I/O. There is no translation model, model-driven tool selection, autonomous research loop or scheduled monitoring job. The application's `local-rule-preparation` actor has kind `automation` so attribution and write permissions are explicit; that label does not imply an AI agent. The coding assistant developing this repository is separate from the running application.
+Explicit trusted model configuration enables one bounded criteria, supported ranking or extractive knowledge-answer call through the shared Responses route. Default startup has no model route; all verification uses simulated I/O. There is no translation model, model-driven tool selection, autonomous research loop or scheduled monitoring job. The application's `local-rule-preparation` actor has kind `automation` so attribution and write permissions are explicit; that label does not imply an AI agent. The coding assistant developing this repository is separate from the running application.
 
-The accepted target adds conversational assistant proposals/answers, broader assistant-driven acquisition, X anomaly alerts and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. The direct supplied-proposal approval, offline task path, atomic shared scheduled new-post allowance and source-free synthetic accounting/forecast surface are present; those broader capabilities remain future work. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
+The accepted target adds conversational enrichment proposals, broader assistant-driven acquisition, X anomaly alerts and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. The direct supplied-proposal approval, offline task path, atomic shared scheduled new-post allowance and source-free synthetic accounting/forecast surface are present; those broader capabilities remain future work. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
 
 Marketer evaluation is a human assessment of whether the findings and decisions are useful. It is not a runtime agent or a database workflow that can manufacture its own answers. The procedure is in [quality review](evaluation.md); execution records belong in `.scratch/`.
 

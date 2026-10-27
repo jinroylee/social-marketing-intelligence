@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS knowledge_answers (
+    id UUID PRIMARY KEY,
+    workspace_id TEXT NOT NULL,
+    request_id TEXT NOT NULL,
+    request_digest TEXT NOT NULL,
+    question TEXT NOT NULL,
+    requested_by TEXT NOT NULL,
+    query_result_id UUID NOT NULL REFERENCES knowledge_query_results(id),
+    include_synthetic BOOLEAN NOT NULL,
+    input_support_ids UUID[] NOT NULL,
+    input_truncated BOOLEAN NOT NULL,
+    selected_support_ids UUID[] NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL,
+    reason TEXT,
+    limitation TEXT,
+    configuration JSONB NOT NULL,
+    operation_id UUID REFERENCES cost_operations(id),
+    usage JSONB,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    finished_at TIMESTAMPTZ,
+    UNIQUE (workspace_id, request_id)
+);

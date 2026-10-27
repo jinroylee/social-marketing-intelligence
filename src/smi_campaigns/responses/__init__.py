@@ -133,7 +133,8 @@ def generated_document(response: dict):
 
 def execute_request(route: ResponsesRoute, transport: ResponsesTransport, credential: str, accounting: UsageAccounting,
             actor, *, operation_request: str, method_version: str, request: dict,
-                    validate: Callable[[dict], dict], attach_operation: Callable[[str], None]) -> dict:
+                    validate: Callable[[dict], dict], attach_operation: Callable[[str], None],
+                    dispatch_guard: Callable[[object], str | None] | None = None) -> dict:
     """Admit one bounded call; retain liability on missing/invalid metering."""
     require(len(json.dumps(request, ensure_ascii=False).encode()) <= route.max_request_bytes, 'model_request_bound_exceeded')
     operation = accounting.begin_operation(route.scope_id, actor, request_id=operation_request, method=method_version)
@@ -174,7 +175,7 @@ def execute_request(route: ResponsesRoute, transport: ResponsesTransport, creden
 
     adapter = ProviderOperationAdapter if route.execution_mode == 'provider' else SyntheticOperationAdapter
     result = adapter(accounting, route.scope_id, max_units=route.max_units()).execute(
-        actor, request_id=operation_request, method=method_version, call=call)
+        actor, request_id=operation_request, method=method_version, call=call, dispatch_guard=dispatch_guard)
     if result['status'] != 'executed':
         return {'status': 'blocked', 'reason': result['reason']}
     return result['value']

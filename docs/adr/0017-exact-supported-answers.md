@@ -1,0 +1,7 @@
+# Answer with exact published findings and full input dependencies
+
+Status: accepted
+
+The bounded knowledge assistant accepts free-form questions but lets one model select only exact published assertion, metric or interpretation IDs plus fixed uncertainty vocabulary. The application renders original governed values and dates as extractive findings. Arbitrary generated factual prose would require an entailment check the installed interface cannot establish; citation membership alone cannot validate its meaning. This narrower contract sacrifices fluent synthesis while keeping unsupported claims outside the saved answer and making the actual relevance judgment explicit.
+
+The answer owner retains the pinned query and every model-input support identity, including unselected facts, without a second source-value cache. All those inputs influence the selection, so current process/display permission or derivation loss withholds the derived selection even when selected citations still survive. Shared admission rechecks exact inputs under source locks through its dispatch commit; I/O follows commit and finalization rechecks. No long-running database transaction spans the model call, and subsequent withdrawal hides the result. Later publications support new questions without rewriting historical membership/model context. Schema-valid relevance is neither semantic entailment nor human usefulness.

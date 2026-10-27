@@ -61,11 +61,15 @@ class SyntheticOperationAdapter:
     def execute(self, actor: ActorContext, *, request_id: str, method: str, call: Callable[[str], SyntheticResult | DeferredProviderResult],
                 task_id: str | None = None, attempt_id: str | None = None,
                 transaction: Callable[[str], AbstractContextManager] | None = None,
-                operation_actor: ActorContext | None = None) -> dict:
+                operation_actor: ActorContext | None = None,
+                dispatch_guard: Callable[[Any], str | None] | None = None) -> dict:
         """Return executed/refused/paused metadata; only executed contains a value.
 
         Trusted task composition can retain the initial ``operation_actor`` while
-        recording the actual dispatcher/settler as ``actor`` on recovery.
+        recording the actual dispatcher/settler as ``actor`` on recovery. A trusted
+        ``dispatch_guard(connection)`` may refuse with a source-free reason after
+        the allowance decision; its policy locks persist through admission commit.
+        Guard refusal records no dispatch or monetary liability. I/O follows commit.
         """
         costs = self.accounting
         actor.require_workspace(costs.workspace_id)
@@ -102,6 +106,13 @@ class SyntheticOperationAdapter:
                                    'ON CONFLICT (workspace_id,operation_id) DO UPDATE SET state=excluded.state,reason=excluded.reason,dispatched_by=excluded.dispatched_by,updated_at=now()',
                                    (costs.workspace_id, oid, Decimal(self.max_units), reserved, state, reason,
                                     Jsonb({'actor_id': actor.actor_id, 'kind': actor.kind})))
+                if reason is None and dispatch_guard is not None:
+                    reason = dispatch_guard(connection)
+                    if reason is not None:
+                        if not isinstance(reason, str) or not reason or len(reason) > 200:
+                            raise EvidenceError('invalid_dispatch_guard_reason')
+                        connection.execute("UPDATE cost_admissions SET state='refused',reason=%s WHERE workspace_id=%s AND operation_id=%s",
+                                           (reason, costs.workspace_id, oid))
         if reason:
             return {'status': 'refused', 'reason': reason, 'operation_id': oid, 'allowance': allowance}
         result = call(self.max_units)

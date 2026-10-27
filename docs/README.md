@@ -36,6 +36,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Bounded synthetic admission](adr/0006-bounded-synthetic-admission.md) | Why scope decisions and ledger writes share a lock while uncertain dispatches keep their commitments |
 | [Generated criteria preserve human constraints](adr/0008-generated-criteria-preserve-human-constraints.md) | Why generated additions stay separate from human briefs and require exact visible selection |
 | [Final cost evidence and meter recovery](adr/0007-final-cost-evidence-and-meter-recovery.md) | Why named liabilities require final evidence and meter health has separate operator recovery |
+| [Exact supported answers](adr/0017-exact-supported-answers.md) | Why bounded extractive answers retain every model input and render only governed source values |
 | [Constrained supported ranking](adr/0009-constrained-supported-ranking.md) | Why one bounded model order uses constrained candidate-scoped judgments and durable no-reissue claims |
 
 The root [glossary](../GLOSSARY.md) defines domain language; the [README](../README.md) explains local commands.

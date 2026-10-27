@@ -2,7 +2,7 @@
 
 ## Implemented relational model
 
-The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql) and [offline costs](../src/smi_costs/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
+The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql) [offline costs](../src/smi_costs/schema.sql) and [knowledge answers](../src/smi_assistant/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
 
 ```mermaid
 erDiagram
@@ -919,3 +919,36 @@ The physical ERD above is unchanged: no new table/column is introduced. `acquisi
 ### Missing-field decision persistence
 
 `acquisition_tasks.supplementation` is a nullable task-owned JSON decision/result, added idempotently for existing databases. It retains the pinned policy, source-free checks/stopping reason, selected primary support references, exact optional supplementary support IDs and attributable accounting operation. Source wording, nickname values, credentials and provider snapshot handles remain outside it. `scope.profile_supplement` pins the exact approved reference/native ID; `scope.supplementation_policy` pins trusted field/value configuration and participates in the execution digest and recorded schedule route authority. No extra task, attempt, ingestion run or publication receipt is created. The original ingestion frontier and cumulative bounds cover both routes; canonical observations/derivations remain separate with their own namespaces and unknown capture dates. Current task reads reopen supplementary support health through ingestion rather than caching permission. See [the contract](tasks.md#one-missing-profile-nickname).
+
+## Bounded knowledge answers
+
+The [assistant schema](../src/smi_assistant/schema.sql) owns one durable claim per workspace/request. The question is human input; source-dependent output stores only exact UUID selections and fixed limitation codes. Full actual source membership, versions, coverage and policy-aware values remain in the query/knowledge/evidence owners.
+
+```mermaid
+erDiagram
+    knowledge_query_results ||--o{ knowledge_answers : pins_inputs
+    cost_operations o|--o| knowledge_answers : meters
+    knowledge_answers {
+        uuid id PK
+        text workspace_id
+        text request_id UK
+        text request_digest
+        text question
+        text requested_by
+        uuid query_result_id FK
+        boolean include_synthetic
+        uuid_array input_support_ids
+        boolean input_truncated
+        uuid_array selected_support_ids
+        text status
+        text reason
+        text limitation
+        jsonb configuration
+        uuid operation_id FK
+        jsonb usage
+        timestamptz recorded_at
+        timestamptz finished_at
+    }
+```
+
+`input_support_ids` records every actual model-input fact, including unselected support; `query_result_id` retains the full original query manifest. The immutable configuration pins method/schema/model/measurement and bounds. Claims precede I/O and exact retries never redispatch. Shared cost admission checks exact current support under source locks through dispatch commit, then finalization checks again. Current process/display permission or support loss withholds the entire derived selection without rewriting historical model/input/accounting context. Values are read afresh, so the answer table has no source text cache to purge. See [the answer interface](knowledge.md#bounded-free-form-knowledge-answers).
