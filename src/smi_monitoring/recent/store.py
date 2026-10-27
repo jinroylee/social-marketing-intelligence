@@ -22,7 +22,7 @@ MAX_WITHDRAWALS = 20000
 
 
 class RecentMonitoring:
-    """Own recent evidence only; no ingestion, publication, campaign or detection action."""
+    """Own recent evidence and current-policy composition for dependent local reads."""
 
     def __init__(self, db, workspace_id='local', *, route: OfflineXRoute | None = None,
                  operators: frozenset[str] = frozenset(), clock=None):
@@ -38,7 +38,8 @@ class RecentMonitoring:
     def _now(self):
         return instant(self.clock().isoformat())
 
-    def _operator(self, actor):
+    def require_operator(self, actor):
+        """Require the trusted human operator for bounded monitoring mutations."""
         actor.require_workspace(self.workspace_id)
         require(actor.kind == 'human' and actor.actor_id in self.operators, 'monitoring_operator_required')
 
@@ -47,7 +48,7 @@ class RecentMonitoring:
 
     def set_policy(self, document, actor: ActorContext, *, expected_version: int):
         """Set current source permission explicitly; retained copies reconcile synchronously."""
-        self._operator(actor)
+        self.require_operator(actor)
         require(type(expected_version) is int and expected_version >= 0, 'invalid_recent_x_version')
         require(isinstance(document, dict) and set(document) == {'context_id', 'can_process', 'can_display', 'can_retain', 'expires_at', 'revoked'}, 'invalid_recent_x_policy')
         require(isinstance(document['context_id'], str) and re.fullmatch(r'[A-Za-z0-9_.:-]{1,100}', document['context_id']), 'invalid_recent_x_policy')
@@ -71,7 +72,7 @@ class RecentMonitoring:
 
     def withdraw(self, native_id, actor):
         """Permanently withdraw a native X post, including future fixture captures."""
-        self._operator(actor)
+        self.require_operator(actor)
         require(isinstance(native_id, str) and re.fullmatch(r'[0-9]{1,24}', native_id), 'invalid_recent_x_native_id')
         with self.db.connect() as connection:
             self._lock(connection)
@@ -89,7 +90,7 @@ class RecentMonitoring:
 
     def configure(self, key, settings, actor: ActorContext, *, expected_version: int, request_id: str):
         """Save one operator topic revision; stable topic/end identity outlives edits."""
-        self._operator(actor)
+        self.require_operator(actor)
         require(isinstance(key, str) and re.fullmatch(r'[a-z0-9_-]{1,80}', key), 'invalid_monitoring_topic_key')
         require(type(expected_version) is int and expected_version >= 0, 'invalid_recent_x_version')
         require(isinstance(request_id, str) and 1 <= len(request_id) <= 200, 'invalid_recent_x_request')
@@ -162,7 +163,7 @@ class RecentMonitoring:
 
     def poll(self, key, window_end, actor):
         """Collect an explicit UTC cadence boundary once; retries reopen the original window."""
-        self._operator(actor)
+        self.require_operator(actor)
         end = instant(window_end)
         with self.db.connect() as connection:
             self._lock(connection)
@@ -183,7 +184,9 @@ class RecentMonitoring:
             start = end - timedelta(minutes=settings['window_minutes'])
             records, acquisition = self.route.collect()
             policy_version = connection.execute('SELECT version FROM monitoring_source_policies WHERE workspace_id=%s AND context_id=%s', (self.workspace_id, settings['source_policy_id'])).fetchone()['version']
-            acquisition.update(policy_context_id=settings['source_policy_id'], policy_version=policy_version, max_records=settings['max_records'])
+            acquisition.update(policy_context_id=settings['source_policy_id'], policy_version=policy_version, max_records=settings['max_records'],
+                               sampling={'method': 'literal-query-capture-order-v1', 'record_schema': 'offline-x-record-v1',
+                                         'file_record_limit': 200, 'file_byte_limit': 262144})
             for record in records:
                 capture = instant(record['captured_at']) if record['captured_at'] else None
                 publication = instant(record['published_at']) if record['published_at'] else None
@@ -261,17 +264,29 @@ class RecentMonitoring:
             return self._observation(connection, row, purpose)
 
     def read_window(self, window_id, actor, *, purpose='display'):
-        """Read original window membership with current policy tombstones, never replacement data."""
+        """Read original membership under current policy, never replacement evidence."""
+        with self.db.connect() as connection:
+            return self.read_window_in_transaction(connection, window_id, actor, purpose=purpose)
+
+    def read_window_in_transaction(self, connection, window_id, actor, *, purpose='display'):
+        """Hold current policy stable through a caller's local PostgreSQL commit.
+
+        The caller supplies a connection from this database and owns commit/rollback.
+        The workspace lock and reconciliation remain owned here. Perform no external
+        I/O while holding this transaction; use this for atomic dependent local saves.
+        """
         actor.require_workspace(self.workspace_id)
         require(purpose in {'display', 'process'}, 'invalid_evidence_purpose')
-        with self.db.connect() as connection:
-            self._lock(connection)
-            self._reconcile(connection)
-            row = connection.execute('SELECT w.*,t.topic_key FROM monitoring_windows w JOIN monitoring_topics t ON t.id=w.topic_id WHERE w.id=%s AND t.workspace_id=%s', (window_id, self.workspace_id)).fetchone()
-            require(row is not None, 'monitoring_window_not_found')
-            rows = connection.execute('SELECT o.* FROM recent_x_observations o JOIN monitoring_window_members m ON m.observation_id=o.id WHERE m.window_id=%s ORDER BY o.native_id,o.capture_id LIMIT 100', (window_id,)).fetchall()
-            observations = [self._observation(connection, r, purpose) for r in rows]
-        return {'window_id': str(row['id']), 'topic_key': row['topic_key'], 'topic_revision_id': str(row['revision_id']), 'window_start': row['window_start'].isoformat(), 'window_end': row['window_end'].isoformat(),
+        self._lock(connection)
+        self._reconcile(connection)
+        row = connection.execute('SELECT w.*,t.topic_key,r.document AS configuration FROM monitoring_windows w JOIN monitoring_topics t ON t.id=w.topic_id JOIN monitoring_topic_revisions r ON r.id=w.revision_id WHERE w.id=%s AND t.workspace_id=%s', (window_id, self.workspace_id)).fetchone()
+        require(row is not None, 'monitoring_window_not_found')
+        rows = connection.execute('SELECT o.* FROM recent_x_observations o JOIN monitoring_window_members m ON m.observation_id=o.id WHERE m.window_id=%s ORDER BY o.native_id,o.capture_id LIMIT 100', (window_id,)).fetchall()
+        observations = [self._observation(connection, r, purpose) for r in rows]
+        policy = self._policy(connection, row['configuration']['source_policy_id'])
+        permissions = {use: self._allowed(policy, use) for use in ('process', 'display', 'retain')}
+        return {'current_permissions': permissions, 'support_permitted': permissions[purpose] and permissions['retain'], 'window_id': str(row['id']), 'topic_key': row['topic_key'], 'topic_revision_id': str(row['revision_id']), 'configuration': row['configuration'],
+                'window_start': row['window_start'].isoformat(), 'window_end': row['window_end'].isoformat(),
                 'coverage': row['coverage'], 'acquisition': row['acquisition'], 'collected_by': row['collected_by'], 'imported_at': row['imported_at'].isoformat(), 'observations': observations}
 
     def timeline(self, key, actor, *, limit=50, offset=0, purpose='display'):

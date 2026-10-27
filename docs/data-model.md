@@ -428,6 +428,10 @@ erDiagram
     monitoring_windows ||--o{ monitoring_window_members : retains
     recent_x_observations ||--o{ monitoring_window_members : appears_in
     monitoring_source_policies ||--o{ recent_x_observations : governs
+    monitoring_windows ||--o{ monitoring_volume_assessments : detection
+    monitoring_windows |o--o{ monitoring_volume_assessments : baseline
+    monitoring_volume_assessments ||--|{ monitoring_detection_requests : reopens
+    monitoring_volume_assessments ||--o| monitoring_alerts : alerts
     monitoring_source_policies {
         text workspace_id PK
         text context_id PK
@@ -486,6 +490,31 @@ erDiagram
         uuid window_id PK,FK
         uuid observation_id PK,FK
     }
+    monitoring_volume_assessments {
+        uuid id PK
+        text workspace_id
+        uuid detection_window_id FK
+        uuid baseline_window_id FK
+        text pair_digest
+        jsonb method
+        text outcome
+        jsonb limitations
+        text recorded_by
+        text actor_kind
+        timestamptz recorded_at
+    }
+    monitoring_detection_requests {
+        text workspace_id PK
+        text request_id PK
+        text request_digest
+        uuid assessment_id FK
+    }
+    monitoring_alerts {
+        uuid id PK
+        uuid assessment_id FK
+        uuid notification_id
+        timestamptz created_at
+    }
     monitoring_x_withdrawals {
         text workspace_id PK
         text native_id PK
@@ -495,6 +524,8 @@ erDiagram
 ```
 
 The [recent schema](../src/smi_monitoring/recent/schema.sql) is independent of canonical entities, knowledge runs/publications, campaigns and scheduled keywords. Topic/end uniqueness preserves one logical poll across configuration edits; original configuration/coverage/acquisition remain pinned. Workspace/source-capture uniqueness uses native identity and original source time rather than a fixture label, so a later import cannot restore a purged copy or refresh its first import. Current policy is a mutable versioned overlay; original acquisition records its policy version. Native withdrawal tombstones govern future captures without requiring a foreign key from an observation. Body text/metric copies purge permanently while permitted identities, original times, coverage and audit history remain. See [the contract](monitoring.md#bounded-offline-recent-x-evidence) for finite topic/revision/file/window/observation/retention/timeline limits and policy reconciliation.
+
+The [quantitative alert schema](../src/smi_monitoring/alerts/schema.sql) pins exact original detection/baseline window references and source-free method/configuration/outcome/limitations. Workspace/pair-digest uniqueness prevents duplicate assessments/alerts for the same windows and configuration; workspace/request receipts separately reject changed actor/input reuse. A supported crossing inserts the one-to-one alert and unique local notification identity in the same transaction as assessment/request. No copied caption, metric or numerical comparison is stored here. Current claims reopen original windows through the recent owner's public caller-transaction read under its policy lock, so source denial/expiry/withdrawal hides the whole comparison while preserving history. The alert owner does not read task or recent tables privately; notifications enter the browser inbox through public composition. See [the quantitative contract](monitoring.md#configured-quantitative-volume-assessments) for finite history/request caps.
 
 ## Monitoring and planning tables
 
@@ -608,7 +639,7 @@ Monitoring has no campaign foreign key. Its scope and insight heads preserve ind
 
 ## Product domain model
 
-This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes snapshot monitoring and bounded offline recent-X evidence are implemented. Creator associations, lightweight X alerts and actual outcomes/attribution remain accepted future design; operational ranking/automatic shortlist persistence, bounded spending controls and recorded live schedule authority are installed as described by their current contracts; the physical diagrams describe implemented tables, including task execution ownership and independent synthetic accounting below.
+This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes snapshot monitoring, bounded offline recent-X evidence and configured quantitative alerts/local notifications are implemented. Creator associations, semantic X detection/KB explanation and actual outcomes/attribution remain accepted future design; operational ranking/automatic shortlist persistence, bounded spending controls and recorded live schedule authority are installed as described by their current contracts; the physical diagrams describe implemented tables, including task execution ownership and independent synthetic accounting below.
 
 ```mermaid
 erDiagram

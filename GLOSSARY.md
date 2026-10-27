@@ -118,6 +118,9 @@ One topic's bounded observation interval with its original configuration, actual
 **Monitoring observation**:
 A recent source observation used for timely monitoring and anomaly detection. It can support an alert without every observed post becoming a fully modeled knowledge-base entity.
 
+**Quantitative monitoring assessment**:
+A recorded comparison of market activity within explicit observation and baseline windows, using a configured quantitative method and stated comparability and coverage limits. An inadequate or unavailable baseline is a limitation rather than evidence of change.
+
 **Anomaly alert**:
 A retained notification of a significant quantitative or semantic anomaly, with its evidence, comparison context, method and uncertainty. It does not itself authorize further external research or campaign creation.
 

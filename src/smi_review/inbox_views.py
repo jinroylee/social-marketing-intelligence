@@ -5,13 +5,18 @@ import uuid
 from .views import brief_summary, e, error_message, hidden, options, profile_summary, value
 
 
-def index(events):
+def index(events, monitoring_notifications=()):
     """List bounded completion events without copying source or task-purpose text."""
     content = '<h1>Completion inbox</h1><p>Latest 100 task completions. Publication availability is checked when reopened.</p>'
     for event in events:
         content += f'<section class="panel"><a href="/inbox/{e(event["event_id"])}">Completion {e(event["created_at"])}</a>'
         content += detail(event, heading=False) + '</section>'
-    return content if events else content + '<p>No completed tasks yet.</p>'
+    if not events:
+        content += '<p>No completed tasks yet.</p>'
+    content += '<h2>Monitoring alerts</h2><p>Latest 100 durable local alert notifications; current source support is checked when reopened.</p>'
+    for notification in monitoring_notifications:
+        content += f'<section class="panel"><p><a href="{e(notification["href"])}">X volume alert {e(notification["created_at"])}</a></p><p>{e(notification["message"])}</p></section>'
+    return content
 
 
 def detail(event, *, heading=True):

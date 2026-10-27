@@ -53,6 +53,7 @@ def topic(topic, timeline, csrf, operator, submitted=None, error=None):
     if operator:
         content += '<details class="panel"><summary>Revise settings</summary>' + configuration(csrf, topic, submitted) + '</details>'
         content += f'<form method="post" action="/monitoring/topics/{e(key)}/poll">{hidden("csrf", csrf)}<label>Window end (explicit UTC cadence boundary)<input name="window_end" value="{e(value(submitted, "window_end"))}" placeholder="2026-10-28T12:00:00+00:00" required></label><button type="submit">Collect bounded offline window</button></form>'
+    content += '<p><a href="/monitoring/assessments">Assess volume / retained assessment history</a></p>'
     content += '<h2>Original collection windows</h2><p>Latest 100 windows. Empty or partial fixture coverage does not establish market absence.</p>'
     content += ''.join(f'<p><a href="/monitoring/windows/{e(w["id"])}">{e(w["window_start"])} → {e(w["window_end"])}</a></p>' for w in topic['windows'])
     content += '<h2>Retained capture timeline</h2><p>Distinct captures; repeated windows do not refresh source or import times. This is not a trend or alert.</p>'
@@ -64,6 +65,6 @@ def topic(topic, timeline, csrf, operator, submitted=None, error=None):
 
 
 def window(record):
-    content = f'<p><a href="/monitoring/topics/{e(record["topic_key"])}">← Topic</a></p><h1>Recent X collection window</h1><p>{e(record["window_start"])} → {e(record["window_end"])}</p><p>Market coverage: {e(record["coverage"]["market_coverage"])}</p>'
+    content = f'<p><a href="/monitoring/topics/{e(record["topic_key"])}">← Topic</a></p><h1>Recent X collection window</h1><p>Window ID: {e(record["window_id"])} · <a href="/monitoring/assessments">Assess volume</a></p><p>{e(record["window_start"])} → {e(record["window_end"])}</p><p>Market coverage: {e(record["coverage"]["market_coverage"])}</p>'
     content += '<pre>' + e(json.dumps({'coverage': record['coverage'], 'acquisition': record['acquisition'], 'topic_revision_id': record['topic_revision_id'], 'collected_by': record['collected_by'], 'imported_at': record['imported_at']}, indent=2)) + '</pre>'
     return content + ''.join(observation(o) for o in record['observations'])

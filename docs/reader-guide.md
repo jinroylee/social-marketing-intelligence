@@ -2,7 +2,7 @@
 
 This guide connects the browser workflow, Python modules and database using the repository's Hero Cushion sample. It describes implemented behavior; the linked contracts and SQL define the precise interfaces.
 
-The [target functional requirements](functional-requirements.md) add ranked recommendations that agents can save as shortlists without human review, an enrichment assistant, background acquisition, lightweight X alerts, graph/lineage interfaces and hybrid spending controls. Bounded extractive knowledge answers and explicit gap/proposal/approval/task follow-up are installed; autonomous research, X alerts and explorer surfaces remain future work. The browser offers automatic deterministic shortlists and bounded supported model ranking through an explicitly configured route, verified with simulated I/O; the human save/confirmation steps below describe the separate human-selection workflow.
+The [target functional requirements](functional-requirements.md) add ranked recommendations that agents can save as shortlists without human review, an enrichment assistant, background acquisition, lightweight X alerts, graph/lineage interfaces and hybrid spending controls. Bounded extractive knowledge answers and explicit gap/proposal/approval/task follow-up are installed; bounded offline X volume alerts and their local inbox are installed; autonomous research, semantic X detection/KB explanation and explorer surfaces remain future work. The browser offers automatic deterministic shortlists and bounded supported model ranking through an explicitly configured route, verified with simulated I/O; the human save/confirmation steps below describe the separate human-selection workflow.
 
 ## What the application is today
 
@@ -115,7 +115,7 @@ The browser sends a form to [`ReviewApp`](../src/smi_review/app.py). That applic
 | **Completion inbox** | Reopen one durable completion per task with actual coverage and current permitted publication navigation; usable campaign discovery offers explicit current-context regeneration while keeping old revisions intact. | [`CompletionInbox`](../src/smi_tasks/notifications/store.py); source-free `task_completion_events` |
 | **Knowledge search** | Filter current committed permitted publications, inspect freshness and unknowns, and reopen exact saved support. Scan/result limits are explicit. | [`query_views`](../src/smi_review/query_views.py), [`KnowledgeQueries`](../src/smi_knowledge/queries/store.py) |
 | **Knowledge publications** | Reopen committed bounded selections, exact support and current unavailable/superseded states. Publish explicitly through the operator CLI. | [`publication_views`](../src/smi_review/publication_views.py), [`KnowledgePublications`](../src/smi_knowledge/publications/store.py) |
-| **Recent X** | Configure a separate bounded offline topic, explicitly collect a logical window and reopen original capture/time/coverage with current policy tombstones. No live source, alert or full KB publication. | [`RecentMonitoring`](../src/smi_monitoring/recent/store.py), [`recent_views`](../src/smi_review/recent_views.py); separate topic/window/capture tables |
+| **Recent X** | Configure a separate bounded offline topic, explicitly collect a logical window and reopen original capture/time/coverage with current policy tombstones. Select comparable original windows for explicitly configured volume assessment, retained local alerts and inbox messages; no live source or per-post KB publication. | [`RecentMonitoring`](../src/smi_monitoring/recent/store.py), [`recent_views`](../src/smi_review/recent_views.py), [`QuantitativeAlerts`](../src/smi_monitoring/alerts/store.py); separate topic/window/capture/assessment/alert tables |
 | **Investigations / create investigation** | Ask a standalone question about selected brands/products/topics, with optional publication dates. Intended market describes the question, not proven audience location. Selected references match with OR. | [`monitoring_views`](../src/smi_review/monitoring_views.py), [`MonitoringStore`](../src/smi_monitoring/store.py); investigations and scope revisions |
 | **Prepare rule-based insight / snapshot insight** | Count literal reference and PR/Qoo10 support within matching sample posts. “Snapshot” means a bounded answer, not continuous monitoring or a market trend. A required caption language is currently not assessable by script rules. | [`build_summary`](../src/smi_monitoring/summary.py); `insight_revisions`, `insight_findings`, `insight_support` |
 | **Measurement plans and decision notes** | Propose what would be measured and record human feedback. Plans require a saved shortlist associated with the current brief; even an empty/deferred shortlist is valid. Notes can reference historical shortlists. | [`planning_views`](../src/smi_review/planning_views.py), [`CampaignPlanning`](../src/smi_campaigns/planning/store.py); plan, note and note-support tables |
@@ -238,6 +238,23 @@ Owner: [`smi_assistant`](../src/smi_assistant/schema.sql).
 
 The browser's **Ask knowledge** form needs no enrichment approval. It selects exact published findings with dates and explicit limits; it provides no semantic search, unconstrained synthesis or independent verification. A supported gap offers separate exact keyword/subject/window scope, saved proposal review, actual human approval, immediate task status and durable actual completion. Model/configuration failure alone offers no acquisition gap; only a later explicit question uses newly usable publications. Read [the answer contract](knowledge.md#bounded-free-form-knowledge-answers).
 
+### Recent X evidence and quantitative alerts — 10 tables
+
+| Table | Purpose | Example |
+| --- | --- | --- |
+| `monitoring_source_policies` | Current source permission with version | Offline sample may be displayed until explicit denial/expiry. |
+| `monitoring_topics` | Stable topic key and current revision | Cushion topic stays independent of campaign keywords. |
+| `monitoring_topic_revisions` | Original query/cadence/window/record/retention settings | An edited query does not replace a prior window. |
+| `monitoring_windows` | Explicit frozen interval, acquisition and original coverage | 10:00–11:00 sample is a selected baseline. |
+| `recent_x_observations` | Original native/source-time capture with governed body/tombstone | Repeated captures of one post are not new volume. |
+| `monitoring_window_members` | Original window/capture membership | Detail reopens original evidence rather than newer captures. |
+| `monitoring_x_withdrawals` | Permanent attributable native-post withdrawal | Later fixture aliases cannot restore a removed post. |
+| `monitoring_volume_assessments` | Source-free configured method, exact pair, outcome/limitations | Missing baseline is retained without a spike claim. |
+| `monitoring_detection_requests` | Exact actor/input/configuration retry receipt | Repeating a browser request reopens its assessment. |
+| `monitoring_alerts` | Atomic alert and durable local notification identities | A supported sample threshold crossing appears once in inbox. |
+
+Current numerical comparisons are derived from permitted original support; denied/expired/withdrawn evidence leaves visible unavailable history. See [the monitoring contract](monitoring.md#configured-quantitative-volume-assessments).
+
 ### Independent questions and snapshot answers — 5 tables
 
 Owner: [`smi_monitoring`](../src/smi_monitoring/schema.sql).
@@ -280,7 +297,7 @@ read fixed evidence -> apply caption rules -> build comparison or summary -> sav
 
 Explicit trusted model configuration enables one bounded criteria, supported ranking or extractive knowledge-answer call through the shared Responses route. Default startup has no model route; all verification uses simulated I/O. There is no translation model, model-driven tool selection, autonomous research loop or scheduled monitoring job. The application's `local-rule-preparation` actor has kind `automation` so attribution and write permissions are explicit; that label does not imply an AI agent. The coding assistant developing this repository is separate from the running application.
 
-The accepted target adds broader autonomous assistant research, X anomaly alerts and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. The direct supplied-proposal and assistant-gap exact approval journeys, offline task path, atomic shared scheduled new-post allowance and source-free synthetic accounting/forecast surface are present; those broader capabilities remain future work. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
+The accepted target adds broader autonomous assistant research, semantic X anomalies/KB explanations and explorer views through evidence/knowledge interfaces. Derivable actual costs receive configured ceilings; unmeterable portions retain forecasts. The direct supplied-proposal and assistant-gap exact approval journeys, offline task path, atomic shared scheduled new-post allowance and source-free synthetic accounting/forecast surface are present; those broader capabilities remain future work. Creator/person associations, full account histories, actual outcome ingestion and attribution, and authenticated hosted operation also remain future work. Current plans and notes do not implement those capabilities.
 
 Marketer evaluation is a human assessment of whether the findings and decisions are useful. It is not a runtime agent or a database workflow that can manufacture its own answers. The procedure is in [quality review](evaluation.md); execution records belong in `.scratch/`.
 

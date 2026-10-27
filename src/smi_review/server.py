@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -12,6 +13,7 @@ from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_tasks import OfflineRoute
 from smi_monitoring.recent import OfflineXRoute
+from smi_monitoring.alerts import VolumeThreshold
 
 from .app import Response, ReviewApp
 from .views import request_error
@@ -114,12 +116,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--enable-live-discovery", action="store_true", help="Enable review/admission for the configured live keyword route; execution needs separate source/operation/credential/cost gates")
     parser.add_argument("--schedule-operator", action="store_true", help="Grant the named local human keyword configuration and offline tick authority")
     parser.add_argument('--recent-x-fixture', type=Path, help='Configure the bounded offline recent-X JSON route')
+    parser.add_argument('--monitoring-volume-threshold', help='JSON object with minimum_baseline_posts, minimum_increase_posts and minimum_ratio; explicit sample signal thresholds')
     parser.add_argument('--monitoring-operator', action='store_true', help='Grant the named human topic configuration and offline poll authority')
     parser.add_argument("--offline-route-version", default="offline-fixture-v1")
     args = parser.parse_args(argv)
     try:
         route = OfflineRoute(args.offline_manifest, args.offline_route_version) if args.offline_manifest else None
-        app = ReviewApp(Database(args.dsn, args.schema), args.actor, offline_route=route, live_discovery_enabled=args.enable_live_discovery, schedule_operator=args.schedule_operator, recent_x_route=OfflineXRoute(args.recent_x_fixture) if args.recent_x_fixture else None, monitoring_operator=args.monitoring_operator)
+        threshold = None
+        if args.monitoring_volume_threshold is not None:
+            document = json.loads(args.monitoring_volume_threshold)
+            if not isinstance(document, dict) or set(document) != {'minimum_baseline_posts', 'minimum_increase_posts', 'minimum_ratio'}:
+                raise ValueError('invalid_volume_threshold')
+            threshold = VolumeThreshold(**document)
+        app = ReviewApp(Database(args.dsn, args.schema), args.actor, offline_route=route, live_discovery_enabled=args.enable_live_discovery, schedule_operator=args.schedule_operator, recent_x_route=OfflineXRoute(args.recent_x_fixture) if args.recent_x_fixture else None, monitoring_operator=args.monitoring_operator, monitoring_threshold=threshold)
         with make_server(app, args.port) as server:
             print(f"Local campaign review: {server.url} · reviewer: {app.actor.actor_id}", flush=True)
             server.serve_forever()
