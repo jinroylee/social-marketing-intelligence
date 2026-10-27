@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket31 in its fresh context/worktree: one bounded semantic recent-X method using established metered model/alert contracts, exact support and explicit comparison/uncertainty. Tickets11–30 are integrated and resolved; validate and merge before advancing. No external research or new provider is authorized.
+Dispatch ticket 32 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–31 are integrated and resolved; ticket 32 is pending. The provisional quality-controversy software method is complete without baseline/change, verified controversy, market, live-readiness or human-usefulness claims; actual runtime/quality gates and archive-before-cleanup remain explicit.
 
 ## Current Phase
 
-Phase 35 — ticket 31 in progress after successful ticket 30 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 36 — ticket 32 pending after successful ticket 31 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -248,9 +248,9 @@ Fast-forward integrated final handoff/root checked `c9d456fe85d9597c1dea7eea409e
 
 ### Phase 35 — Implement ticket 31
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final handoff/root checked `c3d85e2c0cc9e593d74b2aaa1a6cd1779c2f46ee`, runtime/frozen `bd1c085fe779a21812765044c25996679b8cc23c`. Required root shared checks passed all static/preflight stages and **748 tests in 501.96 seconds**, exit 0; durable evidence is under `verification/ticket-31-integrated/`. Wheel identity/all 78 source/archive pairs match root bytes, sizes, hashes and relative sibling targets, including fourteen SQL schemas, both assets and 27 packaged guidance pairs; root guidance pair separately verified. Prepared worker archive size/hash/46-entry identity is verified, with root archival/relocation still pending. All six criteria are checked and ticket 31 is resolved. Root review reported no blocking issue; public contention/rollback/meter/input-policy tests and full gate cover one provisional controversy method with exact labels/spans, distinct-native thresholds, permanent judgment purge on any lost actual input and one-use metered claims. No baseline/change, verified semantic controversy, market completeness, live readiness or human usefulness is established.
 
 ### Phase 36 — Implement ticket 32
 
