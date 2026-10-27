@@ -61,6 +61,9 @@ A record of the source operation and evidence actually returned, with its covera
 **Discovery avoidance decision**:
 A recorded choice to omit unnecessary retrieval or processing based on the exact prior query, source context, capture freshness and usable evidence. Avoidance creates no new source observation or knowledge publication and grants no broader acquisition authority.
 
+**Supplementation decision**:
+A recorded choice to retrieve one explicitly authorized missing field or stop further acquisition, based on existing support, freshness, permission, capability, expected information value and resource cost. Additional source support retains its own provenance and does not establish equivalence between source identities.
+
 **Registered scheduled keyword**:
 An operator-authorized recurring discovery query with an explicit subject scope and a stable identity. It is independent of monitoring topics and does not restrict separately approved on-demand investigation.
 

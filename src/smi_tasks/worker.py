@@ -29,6 +29,8 @@ from smi_ingestion.support import IngestedEvidence, SupportReference
 from smi_knowledge import KnowledgePublications
 
 from .store import AcquisitionTasks
+from .supplementation import ProfileSupplementation
+from smi_ingestion.adapters.bright_data import BrightDataNicknameMapper
 from .discovery import DiscoveryHistory
 from .contracts import OfflineRoute, execution_configuration_digest
 from .execution import TaskExecution
@@ -163,7 +165,7 @@ class OfflineTaskWorker:
             results = report.get('source_results', [])
             selected = sum(r.get('eligible_records', 0) for r in results)
             admitted = min(report['applied'], selected)
-            coverage.update(returned_records=sum(r.get('returned_records', 0) for r in results) if results or report['coverage'] == 'complete_for_requested_input' else None,
+            coverage.update(returned_records=sum(r.get('returned_records', 0) for r in results) if all(r['returned_records_known'] for r in results) and (results or report['coverage'] == 'complete_for_requested_input') else None,
                 selection_eligible_records=selected, eligible_records=admitted, admitted_records=admitted,
                 failed_records=sum(r.get('returned_records', 0) for r in results if r['mapping_status'] == 'quarantined'),
                 published_records=0, unchanged_records=0,
@@ -245,8 +247,9 @@ class OfflineTaskWorker:
                     raise EvidenceError('task_configuration_changed')
                 if live and row['origin'] == 'schedule':
                     authority = {key: scope[key] for key in ('route', 'route_version', 'manifest_hash', 'discovery_context')}
-                    if 'discovery_policy' in scope:
-                        authority['discovery_policy'] = scope['discovery_policy']
+                    for key in ('discovery_policy', 'supplementation_policy'):
+                        if key in scope:
+                            authority[key] = scope[key]
                     authority.update(limits=row['limits'], manifest_path=row['manifest_path'])
                     if row['scope_version'] != 'schedule-live-v1' or scope['schedule'].get('route_authority') != authority:
                         raise EvidenceError('live_schedule_authority_required')
@@ -268,6 +271,15 @@ class OfflineTaskWorker:
                 base_collector, mapper = self.collector or LocalFileCollector('fixture-json'), JsonFixtureMapper()
             registry = AdapterRegistry()
             collector = _ControlledCollector(base_collector, self.costs, control, attempt, execution, row['scope'].get('schedule')) if control else base_collector
+            supplement = None
+            if live and row['scope'].get('supplementation_policy'):
+                supplement = ProfileSupplementation(collector, row, attempt, execution, self.evidence, self.costs, self.live_discovery, self.clock)
+                if scope.get('profile_supplement'):
+                    collector = supplement
+                    registry.register('brightdata-tiktok-profile', collector, BrightDataNicknameMapper())
+                else:
+                    supplement.record_unapproved_target()
+                    supplement = None
             registry.register(row['scope']['route'], collector, mapper)
             runner = IngestionRunner(self.evidence, CanonicalWriter(self.db), registry)
             publications = KnowledgePublications(self.db, self.workspace_id)
@@ -297,7 +309,13 @@ class OfflineTaskWorker:
                     if report['waiting']:
                         self._checkpoint(execution, attempt_id, 'waiting', coverage, waiting=report['waiting'])
                         return self.tasks.read(task_id, actor)
+                    if supplement:
+                        supplement.complete(report)
                     failed_phase = code = None
+                    if supplement:
+                        supplementary_result = self.tasks.read(task_id, actor)['supplementation']
+                        if supplementary_result and supplementary_result['reason'] == 'source_failure':
+                            failed_phase, code = 'collection', 'supplementary_source_failure'
                     if report['issues'] or report['status'] != 'completed':
                         code = report['issues'][0]['code'] if report['issues'] else 'incomplete_input'
                         failed_phase = 'collection' if code.startswith('provider_snapshot_') else 'ingestion' if report['quarantined'] or code == 'processing_not_permitted' else 'collection'

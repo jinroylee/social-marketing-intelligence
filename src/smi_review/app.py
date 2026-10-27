@@ -24,7 +24,7 @@ from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore
 from smi_monitoring import MonitoringStore
 from smi_tasks.schedules import ScheduledDiscovery
-from smi_tasks import AcquisitionTasks, CampaignRecommendations, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority
+from smi_tasks import AcquisitionTasks, CampaignRecommendations, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority, ProfileSupplement
 
 from . import cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
 from .forms import identifier, one
@@ -378,12 +378,14 @@ class ReviewApp:
                 interpretation_id=identifier(one(form, "interpretation_id")) if one(form, "interpretation_id") else None)
             return Response(303, location=f"/shortlists/{saved['shortlist_id']}" if saved.get('shortlist_id') else f"/inbox/{event_id}/regenerate")
         if path == "/proposals":
-            if not form.keys() <= {"csrf", "request_id", "purpose", "intent", "subject_ids", "search_queries", "published_from", "published_before"}:
+            if not form.keys() <= {"csrf", "request_id", "purpose", "intent", "subject_ids", "search_queries", "published_from", "published_before", "profile_url", "profile_native_id"}:
                 raise EvidenceError("invalid_form")
             proposal = EnrichmentProposal(one(form, "purpose"), one(form, "intent"),
                 tuple(v.strip() for v in one(form, "subject_ids").splitlines() if v.strip()),
                 tuple(v.strip() for v in one(form, "search_queries").splitlines() if v.strip()),
-                one(form, "published_from") or None, one(form, "published_before") or None)
+                one(form, "published_from") or None, one(form, "published_before") or None,
+                ProfileSupplement(one(form, "profile_url"), one(form, "profile_native_id"))
+                if one(form, "profile_url") or one(form, "profile_native_id") else None)
             saved = self.tasks.save_proposal(proposal, self.actor, request_id=request_id)
             return Response(303, location=f"/proposals/{saved['proposal_id']}")
         match = re.fullmatch(r"/proposals/([^/]+)/approve", path)

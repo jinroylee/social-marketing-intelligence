@@ -145,3 +145,5 @@ CREATE TABLE IF NOT EXISTS campaign_regeneration_requests (
     recorded_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY(workspace_id,request_id)
 );
+
+ALTER TABLE acquisition_tasks ADD COLUMN IF NOT EXISTS supplementation jsonb;

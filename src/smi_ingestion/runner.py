@@ -107,6 +107,7 @@ class IngestionRunner:
                 "request_phase": row["coverage"].get("request_phase"),
                 "row_count": row["coverage"].get("row_count"),
                 "returned_records": row["coverage"].get("returned_records", 0),
+                "returned_records_known": row["coverage"].get("returned_records_known", True),
                 "eligible_records": row["coverage"].get("eligible_records", 0),
                 "failed_records": row["coverage"].get("failed_records", 0),
                 "error_rows": row["coverage"].get("error_rows"),

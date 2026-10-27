@@ -23,6 +23,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Quality review](evaluation.md) | Separate technical, translation-assisted and marketer-usefulness gates |
 | [Canonical evidence ownership](adr/0001-canonical-evidence-ownership.md) | Why source evidence and business decisions have separate owners |
 | [Pinned support and current policy](adr/0002-pinned-support-current-policy.md) | Why reproducible decisions pin support while permissions remain current |
+| [Exact supplementary profile authority](adr/0016-explicit-bounded-profile-supplementation.md) | Why one approved nickname fill shares parent limits while retaining separate source identity |
 | [Recorded live schedule authority](adr/0015-recorded-live-schedule-authority.md) | Why explicit operator activation pins a route independently of process switches and preserves bounded snapshot recovery |
 | [Live discovery uncertainty](adr/0014-live-discovery-response-and-billing-identity.md) | Why source response recovery and final billing retain separate stable identities |
 | [Capture-based discovery avoidance](adr/0013-capture-based-discovery-avoidance.md) | Why original captures, complete support and current permissions govern reuse without transferring task receipts |

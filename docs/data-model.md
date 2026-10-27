@@ -716,6 +716,7 @@ erDiagram
         int execution_backend_pid
         jsonb execution_actor
         jsonb coverage
+        jsonb supplementation
         text failure_phase
         text failure_code
         timestamptz submitted_at
@@ -914,3 +915,7 @@ The schedule owner retains one fixed accounting timezone per workspace and immut
 The physical ERD above is unchanged: no new table/column is introduced. `acquisition_tasks.scope` can pin the live keyword adapter/provider/schema, exact approved query and independent bounds; `discovery_history.retrieval_context` retains the actual live mapper key and explicit unknown response hash rather than a fictitious offline corpus identity. `ingestion_runs.checkpoint` owns opaque snapshot ID, phase, monotonic step and UTC not-before; source-free waiting metadata exposes resumability and byte/request totals, never credentials or opaque handles. Existing `bytes_used` now includes no-observation HTTP response bytes atomically with those checkpoints. Original source capture/measurement dates remain null when absent; separate source coverage records retrieval time, returned/eligible counts and unavailable field names.
 
 `cost_route_controls` identifies the configured live source scope and one-unit declared attempt bound. `cost_admissions.state='dispatched'` remains an outstanding conservative liability after source responses; final usage is absent until explicit provider-basis final reconciliation. `source_observations.coverage` can carry a terminal failed/canceled provider-status observation with zero returned records; it cannot create canonical facts or a knowledge publication. Exact task-owned support/receipt/history references retain their existing physical relationships. See [the live task interface](tasks.md#gated-live-on-demand-keyword-tasks).
+
+### Missing-field decision persistence
+
+`acquisition_tasks.supplementation` is a nullable task-owned JSON decision/result, added idempotently for existing databases. It retains the pinned policy, source-free checks/stopping reason, selected primary support references, exact optional supplementary support IDs and attributable accounting operation. Source wording, nickname values, credentials and provider snapshot handles remain outside it. `scope.profile_supplement` pins the exact approved reference/native ID; `scope.supplementation_policy` pins trusted field/value configuration and participates in the execution digest and recorded schedule route authority. No extra task, attempt, ingestion run or publication receipt is created. The original ingestion frontier and cumulative bounds cover both routes; canonical observations/derivations remain separate with their own namespaces and unknown capture dates. Current task reads reopen supplementary support health through ingestion rather than caching permission. See [the contract](tasks.md#one-missing-profile-nickname).

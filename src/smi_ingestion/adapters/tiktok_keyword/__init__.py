@@ -33,6 +33,7 @@ class LiveDiscoveryConfig:
     operation_authorized: bool = False
     source_use_authorized: bool = False
     api_key: str | None = field(default=None, repr=False)
+    profile_supplementation_authorized: bool = False
 
     def unavailable_reason(self) -> str | None:
         """Return the first unmet external prerequisite without disclosing secrets."""

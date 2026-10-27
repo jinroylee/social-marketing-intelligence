@@ -249,6 +249,8 @@ class AcquisitionTasks:
         path, manifest_hash, manifest = self.route.snapshot()
         if manifest['adapter'] == LIVE_ROUTE and self.live_discovery_enabled is not True:
             raise EvidenceError('live_discovery_disabled')
+        if proposal.profile_supplement is not None and (manifest['adapter'] != LIVE_ROUTE or self.route.supplementation is None):
+            raise EvidenceError('profile_supplementation_unconfigured')
         scope = {**proposal.document(), 'route': manifest['adapter'], 'route_version': self.route.version,
                  'manifest_hash': manifest_hash, 'references': [i.get('reference', '') for i in manifest.get('items', [])]}
         if manifest['adapter'] in {ROUTE, LIVE_ROUTE}:
@@ -410,8 +412,14 @@ class AcquisitionTasks:
                 publication_ids = [committed['publication_id']]
         from .schedules.allowance import ScheduledPostAllowance
         allowance = ScheduledPostAllowance(self.db, self.workspace_id).read(row['scope']['schedule']['accounting_day'], actor, occurrence_id=str(row['schedule_occurrence_id'])) if row['origin'] == 'schedule' else None
+        supplementation = dict(row['supplementation']) if row['supplementation'] else None
+        if supplementation is not None:
+            refs = tuple(SupportReference(r['observation_id'], r['derivation_id'], tuple(r['assertion_ids']), tuple(r['metric_ids'])) for r in supplementation.get('support', []))
+            current = IngestedEvidence(self.db, self.workspace_id).read(refs, actor) if refs else []
+            supplementation['current_support'] = [{key: m[key] for key in ('observation_id', 'availability', 'support_status')} for m in current]
         return {'task_id': task_id, 'workspace_id': self.workspace_id, 'request_id': row['request_id'],
                 'discovery_history': DiscoveryHistory(self.db, self.workspace_id).read(task_id, actor),
+                'supplementation': supplementation,
                 'daily_allowance': allowance, 'origin': row['origin'], 'initiator': {'actor_id': row['initiator_id'], 'kind': row['initiator_kind']},
                 'scope_version': row['scope_version'], 'scope': row['scope'], 'limits': row['limits'], 'attempt_limit': row['attempt_limit'],
                 'status': row['status'], 'progress': progress, 'outcome': row['outcome'], 'coverage': coverage,

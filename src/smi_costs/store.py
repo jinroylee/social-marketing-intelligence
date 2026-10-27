@@ -52,11 +52,11 @@ class UsageAccounting:
         """Bind an installed route immutably to its trusted one-attempt declared bound."""
         actor.require_workspace(self.workspace_id, importing=True)
         units = decimal(max_units)
-        if adapter_id not in {'fixture-json', 'offline-keyword-json', 'brightdata-tiktok-keyword'} or units != 1:
+        if adapter_id not in {'fixture-json', 'offline-keyword-json', 'brightdata-tiktok-keyword', 'brightdata-tiktok-profile'} or units != 1:
             raise EvidenceError('unsupported_cost_route_contract')
         with self.db.connect() as connection:
             self._lock_scope(connection, scope_id)
-            if adapter_id == 'brightdata-tiktok-keyword':
+            if adapter_id in {'brightdata-tiktok-keyword', 'brightdata-tiktok-profile'}:
                 scope = self._scope(connection, scope_id)
                 if (scope.get('measurement_basis') != 'provider_reported' or scope['provider'] != 'brightdata'
                         or scope['service'] != 'tiktok-keyword' or scope['unit'] != 'declared-record-bound'):

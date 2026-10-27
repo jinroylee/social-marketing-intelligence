@@ -88,7 +88,7 @@ class BrightDataTransport:
 
     def _request(self, path: str, token: str, max_bytes: int,
                  *, body: bytes | None = None, query: dict[str, str] | None = None,
-                 timeout: int = 15) -> BrightDataHTTPResponse:
+                 timeout: int = 15, strict_bound: bool = False) -> BrightDataHTTPResponse:
         target = "https://api.brightdata.com" + path
         if query:
             target += "?" + urlencode(query)
@@ -107,12 +107,14 @@ class BrightDataTransport:
                 # as text/plain even when format=json is requested.
                 if response.headers.get_content_type() not in {"application/json", "text/plain"}:
                     raise EvidenceError("invalid_source_content_type")
-                result = response.read(max_bytes + 1)
+                result = response.read(max_bytes if strict_bound else max_bytes + 1)
+                if strict_bound and len(result) >= max_bytes:
+                    return BrightDataHTTPResponse(0, result)
                 if len(result) > max_bytes:
                     raise EvidenceError("response_too_large")
                 return BrightDataHTTPResponse(response.status, result)
         except HTTPError as error:
-            return BrightDataHTTPResponse(error.code, error.read(max_bytes + 1)[:max_bytes])
+            return BrightDataHTTPResponse(error.code, error.read(max_bytes if strict_bound else max_bytes + 1)[:max_bytes])
 
     def fetch(
         self, dataset_id: str, profile_url: str, num_of_posts: int,
@@ -130,6 +132,15 @@ class BrightDataTransport:
         return self._request("/datasets/v3/scrape", token, max_bytes, body=body,
                              query={"dataset_id": dataset_id, "format": "json",
                                     "include_errors": "true"}, timeout=self.timeout_seconds)
+
+    def fetch_profile_field(self, profile_url: str, token: str, max_bytes: int) -> BrightDataHTTPResponse:
+        """Read only the profile dataset with a strict remaining response-byte bound."""
+        reference = _profile_reference(profile_url)
+        return self._request('/datasets/v3/scrape', token, max_bytes,
+            body=json.dumps({'input': [{'url': reference.original}], 'limit_per_input': 1,
+                             'custom_output_fields': 'id|account_id|url|nickname'}).encode(),
+            query={'dataset_id': _DATASETS['profile'], 'format': 'json', 'include_errors': 'true'},
+            timeout=self.timeout_seconds, strict_bound=True)
 
     def progress(self, snapshot_id: str, token: str) -> BrightDataHTTPResponse:
         if not _SNAPSHOT_ID.fullmatch(snapshot_id):
@@ -566,3 +577,91 @@ class BrightDataTikTokMapper:
                                          f"{locator}.{author_source}", "missing_stable_id"))
         for name in ("play_count", "digg_count", "comment_count", "share_count", "collect_count"):
             self._metric(metrics, fields, key, row, name, locator, observation.captured_at)
+
+
+class BrightDataProfileFieldCollector:
+    """Read one supplied profile once; never transition to posts or poll paid work.
+
+    Source capture time remains unknown. The response retrieval clock is separate;
+    the full source response retains provenance while canonical mapping selects
+    only the authorized nickname. Pending/failed/ambiguous responses stop here.
+    """
+
+    adapter_id = 'brightdata-tiktok-profile'
+    version = 'nickname-v1'
+
+    def __init__(self, target: dict[str, Any], token: str, *, clock: Callable[[], datetime]):
+        self.target, self.token, self.clock = target, token, clock
+
+    def collect(self, manifest: dict[str, Any], checkpoint: dict[str, Any], limits: RunLimits) -> CollectedBatch:
+        """Issue at most one bounded request using the existing fixed-host transport."""
+        reference = _profile_reference(self.target['profile_url'])
+        try:
+            response = BrightDataTransport().fetch_profile_field(reference.original, self.token,
+                                                                 min(limits.max_bytes, _MAX_RESPONSE_BYTES))
+        except (EvidenceError, URLError, OSError, TimeoutError):
+            return CollectedBatch((), {'profile_result': 'provider_operation_ambiguous'}, True, request_attempts=1)
+        if response.status != 200:
+            return CollectedBatch((), {'profile_result': 'provider_pending_unresumed' if response.status == 202
+                else 'response_byte_bound_reached' if response.status == 0 else 'source_http_failure'}, True,
+                request_attempts=1, response_bytes=len(response.body))
+        try:
+            rows = json.loads(response.body)
+        except (ValueError, UnicodeError, RecursionError):
+            rows = None
+        returned = len(rows) if isinstance(rows, list) else 0
+        eligible = 0
+        if returned == 1 and isinstance(rows[0], dict) and not (rows[0].get('error') or rows[0].get('error_code') or rows[0].get('status') == 'error'):
+            try:
+                returned_reference = _profile_reference(rows[0].get('url'))
+                native, _, reason = _profile_identity(rows[0], returned_reference)
+                eligible = int(not reason and native == self.target['native_id'] and returned_reference.original == reference.original)
+            except EvidenceError:
+                pass
+        policy = manifest['policy']
+        draft = ObservationDraft(
+            source_item_key=reference.original + '#nickname', adapter_id=self.adapter_id,
+            provider_id='brightdata', format_version='brightdata-profile-nickname-v1',
+            reference=reference, payload=response.body, media_type='application/json', captured_at=None,
+            source_as_of=None, policy=SourcePolicy(policy['context_id'], policy['can_process'],
+                policy['can_retain'], policy['can_display'],
+                datetime.fromisoformat(policy['expires_at']) if policy.get('expires_at') else None,
+                policy.get('revoked', False)), synthetic=False,
+            coverage={'outcome': 'resolved', 'dataset_kind': 'profile', 'http_status': 200,
+                'http_attempts': 1, 'returned_records': returned, 'eligible_records': eligible,
+                'returned_records_known': isinstance(rows, list),
+                'supplementary_field': 'nickname', 'expected_native_id': self.target['native_id'],
+                'retrieved_at': self.clock().isoformat(), 'capture_time': 'unknown',
+                'unavailable_fields': ['biography', 'profile_metrics', 'account_equivalence_unestablished']})
+        return CollectedBatch((draft,), {'profile_result': 'returned'}, True)
+
+
+class BrightDataNicknameMapper:
+    """Publish only nickname under the profile route's own identity and semantics."""
+
+    version = 'nickname-v1'
+
+    def normalize(self, observation: RawObservation, payload: bytes) -> NormalizedBatch:
+        """Require one exact corroborated profile; extra fields confer no retained facts."""
+        if (observation.adapter_id != 'brightdata-tiktok-profile' or observation.provider_id != 'brightdata'
+                or observation.format_version != 'brightdata-profile-nickname-v1' or observation.synthetic):
+            raise ValueError('unsupported_profile_nickname_observation')
+        try:
+            data = json.loads(payload)
+        except (ValueError, UnicodeError, RecursionError) as error:
+            raise ValueError('invalid_profile_response') from error
+        if (not isinstance(data, list) or len(data) != 1 or not isinstance(data[0], dict)
+                or data[0].get('error') or data[0].get('error_code') or data[0].get('status') == 'error'):
+            raise ValueError('invalid_profile_response')
+        row = data[0]
+        reference = _profile_reference(row.get('url'))
+        native, _, reason = _profile_identity(row, reference)
+        if (reason or native != observation.coverage['expected_native_id']
+                or reference.original != observation.reference.original):
+            raise ValueError('profile_identity_conflict')
+        key = ExternalKey('tiktok', 'tiktok:public', 'account', native)
+        value = row.get('nickname')
+        valid = isinstance(value, str) and bool(value.strip()) and len(value) <= 500
+        field = FieldCandidate(key, 'nickname', 'observed' if valid else 'not_returned' if value is None else 'unavailable',
+                               value if valid else None, '$[0].nickname')
+        return NormalizedBatch((key,), (field,), ())

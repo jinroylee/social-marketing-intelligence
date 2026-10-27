@@ -50,6 +50,9 @@ def detail(task):
                         ('Scope version', task['scope_version']), ('Immutable scope', task['scope']), ('Limits', task['limits']),
                         ('Attempt limit', task['attempt_limit']), ('Execution', task['execution']), ('Progress', task['progress']), ('Coverage', task['coverage']), ('Failure', task['failure']), ('Attempts', task['attempts'])):
         content += f'<p>{e(label)}: {e(json.dumps(item, ensure_ascii=False))}</p>'
+    if task.get('supplementation'):
+        content += '<h2>Selective supplementation</h2><p>Actual decision and result; additional source support retains its own identity. Unknown fields and account equivalence remain explicit.</p>'
+        content += f'<p>{e(json.dumps(task["supplementation"], ensure_ascii=False))}</p>'
     history = task['discovery_history']
     if history:
         content += '<h2>Discovery retrieval history</h2>'

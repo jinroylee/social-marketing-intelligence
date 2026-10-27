@@ -1,0 +1,12 @@
+# Bright Data profile nickname contract — 2026-10-27
+
+Read-only unauthenticated primary documentation lookup; no source/API/model/paid execution occurred. The research skill's background-agent instruction was superseded by this ticket's explicit no-subagent instruction, so the implementer captured the evidence directly. Raw responses are retained locally under `verification/ticket-26/` and excluded from commits.
+
+| Primary source | SHA-256 of fetched bytes | Finding |
+| --- | --- | --- |
+| [TikTok Profiles schema](https://docs.brightdata.com/scrapers/gd_l1villgoiiidt09ci.json) | `d4c56c4c44a315131a557bc37f00676ce51e09d9f389acf6a8256a7eb796b719` | Dataset `gd_l1villgoiiidt09ci`, collect-by-URL input; output includes `id`, `account_id`, `url`, `nickname` and broader optional fields. The nickname description does not establish a verified human display name. |
+| [Synchronous requests](https://docs.brightdata.com/api-reference/scrapers/synchronous-requests.md) | `28ba451249656355f994c54ef6f81e422bb9143f79b839a12589222aca245e6b` | Fixed scrape POST, Bearer auth, `format=json`; object body with input array, `limit_per_input`, pipe-delimited `custom_output_fields`. Bare arrays remain accepted but cannot carry filtering. 200 returns records, 202 retains asynchronous work after the documented one-minute limit. |
+
+Selected operation: reuse the existing source transport with one explicitly supplied profile URL, one-record bound and `custom_output_fields=id|account_id|url|nickname`. This field request needs identity corroboration, not profile/posts collection. Existing mapper's stable-ID rules distinguish numeric native `id` from mutable account labels. This is conservative software validation, not a proof that all future responses contain a stable ID or obey output filtering.
+
+The schema does not guarantee original observation/capture time; source capture and source-as-of remain null, with retrieval clock stored separately. A 202 or lost response remains unresolved source work; this bounded slice stops and does not poll, blindly retry or release cost liability. Primary docs do not establish final billed units, a hard commercial charge cap, current service health, source-use rights or live readiness. The existing shared allowance remains an explicit operator-declared commitment; actual profile route/method is separately attributable. Tests use dummy credentials and counted simulated HTTP. No historical profile receipt is reused as current query, permission or commercial evidence.

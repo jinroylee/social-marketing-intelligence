@@ -42,6 +42,10 @@ def supplied_form(csrf, route, submitted=None, error=None, *, live_enabled=False
     if capability['query_discovery']:
         for name, label in (('published_from', 'Published from (inclusive, timestamp with timezone)'), ('published_before', 'Published before (exclusive, timestamp with timezone)')):
             content += f'<label>{e(label)}<input name="{e(name)}" value="{e(value(submitted, name))}" required maxlength="100"></label>'
+    if capability['route'] == 'brightdata-tiktok-keyword' and route.supplementation is not None:
+        content += '<p>Optional nickname supplementation: approve one exact profile URL and stable native ID. The discovered identity must corroborate this target. Profile support retains its own namespace; account equivalence remains unestablished.</p>'
+        for name, label in (('profile_url', 'Exact profile URL'), ('profile_native_id', 'Expected stable native account ID')):
+            content += f'<label>{e(label)}<input name="{e(name)}" value="{e(value(submitted, name))}" maxlength="200"></label>'
     return content + '<button type="submit">Save proposal for review</button></form>'
 
 

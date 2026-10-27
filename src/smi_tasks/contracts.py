@@ -13,6 +13,7 @@ from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext
 
 from .discovery import DiscoveryPolicy
+from .supplementation.policy import ProfileSupplement, SupplementationPolicy
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,7 @@ class OfflineRoute:
     version: str = 'offline-fixture-v1'
     limits: RunLimits = RunLimits(max_requests=10, max_pages=10, max_records=10)
     discovery_policy: DiscoveryPolicy | None = None
+    supplementation: SupplementationPolicy | None = None
 
     def discovery_configuration(self, manifest: dict[str, Any]) -> dict[str, Any]:
         """Pin input identity and explicit policy on newly admitted discovery only."""
@@ -30,6 +32,8 @@ class OfflineRoute:
                   'provider_id': manifest.get('provider_id'), 'format_version': manifest.get('format_version')}}
         if self.discovery_policy is not None:
             result['discovery_policy'] = asdict(self.discovery_policy)
+        if self.supplementation is not None:
+            result['supplementation_policy'] = asdict(self.supplementation)
         return result
 
     def discovery_authority(self) -> dict[str, Any]:
@@ -41,6 +45,10 @@ class OfflineRoute:
 
     def validate(self) -> None:
         """Validate immutable operator version and hard limits without touching input files."""
+        if self.supplementation is not None:
+            if not isinstance(self.supplementation, SupplementationPolicy):
+                raise EvidenceError('invalid_supplementation_policy')
+            self.supplementation.validate()
         if self.discovery_policy is not None:
             if not isinstance(self.discovery_policy, DiscoveryPolicy):
                 raise EvidenceError('invalid_discovery_policy')
@@ -160,12 +168,18 @@ class EnrichmentProposal:
     search_queries: tuple[str, ...] = ()
     published_from: str | None = None
     published_before: str | None = None
+    profile_supplement: ProfileSupplement | None = None
 
     def validate(self) -> None:
         """Reject ambiguous or unbounded proposal metadata before persistence."""
         if (not isinstance(self.purpose, str) or not self.purpose.strip() or len(self.purpose) > 1000
                 or not isinstance(self.intent, str) or self.intent not in {'refresh', 'fill', 'expansion'}):
             raise EvidenceError('invalid_enrichment_proposal')
+        if self.profile_supplement is not None:
+            if not isinstance(self.profile_supplement, ProfileSupplement):
+                raise EvidenceError('invalid_profile_supplement_scope')
+            self.profile_supplement.validate()
+            self.keyword_scope()
         for values in (self.subject_ids, self.search_queries):
             if (not isinstance(values, tuple) or len(values) > 30
                     or any(not isinstance(v, str) or not v.strip() or len(v) > 500 for v in values)
@@ -191,17 +205,23 @@ class EnrichmentProposal:
                   'subject_ids': self.subject_ids, 'search_queries': self.search_queries}
         if self.published_from is not None or self.published_before is not None:
             result.update(published_from=self.published_from, published_before=self.published_before)
+        if self.profile_supplement is not None:
+            result['profile_supplement'] = asdict(self.profile_supplement)
         return result
 
     @classmethod
     def from_document(cls, document: dict[str, Any]) -> 'EnrichmentProposal':
         """Parse supplied JSON scope, rejecting authority fields rather than trusting them."""
-        if (not isinstance(document, dict) or not document.keys() <= {'purpose', 'intent', 'subject_ids', 'search_queries', 'published_from', 'published_before'}
+        if (not isinstance(document, dict) or not document.keys() <= {'purpose', 'intent', 'subject_ids', 'search_queries', 'published_from', 'published_before', 'profile_supplement'}
                 or not all(isinstance(document.get(k, []), list) for k in ('subject_ids', 'search_queries'))):
             raise EvidenceError('invalid_enrichment_proposal')
+        target = document.get('profile_supplement')
+        if target is not None and (not isinstance(target, dict) or set(target) != {'profile_url', 'native_id'}):
+            raise EvidenceError('invalid_profile_supplement_scope')
         proposal = cls(document.get('purpose'), document.get('intent'),
                        tuple(document.get('subject_ids', [])), tuple(document.get('search_queries', [])),
-                       document.get('published_from'), document.get('published_before'))
+                       document.get('published_from'), document.get('published_before'),
+                       ProfileSupplement(**target) if target is not None else None)
         proposal.validate()
         return proposal
 
