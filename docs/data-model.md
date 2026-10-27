@@ -2,7 +2,7 @@
 
 ## Implemented relational model
 
-The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [snapshot monitoring](../src/smi_monitoring/schema.sql), [recent X evidence](../src/smi_monitoring/recent/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql), [offline costs](../src/smi_costs/schema.sql), [knowledge answers](../src/smi_assistant/schema.sql) and [assistant enrichment linkage](../src/smi_tasks/assistant/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
+The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [snapshot monitoring](../src/smi_monitoring/schema.sql), [recent X evidence](../src/smi_monitoring/recent/schema.sql), [quantitative alerts](../src/smi_monitoring/alerts/schema.sql), [semantic assessments](../src/smi_monitoring/semantic/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql), [offline costs](../src/smi_costs/schema.sql), [knowledge answers](../src/smi_assistant/schema.sql) and [assistant enrichment linkage](../src/smi_tasks/assistant/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
 
 ```mermaid
 erDiagram
@@ -432,6 +432,44 @@ erDiagram
     monitoring_windows |o--o{ monitoring_volume_assessments : baseline
     monitoring_volume_assessments ||--|{ monitoring_detection_requests : reopens
     monitoring_volume_assessments ||--o| monitoring_alerts : alerts
+    monitoring_windows ||--o{ monitoring_semantic_assessments : semantic_input
+    cost_operations |o--o| monitoring_semantic_assessments : meters
+    monitoring_semantic_assessments ||--|{ monitoring_semantic_requests : reopens
+    monitoring_semantic_assessments ||--o| monitoring_semantic_alerts : alerts
+    monitoring_semantic_assessments {
+        uuid id PK
+        text workspace_id
+        uuid window_id FK
+        text assessment_digest
+        jsonb method
+        jsonb configuration
+        uuid_array input_observation_ids
+        text input_digest
+        text status
+        text outcome
+        text reason
+        jsonb limitations
+        jsonb judgments
+        boolean support_purged
+        uuid operation_id FK
+        jsonb usage
+        text recorded_by
+        text actor_kind
+        timestamptz recorded_at
+        timestamptz finished_at
+    }
+    monitoring_semantic_requests {
+        text workspace_id PK
+        text request_id PK
+        text request_digest
+        uuid assessment_id FK
+    }
+    monitoring_semantic_alerts {
+        uuid id PK
+        uuid assessment_id FK
+        uuid notification_id
+        timestamptz created_at
+    }
     monitoring_source_policies {
         text workspace_id PK
         text context_id PK
@@ -526,6 +564,8 @@ erDiagram
 The [recent schema](../src/smi_monitoring/recent/schema.sql) is independent of canonical entities, knowledge runs/publications, campaigns and scheduled keywords. Topic/end uniqueness preserves one logical poll across configuration edits; original configuration/coverage/acquisition remain pinned. Workspace/source-capture uniqueness uses native identity and original source time rather than a fixture label, so a later import cannot restore a purged copy or refresh its first import. Current policy is a mutable versioned overlay; original acquisition records its policy version. Native withdrawal tombstones govern future captures without requiring a foreign key from an observation. Body text/metric copies purge permanently while permitted identities, original times, coverage and audit history remain. See [the contract](monitoring.md#bounded-offline-recent-x-evidence) for finite topic/revision/file/window/observation/retention/timeline limits and policy reconciliation.
 
 The [quantitative alert schema](../src/smi_monitoring/alerts/schema.sql) pins exact original detection/baseline window references and source-free method/configuration/outcome/limitations. Workspace/pair-digest uniqueness prevents duplicate assessments/alerts for the same windows and configuration; workspace/request receipts separately reject changed actor/input reuse. A supported crossing inserts the one-to-one alert and unique local notification identity in the same transaction as assessment/request. No copied caption, metric or numerical comparison is stored here. Current claims reopen original windows through the recent owner's public caller-transaction read under its policy lock, so source denial/expiry/withdrawal hides the whole comparison while preserving history. The alert owner does not read task or recent tables privately; notifications enter the browser inbox through public composition. See [the quantitative contract](monitoring.md#configured-quantitative-volume-assessments) for finite history/request caps.
+
+The [semantic schema](../src/smi_monitoring/semantic/schema.sql) pins one exact window, full prepared input IDs/digest, configured bounded quality-controversy method/schema/model, operator attribution, no-reissue claim status and shared usage/cost operation. Window/method/model configuration uniqueness owns the first assessment; exact request receipts additionally protect actor/input reuse. Successful provisional positions contain source-free IDs, fixed labels and quote offsets only. A supported configured signal inserts its one-to-one semantic alert and unique local notification identity in the same finalization transaction. All actual inputs (including unresolved text) govern dispatch, finalization and reopen through the public recent-policy lock port. Observed loss clears every dependent judgment irreversibly while retaining historical outcome/lineage and unavailable alert identity. Excerpts always resolve from current permitted original source values; no copied factual narrative is stored. Interrupted/uncertain claims cannot automatically redispatch; final metered usage may remain without a usable finding. See [the semantic contract](monitoring.md#bounded-provisional-quality-controversy-assessments).
 
 ## Monitoring and planning tables
 
@@ -639,7 +679,7 @@ Monitoring has no campaign foreign key. Its scope and insight heads preserve ind
 
 ## Product domain model
 
-This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes snapshot monitoring, bounded offline recent-X evidence and configured quantitative alerts/local notifications are implemented. Creator associations, semantic X detection/KB explanation and actual outcomes/attribution remain accepted future design; operational ranking/automatic shortlist persistence, bounded spending controls and recorded live schedule authority are installed as described by their current contracts; the physical diagrams describe implemented tables, including task execution ownership and independent synthetic accounting below.
+This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes snapshot monitoring, bounded offline recent-X evidence and configured quantitative/provisional quality-controversy alerts/local notifications are implemented. Creator associations, semantic shift/KB explanation and actual outcomes/attribution remain accepted future design; operational ranking/automatic shortlist persistence, bounded spending controls and recorded live schedule authority are installed as described by their current contracts; the physical diagrams describe implemented tables, including task execution ownership and independent synthetic accounting below.
 
 ```mermaid
 erDiagram

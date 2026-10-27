@@ -121,6 +121,9 @@ A recent source observation used for timely monitoring and anomaly detection. It
 **Quantitative monitoring assessment**:
 A recorded comparison of market activity within explicit observation and baseline windows, using a configured quantitative method and stated comparability and coverage limits. An inadequate or unavailable baseline is a limitation rather than evidence of change.
 
+**Semantic monitoring assessment**:
+A provisional automated interpretation of meaning or positions in an explicit recent evidence sample, retaining its method, actual inputs, uncertainty and comparison limits. A possible controversy signal does not establish verified sentiment, a shared disputed claim or change over time.
+
 **Anomaly alert**:
 A retained notification of a significant quantitative or semantic anomaly, with its evidence, comparison context, method and uncertainty. It does not itself authorize further external research or campaign creation.
 

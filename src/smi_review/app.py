@@ -27,10 +27,11 @@ from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStor
 from smi_monitoring import MonitoringStore
 from smi_monitoring.recent import OfflineXRoute, RecentMonitoring
 from smi_monitoring.alerts import QuantitativeAlerts, VolumeThreshold
+from smi_monitoring.semantic import ControversyThreshold, SemanticAlerts
 from smi_tasks.schedules import ScheduledDiscovery
 from smi_tasks import AcquisitionTasks, CampaignRecommendations, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority, ProfileSupplement
 
-from . import alert_views, recent_views, enrichment_views, answer_views, cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
+from . import semantic_views, alert_views, recent_views, enrichment_views, answer_views, cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
 from .forms import identifier, one
 
 
@@ -103,7 +104,7 @@ class ReviewApp:
 
     def __init__(self, db: Database, actor_id: str = "local-marketer", workspace_id: str = "local", *, offline_route: OfflineRoute | None = None,
                  live_discovery_enabled: bool = False, schedule_operator: bool = False, schedule_clock: Callable[[], datetime] | None = None,
-                 recent_x_route: OfflineXRoute | None = None, monitoring_operator: bool = False, monitoring_clock: Callable[[], datetime] | None = None, monitoring_threshold: VolumeThreshold | None = None,
+                 recent_x_route: OfflineXRoute | None = None, monitoring_operator: bool = False, monitoring_clock: Callable[[], datetime] | None = None, monitoring_threshold: VolumeThreshold | None = None, monitoring_controversy_threshold: ControversyThreshold | None = None,
                  model_route: ResponsesRoute | None = None, model_transport: ResponsesTransport | None = None, model_credential: str | None = None):
         self.actor = ActorContext(workspace_id, actor_id, "human")
         self.actor.require_workspace(workspace_id)
@@ -117,6 +118,8 @@ class ReviewApp:
         self.monitoring = MonitoringStore(db, workspace_id)
         self.recent = RecentMonitoring(db, workspace_id, route=recent_x_route, operators=frozenset({actor_id}) if monitoring_operator else frozenset(), clock=monitoring_clock)
         self.alerts = QuantitativeAlerts(self.recent, threshold=monitoring_threshold, clock=monitoring_clock)
+        self.semantic_alerts = SemanticAlerts(self.recent, threshold=monitoring_controversy_threshold, model_route=model_route,
+            model_transport=model_transport, model_credential=model_credential, clock=monitoring_clock)
         self.monitoring_operator = monitoring_operator
         self.planning = CampaignPlanning(db, workspace_id)
         self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, live_discovery_enabled=live_discovery_enabled, authority=TaskAuthority(campaign_humans=frozenset({actor_id}),
@@ -226,6 +229,9 @@ class ReviewApp:
                     if match:
                         allowed = {"csrf", "request_id", "brief_id", "interpretation_id", "expected_brief_version", "expected_shortlist_version"}
                         return self._regeneration_page(identifier(match[1]), {k: v for k, v in form.items() if k in allowed}, code, status)
+                    if path == '/monitoring/semantic-assessments':
+                        allowed = {'request_id', 'window_id'}
+                        return self.page('Semantic X assessments', semantic_views.index(self.semantic_alerts.history(self.actor), self.csrf, self.monitoring_operator, self.semantic_alerts.threshold, {k: v for k, v in form.items() if k in allowed}, code), status)
                     if path == '/monitoring/assessments':
                         allowed = {'request_id', 'detection_window_id', 'baseline_window_id'}
                         return self.page('Quantitative X assessments', alert_views.index(self.alerts.history(self.actor), self.csrf, self.monitoring_operator, self.alerts.threshold, {k: v for k, v in form.items() if k in allowed}, code), status)
@@ -289,6 +295,12 @@ class ReviewApp:
             return self.page("Action needs attention", views.error_message(code), status)
 
     def _get(self, path, query):
+        if path == '/monitoring/semantic-assessments':
+            return self.page('Semantic X assessments', semantic_views.index(self.semantic_alerts.history(self.actor), self.csrf, self.monitoring_operator, self.semantic_alerts.threshold))
+        match = re.fullmatch(r'/monitoring/(semantic-assessments|semantic-alerts)/([^/]+)', path)
+        if match:
+            record = self.semantic_alerts.read_alert(identifier(match[2]), self.actor) if match[1] == 'semantic-alerts' else self.semantic_alerts.read_assessment(identifier(match[2]), self.actor)
+            return self.page('Semantic X assessment', semantic_views.detail(record))
         if path == '/monitoring/assessments':
             return self.page('Quantitative X assessments', alert_views.index(self.alerts.history(self.actor), self.csrf, self.monitoring_operator, self.alerts.threshold))
         match = re.fullmatch(r'/monitoring/(assessments|alerts)/([^/]+)', path)
@@ -321,7 +333,7 @@ class ReviewApp:
         if match:
             return self._regeneration_page(identifier(match[1]))
         if path == "/inbox":
-            return self.page("Completion inbox", inbox_views.index(self.inbox.list(self.actor), self.alerts.notifications(self.actor)))
+            return self.page("Completion inbox", inbox_views.index(self.inbox.list(self.actor), self.alerts.notifications(self.actor) + self.semantic_alerts.notifications(self.actor)))
         match = re.fullmatch(r"/inbox/([^/]+)", path)
         if match:
             return self.page("Task completion", inbox_views.detail(self.inbox.read(identifier(match[1]), self.actor)))
@@ -423,6 +435,11 @@ class ReviewApp:
         if not secrets.compare_digest(one(form, "csrf").encode(), self.csrf.encode()):
             raise EvidenceError("invalid_form")
         request_id = one(form, "request_id")
+        if path == '/monitoring/semantic-assessments':
+            if not form.keys() <= {'csrf', 'request_id', 'window_id'}:
+                raise EvidenceError('invalid_form')
+            record = self.semantic_alerts.detect(identifier(one(form, 'window_id')), self.actor, request_id=request_id)
+            return Response(303, location='/monitoring/semantic-assessments/' + record['assessment_id'])
         if path == '/monitoring/assessments':
             if not form.keys() <= {'csrf', 'request_id', 'detection_window_id', 'baseline_window_id'}:
                 raise EvidenceError('invalid_form')

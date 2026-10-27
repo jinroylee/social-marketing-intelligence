@@ -53,7 +53,7 @@ def topic(topic, timeline, csrf, operator, submitted=None, error=None):
     if operator:
         content += '<details class="panel"><summary>Revise settings</summary>' + configuration(csrf, topic, submitted) + '</details>'
         content += f'<form method="post" action="/monitoring/topics/{e(key)}/poll">{hidden("csrf", csrf)}<label>Window end (explicit UTC cadence boundary)<input name="window_end" value="{e(value(submitted, "window_end"))}" placeholder="2026-10-28T12:00:00+00:00" required></label><button type="submit">Collect bounded offline window</button></form>'
-    content += '<p><a href="/monitoring/assessments">Assess volume / retained assessment history</a></p>'
+    content += '<p><a href="/monitoring/assessments">Assess volume / retained assessment history</a> · <a href="/monitoring/semantic-assessments">Assess possible controversy / semantic history</a></p>'
     content += '<h2>Original collection windows</h2><p>Latest 100 windows. Empty or partial fixture coverage does not establish market absence.</p>'
     content += ''.join(f'<p><a href="/monitoring/windows/{e(w["id"])}">{e(w["window_start"])} → {e(w["window_end"])}</a></p>' for w in topic['windows'])
     content += '<h2>Retained capture timeline</h2><p>Distinct captures; repeated windows do not refresh source or import times. This is not a trend or alert.</p>'

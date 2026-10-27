@@ -15,7 +15,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Offline acquisition tasks](tasks.md) | Configured daily keyword, campaign and exact approved-proposal submission, bounded synthetic worker and exact outcomes |
 | [Offline cost accounting](costs.md) | Attributable synthetic usage, forecasts, shared bounded admission, final-evidence reconciliation, meter recovery and local cost detail |
 | [Campaign decisions](campaigns.md) | Versioned campaign workflow, automatic deterministic/model-ordered shortlist persistence, bounded ranking provenance and explicit discovery regeneration |
-| [Independent monitoring](monitoring.md) | Frozen investigations, bounded offline X topics/windows/captures and configured quantitative alerts with policy-aware history |
+| [Independent monitoring](monitoring.md) | Frozen investigations, bounded offline X topics/windows/captures and configured quantitative and provisional semantic alerts with policy-aware history |
 | [Measurement and feedback](planning.md) | Proposed campaign plans and human decision-note revisions |
 | [Local review application](local-review.md) | Browser workflow, named local actor, evidence panels, saves and failure behavior |
 | [Development verification](development.md) | The shared local/CI check command and test prerequisites |
@@ -34,6 +34,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Automatic shortlist persistence](adr/0003-automatic-shortlist-persistence.md) | Why saving generated recommendations requires no human review or approval |
 | [Lightweight monitoring evidence](adr/0004-lightweight-monitoring-evidence.md) | Why X detection owns bounded recent evidence separately from full KB publication |
 | [Source-free quantitative alert history](adr/0019-source-free-quantitative-alert-history.md) | Why configured sample-volume assessments and notifications retain exact window lineage without copied source claims |
+| [Bounded semantic positions](adr/0020-bounded-semantic-positions-full-input-policy.md) | Why provisional fixed positions and every actual model input govern semantic alert history |
 | [Task session effect ownership](adr/0005-task-session-effect-ownership.md) | Why each task's execution lock and effect transactions share one PostgreSQL session |
 | [Bounded synthetic admission](adr/0006-bounded-synthetic-admission.md) | Why scope decisions and ledger writes share a lock while uncertain dispatches keep their commitments |
 | [Generated criteria preserve human constraints](adr/0008-generated-criteria-preserve-human-constraints.md) | Why generated additions stay separate from human briefs and require exact visible selection |

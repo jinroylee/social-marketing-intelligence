@@ -13,9 +13,9 @@ def index(events, monitoring_notifications=()):
         content += detail(event, heading=False) + '</section>'
     if not events:
         content += '<p>No completed tasks yet.</p>'
-    content += '<h2>Monitoring alerts</h2><p>Latest 100 durable local alert notifications; current source support is checked when reopened.</p>'
+    content += '<h2>Monitoring alerts</h2><p>Latest 100 durable local notifications per monitoring method; current source support is checked when reopened.</p>'
     for notification in monitoring_notifications:
-        content += f'<section class="panel"><p><a href="{e(notification["href"])}">X volume alert {e(notification["created_at"])}</a></p><p>{e(notification["message"])}</p></section>'
+        content += f'<section class="panel"><p><a href="{e(notification["href"])}">{"Semantic X alert" if notification.get("kind") == "semantic" else "X volume alert"} {e(notification["created_at"])}</a></p><p>{e(notification["message"])}</p></section>'
     return content
 
 
