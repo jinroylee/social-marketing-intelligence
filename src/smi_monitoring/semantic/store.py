@@ -1,6 +1,7 @@
 """Durable no-reissue claims with exact full-input policy and metered Responses I/O."""
 
 import uuid
+from contextlib import nullcontext
 from collections.abc import Callable
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -169,10 +170,10 @@ class SemanticAlerts:
         with self.db.connect() as connection:
             return self._read(connection, assessment_id, actor)
 
-    def read_alert(self, alert_id: str, actor: ActorContext) -> dict:
-        """Reopen one retained semantic alert through all actual input dependencies."""
+    def read_alert(self, alert_id: str, actor: ActorContext, *, connection=None) -> dict:
+        """Reopen all actual inputs; caller transactions retain policy locks through commit."""
         actor.require_workspace(self.workspace_id)
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             row = connection.execute('SELECT a.id FROM monitoring_semantic_assessments a JOIN monitoring_semantic_alerts l ON l.assessment_id=a.id WHERE l.id=%s AND a.workspace_id=%s', (alert_id, self.workspace_id)).fetchone()
             require(row is not None, 'monitoring_semantic_alert_not_found')
             return self._read(connection, row['id'], actor)

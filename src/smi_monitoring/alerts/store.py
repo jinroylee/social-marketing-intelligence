@@ -1,6 +1,7 @@
 """Source-free alert lineage; current windows supply every displayed source value."""
 
 import uuid
+from contextlib import nullcontext
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -160,10 +161,10 @@ class QuantitativeAlerts:
         with self.db.connect() as connection:
             return self._read(connection, assessment_id, actor)
 
-    def read_alert(self, alert_id, actor):
-        """Reopen retained alert support; never substitute newer source captures."""
+    def read_alert(self, alert_id, actor, *, connection=None):
+        """Reopen exact support; caller transactions retain policy locks through commit."""
         actor.require_workspace(self.workspace_id)
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             row = connection.execute('SELECT a.id FROM monitoring_volume_assessments a JOIN monitoring_alerts l ON l.assessment_id=a.id WHERE l.id=%s AND a.workspace_id=%s', (alert_id, self.workspace_id)).fetchone()
             require(row is not None, 'monitoring_alert_not_found')
             return self._read(connection, row['id'], actor)

@@ -127,6 +127,9 @@ A provisional automated interpretation of meaning or positions in an explicit re
 **Anomaly alert**:
 A retained notification of a significant quantitative or semantic anomaly, with its evidence, comparison context, method and uncertainty. It does not itself authorize further external research or campaign creation.
 
+**Alert investigation**:
+A saved explanation of an anomaly alert using its original recent evidence and an exact selection of existing knowledge, with their dates, coverage and uncertainty kept distinct. Contextual similarity does not establish causation, identity equivalence or authority for further acquisition.
+
 **Measurement plan**:
 A descriptive proposal for measuring a campaign's objective, with intended outcome definitions, sources, periods, matching and attribution assumptions, and known gaps. It is distinct from observed results and does not establish causal lift.
 

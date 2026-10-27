@@ -1,0 +1,11 @@
+# Existing-KB alert investigations
+
+Own `AlertInvestigations`: one immutable bounded KB selection beside a quantitative or provisional semantic alert. Read [the context contract](../../../docs/monitoring.md#existing-kb-alert-investigations) and [ADR 0021](../../../docs/adr/0021-pinned-local-alert-context.md) before changing selection, dependencies or explanation lifecycle.
+
+Compose only public `QuantitativeAlerts.read_alert`, `SemanticAlerts.read_alert` and `KnowledgeQueries` operations in one caller transaction. Each sibling owns its SQL. Recent policy locks and KB source/derivation/publication locks last through dependent local commit. Acquire recent authority before investigation row locks. No transaction spans external I/O.
+
+Use frozen detection-topic wording as one literal cross-platform query, limited to 20 members of the query owner's bounded committed-publication scan. Pin its result ID and all original window/capture IDs. Exact workspace/request identity includes alert kind/ID, actor, method and synthetic selection; new requests alone may select newer publications. Empty results retain an explicit gap.
+
+Keep recent evidence, existing KB facts and the deterministic derived explanation visibly separate. Literal matching establishes neither causation, entity equivalence nor semantic relevance. Reopen both owners under current process/display/retention and derivation/interpretation health. Loss of any original dependency permanently withholds the entire explanation; retain safe manifests, method, actor/time and historical alert identity. Store no source excerpts or generated factual narrative, and never reconstruct a withheld explanation from recovered or newer support.
+
+This owner accepts no transport, model, enrichment, schedule, topic-mutation or campaign port. Existing KB reads require no enrichment approval. Test public investigation/alert/KB and protected HTTP operations with real PostgreSQL, forbidden provider/source/model transports, trusted time/randomness and fault-only commit DDL. Passing software checks do not validate semantic or marketer usefulness.

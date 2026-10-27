@@ -1,0 +1,9 @@
+# Pin local KB context separately from recent alert evidence
+
+Status: accepted
+
+An alert investigation composes either retained alert method with one bounded literal query over committed permitted KB publications. It pins the exact query result and original recent window/capture dependencies; new investigations alone may see new publications. This preserves the distinction between timely monitoring evidence and existing knowledge without making every recent post a KB publication or granting investigation any acquisition authority.
+
+The installed explanation uses a fixed deterministic template to juxtapose the historical alert outcome with the exact number of selected context members and an explicit empty-context gap. Literal topic matching does not verify semantic relevance, entity equivalence, causation or why a market event happened. This trades fluent synthesis for a small inspectable local operation with no model or external-search capability. Source facts and their independent dates/coverage remain in governed evidence panels, not copied prose.
+
+Every original recent and selected KB dependency governs the explanation. Observed loss of process/display/retention permission, source availability, derivation health or required published interpretation support permanently withholds the whole explanation while preserving safe lineage. Source locks remain held through the dependent local commit. This conservatively sacrifices explanation recovery after permission restoration; a new investigation is explicit new work. Reconciliation is synchronous on public reads/writes, with no background deletion guarantee. [ADR 0002](0002-pinned-support-current-policy.md) and [ADR 0020](0020-bounded-semantic-positions-full-input-policy.md) retain their existing owners' lifecycle rules.

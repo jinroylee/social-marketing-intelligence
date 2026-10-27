@@ -2,7 +2,7 @@
 
 ## Implemented relational model
 
-The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [snapshot monitoring](../src/smi_monitoring/schema.sql), [recent X evidence](../src/smi_monitoring/recent/schema.sql), [quantitative alerts](../src/smi_monitoring/alerts/schema.sql), [semantic assessments](../src/smi_monitoring/semantic/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql), [offline costs](../src/smi_costs/schema.sql), [knowledge answers](../src/smi_assistant/schema.sql) and [assistant enrichment linkage](../src/smi_tasks/assistant/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
+The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [snapshot monitoring](../src/smi_monitoring/schema.sql), [recent X evidence](../src/smi_monitoring/recent/schema.sql), [quantitative alerts](../src/smi_monitoring/alerts/schema.sql), [semantic assessments](../src/smi_monitoring/semantic/schema.sql), [alert context](../src/smi_monitoring/context/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql), [offline costs](../src/smi_costs/schema.sql), [knowledge answers](../src/smi_assistant/schema.sql) and [assistant enrichment linkage](../src/smi_tasks/assistant/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
 
 ```mermaid
 erDiagram
@@ -436,6 +436,25 @@ erDiagram
     cost_operations |o--o| monitoring_semantic_assessments : meters
     monitoring_semantic_assessments ||--|{ monitoring_semantic_requests : reopens
     monitoring_semantic_assessments ||--o| monitoring_semantic_alerts : alerts
+    knowledge_query_results ||--o{ monitoring_alert_investigations : context
+    monitoring_alerts |o..o{ monitoring_alert_investigations : logical_quantitative_alert
+    monitoring_semantic_alerts |o..o{ monitoring_alert_investigations : logical_semantic_alert
+    monitoring_alert_investigations {
+        uuid id PK
+        text workspace_id
+        text request_id UK
+        text request_digest
+        text alert_kind
+        uuid alert_id
+        uuid query_result_id FK
+        jsonb recent_dependencies
+        text method_version
+        boolean include_synthetic
+        boolean explanation_withheld
+        text recorded_by
+        text actor_kind
+        timestamptz recorded_at
+    }
     monitoring_semantic_assessments {
         uuid id PK
         text workspace_id
@@ -567,6 +586,8 @@ The [quantitative alert schema](../src/smi_monitoring/alerts/schema.sql) pins ex
 
 The [semantic schema](../src/smi_monitoring/semantic/schema.sql) pins one exact window, full prepared input IDs/digest, configured bounded quality-controversy method/schema/model, operator attribution, no-reissue claim status and shared usage/cost operation. Window/method/model configuration uniqueness owns the first assessment; exact request receipts additionally protect actor/input reuse. Successful provisional positions contain source-free IDs, fixed labels and quote offsets only. A supported configured signal inserts its one-to-one semantic alert and unique local notification identity in the same finalization transaction. All actual inputs (including unresolved text) govern dispatch, finalization and reopen through the public recent-policy lock port. Observed loss clears every dependent judgment irreversibly while retaining historical outcome/lineage and unavailable alert identity. Excerpts always resolve from current permitted original source values; no copied factual narrative is stored. Interrupted/uncertain claims cannot automatically redispatch; final metered usage may remain without a usable finding. See [the semantic contract](monitoring.md#bounded-provisional-quality-controversy-assessments).
 
+The [alert-context schema](../src/smi_monitoring/context/schema.sql) retains a logical typed alert reference (the mutually exclusive alert owners remain separate), a foreign key to its exact KB query result, original recent window/capture dependency IDs, method/actor/time and permanent explanation-withheld flag. Workspace/request uniqueness binds alert, actor, method and synthetic scope. Query/context writes share source-owner locks and one transaction; original source and KB facts remain with their owners. No copied source prose or selected numeric explanation is stored. New publications require a new investigation, and dependency loss withholds explanation without replacing original membership. See [the context contract](monitoring.md#existing-kb-alert-investigations).
+
 ## Monitoring and planning tables
 
 ```mermaid
@@ -679,7 +700,7 @@ Monitoring has no campaign foreign key. Its scope and insight heads preserve ind
 
 ## Product domain model
 
-This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes snapshot monitoring, bounded offline recent-X evidence and configured quantitative/provisional quality-controversy alerts/local notifications are implemented. Creator associations, semantic shift/KB explanation and actual outcomes/attribution remain accepted future design; operational ranking/automatic shortlist persistence, bounded spending controls and recorded live schedule authority are installed as described by their current contracts; the physical diagrams describe implemented tables, including task execution ownership and independent synthetic accounting below.
+This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes snapshot monitoring, bounded offline recent-X evidence and configured quantitative/provisional quality-controversy alerts/local notifications are implemented. Bounded existing-KB alert context is implemented. Creator associations, semantic shift/richer explanation and actual outcomes/attribution remain accepted future design; operational ranking/automatic shortlist persistence, bounded spending controls and recorded live schedule authority are installed as described by their current contracts; the physical diagrams describe implemented tables, including task execution ownership and independent synthetic accounting below.
 
 ```mermaid
 erDiagram

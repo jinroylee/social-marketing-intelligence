@@ -4,7 +4,7 @@
 
 **Blocked by:** 03: Search current knowledge and pin result support; 30: Detect quantitative X anomalies with retained alerts.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** S — one bounded user-visible journey or extension in a fresh implementation context.
 

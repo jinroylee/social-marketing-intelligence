@@ -15,6 +15,7 @@ from .contracts import InvestigationScope, require, text
 from .recent import RecentMonitoring
 from .alerts import QuantitativeAlerts
 from .semantic import SemanticAlerts
+from .context import AlertInvestigations
 from .summary import LIMITS, METHOD_VERSION, build_summary
 
 
@@ -41,6 +42,7 @@ class MonitoringStore:
             connection.execute(Path(__file__).with_name("schema.sql").read_text())
         QuantitativeAlerts(RecentMonitoring(self.db, self.workspace_id)).migrate()
         SemanticAlerts(RecentMonitoring(self.db, self.workspace_id)).migrate()
+        AlertInvestigations(RecentMonitoring(self.db, self.workspace_id)).migrate()
 
     def _human(self, actor):
         actor.require_workspace(self.workspace_id)

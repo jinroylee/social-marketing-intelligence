@@ -25,13 +25,14 @@ from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
 from smi_monitoring import MonitoringStore
+from smi_monitoring.context import AlertInvestigations
 from smi_monitoring.recent import OfflineXRoute, RecentMonitoring
 from smi_monitoring.alerts import QuantitativeAlerts, VolumeThreshold
 from smi_monitoring.semantic import ControversyThreshold, SemanticAlerts
 from smi_tasks.schedules import ScheduledDiscovery
 from smi_tasks import AcquisitionTasks, CampaignRecommendations, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority, ProfileSupplement
 
-from . import semantic_views, alert_views, recent_views, enrichment_views, answer_views, cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
+from . import context_views, semantic_views, alert_views, recent_views, enrichment_views, answer_views, cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
 from .forms import identifier, one
 
 
@@ -120,6 +121,7 @@ class ReviewApp:
         self.alerts = QuantitativeAlerts(self.recent, threshold=monitoring_threshold, clock=monitoring_clock)
         self.semantic_alerts = SemanticAlerts(self.recent, threshold=monitoring_controversy_threshold, model_route=model_route,
             model_transport=model_transport, model_credential=model_credential, clock=monitoring_clock)
+        self.alert_investigations = AlertInvestigations(self.recent)
         self.monitoring_operator = monitoring_operator
         self.planning = CampaignPlanning(db, workspace_id)
         self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, live_discovery_enabled=live_discovery_enabled, authority=TaskAuthority(campaign_humans=frozenset({actor_id}),
@@ -229,6 +231,11 @@ class ReviewApp:
                     if match:
                         allowed = {"csrf", "request_id", "brief_id", "interpretation_id", "expected_brief_version", "expected_shortlist_version"}
                         return self._regeneration_page(identifier(match[1]), {k: v for k, v in form.items() if k in allowed}, code, status)
+                    match = re.fullmatch(r'/monitoring/(alerts|semantic-alerts)/([^/]+)/investigations', path)
+                    if match:
+                        kind = 'quantitative' if match[1] == 'alerts' else 'semantic'
+                        allowed = {'request_id', 'include_synthetic'}
+                        return self.page('Investigate using existing KB', context_views.form(kind, identifier(match[2]), self.csrf, {k: v for k, v in form.items() if k in allowed}, code), status)
                     if path == '/monitoring/semantic-assessments':
                         allowed = {'request_id', 'window_id'}
                         return self.page('Semantic X assessments', semantic_views.index(self.semantic_alerts.history(self.actor), self.csrf, self.monitoring_operator, self.semantic_alerts.threshold, {k: v for k, v in form.items() if k in allowed}, code), status)
@@ -295,18 +302,29 @@ class ReviewApp:
             return self.page("Action needs attention", views.error_message(code), status)
 
     def _get(self, path, query):
+        match = re.fullmatch(r'/monitoring/alert-investigations/([^/]+)', path)
+        if match:
+            synthetic = one(query, 'include_synthetic') == 'yes'
+            record = self.alert_investigations.read(identifier(match[1]), self.actor, include_synthetic=synthetic)
+            return self.page('Saved alert investigation', context_views.detail(record, include_synthetic=synthetic))
         if path == '/monitoring/semantic-assessments':
             return self.page('Semantic X assessments', semantic_views.index(self.semantic_alerts.history(self.actor), self.csrf, self.monitoring_operator, self.semantic_alerts.threshold))
         match = re.fullmatch(r'/monitoring/(semantic-assessments|semantic-alerts)/([^/]+)', path)
         if match:
             record = self.semantic_alerts.read_alert(identifier(match[2]), self.actor) if match[1] == 'semantic-alerts' else self.semantic_alerts.read_assessment(identifier(match[2]), self.actor)
-            return self.page('Semantic X assessment', semantic_views.detail(record))
+            content = semantic_views.detail(record)
+            if record['alert_id']:
+                content += context_views.form('semantic', record['alert_id'], self.csrf)
+            return self.page('Semantic X assessment', content)
         if path == '/monitoring/assessments':
             return self.page('Quantitative X assessments', alert_views.index(self.alerts.history(self.actor), self.csrf, self.monitoring_operator, self.alerts.threshold))
         match = re.fullmatch(r'/monitoring/(assessments|alerts)/([^/]+)', path)
         if match:
             record = self.alerts.read_alert(identifier(match[2]), self.actor) if match[1] == 'alerts' else self.alerts.read_assessment(identifier(match[2]), self.actor)
-            return self.page('Quantitative X assessment', alert_views.detail(record))
+            content = alert_views.detail(record)
+            if record['alert_id']:
+                content += context_views.form('quantitative', record['alert_id'], self.csrf)
+            return self.page('Quantitative X assessment', content)
         if path == '/monitoring/topics':
             return self.page('Recent X topics', recent_views.index(self.recent.list_topics(self.actor), self.csrf, self.monitoring_operator))
         match = re.fullmatch(r'/monitoring/topics/([a-z0-9_-]+)', path)
@@ -435,6 +453,13 @@ class ReviewApp:
         if not secrets.compare_digest(one(form, "csrf").encode(), self.csrf.encode()):
             raise EvidenceError("invalid_form")
         request_id = one(form, "request_id")
+        match = re.fullmatch(r'/monitoring/(alerts|semantic-alerts)/([^/]+)/investigations', path)
+        if match:
+            if not form.keys() <= {'csrf', 'request_id', 'include_synthetic'} or one(form, 'include_synthetic') not in {'', 'yes'}:
+                raise EvidenceError('invalid_form')
+            synthetic = one(form, 'include_synthetic') == 'yes'
+            record = self.alert_investigations.investigate('quantitative' if match[1] == 'alerts' else 'semantic', identifier(match[2]), self.actor, request_id=request_id, include_synthetic=synthetic)
+            return Response(303, location='/monitoring/alert-investigations/' + record['investigation_id'] + ('?include_synthetic=yes' if synthetic else ''))
         if path == '/monitoring/semantic-assessments':
             if not form.keys() <= {'csrf', 'request_id', 'window_id'}:
                 raise EvidenceError('invalid_form')
