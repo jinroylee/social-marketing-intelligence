@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 29 in its fresh context/worktree: one bounded deterministic offline recent-X topic/window collection and retained policy-aware timeline independent of full KB publication. Tickets 11–28 are integrated and resolved; validate and merge before advancing. Alerts and live X are outside this ticket.
+Dispatch ticket 30 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–29 are integrated and resolved; ticket 30 is pending. Offline recent-X evidence software is complete without live-readiness, market-completeness, trend or human-quality claims; worker artifacts remain preserved for verified archival before eventual cleanup.
 
 ## Current Phase
 
-Phase 33 — ticket 29 in progress after successful ticket 28 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 34 — ticket 30 pending after successful ticket 29 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -236,9 +236,9 @@ Fast-forward integrated final handoff/root checked `379f2219bc71173371d58eb1ae00
 
 ### Phase 33 — Implement ticket 29
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final handoff/root checked `80c3329e8428efcebe3fa1f0fba682f66c7beda7`, runtime `4aa3535eb5ba3987b9e7aa93b888665e808d7197`, actual worker frozen merge `51ce0aec6ca3c83d43991f9492c3c970ef3a8830`. Required root shared checks passed all static/preflight stages and **706 tests in 483.80 seconds**, exit 0; durable evidence is under `verification/ticket-29-integrated/`. Wheel identity and all 72 source/archive pairs match root bytes, sizes, hashes and relative symlink targets, including twelve SQL schemas, both assets and all 25 guidance pairs. All six criteria are checked and ticket 29 is resolved. Native/original-time identity and label-independent fingerprint/deduplication close alias-based purged-content reconstruction, without import/retention reset; public regressions/full gate cover the repair and future-time validation. Bounded offline topic/window/timeline is separate from KB publication and old frozen investigations, without alerts/live/promotion or market/trend/human-quality claims.
 
 ### Phase 34 — Implement ticket 30
 
