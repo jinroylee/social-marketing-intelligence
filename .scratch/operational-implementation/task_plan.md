@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 32 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–31 are integrated and resolved; ticket 32 is pending. The provisional quality-controversy software method is complete without baseline/change, verified controversy, market, live-readiness or human-usefulness claims; actual runtime/quality gates and archive-before-cleanup remain explicit.
+Implement ticket32 in its fresh context/worktree: bounded existing-KB context and explanation beside supported X alerts, with exact pinned support and current policy. Tickets11–31 are integrated and resolved; validate and merge before advancing. No external/model acquisition, enrichment, topic expansion or campaign action.
 
 ## Current Phase
 
-Phase 36 — ticket 32 pending after successful ticket 31 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 36 — ticket 32 in progress after successful ticket 31 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -254,7 +254,7 @@ Fast-forward integrated final handoff/root checked `c3d85e2c0cc9e593d74b2aaa1a6c
 
 ### Phase 36 — Implement ticket 32
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
