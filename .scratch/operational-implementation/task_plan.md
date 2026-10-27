@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 27 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–26 are integrated and resolved; ticket 27 is pending. The one-field supplementary software is complete; actual source/model runtime authorization, commercial configuration and live receipt remain separate unmet gates.
+Implement ticket 27 in its fresh context/worktree: one bounded model-backed question/answer journey over current permitted KB support, with attributable metering and policy-aware historical reads. Tickets 11–26 are integrated and resolved; validate and merge before advancing. No enrichment submission or external search is part of this ticket.
 
 ## Current Phase
 
-Phase 31 — ticket 27 pending after successful ticket 26 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 31 — ticket 27 in progress after successful ticket 26 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -224,7 +224,7 @@ Fast-forward integrated final handoff/root checked head `ca4bd0a4da32cb1944d5013
 
 ### Phase 31 — Implement ticket 27
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
