@@ -12,7 +12,7 @@ This document describes implemented acquisition capabilities and the evidence st
 | TikTok public web | Collect explicitly supplied references and interpret available source fields in `web:public` | Challenges and partial coverage are explicit; selected post success does not establish complete profiles/history |
 | TikTok oEmbed | Resolve supplied video/profile references as bounded availability/operational observations | Not a retained creator-history or engagement feed; no canonical post/account facts are inferred from the embed response |
 | Bright Data TikTok | Collect a supplied creator profile and requested posts in `tiktok:public`, with bounded provider-snapshot polling/resume | Supplied-profile collection, not arbitrary keyword/creator discovery or an application job queue |
-| X | None | Collector, topic polling, recent-observation path and anomaly methods remain implementation work |
+| X | Bounded synthetic local JSON route | Separate topic/window/recent-observation storage and policy-aware timeline are implemented; live provider, scheduler, anomaly methods, alerts and KB promotion remain future work. See [monitoring](monitoring.md#bounded-offline-recent-x-evidence) |
 
 See [local source commands](../README.md#explicit-live-source-operations), [adapter code](../src/smi_ingestion/adapters/registry.py) and [evidence contracts](evidence-sets.md). Examples under `examples/live/` are explicit network operations; the default snapshot workflow is offline. Load credentials from local configuration without printing or committing them. Existing credentials do not themselves authorize additional source calls or prove source-use clearance.
 

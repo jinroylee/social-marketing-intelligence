@@ -2,7 +2,7 @@
 
 ## Implemented relational model
 
-The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [monitoring](../src/smi_monitoring/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql), [offline costs](../src/smi_costs/schema.sql), [knowledge answers](../src/smi_assistant/schema.sql) and [assistant enrichment linkage](../src/smi_tasks/assistant/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
+The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [snapshot monitoring](../src/smi_monitoring/schema.sql), [recent X evidence](../src/smi_monitoring/recent/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql), [offline costs](../src/smi_costs/schema.sql), [knowledge answers](../src/smi_assistant/schema.sql) and [assistant enrichment linkage](../src/smi_tasks/assistant/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
 
 ```mermaid
 erDiagram
@@ -418,6 +418,84 @@ Campaign heads serialize brief/shortlist saves. Revision/request uniqueness sepa
 
 `campaign_ranking_assessments` is a durable one-call claim for an exact comparison/brief/producer/request, expected heads and assessed candidate IDs. Its optional shortlist link identifies a validated automatic save; failed/interrupted claims have no saved fallback. Configuration pins actual model/method/schema/ranking profile; logical cost-operation references preserve cost ownership without cross-owner SQL. Candidate `ranking_input` and `ranking_judgment` retain only required governed input components and validated structured judgments; they share `comparison_support` cleanup. No transaction spans provider I/O. Final publication rechecks pinned support and both heads; reported consumption remains accounted for unusable results. See [the ranking contract](campaigns.md#bounded-supported-llm-ranking).
 
+## Recent X evidence tables
+
+```mermaid
+erDiagram
+    monitoring_topics ||--|{ monitoring_topic_revisions : configures
+    monitoring_topics ||--o{ monitoring_windows : collects
+    monitoring_topic_revisions ||--o{ monitoring_windows : pins
+    monitoring_windows ||--o{ monitoring_window_members : retains
+    recent_x_observations ||--o{ monitoring_window_members : appears_in
+    monitoring_source_policies ||--o{ recent_x_observations : governs
+    monitoring_source_policies {
+        text workspace_id PK
+        text context_id PK
+        int version
+        jsonb document
+        text recorded_by
+        timestamptz recorded_at
+    }
+    monitoring_topics {
+        uuid id PK
+        text workspace_id
+        text topic_key
+        int version
+    }
+    monitoring_topic_revisions {
+        uuid id PK
+        uuid topic_id FK
+        int version
+        jsonb document
+        text request_id
+        text request_digest
+        text recorded_by
+        timestamptz recorded_at
+    }
+    monitoring_windows {
+        uuid id PK
+        uuid topic_id FK
+        uuid revision_id FK
+        timestamptz window_start
+        timestamptz window_end
+        jsonb coverage
+        jsonb acquisition
+        text collected_by
+        timestamptz imported_at
+    }
+    recent_x_observations {
+        uuid id PK
+        text workspace_id FK
+        text capture_id
+        text native_id
+        text source_reference
+        text capture_key
+        text capture_digest
+        jsonb acquisition
+        jsonb missing_fields
+        text policy_context_id FK
+        timestamptz captured_at
+        timestamptz published_at
+        timestamptz metric_measured_at
+        timestamptz imported_at
+        timestamptz retain_until
+        jsonb body
+        text purged_reason
+    }
+    monitoring_window_members {
+        uuid window_id PK,FK
+        uuid observation_id PK,FK
+    }
+    monitoring_x_withdrawals {
+        text workspace_id PK
+        text native_id PK
+        text withdrawn_by
+        timestamptz withdrawn_at
+    }
+```
+
+The [recent schema](../src/smi_monitoring/recent/schema.sql) is independent of canonical entities, knowledge runs/publications, campaigns and scheduled keywords. Topic/end uniqueness preserves one logical poll across configuration edits; original configuration/coverage/acquisition remain pinned. Workspace/source-capture uniqueness uses native identity and original source time rather than a fixture label, so a later import cannot restore a purged copy or refresh its first import. Current policy is a mutable versioned overlay; original acquisition records its policy version. Native withdrawal tombstones govern future captures without requiring a foreign key from an observation. Body text/metric copies purge permanently while permitted identities, original times, coverage and audit history remain. See [the contract](monitoring.md#bounded-offline-recent-x-evidence) for finite topic/revision/file/window/observation/retention/timeline limits and policy reconciliation.
+
 ## Monitoring and planning tables
 
 ```mermaid
@@ -530,7 +608,7 @@ Monitoring has no campaign foreign key. Its scope and insight heads preserve ind
 
 ## Product domain model
 
-This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes and snapshot monitoring are implemented. Creator associations, lightweight X alerts and actual outcomes/attribution remain accepted future design; operational ranking/automatic shortlist persistence, bounded spending controls and recorded live schedule authority are installed as described by their current contracts; the physical diagrams describe implemented tables, including task execution ownership and independent synthetic accounting below.
+This conceptual model expresses the accepted domain. Evidence, Brand/Product references, human campaign decisions/plans/notes snapshot monitoring and bounded offline recent-X evidence are implemented. Creator associations, lightweight X alerts and actual outcomes/attribution remain accepted future design; operational ranking/automatic shortlist persistence, bounded spending controls and recorded live schedule authority are installed as described by their current contracts; the physical diagrams describe implemented tables, including task execution ownership and independent synthetic accounting below.
 
 ```mermaid
 erDiagram

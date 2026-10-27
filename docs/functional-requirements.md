@@ -46,7 +46,7 @@ See the [campaign contract](campaigns.md) for implemented automatic deterministi
 5. Notify users with a concise explanation and supporting evidence; retain relevant alert history with its source support, windows, baseline/method versions and uncertainty. Alert evidence remains subject to source retention/display policy, expiry and withdrawal. Saved alerts must indicate when support becomes unavailable.
 6. The light path remains bounded by acquisition settings, source constraints and applicable spending controls. “Lightweight” does not remove provenance or permit untraceable alert claims. Exact collection cadence, evidence retention windows and significance parameters are explicit operating configuration, not guarantees inferred from the current snapshot fixture.
 
-See [monitoring](monitoring.md) and the [light-path ADR](adr/0004-lightweight-monitoring-evidence.md). Current snapshot investigations remain independently useful and are not presented as continuous X monitoring.
+See [monitoring](monitoring.md) and the [light-path ADR](adr/0004-lightweight-monitoring-evidence.md). Bounded offline recent-X topic/window collection and its governed timeline are installed separately; live polling, scheduling, detection, alerts and promotion remain future work. Current snapshot investigations retain their independent frozen-sample meaning.
 
 ## Shared acquisition and worker pipeline
 

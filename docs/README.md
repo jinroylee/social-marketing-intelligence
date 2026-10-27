@@ -15,7 +15,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Offline acquisition tasks](tasks.md) | Configured daily keyword, campaign and exact approved-proposal submission, bounded synthetic worker and exact outcomes |
 | [Offline cost accounting](costs.md) | Attributable synthetic usage, forecasts, shared bounded admission, final-evidence reconciliation, meter recovery and local cost detail |
 | [Campaign decisions](campaigns.md) | Versioned campaign workflow, automatic deterministic/model-ordered shortlist persistence, bounded ranking provenance and explicit discovery regeneration |
-| [Independent monitoring](monitoring.md) | Investigation scopes, literal snapshot findings, counts and policy-aware history |
+| [Independent monitoring](monitoring.md) | Frozen investigations plus separate bounded offline X topics/windows/captures and policy-aware history |
 | [Measurement and feedback](planning.md) | Proposed campaign plans and human decision-note revisions |
 | [Local review application](local-review.md) | Browser workflow, named local actor, evidence panels, saves and failure behavior |
 | [Development verification](development.md) | The shared local/CI check command and test prerequisites |

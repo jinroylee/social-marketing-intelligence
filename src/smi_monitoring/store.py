@@ -12,6 +12,7 @@ from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgeStore
 
 from .contracts import InvestigationScope, require, text
+from .recent import RecentMonitoring
 from .summary import LIMITS, METHOD_VERSION, build_summary
 
 
@@ -36,6 +37,7 @@ class MonitoringStore:
         """Install monitoring tables after ingestion and knowledge migrations."""
         with self.db.connect() as connection:
             connection.execute(Path(__file__).with_name("schema.sql").read_text())
+        RecentMonitoring(self.db, self.workspace_id).migrate()
 
     def _human(self, actor):
         actor.require_workspace(self.workspace_id)

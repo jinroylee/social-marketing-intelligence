@@ -11,6 +11,7 @@ from urllib.parse import parse_qs
 from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError
 from smi_tasks import OfflineRoute
+from smi_monitoring.recent import OfflineXRoute
 
 from .app import Response, ReviewApp
 from .views import request_error
@@ -112,11 +113,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--offline-manifest", type=Path, help="Configure a fixture or explicitly enabled live keyword task route")
     parser.add_argument("--enable-live-discovery", action="store_true", help="Enable review/admission for the configured live keyword route; execution needs separate source/operation/credential/cost gates")
     parser.add_argument("--schedule-operator", action="store_true", help="Grant the named local human keyword configuration and offline tick authority")
+    parser.add_argument('--recent-x-fixture', type=Path, help='Configure the bounded offline recent-X JSON route')
+    parser.add_argument('--monitoring-operator', action='store_true', help='Grant the named human topic configuration and offline poll authority')
     parser.add_argument("--offline-route-version", default="offline-fixture-v1")
     args = parser.parse_args(argv)
     try:
         route = OfflineRoute(args.offline_manifest, args.offline_route_version) if args.offline_manifest else None
-        app = ReviewApp(Database(args.dsn, args.schema), args.actor, offline_route=route, live_discovery_enabled=args.enable_live_discovery, schedule_operator=args.schedule_operator)
+        app = ReviewApp(Database(args.dsn, args.schema), args.actor, offline_route=route, live_discovery_enabled=args.enable_live_discovery, schedule_operator=args.schedule_operator, recent_x_route=OfflineXRoute(args.recent_x_fixture) if args.recent_x_fixture else None, monitoring_operator=args.monitoring_operator)
         with make_server(app, args.port) as server:
             print(f"Local campaign review: {server.url} · reviewer: {app.actor.actor_id}", flush=True)
             server.serve_forever()

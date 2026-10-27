@@ -109,6 +109,12 @@ Missing, ambiguous, stale or currently unavailable knowledge support that preven
 **Knowledge publication**:
 A versioned availability of ingested evidence and supported interpretations for knowledge-base queries. It identifies the source support and transformations that make an update usable.
 
+**Monitoring topic**:
+An operator-authorized recurring market question with its own source scope, cadence, collection bounds and evidence retention. It is independent of a registered scheduled keyword or a campaign.
+
+**Monitoring collection window**:
+One topic's bounded observation interval with its original configuration, actual acquisition and coverage limits. Retrying the same logical interval does not establish a new collection or a trend baseline.
+
 **Monitoring observation**:
 A recent source observation used for timely monitoring and anomaly detection. It can support an alert without every observed post becoming a fully modeled knowledge-base entity.
 

@@ -25,10 +25,11 @@ from smi_ingestion.evidence import EvidenceError
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
 from smi_monitoring import MonitoringStore
+from smi_monitoring.recent import OfflineXRoute, RecentMonitoring
 from smi_tasks.schedules import ScheduledDiscovery
 from smi_tasks import AcquisitionTasks, CampaignRecommendations, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority, ProfileSupplement
 
-from . import enrichment_views, answer_views, cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
+from . import recent_views, enrichment_views, answer_views, cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
 from .forms import identifier, one
 
 
@@ -101,6 +102,7 @@ class ReviewApp:
 
     def __init__(self, db: Database, actor_id: str = "local-marketer", workspace_id: str = "local", *, offline_route: OfflineRoute | None = None,
                  live_discovery_enabled: bool = False, schedule_operator: bool = False, schedule_clock: Callable[[], datetime] | None = None,
+                 recent_x_route: OfflineXRoute | None = None, monitoring_operator: bool = False, monitoring_clock: Callable[[], datetime] | None = None,
                  model_route: ResponsesRoute | None = None, model_transport: ResponsesTransport | None = None, model_credential: str | None = None):
         self.actor = ActorContext(workspace_id, actor_id, "human")
         self.actor.require_workspace(workspace_id)
@@ -112,6 +114,8 @@ class ReviewApp:
         self.assistant = KnowledgeAssistant(db, workspace_id, model_route=model_route, model_transport=model_transport, model_credential=model_credential)
         self.evidence = EvidenceSetReader(db, workspace_id)
         self.monitoring = MonitoringStore(db, workspace_id)
+        self.recent = RecentMonitoring(db, workspace_id, route=recent_x_route, operators=frozenset({actor_id}) if monitoring_operator else frozenset(), clock=monitoring_clock)
+        self.monitoring_operator = monitoring_operator
         self.planning = CampaignPlanning(db, workspace_id)
         self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, live_discovery_enabled=live_discovery_enabled, authority=TaskAuthority(campaign_humans=frozenset({actor_id}),
             campaign_automations=frozenset({self.worker.actor_id}), proposal_approvers=frozenset({actor_id}), schedule_operators=frozenset({actor_id}) if schedule_operator else frozenset()))
@@ -196,6 +200,11 @@ class ReviewApp:
             brief = next((b for b in campaign['briefs'] if b['id'] == one(submitted, 'brief_id')), brief)
         return self.page("Submit offline acquisition", task_views.submit_form(campaign, brief, self.csrf, self.tasks.route, submitted, error), status)
 
+    def _recent_topic_page(self, key, query=None, submitted=None, error=None, status=200):
+        topic = self.recent.read_topic(key, self.actor)
+        timeline = self.recent.timeline(key, self.actor, offset=int(one(query or {}, 'offset', '0')))
+        return self.page('Recent X topic', recent_views.topic(topic, timeline, self.csrf, self.monitoring_operator, submitted, error), status)
+
     def handle(self, method: str, target: str, form: dict[str, list[str]] | None = None) -> Response:
         """Route validated requests; surface sanitized errors and preserve recoverable edits."""
         parsed = urlsplit(target)
@@ -215,6 +224,13 @@ class ReviewApp:
                     if match:
                         allowed = {"csrf", "request_id", "brief_id", "interpretation_id", "expected_brief_version", "expected_shortlist_version"}
                         return self._regeneration_page(identifier(match[1]), {k: v for k, v in form.items() if k in allowed}, code, status)
+                    if path == '/monitoring/topics':
+                        allowed = {'topic_key', 'settings', 'request_id', 'expected_version'}
+                        return self.page('Recent X topics', recent_views.index(self.recent.list_topics(self.actor), self.csrf, self.monitoring_operator, {k: v for k, v in form.items() if k in allowed}, code), status)
+                    match = re.fullmatch(r'/monitoring/topics/([a-z0-9_-]+)(/poll)?', path)
+                    if match:
+                        allowed = {'topic_key', 'settings', 'request_id', 'expected_version', 'window_end'}
+                        return self._recent_topic_page(match[1], submitted={k: v for k, v in form.items() if k in allowed}, error=code, status=status)
                     if path == "/schedules":
                         allowed = {"expected_version", "timezone", "daily_at", "lookback_days", "daily_allowance", "keywords", "execution_mode"}
                         return self.page("Keyword schedule", schedule_views.settings(self.schedules.read(self.actor), self.csrf,
@@ -268,6 +284,17 @@ class ReviewApp:
             return self.page("Action needs attention", views.error_message(code), status)
 
     def _get(self, path, query):
+        if path == '/monitoring/topics':
+            return self.page('Recent X topics', recent_views.index(self.recent.list_topics(self.actor), self.csrf, self.monitoring_operator))
+        match = re.fullmatch(r'/monitoring/topics/([a-z0-9_-]+)', path)
+        if match:
+            return self._recent_topic_page(match[1], query)
+        match = re.fullmatch(r'/monitoring/windows/([^/]+)', path)
+        if match:
+            return self.page('Recent X window', recent_views.window(self.recent.read_window(identifier(match[1]), self.actor)))
+        match = re.fullmatch(r'/monitoring/observations/([^/]+)', path)
+        if match:
+            return self.page('Recent X capture', recent_views.observation(self.recent.read_observation(identifier(match[1]), self.actor)))
         if path == "/schedules":
             return self.page("Keyword schedule", schedule_views.settings(self.schedules.read(self.actor), self.csrf, self.schedule_operator))
         if path == "/costs":
@@ -385,6 +412,21 @@ class ReviewApp:
         if not secrets.compare_digest(one(form, "csrf").encode(), self.csrf.encode()):
             raise EvidenceError("invalid_form")
         request_id = one(form, "request_id")
+        match = re.fullmatch(r'/monitoring/topics/([a-z0-9_-]+)/poll', path)
+        if match:
+            if not form.keys() <= {'csrf', 'window_end'}:
+                raise EvidenceError('invalid_form')
+            result = self.recent.poll(match[1], one(form, 'window_end'), self.actor)
+            return Response(303, location='/monitoring/windows/' + result['window_id'])
+        match = re.fullmatch(r'/monitoring/topics/([a-z0-9_-]+)', path)
+        if path == '/monitoring/topics' or match:
+            if not form.keys() <= {'csrf', 'topic_key', 'settings', 'request_id', 'expected_version'}:
+                raise EvidenceError('invalid_form')
+            key = one(form, 'topic_key')
+            if match and key != match[1]:
+                raise EvidenceError('invalid_monitoring_topic_key')
+            self.recent.configure(key, json.loads(one(form, 'settings')), self.actor, expected_version=int(one(form, 'expected_version')), request_id=request_id)
+            return Response(303, location='/monitoring/topics/' + key)
         if path == "/schedules":
             if not form.keys() <= {"csrf", "expected_version", "timezone", "daily_at", "lookback_days", "daily_allowance", "keywords", "execution_mode"}:
                 raise EvidenceError("invalid_form")

@@ -1,0 +1,14 @@
+{
+  "coverage": "partial",
+  "records": [
+    {
+      "capture_id": "synthetic-x-11-capture-1",
+      "native_id": "11",
+      "text": "Synthetic cushion sample; no live X observation.",
+      "published_at": "2026-10-28T10:30:00+00:00",
+      "captured_at": "2026-10-28T11:00:00+00:00",
+      "metric_measured_at": "2026-10-28T11:00:00+00:00",
+      "metrics": {"like_count": 4}
+    }
+  ]
+}
