@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 31 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–30 are integrated and resolved; ticket 31 is pending. The offline configured sample-volume alert software is complete without independent statistical-significance, market-completeness, live-readiness or human-usefulness claims; worker artifacts remain preserved for verified archival before eventual cleanup.
+Implement ticket31 in its fresh context/worktree: one bounded semantic recent-X method using established metered model/alert contracts, exact support and explicit comparison/uncertainty. Tickets11–30 are integrated and resolved; validate and merge before advancing. No external research or new provider is authorized.
 
 ## Current Phase
 
-Phase 35 — ticket 31 pending after successful ticket 30 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 35 — ticket 31 in progress after successful ticket 30 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -248,7 +248,7 @@ Fast-forward integrated final handoff/root checked `c9d456fe85d9597c1dea7eea409e
 
 ### Phase 35 — Implement ticket 31
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
