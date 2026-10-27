@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 26 in its fresh context/worktree: one supported missing-field case and existing supplementary route, explicit information-value selection/stopping, preserved parent authority and remaining limits. Tickets 11–25 are integrated and resolved; validate and merge before advancing.
+Dispatch ticket 27 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–26 are integrated and resolved; ticket 27 is pending. The one-field supplementary software is complete; actual source/model runtime authorization, commercial configuration and live receipt remain separate unmet gates.
 
 ## Current Phase
 
-Phase 30 — ticket 26 in progress after successful ticket 25 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 31 — ticket 27 pending after successful ticket 26 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -218,9 +218,9 @@ Fast-forward integrated runtime/frozen `df3b65255120c9bde828a6d809834b089b55b6aa
 
 ### Phase 30 — Implement ticket 26
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final handoff/root checked head `ca4bd0a4da32cb1944d5013dc882999a2a267423`, runtime/frozen `c461a49ff89e9057973848ba049a9273095016bd`. Required root shared checks passed all static stages, PostgreSQL preflight and **656 tests in 454.35 seconds**, exit 0; durable evidence is under `verification/ticket-26-integrated/`. Existing persistent wheel identity and all 68 source/archive pairs match integrated bytes, sizes, hashes and relative symlink targets, including nine SQL schemas, two review assets and all 22 guidance pairs. All six criteria are checked and ticket 26 is resolved. Current primary contract/software verification is complete; profile runtime gates, commercial configuration and live receipt remain unmet without readiness/human-quality claims. Resume prerequisites were restored locally while preserving prior completed gates.
 
 ### Phase 31 — Implement ticket 27
 
