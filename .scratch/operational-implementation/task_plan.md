@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 29 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–28 are integrated and resolved; ticket 29 is pending. Assistant enrichment composition is complete; live source/model configuration, permissions, keys, commercial receipts and human quality remain independent unestablished gates.
+Implement ticket 29 in its fresh context/worktree: one bounded deterministic offline recent-X topic/window collection and retained policy-aware timeline independent of full KB publication. Tickets 11–28 are integrated and resolved; validate and merge before advancing. Alerts and live X are outside this ticket.
 
 ## Current Phase
 
-Phase 33 — ticket 29 pending after successful ticket 28 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 33 — ticket 29 in progress after successful ticket 28 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -236,7 +236,7 @@ Fast-forward integrated final handoff/root checked `379f2219bc71173371d58eb1ae00
 
 ### Phase 33 — Implement ticket 29
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
@@ -304,4 +304,4 @@ Fresh implementer context/worktree; public TDD; exact acceptance and external pr
 
 **Status:** pending
 
-Review against the original starting baseline, address findings in one fresh implementer context, verify integration, remove clean merged implementer worktrees, and report completed work plus genuine external blockers.
+Review against the original starting baseline, address findings in one fresh implementer context, verify integration, and report completed work plus genuine external blockers. Before removing clean merged implementer worktrees, archive retained worker logs, wheels, manifests and verifiers in the root persistent verification directory with identity/hash checks and a relocation index; keep historical original paths truthful and record usable current locations. Then remove clean merged worktrees without discarding verification evidence.
