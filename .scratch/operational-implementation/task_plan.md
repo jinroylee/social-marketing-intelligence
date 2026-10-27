@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 28 in its fresh context/worktree: compose assistant gaps, exact proposal approval, task status/completion and later explicit queries over actual publications. Tickets 11–27 are integrated and resolved; validate and merge before advancing. No new acquisition/model provider or authority from generated text.
+Dispatch ticket 29 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–28 are integrated and resolved; ticket 29 is pending. Assistant enrichment composition is complete; live source/model configuration, permissions, keys, commercial receipts and human quality remain independent unestablished gates.
 
 ## Current Phase
 
-Phase 32 — ticket 28 in progress after successful ticket 27 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 33 — ticket 29 pending after successful ticket 28 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -230,9 +230,9 @@ Fast-forward integrated final handoff/root checked `c37f76a71d2a739c6c44936dd27b
 
 ### Phase 32 — Implement ticket 28
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final handoff/root checked `379f2219bc71173371d58eb1ae00f6a55de40125`, runtime `d9d3276a8c257092dbda6b4c1f489a5128771c5a`, actual worker frozen merge `1d0c137cc1936a4fe6ddd7f6a796a8a1f20f9d93`. Required root shared checks passed all static/preflight stages and **680 tests in 472.61 seconds**, exit 0; durable evidence is under `verification/ticket-28-integrated/`. Wheel identity and all 68 source/archive pairs match integrated bytes, sizes, hashes and relative symlink targets, including eleven SQL schemas, both assets and all 24 guidance pairs. All six criteria are checked and ticket 28 is resolved. Committed-proposal/lost-journey recovery is repaired with public/HTTP regression coverage; final compatibility and full gate cover the corrected legacy HTTP migration fixture, whose superseded failure remains recorded. Original answers stay immutable and later explicit queries use only usable publications; broadening needs fresh exact approval. Runtime/live/human-quality prerequisites remain unestablished without readiness claims.
 
 ### Phase 33 — Implement ticket 29
 
