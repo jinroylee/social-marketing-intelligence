@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 27 in its fresh context/worktree: one bounded model-backed question/answer journey over current permitted KB support, with attributable metering and policy-aware historical reads. Tickets 11–26 are integrated and resolved; validate and merge before advancing. No enrichment submission or external search is part of this ticket.
+Dispatch ticket 28 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–27 are integrated and resolved; ticket 28 is pending. The bounded extractive answer software is complete; actual model runtime prerequisites and independent semantic/human-quality validation remain unestablished.
 
 ## Current Phase
 
-Phase 31 — ticket 27 in progress after successful ticket 26 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 32 — ticket 28 pending after successful ticket 27 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -224,9 +224,9 @@ Fast-forward integrated final handoff/root checked head `ca4bd0a4da32cb1944d5013
 
 ### Phase 31 — Implement ticket 27
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final handoff/root checked `c37f76a71d2a739c6c44936dd27b604824960fba`, runtime/frozen `6110c01839e1742a1f8986f9b25f8335c9e97544`. Required root shared checks passed all static/preflight stages and **671 tests in 466.67 seconds**, exit 0; durable identity/status/logs are under `verification/ticket-27-integrated/`. Existing persistent wheel identity and all 67 source/archive pairs match integrated bytes, sizes, hashes and relative symlink targets, including ten SQL schemas, both review assets and all 23 guidance pairs. All six criteria are checked and ticket 27 is resolved. Dispatch-time permission race is repaired and covered by the public real-PostgreSQL regression/full gate; no blocking root finding remains. Exact extractive findings/full-input dependencies are implemented without source-value cache or acquisition/tools; model runtime/live receipts and semantic/human usefulness remain unestablished.
 
 ### Phase 32 — Implement ticket 28
 
