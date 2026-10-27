@@ -1,0 +1,896 @@
+{
+  "base_commit": "1d38a3e6515f78a0e0edc22ad6d6d90f637feaf3",
+  "files": [
+    {
+      "source": "src/smi_assistant/AGENTS.md",
+      "archive": "smi_assistant/AGENTS.md",
+      "source_identity": {
+        "size": 2504,
+        "sha256": "de14b2921e42f0f25774fefe61c8c9e5a27bd562e8e799e274ccd8f38f555b9a"
+      },
+      "archive_identity": {
+        "size": 2504,
+        "sha256": "de14b2921e42f0f25774fefe61c8c9e5a27bd562e8e799e274ccd8f38f555b9a"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_assistant/CLAUDE.md",
+      "archive": "smi_assistant/CLAUDE.md",
+      "source_identity": {
+        "size": 2504,
+        "sha256": "de14b2921e42f0f25774fefe61c8c9e5a27bd562e8e799e274ccd8f38f555b9a"
+      },
+      "archive_identity": {
+        "size": 2504,
+        "sha256": "de14b2921e42f0f25774fefe61c8c9e5a27bd562e8e799e274ccd8f38f555b9a"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_assistant/schema.sql",
+      "archive": "smi_assistant/schema.sql",
+      "source_identity": {
+        "size": 765,
+        "sha256": "3e71f039b5bf698bda281e554b88517f96c4d217e3bdf103eeaaedd37fc66d04"
+      },
+      "archive_identity": {
+        "size": 765,
+        "sha256": "3e71f039b5bf698bda281e554b88517f96c4d217e3bdf103eeaaedd37fc66d04"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/AGENTS.md",
+      "archive": "smi_campaigns/AGENTS.md",
+      "source_identity": {
+        "size": 8366,
+        "sha256": "da47b1789eecfa42a4c3430febc109386657a98b73cce262b4d6bcbc716ebf19"
+      },
+      "archive_identity": {
+        "size": 8366,
+        "sha256": "da47b1789eecfa42a4c3430febc109386657a98b73cce262b4d6bcbc716ebf19"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/CLAUDE.md",
+      "archive": "smi_campaigns/CLAUDE.md",
+      "source_identity": {
+        "size": 8366,
+        "sha256": "da47b1789eecfa42a4c3430febc109386657a98b73cce262b4d6bcbc716ebf19"
+      },
+      "archive_identity": {
+        "size": 8366,
+        "sha256": "da47b1789eecfa42a4c3430febc109386657a98b73cce262b4d6bcbc716ebf19"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_campaigns/interpretation/AGENTS.md",
+      "archive": "smi_campaigns/interpretation/AGENTS.md",
+      "source_identity": {
+        "size": 2014,
+        "sha256": "997b11f3b6d565f15938470d97be2d383423ff622680d3c3e34013effd93616f"
+      },
+      "archive_identity": {
+        "size": 2014,
+        "sha256": "997b11f3b6d565f15938470d97be2d383423ff622680d3c3e34013effd93616f"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/interpretation/CLAUDE.md",
+      "archive": "smi_campaigns/interpretation/CLAUDE.md",
+      "source_identity": {
+        "size": 2014,
+        "sha256": "997b11f3b6d565f15938470d97be2d383423ff622680d3c3e34013effd93616f"
+      },
+      "archive_identity": {
+        "size": 2014,
+        "sha256": "997b11f3b6d565f15938470d97be2d383423ff622680d3c3e34013effd93616f"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_campaigns/planning/AGENTS.md",
+      "archive": "smi_campaigns/planning/AGENTS.md",
+      "source_identity": {
+        "size": 1635,
+        "sha256": "f898de75703f6652e7cc8700b39f21a5fa9d73cc56abce4b94ed1cb254a503f5"
+      },
+      "archive_identity": {
+        "size": 1635,
+        "sha256": "f898de75703f6652e7cc8700b39f21a5fa9d73cc56abce4b94ed1cb254a503f5"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/planning/CLAUDE.md",
+      "archive": "smi_campaigns/planning/CLAUDE.md",
+      "source_identity": {
+        "size": 1635,
+        "sha256": "f898de75703f6652e7cc8700b39f21a5fa9d73cc56abce4b94ed1cb254a503f5"
+      },
+      "archive_identity": {
+        "size": 1635,
+        "sha256": "f898de75703f6652e7cc8700b39f21a5fa9d73cc56abce4b94ed1cb254a503f5"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_campaigns/planning/schema.sql",
+      "archive": "smi_campaigns/planning/schema.sql",
+      "source_identity": {
+        "size": 1705,
+        "sha256": "ebf7ffe6db470fb9d107af0868846a6f215b9a9326ecc37a35c6f4dc2b37f4a2"
+      },
+      "archive_identity": {
+        "size": 1705,
+        "sha256": "ebf7ffe6db470fb9d107af0868846a6f215b9a9326ecc37a35c6f4dc2b37f4a2"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/ranking/AGENTS.md",
+      "archive": "smi_campaigns/ranking/AGENTS.md",
+      "source_identity": {
+        "size": 1465,
+        "sha256": "4dbf20779a1608835ba9b7124b19ff53179e1b5122962510f62b81bd60a95d06"
+      },
+      "archive_identity": {
+        "size": 1465,
+        "sha256": "4dbf20779a1608835ba9b7124b19ff53179e1b5122962510f62b81bd60a95d06"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/ranking/CLAUDE.md",
+      "archive": "smi_campaigns/ranking/CLAUDE.md",
+      "source_identity": {
+        "size": 1465,
+        "sha256": "4dbf20779a1608835ba9b7124b19ff53179e1b5122962510f62b81bd60a95d06"
+      },
+      "archive_identity": {
+        "size": 1465,
+        "sha256": "4dbf20779a1608835ba9b7124b19ff53179e1b5122962510f62b81bd60a95d06"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_campaigns/responses/AGENTS.md",
+      "archive": "smi_campaigns/responses/AGENTS.md",
+      "source_identity": {
+        "size": 1752,
+        "sha256": "ca49fe9d86dec20d6e536c811f8032a78dfb0a988bd819c6a23865bd24bdc1f2"
+      },
+      "archive_identity": {
+        "size": 1752,
+        "sha256": "ca49fe9d86dec20d6e536c811f8032a78dfb0a988bd819c6a23865bd24bdc1f2"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/responses/CLAUDE.md",
+      "archive": "smi_campaigns/responses/CLAUDE.md",
+      "source_identity": {
+        "size": 1752,
+        "sha256": "ca49fe9d86dec20d6e536c811f8032a78dfb0a988bd819c6a23865bd24bdc1f2"
+      },
+      "archive_identity": {
+        "size": 1752,
+        "sha256": "ca49fe9d86dec20d6e536c811f8032a78dfb0a988bd819c6a23865bd24bdc1f2"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_campaigns/schema.sql",
+      "archive": "smi_campaigns/schema.sql",
+      "source_identity": {
+        "size": 7682,
+        "sha256": "4abcc207e0fec794d2e78acc89e1fe167c70749c6526457fd104f90c010e9104"
+      },
+      "archive_identity": {
+        "size": 7682,
+        "sha256": "4abcc207e0fec794d2e78acc89e1fe167c70749c6526457fd104f90c010e9104"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_costs/AGENTS.md",
+      "archive": "smi_costs/AGENTS.md",
+      "source_identity": {
+        "size": 5780,
+        "sha256": "e7f71b8563407902ebfbe7f74c381c58660b4adacb06c8403b717b8dba704c0a"
+      },
+      "archive_identity": {
+        "size": 5780,
+        "sha256": "e7f71b8563407902ebfbe7f74c381c58660b4adacb06c8403b717b8dba704c0a"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_costs/CLAUDE.md",
+      "archive": "smi_costs/CLAUDE.md",
+      "source_identity": {
+        "size": 5780,
+        "sha256": "e7f71b8563407902ebfbe7f74c381c58660b4adacb06c8403b717b8dba704c0a"
+      },
+      "archive_identity": {
+        "size": 5780,
+        "sha256": "e7f71b8563407902ebfbe7f74c381c58660b4adacb06c8403b717b8dba704c0a"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_costs/schema.sql",
+      "archive": "smi_costs/schema.sql",
+      "source_identity": {
+        "size": 3556,
+        "sha256": "f2952c0bfe080cf48d0e659cd3fc7cb4fdaf7bd5901792b0343297a01bd76377"
+      },
+      "archive_identity": {
+        "size": 3556,
+        "sha256": "f2952c0bfe080cf48d0e659cd3fc7cb4fdaf7bd5901792b0343297a01bd76377"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/AGENTS.md",
+      "archive": "smi_ingestion/AGENTS.md",
+      "source_identity": {
+        "size": 3543,
+        "sha256": "ac79f43e545208825390d1d32d563f89b8c5debbadc603d096c02787337a7a5c"
+      },
+      "archive_identity": {
+        "size": 3543,
+        "sha256": "ac79f43e545208825390d1d32d563f89b8c5debbadc603d096c02787337a7a5c"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/CLAUDE.md",
+      "archive": "smi_ingestion/CLAUDE.md",
+      "source_identity": {
+        "size": 3543,
+        "sha256": "ac79f43e545208825390d1d32d563f89b8c5debbadc603d096c02787337a7a5c"
+      },
+      "archive_identity": {
+        "size": 3543,
+        "sha256": "ac79f43e545208825390d1d32d563f89b8c5debbadc603d096c02787337a7a5c"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_ingestion/adapters/AGENTS.md",
+      "archive": "smi_ingestion/adapters/AGENTS.md",
+      "source_identity": {
+        "size": 2685,
+        "sha256": "20f0569e0b5d94d3c9bf17895988dd41839b08efa7d47142234971ac47a01c7b"
+      },
+      "archive_identity": {
+        "size": 2685,
+        "sha256": "20f0569e0b5d94d3c9bf17895988dd41839b08efa7d47142234971ac47a01c7b"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/adapters/CLAUDE.md",
+      "archive": "smi_ingestion/adapters/CLAUDE.md",
+      "source_identity": {
+        "size": 2685,
+        "sha256": "20f0569e0b5d94d3c9bf17895988dd41839b08efa7d47142234971ac47a01c7b"
+      },
+      "archive_identity": {
+        "size": 2685,
+        "sha256": "20f0569e0b5d94d3c9bf17895988dd41839b08efa7d47142234971ac47a01c7b"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_ingestion/adapters/tiktok_keyword/AGENTS.md",
+      "archive": "smi_ingestion/adapters/tiktok_keyword/AGENTS.md",
+      "source_identity": {
+        "size": 1813,
+        "sha256": "2e683926e773948ee8cb1089b354d78415c5c070dffcaba27e65b5e58e4adc8d"
+      },
+      "archive_identity": {
+        "size": 1813,
+        "sha256": "2e683926e773948ee8cb1089b354d78415c5c070dffcaba27e65b5e58e4adc8d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/adapters/tiktok_keyword/CLAUDE.md",
+      "archive": "smi_ingestion/adapters/tiktok_keyword/CLAUDE.md",
+      "source_identity": {
+        "size": 1813,
+        "sha256": "2e683926e773948ee8cb1089b354d78415c5c070dffcaba27e65b5e58e4adc8d"
+      },
+      "archive_identity": {
+        "size": 1813,
+        "sha256": "2e683926e773948ee8cb1089b354d78415c5c070dffcaba27e65b5e58e4adc8d"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_ingestion/cli.py",
+      "archive": "smi_ingestion/cli.py",
+      "source_identity": {
+        "size": 23326,
+        "sha256": "624a1e7daaae177392daa26ba3f2ec80e94cbc6b90180a0e27e6186f30b6a806"
+      },
+      "archive_identity": {
+        "size": 23326,
+        "sha256": "624a1e7daaae177392daa26ba3f2ec80e94cbc6b90180a0e27e6186f30b6a806"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/evidence_sets/AGENTS.md",
+      "archive": "smi_ingestion/evidence_sets/AGENTS.md",
+      "source_identity": {
+        "size": 1403,
+        "sha256": "4322864004029d6a209b045879775868aeb445b3ff4f56343d15374cb9aa381d"
+      },
+      "archive_identity": {
+        "size": 1403,
+        "sha256": "4322864004029d6a209b045879775868aeb445b3ff4f56343d15374cb9aa381d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/evidence_sets/CLAUDE.md",
+      "archive": "smi_ingestion/evidence_sets/CLAUDE.md",
+      "source_identity": {
+        "size": 1403,
+        "sha256": "4322864004029d6a209b045879775868aeb445b3ff4f56343d15374cb9aa381d"
+      },
+      "archive_identity": {
+        "size": 1403,
+        "sha256": "4322864004029d6a209b045879775868aeb445b3ff4f56343d15374cb9aa381d"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_ingestion/schema.sql",
+      "archive": "smi_ingestion/schema.sql",
+      "source_identity": {
+        "size": 5772,
+        "sha256": "6ff0e235ab61e0c41431bdfde4d291fb28c6f0f935cbce17f4c15c3294a27f44"
+      },
+      "archive_identity": {
+        "size": 5772,
+        "sha256": "6ff0e235ab61e0c41431bdfde4d291fb28c6f0f935cbce17f4c15c3294a27f44"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/support/AGENTS.md",
+      "archive": "smi_ingestion/support/AGENTS.md",
+      "source_identity": {
+        "size": 2048,
+        "sha256": "76b2d8b44f93b4174c37c24ebb0058159407aa25de857aa7e2a321fe0c642394"
+      },
+      "archive_identity": {
+        "size": 2048,
+        "sha256": "76b2d8b44f93b4174c37c24ebb0058159407aa25de857aa7e2a321fe0c642394"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/support/CLAUDE.md",
+      "archive": "smi_ingestion/support/CLAUDE.md",
+      "source_identity": {
+        "size": 2048,
+        "sha256": "76b2d8b44f93b4174c37c24ebb0058159407aa25de857aa7e2a321fe0c642394"
+      },
+      "archive_identity": {
+        "size": 2048,
+        "sha256": "76b2d8b44f93b4174c37c24ebb0058159407aa25de857aa7e2a321fe0c642394"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_knowledge/AGENTS.md",
+      "archive": "smi_knowledge/AGENTS.md",
+      "source_identity": {
+        "size": 1685,
+        "sha256": "f46b70e18e6e491a8d84e2adc708b90b91627a8307176032fc26adb2564f6122"
+      },
+      "archive_identity": {
+        "size": 1685,
+        "sha256": "f46b70e18e6e491a8d84e2adc708b90b91627a8307176032fc26adb2564f6122"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_knowledge/CLAUDE.md",
+      "archive": "smi_knowledge/CLAUDE.md",
+      "source_identity": {
+        "size": 1685,
+        "sha256": "f46b70e18e6e491a8d84e2adc708b90b91627a8307176032fc26adb2564f6122"
+      },
+      "archive_identity": {
+        "size": 1685,
+        "sha256": "f46b70e18e6e491a8d84e2adc708b90b91627a8307176032fc26adb2564f6122"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_knowledge/publications/AGENTS.md",
+      "archive": "smi_knowledge/publications/AGENTS.md",
+      "source_identity": {
+        "size": 3314,
+        "sha256": "6fd6ec27d2a7b1c2d7b9cff2a5e81817f624fd76a1f3a5707e9a266c28d11a55"
+      },
+      "archive_identity": {
+        "size": 3314,
+        "sha256": "6fd6ec27d2a7b1c2d7b9cff2a5e81817f624fd76a1f3a5707e9a266c28d11a55"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_knowledge/publications/CLAUDE.md",
+      "archive": "smi_knowledge/publications/CLAUDE.md",
+      "source_identity": {
+        "size": 3314,
+        "sha256": "6fd6ec27d2a7b1c2d7b9cff2a5e81817f624fd76a1f3a5707e9a266c28d11a55"
+      },
+      "archive_identity": {
+        "size": 3314,
+        "sha256": "6fd6ec27d2a7b1c2d7b9cff2a5e81817f624fd76a1f3a5707e9a266c28d11a55"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_knowledge/queries/AGENTS.md",
+      "archive": "smi_knowledge/queries/AGENTS.md",
+      "source_identity": {
+        "size": 2485,
+        "sha256": "d20de5def0e0571102457b7a076acf7bddee16571b080f21e21bd56c2466075d"
+      },
+      "archive_identity": {
+        "size": 2485,
+        "sha256": "d20de5def0e0571102457b7a076acf7bddee16571b080f21e21bd56c2466075d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_knowledge/queries/CLAUDE.md",
+      "archive": "smi_knowledge/queries/CLAUDE.md",
+      "source_identity": {
+        "size": 2485,
+        "sha256": "d20de5def0e0571102457b7a076acf7bddee16571b080f21e21bd56c2466075d"
+      },
+      "archive_identity": {
+        "size": 2485,
+        "sha256": "d20de5def0e0571102457b7a076acf7bddee16571b080f21e21bd56c2466075d"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_knowledge/schema.sql",
+      "archive": "smi_knowledge/schema.sql",
+      "source_identity": {
+        "size": 6081,
+        "sha256": "5319ad64e747f6f827b7b249652fa1a8cfc5329f3d9feea016303b8c0ee56547"
+      },
+      "archive_identity": {
+        "size": 6081,
+        "sha256": "5319ad64e747f6f827b7b249652fa1a8cfc5329f3d9feea016303b8c0ee56547"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/AGENTS.md",
+      "archive": "smi_monitoring/AGENTS.md",
+      "source_identity": {
+        "size": 1390,
+        "sha256": "2e4dd697c8307430dfe203aae043be227b602d456fcd57e71141ead120863240"
+      },
+      "archive_identity": {
+        "size": 1390,
+        "sha256": "2e4dd697c8307430dfe203aae043be227b602d456fcd57e71141ead120863240"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/CLAUDE.md",
+      "archive": "smi_monitoring/CLAUDE.md",
+      "source_identity": {
+        "size": 1390,
+        "sha256": "2e4dd697c8307430dfe203aae043be227b602d456fcd57e71141ead120863240"
+      },
+      "archive_identity": {
+        "size": 1390,
+        "sha256": "2e4dd697c8307430dfe203aae043be227b602d456fcd57e71141ead120863240"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_monitoring/schema.sql",
+      "archive": "smi_monitoring/schema.sql",
+      "source_identity": {
+        "size": 2150,
+        "sha256": "f4a35baf59de56f845981b1756685fe2b4ee7b455aec7f348bca2ead714d1382"
+      },
+      "archive_identity": {
+        "size": 2150,
+        "sha256": "f4a35baf59de56f845981b1756685fe2b4ee7b455aec7f348bca2ead714d1382"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/AGENTS.md",
+      "archive": "smi_review/AGENTS.md",
+      "source_identity": {
+        "size": 13240,
+        "sha256": "9aee643b85345351e077cae471f54df7e1237350739671f82158232f3ba3a631"
+      },
+      "archive_identity": {
+        "size": 13240,
+        "sha256": "9aee643b85345351e077cae471f54df7e1237350739671f82158232f3ba3a631"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/CLAUDE.md",
+      "archive": "smi_review/CLAUDE.md",
+      "source_identity": {
+        "size": 13240,
+        "sha256": "9aee643b85345351e077cae471f54df7e1237350739671f82158232f3ba3a631"
+      },
+      "archive_identity": {
+        "size": 13240,
+        "sha256": "9aee643b85345351e077cae471f54df7e1237350739671f82158232f3ba3a631"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_review/app.py",
+      "archive": "smi_review/app.py",
+      "source_identity": {
+        "size": 42526,
+        "sha256": "d320315c035ba8c507e9a55814fe1b753f765a043c2556e3b520bea88ce796e6"
+      },
+      "archive_identity": {
+        "size": 42526,
+        "sha256": "d320315c035ba8c507e9a55814fe1b753f765a043c2556e3b520bea88ce796e6"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/enrichment_views.py",
+      "archive": "smi_review/enrichment_views.py",
+      "source_identity": {
+        "size": 5263,
+        "sha256": "dc53d97740227c2ab78bcc706532191332560410b80a05f9b6047cc78885dee8"
+      },
+      "archive_identity": {
+        "size": 5263,
+        "sha256": "dc53d97740227c2ab78bcc706532191332560410b80a05f9b6047cc78885dee8"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/proposal_views.py",
+      "archive": "smi_review/proposal_views.py",
+      "source_identity": {
+        "size": 7370,
+        "sha256": "cbc0febd897c1b57420336b1af4d254efe18d0e39ff313af4d34cc60b932e345"
+      },
+      "archive_identity": {
+        "size": 7370,
+        "sha256": "cbc0febd897c1b57420336b1af4d254efe18d0e39ff313af4d34cc60b932e345"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/static/review.css",
+      "archive": "smi_review/static/review.css",
+      "source_identity": {
+        "size": 6957,
+        "sha256": "efda583d76a7eae5d817c7b3ad137ef7630f03c6c5a2163177c27779df924a6d"
+      },
+      "archive_identity": {
+        "size": 6957,
+        "sha256": "efda583d76a7eae5d817c7b3ad137ef7630f03c6c5a2163177c27779df924a6d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/static/review.js",
+      "archive": "smi_review/static/review.js",
+      "source_identity": {
+        "size": 2135,
+        "sha256": "58aa724b6ac9532d6fcf656e15ad20eb71b625dde1967fddd4ab5676cc5ce253"
+      },
+      "archive_identity": {
+        "size": 2135,
+        "sha256": "58aa724b6ac9532d6fcf656e15ad20eb71b625dde1967fddd4ab5676cc5ce253"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/AGENTS.md",
+      "archive": "smi_tasks/AGENTS.md",
+      "source_identity": {
+        "size": 10078,
+        "sha256": "c54913096288bbdfaea10db9a6f7a5909d4d7c5b5de2e24c1c1bf6d4196bb0b8"
+      },
+      "archive_identity": {
+        "size": 10078,
+        "sha256": "c54913096288bbdfaea10db9a6f7a5909d4d7c5b5de2e24c1c1bf6d4196bb0b8"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/CLAUDE.md",
+      "archive": "smi_tasks/CLAUDE.md",
+      "source_identity": {
+        "size": 10078,
+        "sha256": "c54913096288bbdfaea10db9a6f7a5909d4d7c5b5de2e24c1c1bf6d4196bb0b8"
+      },
+      "archive_identity": {
+        "size": 10078,
+        "sha256": "c54913096288bbdfaea10db9a6f7a5909d4d7c5b5de2e24c1c1bf6d4196bb0b8"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/assistant/AGENTS.md",
+      "archive": "smi_tasks/assistant/AGENTS.md",
+      "source_identity": {
+        "size": 2505,
+        "sha256": "9ca316cd70184d573946c2d8fc6834939b7f2c2bc7453d6ba42362bdf627b153"
+      },
+      "archive_identity": {
+        "size": 2505,
+        "sha256": "9ca316cd70184d573946c2d8fc6834939b7f2c2bc7453d6ba42362bdf627b153"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/assistant/CLAUDE.md",
+      "archive": "smi_tasks/assistant/CLAUDE.md",
+      "source_identity": {
+        "size": 2505,
+        "sha256": "9ca316cd70184d573946c2d8fc6834939b7f2c2bc7453d6ba42362bdf627b153"
+      },
+      "archive_identity": {
+        "size": 2505,
+        "sha256": "9ca316cd70184d573946c2d8fc6834939b7f2c2bc7453d6ba42362bdf627b153"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/assistant/__init__.py",
+      "archive": "smi_tasks/assistant/__init__.py",
+      "source_identity": {
+        "size": 9439,
+        "sha256": "17495ce0c86ab36591207b7f46b66f36ca9fa8233819ca4aaab38994295159aa"
+      },
+      "archive_identity": {
+        "size": 9439,
+        "sha256": "17495ce0c86ab36591207b7f46b66f36ca9fa8233819ca4aaab38994295159aa"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/assistant/schema.sql",
+      "archive": "smi_tasks/assistant/schema.sql",
+      "source_identity": {
+        "size": 574,
+        "sha256": "4a162860c67cfdf57595005881bd05858f64acf70aa012df906a35b86e3a9179"
+      },
+      "archive_identity": {
+        "size": 574,
+        "sha256": "4a162860c67cfdf57595005881bd05858f64acf70aa012df906a35b86e3a9179"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/campaigns/AGENTS.md",
+      "archive": "smi_tasks/campaigns/AGENTS.md",
+      "source_identity": {
+        "size": 2406,
+        "sha256": "f80143db02376895da6f36194982fc2c90747b1bfc17300078eeebc16089b2aa"
+      },
+      "archive_identity": {
+        "size": 2406,
+        "sha256": "f80143db02376895da6f36194982fc2c90747b1bfc17300078eeebc16089b2aa"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/campaigns/CLAUDE.md",
+      "archive": "smi_tasks/campaigns/CLAUDE.md",
+      "source_identity": {
+        "size": 2406,
+        "sha256": "f80143db02376895da6f36194982fc2c90747b1bfc17300078eeebc16089b2aa"
+      },
+      "archive_identity": {
+        "size": 2406,
+        "sha256": "f80143db02376895da6f36194982fc2c90747b1bfc17300078eeebc16089b2aa"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/discovery/AGENTS.md",
+      "archive": "smi_tasks/discovery/AGENTS.md",
+      "source_identity": {
+        "size": 2760,
+        "sha256": "6077351f583f2b8ad03e3df0b0a1cf6a822c9e1e00357c31cbb5f9e676a56641"
+      },
+      "archive_identity": {
+        "size": 2760,
+        "sha256": "6077351f583f2b8ad03e3df0b0a1cf6a822c9e1e00357c31cbb5f9e676a56641"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/discovery/CLAUDE.md",
+      "archive": "smi_tasks/discovery/CLAUDE.md",
+      "source_identity": {
+        "size": 2760,
+        "sha256": "6077351f583f2b8ad03e3df0b0a1cf6a822c9e1e00357c31cbb5f9e676a56641"
+      },
+      "archive_identity": {
+        "size": 2760,
+        "sha256": "6077351f583f2b8ad03e3df0b0a1cf6a822c9e1e00357c31cbb5f9e676a56641"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/discovery/schema.sql",
+      "archive": "smi_tasks/discovery/schema.sql",
+      "source_identity": {
+        "size": 1003,
+        "sha256": "0a4c90a6a47d4045764379e1e1b62aacd24489b0b109c8b03e2739bbdad6489e"
+      },
+      "archive_identity": {
+        "size": 1003,
+        "sha256": "0a4c90a6a47d4045764379e1e1b62aacd24489b0b109c8b03e2739bbdad6489e"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/notifications/AGENTS.md",
+      "archive": "smi_tasks/notifications/AGENTS.md",
+      "source_identity": {
+        "size": 2116,
+        "sha256": "4c3ac15ab13efbe93f6e3244819cd615482bd5d49e4055cc995828f42ca5e58c"
+      },
+      "archive_identity": {
+        "size": 2116,
+        "sha256": "4c3ac15ab13efbe93f6e3244819cd615482bd5d49e4055cc995828f42ca5e58c"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/notifications/CLAUDE.md",
+      "archive": "smi_tasks/notifications/CLAUDE.md",
+      "source_identity": {
+        "size": 2116,
+        "sha256": "4c3ac15ab13efbe93f6e3244819cd615482bd5d49e4055cc995828f42ca5e58c"
+      },
+      "archive_identity": {
+        "size": 2116,
+        "sha256": "4c3ac15ab13efbe93f6e3244819cd615482bd5d49e4055cc995828f42ca5e58c"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/notifications/store.py",
+      "archive": "smi_tasks/notifications/store.py",
+      "source_identity": {
+        "size": 5925,
+        "sha256": "50b62ed12d3e0b0fb7a8269f64ae7b74c7ba9ff40717fffe65d76663cf05792b"
+      },
+      "archive_identity": {
+        "size": 5925,
+        "sha256": "50b62ed12d3e0b0fb7a8269f64ae7b74c7ba9ff40717fffe65d76663cf05792b"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/schedules/AGENTS.md",
+      "archive": "smi_tasks/schedules/AGENTS.md",
+      "source_identity": {
+        "size": 4268,
+        "sha256": "e013898bd8e1523c87d0432830690c0608e26624288687d540c6badf42c71bf8"
+      },
+      "archive_identity": {
+        "size": 4268,
+        "sha256": "e013898bd8e1523c87d0432830690c0608e26624288687d540c6badf42c71bf8"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/schedules/CLAUDE.md",
+      "archive": "smi_tasks/schedules/CLAUDE.md",
+      "source_identity": {
+        "size": 4268,
+        "sha256": "e013898bd8e1523c87d0432830690c0608e26624288687d540c6badf42c71bf8"
+      },
+      "archive_identity": {
+        "size": 4268,
+        "sha256": "e013898bd8e1523c87d0432830690c0608e26624288687d540c6badf42c71bf8"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/schedules/schema.sql",
+      "archive": "smi_tasks/schedules/schema.sql",
+      "source_identity": {
+        "size": 3826,
+        "sha256": "95da9883ab81d9a7530e2ade939627aa964259150749b8f2a42aee030546db89"
+      },
+      "archive_identity": {
+        "size": 3826,
+        "sha256": "95da9883ab81d9a7530e2ade939627aa964259150749b8f2a42aee030546db89"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/schema.sql",
+      "archive": "smi_tasks/schema.sql",
+      "source_identity": {
+        "size": 7766,
+        "sha256": "9b7282ae9926d3a748f9c2aab78053b01dd02ed9e9c9e2948bfdf5554f76581a"
+      },
+      "archive_identity": {
+        "size": 7766,
+        "sha256": "9b7282ae9926d3a748f9c2aab78053b01dd02ed9e9c9e2948bfdf5554f76581a"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/store.py",
+      "archive": "smi_tasks/store.py",
+      "source_identity": {
+        "size": 38135,
+        "sha256": "49b67a75546381789f1e2d38f0c73ce04d3ba3c47a5abf6b625f5cb52ff98b4d"
+      },
+      "archive_identity": {
+        "size": 38135,
+        "sha256": "49b67a75546381789f1e2d38f0c73ce04d3ba3c47a5abf6b625f5cb52ff98b4d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/supplementation/AGENTS.md",
+      "archive": "smi_tasks/supplementation/AGENTS.md",
+      "source_identity": {
+        "size": 2009,
+        "sha256": "e645be5dfea9d7b0233af0bd9f7b5bdceadfee09b60cc0a2f3af146317ccc64d"
+      },
+      "archive_identity": {
+        "size": 2009,
+        "sha256": "e645be5dfea9d7b0233af0bd9f7b5bdceadfee09b60cc0a2f3af146317ccc64d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/supplementation/CLAUDE.md",
+      "archive": "smi_tasks/supplementation/CLAUDE.md",
+      "source_identity": {
+        "size": 2009,
+        "sha256": "e645be5dfea9d7b0233af0bd9f7b5bdceadfee09b60cc0a2f3af146317ccc64d"
+      },
+      "archive_identity": {
+        "size": 2009,
+        "sha256": "e645be5dfea9d7b0233af0bd9f7b5bdceadfee09b60cc0a2f3af146317ccc64d"
+      },
+      "symlink_target": "AGENTS.md"
+    }
+  ],
+  "wheel": {
+    "filename": "smi_ingestion-0.1.0-py3-none-any.whl",
+    "size": 336398,
+    "sha256": "485099d9851128f34c17a11101e1b85d037c9ac5516992091d7e05973d8f3391",
+    "entry_count": 159
+  },
+  "runtime_commit": "1d0c137cc1936a4fe6ddd7f6a796a8a1f20f9d93"
+}
