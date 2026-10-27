@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 30 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–29 are integrated and resolved; ticket 30 is pending. Offline recent-X evidence software is complete without live-readiness, market-completeness, trend or human-quality claims; worker artifacts remain preserved for verified archival before eventual cleanup.
+Implement ticket 30 in its fresh context/worktree: one configured quantitative method over comparable recent-X baseline/detection windows, retained alerts and durable local inbox delivery. Tickets 11–29 are integrated and resolved; validate and merge before advancing. Semantic detection and external investigation remain outside this ticket.
 
 ## Current Phase
 
-Phase 34 — ticket 30 pending after successful ticket 29 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 34 — ticket 30 in progress after successful ticket 29 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -242,7 +242,7 @@ Fast-forward integrated final handoff/root checked `80c3329e8428efcebe3fa1f0fba6
 
 ### Phase 34 — Implement ticket 30
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
