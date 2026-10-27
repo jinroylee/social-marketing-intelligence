@@ -4,7 +4,7 @@
 
 **Blocked by:** 05: Approve an exact assistant enrichment proposal; 08: Deliver durable task completion notifications; 27: Answer free-form questions from permitted knowledge.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
