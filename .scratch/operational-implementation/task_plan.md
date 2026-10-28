@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket33 in its fresh context/worktree: one explicit selected-monitoring-observation promotion through normal ingestion/publication with origin lineage and inherited policy/retention dependencies. Tickets11–32 are integrated and resolved; validate and merge before advancing. No new retrieval, automatic whole-feed publication or campaign creation.
+Dispatch ticket 34 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–33 are integrated and resolved; ticket 34 is pending. Use current primary contract verification and simulated route validation, keeping actual live prerequisites separate. Preserve archived evidence and the original final-review baseline.
 
 ## Current Phase
 
-Phase 37 — ticket 33 in progress after successful ticket 32 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 38 — ticket 34 pending after successful ticket 33 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -260,9 +260,9 @@ Fast-forward integrated final handoff/root checked `2befbb4b0014530659a982ce6800
 
 ### Phase 37 — Implement ticket 33
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final handoff/root checked `3f9d1050c23d25c8757855141ab1284cffdca746`, runtime `67c58b6dab6bfa0db7a0a02693d7be9c6d96ad02`, frozen worker merge `48cc8052cb604c6c5872ccdc1a7215a8e8c1556e`. Required root checks passed all static/preflight stages plus **794 tests in 700.00 seconds**, exit 0; durable evidence is under `verification/ticket-33-integrated/`. Wheel identity/all 88 pairs match root, including sixteen SQL schemas, both assets, 29 guidance pairs and root guidance; all 285 protected frozen files independently match. All six criteria are checked and ticket 33 is resolved. Source-as-of/public-port/workspace reconciliation review corrections are complete with public promotion/lifecycle/rollback/lock coverage. Promotion preserves original support/policy lineage with zero new provider requests and no human/live-readiness claim. Coordinator root archive 33 identity verified; existing committed 26–32 relocation report and all worker artifacts remain preserved.
 
 ### Phase 38 — Implement ticket 34
 
