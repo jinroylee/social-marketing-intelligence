@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket32 in its fresh context/worktree: bounded existing-KB context and explanation beside supported X alerts, with exact pinned support and current policy. Tickets11–31 are integrated and resolved; validate and merge before advancing. No external/model acquisition, enrichment, topic expansion or campaign action.
+Dispatch ticket 33 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–32 are integrated and resolved; ticket 33 is pending. Existing-KB alert context is complete; actual runtime/quality gates remain unestablished, and artifacts remain for verified archival before cleanup.
 
 ## Current Phase
 
-Phase 36 — ticket 32 in progress after successful ticket 31 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 37 — ticket 33 pending after successful ticket 32 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -254,9 +254,9 @@ Fast-forward integrated final handoff/root checked `c3d85e2c0cc9e593d74b2aaa1a6c
 
 ### Phase 36 — Implement ticket 32
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final handoff/root checked `2befbb4b0014530659a982ce6800cecc02a3934d`, runtime/frozen `91d995bc5f0fd814e6c6c20a335ea080d59d7cf7`. Required root shared checks completed during usage interruption and passed all static/preflight stages plus **775 tests in 660.52 seconds**, exit 0; resume inspected matching durable evidence and preserved PASS without rerun. Wheel identity/all 80 source/archive pairs match root bytes, sizes, hashes and relative targets, including fifteen SQL schemas, both assets and 28 guidance pairs; root guidance separately verified. All six criteria are checked and ticket 32 is resolved. Root review reported no blocker; public both-method/current-policy/atomic-commit tests and zero transport counters cover fixed literal KB context, permanent explanation withholding and new-publication isolation. Causation, entity equivalence, semantic relevance, market, live readiness and human usefulness remain unverified. Worker artifacts remain intact.
 
 ### Phase 37 — Implement ticket 33
 
