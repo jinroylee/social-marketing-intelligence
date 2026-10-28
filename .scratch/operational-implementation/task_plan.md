@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 34 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–33 are integrated and resolved; ticket 34 is pending. Use current primary contract verification and simulated route validation, keeping actual live prerequisites separate. Preserve archived evidence and the original final-review baseline.
+Implement ticket 34 in its fresh context/worktree: verify one current primary recent-X contract and deliver a bounded coordinated route using simulated I/O. Tickets 11–33 are integrated and resolved; validate and merge before advancing. Actual source execution remains disabled until separately supplied runtime gates are met.
 
 ## Current Phase
 
-Phase 38 — ticket 34 pending after successful ticket 33 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 38 — ticket 34 in progress after successful ticket 33 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -266,7 +266,7 @@ Fast-forward integrated final handoff/root checked `3f9d1050c23d25c8757855141ab1
 
 ### Phase 38 — Implement ticket 34
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
