@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 35 in its fresh context/worktree: a bounded one-hop graph projection over existing governed public KB reads, with explicit relationship bases and evidence. Tickets 11–34 are integrated and resolved; validate and merge before advancing. No graph database, inferred Creator merging, multi-hop traversal or new fact store.
+Dispatch ticket 36 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–35 are integrated and resolved; ticket 36 is pending. Preserve exact support/current-policy contracts, verification evidence, archives and the original final-review baseline; human usefulness and complete coverage remain unestablished.
 
 ## Current Phase
 
-Phase 39 — ticket 35 in progress after successful ticket 34 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 40 — ticket 36 pending after successful ticket 35 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -272,9 +272,9 @@ Fast-forward integrated final handoff/root checked `979201b3b8b8c378e9118fab6f6e
 
 ### Phase 39 — Implement ticket 35
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final handoff/root checked `bd5dca9d7e3ba179e0fc1d5fb25c573cc596472d`, runtime `324ee32a640aba7828fa4d4c2fa1644a42cdc726`, frozen merge `bf526f6fa7a8b740fc678b2b084f1a807a2581d5`. Required independent root checks passed all static/preflight stages and **840 tests in 568.46 seconds**, exit 0. Existing wheel/all 89 pairs, all 13 changed packaged paths, eighteen SQL schemas, both assets, 31 guidance pairs/root guidance and all 300 protected identities match root. All six criteria are checked and ticket 35 is resolved. Both provenance findings are closed: exact publication/manifest claim-edge context across republished observations, and exact-subject source dates/unknown ambiguity. Public RED/GREEN, final graph 11/7.18s, compatibility 42/21.82s and full 840 verify final bytes. Projection stays one-hop, source-free and governed by public both-purpose/current-retention/derivation reads, without Creator inference or coverage/human-quality claims. Coordinator archive 35 identity verified; existing 26–34 relocation report and all worker files remain preserved.
 
 ### Phase 40 — Implement ticket 36
 
