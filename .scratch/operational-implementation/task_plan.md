@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 36 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–35 are integrated and resolved; ticket 36 is pending. Preserve exact support/current-policy contracts, verification evidence, archives and the original final-review baseline; human usefulness and complete coverage remain unestablished.
+Implement ticket 36 in its fresh context/worktree: bounded multi-hop navigation and filters over the existing governed graph projection, with visible truncation, cycle safety and current-policy detail. Tickets 11–35 are integrated and resolved; validate and merge before advancing. No new ontology, fact store or source/model execution.
 
 ## Current Phase
 
-Phase 40 — ticket 36 pending after successful ticket 35 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 40 — ticket 36 in progress after successful ticket 35 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -278,7 +278,7 @@ Fast-forward integrated final handoff/root checked `bd5dca9d7e3ba179e0fc1d5fb25c
 
 ### Phase 40 — Implement ticket 36
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
