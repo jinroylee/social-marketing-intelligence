@@ -16,6 +16,8 @@ from .recent import RecentMonitoring
 from .alerts import QuantitativeAlerts
 from .semantic import SemanticAlerts
 from .context import AlertInvestigations
+from .promotion import MonitoringPromotion
+from smi_ingestion.evidence import EvidenceStore
 from .summary import LIMITS, METHOD_VERSION, build_summary
 
 
@@ -43,6 +45,7 @@ class MonitoringStore:
         QuantitativeAlerts(RecentMonitoring(self.db, self.workspace_id)).migrate()
         SemanticAlerts(RecentMonitoring(self.db, self.workspace_id)).migrate()
         AlertInvestigations(RecentMonitoring(self.db, self.workspace_id)).migrate()
+        MonitoringPromotion(RecentMonitoring(self.db, self.workspace_id), EvidenceStore(self.db, None)).migrate()
 
     def _human(self, actor):
         actor.require_workspace(self.workspace_id)

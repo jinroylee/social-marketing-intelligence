@@ -8,6 +8,8 @@ from pathlib import Path
 from psycopg.types.json import Jsonb
 
 from smi_ingestion.evidence_sets import ActorContext
+from smi_ingestion.dependencies import SourceDependencies
+from smi_ingestion.evidence import policy_from_json
 from smi_monitoring.contracts import require
 
 from .route import METRICS, OfflineXRoute, capture_fingerprint, capture_identity, fingerprint, instant
@@ -58,6 +60,7 @@ class RecentMonitoring:
             policy['expires_at'] = instant(policy['expires_at']).isoformat()
         with self.db.connect() as connection:
             self._lock(connection)
+            self._reconcile(connection)
             row = connection.execute('SELECT * FROM monitoring_source_policies WHERE workspace_id=%s AND context_id=%s', (self.workspace_id, policy['context_id'])).fetchone()
             version = row['version'] if row else 0
             if row is None:
@@ -67,6 +70,7 @@ class RecentMonitoring:
             connection.execute('INSERT INTO monitoring_source_policies(workspace_id,context_id,version,document,recorded_by,recorded_at) VALUES (%s,%s,%s,%s,%s,%s) '
                                'ON CONFLICT (workspace_id,context_id) DO UPDATE SET version=EXCLUDED.version,document=EXCLUDED.document,recorded_by=EXCLUDED.recorded_by,recorded_at=EXCLUDED.recorded_at',
                                (self.workspace_id, policy['context_id'], version + 1, Jsonb(policy), actor.actor_id, self._now()))
+            SourceDependencies().update_policy(connection, 'recent-x:' + self.workspace_id, policy_from_json(policy), now=self._now())
             self._reconcile(connection)
         return {'context_id': policy['context_id'], 'version': version + 1}
 
@@ -81,6 +85,7 @@ class RecentMonitoring:
             require(known or count < MAX_WITHDRAWALS, 'recent_x_withdrawal_limit')
             connection.execute('INSERT INTO monitoring_x_withdrawals(workspace_id,native_id,withdrawn_by,withdrawn_at) VALUES (%s,%s,%s,%s) ON CONFLICT DO NOTHING', (self.workspace_id, native_id, actor.actor_id, self._now()))
             connection.execute("UPDATE recent_x_observations SET body=NULL,purged_reason='source_withdrawn' WHERE workspace_id=%s AND native_id=%s", (self.workspace_id, native_id))
+            SourceDependencies().withdraw(connection, 'recent-x:' + self.workspace_id, native_id)
         return {'native_id': native_id, 'status': 'withdrawn'}
 
     def _topic(self, connection, key):
@@ -129,11 +134,18 @@ class RecentMonitoring:
         require(row is not None, 'monitoring_source_policy_not_found')
         return row['document']
 
+    def read_source_policy_in_transaction(self, connection, context_id, actor):
+        """Return current original source policy while retaining the workspace lock."""
+        actor.require_workspace(self.workspace_id)
+        self._lock(connection)
+        return dict(self._policy(connection, context_id))
+
     def _allowed(self, policy, purpose):
         return (not policy['revoked'] and (policy['expires_at'] is None or instant(policy['expires_at']) > self._now())
                 and policy['can_' + purpose])
 
     def _reconcile(self, connection):
+        SourceDependencies().reconcile(connection, owner_id='recent-x:' + self.workspace_id, now=self._now())
         connection.execute("UPDATE recent_x_observations SET body=NULL,purged_reason='retention_expired' WHERE workspace_id=%s AND body IS NOT NULL AND retain_until<=%s", (self.workspace_id, self._now()))
         policies = connection.execute('SELECT document FROM monitoring_source_policies WHERE workspace_id=%s', (self.workspace_id,)).fetchall()
         for row in policies:
@@ -232,6 +244,7 @@ class RecentMonitoring:
                     require(original['capture_digest'] == hashed and original['policy_context_id'] == settings['source_policy_id'], 'recent_x_capture_conflict')
                     observation_id = original['id']
                     connection.execute('UPDATE recent_x_observations SET retain_until=LEAST(retain_until,%s) WHERE id=%s', (retain_until, observation_id))
+                    SourceDependencies().shorten(connection, 'recent-x:' + self.workspace_id, str(observation_id), retain_until, now=now)
                 else:
                     count = connection.execute('SELECT count(*) AS n FROM recent_x_observations WHERE workspace_id=%s', (self.workspace_id,)).fetchone()['n']
                     require(count < MAX_OBSERVATIONS, 'recent_x_observation_limit')

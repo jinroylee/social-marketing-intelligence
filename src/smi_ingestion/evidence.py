@@ -80,10 +80,13 @@ def _observation(row: dict[str, Any]) -> RawObservation:
 
 
 class EvidenceStore:
-    def __init__(self, db: Database, root: Path):
+    """Own normal source captures; a null root permits transient imports only."""
+
+    def __init__(self, db: Database, root: Path | None):
         self.db = db
-        self.root = root.resolve()
-        self.root.mkdir(parents=True, exist_ok=True)
+        self.root = root.resolve() if root is not None else None
+        if self.root is not None:
+            self.root.mkdir(parents=True, exist_ok=True)
 
     def start_run(
         self, manifest_path: Path, digest: str, adapter_id: str, limits: RunLimits,
@@ -116,16 +119,18 @@ class EvidenceStore:
 
     def save(
         self, run_id: str, item_index: int, draft: ObservationDraft,
-        checkpoint: dict[str, Any], *, complete: bool = False, connection=None,
+        checkpoint: dict[str, Any], *, complete: bool = False, connection=None, retain_payload: bool = True,
     ) -> RawObservation:
         """Atomically save evidence, its checkpoint and whether input is complete.
 
         Omitted completion leaves input resumable. A supplied connection stays
         caller-owned; its caller cleans retained payload files after rollback.
+        Already acquired in-memory transfers report zero new requests and may
+        omit the raw payload copy with ``retain_payload=False``.
         """
         if not policy_allows(draft.policy, "process"):
             raise EvidenceError("processing_not_permitted")
-        if draft.request_attempts < 1:
+        if type(draft.request_attempts) is not int or draft.request_attempts < 0:
             raise EvidenceError("invalid_request_attempts")
         with nullcontext(connection) if connection is not None else self.db.connect() as lookup:
             existing = lookup.execute(
@@ -137,7 +142,9 @@ class EvidenceStore:
         observation_id = str(uuid.uuid4())
         digest = hashlib.sha256(draft.payload).hexdigest()
         path: Path | None = None
-        if draft.policy.can_retain:
+        if draft.policy.can_retain and retain_payload:
+            if self.root is None:
+                raise EvidenceError("payload_storage_unconfigured")
             path = self.root / f"{observation_id}.bin"
             temporary = self.root / f"{observation_id}.tmp"
             with temporary.open("xb") as output:
@@ -291,6 +298,8 @@ class EvidenceStore:
             ).fetchall()
         referenced = {str(Path(row["payload_path"]).resolve()) for row in rows}
         removed = 0
+        if self.root is None:
+            return 0
         for pattern in ("*.bin", "*.tmp"):
             for path in self.root.glob(pattern):
                 try:

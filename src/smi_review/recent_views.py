@@ -64,7 +64,26 @@ def topic(topic, timeline, csrf, operator, submitted=None, error=None):
     return content
 
 
-def window(record):
+def window(record, csrf=None, operator=False, submitted=None, error=None):
     content = f'<p><a href="/monitoring/topics/{e(record["topic_key"])}">← Topic</a></p><h1>Recent X collection window</h1><p>Window ID: {e(record["window_id"])} · <a href="/monitoring/assessments">Assess volume</a></p><p>{e(record["window_start"])} → {e(record["window_end"])}</p><p>Market coverage: {e(record["coverage"]["market_coverage"])}</p>'
     content += '<pre>' + e(json.dumps({'coverage': record['coverage'], 'acquisition': record['acquisition'], 'topic_revision_id': record['topic_revision_id'], 'collected_by': record['collected_by'], 'imported_at': record['imported_at']}, indent=2)) + '</pre>'
+    if error:
+        content += error_message(error)
+    if operator:
+        content += f'<form method="post" action="/monitoring/windows/{e(record["window_id"])}/promote">{hidden("csrf", csrf)}{hidden("request_id", value(submitted, "request_id", str(uuid.uuid4())))}<h2>Promote selected observations</h2><p>Choose at most twenty retained captures for normal knowledge ingestion/publication. Original synthetic status and source restrictions remain applicable. No new source request is made.</p>'
+        for item in record['observations']:
+            if item['body'] is not None:
+                checked = ' checked' if submitted and item['observation_id'] in submitted.get('selected', []) else ''
+                content += f'<label><input type="checkbox" name="selected" value="{e(item["observation_id"])}"{checked}>X post {e(item["native_id"])} · {e(item["captured_at"] or "Unknown capture time")}</label>'
+        content += '<button type="submit">Promote selected</button></form>'
     return content + ''.join(observation(o) for o in record['observations'])
+
+
+def promotion_result(record):
+    content = f'<h1>Monitoring promotion result</h1><p>Original outcome: {e(record["status"])} · selected by {e(record["recorded_by"])} at {e(record["recorded_at"])}</p><p><a href="/monitoring/windows/{e(record["window_id"])}">Original monitoring window</a></p><p>Historical publication links do not establish current support permission. Open the publication to inspect current availability. Synthetic evidence requires explicit development visibility.</p>'
+    for item in record['items']:
+        content += f'<section class="panel"><p>Monitoring capture <a href="/monitoring/observations/{e(item["monitoring_observation_id"])}">{e(item["monitoring_observation_id"])}</a> · original result: {e(item["state"])}</p>'
+        if item.get('publication_id'):
+            content += f'<p><a href="/knowledge/publications/{e(item["publication_id"])}?include_synthetic=yes">Knowledge publication (include synthetic)</a> · ingestion run: {e(item["run_id"])} · source observation: {e(item["observation_id"])}</p>'
+        content += '</section>'
+    return content

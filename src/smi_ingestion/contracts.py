@@ -48,7 +48,7 @@ class ObservationDraft:
     policy: SourcePolicy
     synthetic: bool
     coverage: dict[str, Any] = field(default_factory=dict)
-    request_attempts: int = 1  # File reads count once; network adapters include retries.
+    request_attempts: int = 1  # File reads count once; network retries count; retained transfers use zero.
 
 
 @dataclass(frozen=True)

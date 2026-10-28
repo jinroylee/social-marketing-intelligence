@@ -1,0 +1,7 @@
+# Promoted source lifecycle inheritance
+
+Status: accepted and implemented
+
+Selected monitoring observations become normal ingested source support and knowledge publications, so every independent KB consumer must honor the original monitoring lifecycle without first opening a promotion page. Monitoring pushes parent policy/withdrawal/deadline changes atomically through the ingestion-owned `SourceDependencies` public port. Ingestion stores the parent identity and earliest retain deadline, enforces current policy directly and permanently purges copied canonical values on retention loss or expiry. It knows no monitoring SQL and calls no higher-level owner. This avoids both a dependency cycle and lazy promotion-only synchronization, at the cost of explicit parent mutation composition and source-owned dependency tombstones.
+
+Promotion keeps one source/publication per exact original capture, uses transient normal ingestion without another raw file or acquisition, and commits mapping/publication/result receipts together. Permanent purging and source-free historical receipts make retries honest after withdrawal; a new request, mutable fixture label or permission recovery cannot recreate support. The original source-as-of and author/account remain unknown where absent; topic and URL are not entity association evidence. See [the installed contract](../monitoring.md#selected-recent-evidence-promotion).

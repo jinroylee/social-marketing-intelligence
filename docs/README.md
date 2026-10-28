@@ -36,6 +36,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Source-free quantitative alert history](adr/0019-source-free-quantitative-alert-history.md) | Why configured sample-volume assessments and notifications retain exact window lineage without copied source claims |
 | [Bounded semantic positions](adr/0020-bounded-semantic-positions-full-input-policy.md) | Why provisional fixed positions and every actual model input govern semantic alert history |
 | [Pinned local alert context](adr/0021-pinned-local-alert-context.md) | Why one existing-KB query and original recent dependencies govern a deterministic explanation without acquisition authority |
+| [Promoted source lifecycle](adr/0022-promoted-source-lifecycle-inheritance.md) | Why parent monitoring mutations and independent KB reads govern selected ingested copies through a one-way source port |
 | [Task session effect ownership](adr/0005-task-session-effect-ownership.md) | Why each task's execution lock and effect transactions share one PostgreSQL session |
 | [Bounded synthetic admission](adr/0006-bounded-synthetic-admission.md) | Why scope decisions and ledger writes share a lock while uncertain dispatches keep their commitments |
 | [Generated criteria preserve human constraints](adr/0008-generated-criteria-preserve-human-constraints.md) | Why generated additions stay separate from human briefs and require exact visible selection |

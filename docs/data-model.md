@@ -2,7 +2,7 @@
 
 ## Implemented relational model
 
-The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [snapshot monitoring](../src/smi_monitoring/schema.sql), [recent X evidence](../src/smi_monitoring/recent/schema.sql), [quantitative alerts](../src/smi_monitoring/alerts/schema.sql), [semantic assessments](../src/smi_monitoring/semantic/schema.sql), [alert context](../src/smi_monitoring/context/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql), [offline costs](../src/smi_costs/schema.sql), [knowledge answers](../src/smi_assistant/schema.sql) and [assistant enrichment linkage](../src/smi_tasks/assistant/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
+The physical schemas are owned by [ingestion](../src/smi_ingestion/schema.sql), [shared knowledge](../src/smi_knowledge/schema.sql), [campaign decisions](../src/smi_campaigns/schema.sql), [campaign planning](../src/smi_campaigns/planning/schema.sql), [snapshot monitoring](../src/smi_monitoring/schema.sql), [recent X evidence](../src/smi_monitoring/recent/schema.sql), [quantitative alerts](../src/smi_monitoring/alerts/schema.sql), [semantic assessments](../src/smi_monitoring/semantic/schema.sql), [alert context](../src/smi_monitoring/context/schema.sql), [selected promotion](../src/smi_monitoring/promotion/schema.sql), [offline tasks](../src/smi_tasks/schema.sql), [registered keyword schedules](../src/smi_tasks/schedules/schema.sql), [discovery history](../src/smi_tasks/discovery/schema.sql), [offline costs](../src/smi_costs/schema.sql), [knowledge answers](../src/smi_assistant/schema.sql) and [assistant enrichment linkage](../src/smi_tasks/assistant/schema.sql). The diagrams show primary keys, important foreign keys and ownership fields; the SQL is authoritative for the complete columns and constraints.
 
 ```mermaid
 erDiagram
@@ -10,6 +10,16 @@ erDiagram
     ingestion_runs ||--o{ ingestion_issues : reports
     source_observations o|--o{ ingestion_issues : concerns
     source_observations ||--o{ derivations : interpreted_by
+    source_observations ||--o| source_observation_dependencies : inherits
+    source_observation_dependencies {
+        uuid observation_id PK,FK
+        text owner_id
+        text origin_id
+        text native_id
+        text policy_context_id
+        timestamptz retain_until
+        boolean purged
+    }
     canonical_entities ||--o{ external_identities : identified_by
     derivations ||--o{ field_assertions : produces
     canonical_entities ||--o{ field_assertions : described_by
@@ -418,7 +428,11 @@ Campaign heads serialize brief/shortlist saves. Revision/request uniqueness sepa
 
 `campaign_ranking_assessments` is a durable one-call claim for an exact comparison/brief/producer/request, expected heads and assessed candidate IDs. Its optional shortlist link identifies a validated automatic save; failed/interrupted claims have no saved fallback. Configuration pins actual model/method/schema/ranking profile; logical cost-operation references preserve cost ownership without cross-owner SQL. Candidate `ranking_input` and `ranking_judgment` retain only required governed input components and validated structured judgments; they share `comparison_support` cleanup. No transaction spans provider I/O. Final publication rechecks pinned support and both heads; reported consumption remains accounted for unusable results. See [the ranking contract](campaigns.md#bounded-supported-llm-ranking).
 
+`source_observation_dependencies` is ingestion-owned parent lifecycle metadata for transiently imported copies. `(owner_id, origin_id)` is unique; the parent capture deadline can only shorten and `purged` is permanent. Source policy expiry is the earlier of this deadline and parent policy expiry. Parent writes update the linked observation and canonical field/metric bodies atomically through a public ingestion port; independent workspace-scoped support reads reconcile elapsed expiry. It contains no parent SQL dependency or copied source wording.
+
 ## Recent X evidence tables
+
+`monitoring_promotions` pins exact ordered selection/outcomes and human attribution per workspace/request. Its `items` JSON stores only selected IDs, bounded state codes and source/run/publication links. `monitoring_promoted_captures` owns one exact source/publication receipt per original recent capture; it is reused across later requests and cannot grant current usability. All new effects and result receipts commit atomically. See [the promotion contract](monitoring.md#selected-recent-evidence-promotion).
 
 ```mermaid
 erDiagram
@@ -426,6 +440,29 @@ erDiagram
     monitoring_topics ||--o{ monitoring_windows : collects
     monitoring_topic_revisions ||--o{ monitoring_windows : pins
     monitoring_windows ||--o{ monitoring_window_members : retains
+    monitoring_windows ||--o{ monitoring_promotions : selects
+    recent_x_observations ||--o| monitoring_promoted_captures : promotes
+    ingestion_runs ||--o{ monitoring_promoted_captures : imported_as
+    source_observations ||--o| monitoring_promoted_captures : source_copy
+    knowledge_publications ||--o{ monitoring_promoted_captures : publishes
+    monitoring_promotions {
+        uuid id PK
+        text workspace_id
+        text request_id UK
+        text request_digest
+        uuid window_id FK
+        text recorded_by
+        timestamptz recorded_at
+        text outcome
+        jsonb items
+    }
+    monitoring_promoted_captures {
+        text workspace_id PK
+        uuid monitoring_observation_id PK,FK
+        uuid run_id FK
+        uuid observation_id FK
+        uuid publication_id FK
+    }
     recent_x_observations ||--o{ monitoring_window_members : appears_in
     monitoring_source_policies ||--o{ recent_x_observations : governs
     monitoring_windows ||--o{ monitoring_volume_assessments : detection

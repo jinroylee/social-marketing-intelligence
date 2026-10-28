@@ -46,6 +46,14 @@ class IngestionRunner:
         run_id = self.evidence.start_run(manifest_path, digest, manifest["adapter"], selected_limits)
         return self.resume(run_id)
 
+    def map_observation(self, observation: RawObservation, payload: bytes, *, connection) -> bool:
+        """Map already acquired local evidence in the caller's atomic transaction.
+
+        This performs no collection. Invalid source values are quarantined with
+        normal run issues; the caller owns commit/rollback and payload retention.
+        """
+        return self._process(observation, payload, transaction=lambda phase: nullcontext(connection))
+
     def _process(self, observation: RawObservation, transient_payload: bytes | None = None, *, transaction=None, admission: CanonicalAdmission | None = None, policy_version: str = "canonical-v1") -> bool:
         try:
             if transient_payload is None:

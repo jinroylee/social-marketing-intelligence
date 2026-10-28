@@ -150,3 +150,14 @@ CREATE TABLE IF NOT EXISTS evidence_set_members (
 
 -- Imported runs already have an explicit workspace owner. Preserve it on upgrade.
 UPDATE ingestion_runs r SET workspace_id=s.workspace_id FROM evidence_sets s WHERE s.run_id=r.id AND r.workspace_id<>s.workspace_id;
+
+CREATE TABLE IF NOT EXISTS source_observation_dependencies (
+    observation_id UUID PRIMARY KEY REFERENCES source_observations(id),
+    owner_id TEXT NOT NULL,
+    origin_id TEXT NOT NULL,
+    native_id TEXT NOT NULL,
+    policy_context_id TEXT NOT NULL,
+    retain_until TIMESTAMPTZ NOT NULL,
+    purged BOOLEAN NOT NULL DEFAULT FALSE,
+    UNIQUE (owner_id, origin_id)
+);

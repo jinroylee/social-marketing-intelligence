@@ -12,6 +12,7 @@ from decimal import Decimal
 from typing import Any, Literal
 
 from ..db import Database
+from ..dependencies import SourceDependencies
 from ..evidence import EvidenceError, policy_allows, policy_from_json
 from ..evidence_sets import ActorContext
 
@@ -59,10 +60,10 @@ class IngestedEvidence:
         self.db = db
         self.workspace_id = workspace_id
 
-    def select_run(self, run_id: str, actor: ActorContext, *, include_synthetic: bool = False) -> tuple[SupportReference, ...]:
+    def select_run(self, run_id: str, actor: ActorContext, *, include_synthetic: bool = False, connection=None) -> tuple[SupportReference, ...]:
         """Select up to 100 applied observations and their current exact assertions."""
         actor.require_workspace(self.workspace_id)
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             run = connection.execute('SELECT id FROM ingestion_runs WHERE id=%s AND workspace_id=%s', (run_id, self.workspace_id)).fetchone()
             if run is None:
                 raise EvidenceError('ingestion_run_not_found')
@@ -123,6 +124,7 @@ class IngestedEvidence:
         if not 1 <= len(references) <= 100 or len({r.observation_id for r in references}) != len(references):
             raise EvidenceError('invalid_support_selection')
         with nullcontext(connection) if connection is not None else self.db.connect() as connection:
+            SourceDependencies().reconcile(connection, workspace_id=self.workspace_id)
             members = []
             for reference in references:
                 row = connection.execute(

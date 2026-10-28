@@ -25,6 +25,9 @@ An evidence-backed observation or interpretation of a pattern or change in acces
 **Monitoring investigation**:
 A saved topic or product question with an evidence summary and explicit sample limits. An investigation can describe a fixed snapshot without establishing market growth or change over time.
 
+**Monitoring promotion**:
+A deliberate selection of retained monitoring observations for shared knowledge, preserving the original evidence identity, policy and lifecycle. Selection grants no new source access and establishes no author or product association.
+
 **Market insight**:
 A versioned finding or summary answering a monitoring investigation, with its supporting evidence, relevant times, and coverage limits. It may inform a campaign brief without initiating a campaign.
 

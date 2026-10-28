@@ -21,11 +21,12 @@ from smi_campaigns.interpretation import ResponsesRoute, ResponsesTransport
 from smi_campaigns.planning import CampaignPlanning, DecisionNote, MeasurementPlan
 from smi_ingestion.contracts import ExternalKey
 from smi_ingestion.db import Database
-from smi_ingestion.evidence import EvidenceError
+from smi_ingestion.evidence import EvidenceError, EvidenceStore
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
 from smi_monitoring import MonitoringStore
 from smi_monitoring.context import AlertInvestigations
+from smi_monitoring.promotion import MonitoringPromotion
 from smi_monitoring.recent import OfflineXRoute, RecentMonitoring
 from smi_monitoring.alerts import QuantitativeAlerts, VolumeThreshold
 from smi_monitoring.semantic import ControversyThreshold, SemanticAlerts
@@ -122,6 +123,7 @@ class ReviewApp:
         self.semantic_alerts = SemanticAlerts(self.recent, threshold=monitoring_controversy_threshold, model_route=model_route,
             model_transport=model_transport, model_credential=model_credential, clock=monitoring_clock)
         self.alert_investigations = AlertInvestigations(self.recent)
+        self.promotions = MonitoringPromotion(self.recent, EvidenceStore(db, None))
         self.monitoring_operator = monitoring_operator
         self.planning = CampaignPlanning(db, workspace_id)
         self.tasks = AcquisitionTasks(db, workspace_id, route=offline_route, live_discovery_enabled=live_discovery_enabled, authority=TaskAuthority(campaign_humans=frozenset({actor_id}),
@@ -236,6 +238,11 @@ class ReviewApp:
                         kind = 'quantitative' if match[1] == 'alerts' else 'semantic'
                         allowed = {'request_id', 'include_synthetic'}
                         return self.page('Investigate using existing KB', context_views.form(kind, identifier(match[2]), self.csrf, {k: v for k, v in form.items() if k in allowed}, code), status)
+                    match = re.fullmatch(r'/monitoring/windows/([^/]+)/promote', path)
+                    if match:
+                        allowed = {'request_id', 'selected'}
+                        window = self.recent.read_window(identifier(match[1]), self.actor)
+                        return self.page('Recent X window', recent_views.window(window, self.csrf, self.monitoring_operator, {k: v for k, v in form.items() if k in allowed}, code), status)
                     if path == '/monitoring/semantic-assessments':
                         allowed = {'request_id', 'window_id'}
                         return self.page('Semantic X assessments', semantic_views.index(self.semantic_alerts.history(self.actor), self.csrf, self.monitoring_operator, self.semantic_alerts.threshold, {k: v for k, v in form.items() if k in allowed}, code), status)
@@ -332,7 +339,10 @@ class ReviewApp:
             return self._recent_topic_page(match[1], query)
         match = re.fullmatch(r'/monitoring/windows/([^/]+)', path)
         if match:
-            return self.page('Recent X window', recent_views.window(self.recent.read_window(identifier(match[1]), self.actor)))
+            return self.page('Recent X window', recent_views.window(self.recent.read_window(identifier(match[1]), self.actor), self.csrf, self.monitoring_operator))
+        match = re.fullmatch(r'/monitoring/promotions/([^/]+)', path)
+        if match:
+            return self.page('Monitoring promotion result', recent_views.promotion_result(self.promotions.read(identifier(match[1]), self.actor)))
         match = re.fullmatch(r'/monitoring/observations/([^/]+)', path)
         if match:
             return self.page('Recent X capture', recent_views.observation(self.recent.read_observation(identifier(match[1]), self.actor)))
@@ -470,6 +480,12 @@ class ReviewApp:
                 raise EvidenceError('invalid_form')
             record = self.alerts.detect(identifier(one(form, 'detection_window_id')), identifier(one(form, 'baseline_window_id')) if one(form, 'baseline_window_id') else None, self.actor, request_id=request_id)
             return Response(303, location='/monitoring/assessments/' + record['assessment_id'])
+        match = re.fullmatch(r'/monitoring/windows/([^/]+)/promote', path)
+        if match:
+            if not form.keys() <= {'csrf', 'request_id', 'selected'}:
+                raise EvidenceError('invalid_form')
+            record = self.promotions.promote(identifier(match[1]), tuple(form.get('selected', [])), self.actor, request_id=request_id)
+            return Response(303, location='/monitoring/promotions/' + record['promotion_id'])
         match = re.fullmatch(r'/monitoring/topics/([a-z0-9_-]+)/poll', path)
         if match:
             if not form.keys() <= {'csrf', 'window_end'}:

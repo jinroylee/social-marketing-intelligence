@@ -11,3 +11,6 @@ Expose one-way capture/mapping/selection `content_version` only for permitted su
 This interface does not publish knowledge, infer business attributes, or mutate imported evidence-set membership. Update the evidence contract, architecture and physical ERD when changing ownership, limits or transaction behavior.
 
 Denied-support tombstones expose content-free current process/display/retention flags as well as derivation health. Consumers use retention flags to purge their own copies; source values, links and dates remain withheld when the requested purpose is denied.
+
+
+Before source support reads, reconcile inherited source expiry through the public ingestion lifecycle port in this reader's workspace. Hold source/derivation policy locks through the caller commit. Reconciliation must not scan/lock unrelated workspaces; direct publications/queries must enforce inheritance without a promotion reader.
