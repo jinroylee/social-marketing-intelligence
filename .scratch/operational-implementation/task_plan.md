@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 33 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–32 are integrated and resolved; ticket 33 is pending. Existing-KB alert context is complete; actual runtime/quality gates remain unestablished, and artifacts remain for verified archival before cleanup.
+Implement ticket33 in its fresh context/worktree: one explicit selected-monitoring-observation promotion through normal ingestion/publication with origin lineage and inherited policy/retention dependencies. Tickets11–32 are integrated and resolved; validate and merge before advancing. No new retrieval, automatic whole-feed publication or campaign creation.
 
 ## Current Phase
 
-Phase 37 — ticket 33 pending after successful ticket 32 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 37 — ticket 33 in progress after successful ticket 32 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -260,7 +260,7 @@ Fast-forward integrated final handoff/root checked `2befbb4b0014530659a982ce6800
 
 ### Phase 37 — Implement ticket 33
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
