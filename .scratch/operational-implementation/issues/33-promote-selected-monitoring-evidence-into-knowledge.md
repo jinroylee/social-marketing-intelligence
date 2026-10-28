@@ -4,7 +4,7 @@
 
 **Blocked by:** 02: Publish and inspect permitted ingested support; 29: Collect bounded recent X evidence offline.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 
