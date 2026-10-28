@@ -10,6 +10,7 @@ from pathlib import Path
 import psycopg
 
 from smi_knowledge import Catalog, KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
+from smi_knowledge.graph import KnowledgeGraph
 from smi_campaigns import Brief, CampaignStore, Selection
 from smi_monitoring import MonitoringStore
 from smi_assistant import KnowledgeAssistant
@@ -184,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
         db = Database(args.dsn, args.schema)
         if args.command == "migrate":
             db.migrate()
-            KnowledgeStore(db).migrate()
+            KnowledgeGraph(db).migrate()
             CampaignStore(db).migrate()
             MonitoringStore(db).migrate()
             AcquisitionTasks(db).migrate()

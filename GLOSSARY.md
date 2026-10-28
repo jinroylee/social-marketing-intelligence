@@ -109,6 +109,9 @@ A response to a marketer’s question with identified knowledge support, relevan
 **Assistant knowledge gap**:
 Missing, ambiguous, stale or currently unavailable knowledge support that prevents a bounded answer from meeting a question. It may motivate explicitly scoped research; a model or configuration failure alone does not establish a knowledge gap.
 
+**Knowledge graph**:
+A view of supported entities and their relationships, retaining the basis and evidence for each connection. Visual adjacency does not establish identity equivalence, endorsement or causation.
+
 **Knowledge publication**:
 A versioned availability of ingested evidence and supported interpretations for knowledge-base queries. It identifies the source support and transformations that make an update usable.
 

@@ -88,6 +88,20 @@ class KnowledgeStore:
             raise EvidenceError("knowledge_catalog_not_found")
         return Catalog.from_document(row["document"])
 
+    def catalog_context(self, catalog_id: str, actor: ActorContext, *, connection=None) -> dict[str, Any]:
+        """Read one exact human catalog with registration attribution for composition.
+
+        Names and product/brand associations are human configuration, not source
+        verification. A caller transaction can share the read with pinned support.
+        """
+        actor.require_workspace(self.workspace_id)
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
+            row = connection.execute("SELECT catalog_id,digest,document,recorded_by,recorded_at FROM knowledge_catalogs "
+                                     "WHERE workspace_id=%s AND catalog_id=%s", (self.workspace_id, catalog_id)).fetchone()
+            if row is None:
+                raise EvidenceError("knowledge_catalog_not_found")
+            return {**row, "recorded_at": row["recorded_at"].isoformat()}
+
     def list_catalogs(self, actor: ActorContext) -> list[dict[str, Any]]:
         """List registered human configuration metadata within the actor's workspace."""
         actor.require_workspace(self.workspace_id)

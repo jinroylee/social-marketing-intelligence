@@ -24,6 +24,8 @@ from smi_ingestion.db import Database
 from smi_ingestion.evidence import EvidenceError, EvidenceStore
 from smi_ingestion.evidence_sets import ActorContext, EvidenceSetReader
 from smi_knowledge import KnowledgePublications, KnowledgeQueries, KnowledgeStore, QueryScope
+from smi_knowledge.graph import KnowledgeGraph
+from . import graph_views
 from smi_monitoring import MonitoringStore
 from smi_monitoring.context import AlertInvestigations
 from smi_monitoring.promotion import MonitoringPromotion
@@ -116,6 +118,7 @@ class ReviewApp:
         self.knowledge = KnowledgeStore(db, workspace_id)
         self.publications = KnowledgePublications(db, workspace_id)
         self.queries = KnowledgeQueries(db, workspace_id)
+        self.graph = KnowledgeGraph(db, workspace_id)
         self.assistant = KnowledgeAssistant(db, workspace_id, model_route=model_route, model_transport=model_transport, model_credential=model_credential)
         self.evidence = EvidenceSetReader(db, workspace_id)
         self.monitoring = MonitoringStore(db, workspace_id)
@@ -286,6 +289,8 @@ class ReviewApp:
                     if path == "/knowledge/questions":
                         allowed = {"request_id", "question", "text", "include_synthetic"}
                         return self.page("Ask current knowledge", answer_views.question_form(self.csrf, {k: v for k, v in form.items() if k in allowed}, code), status)
+                    if path == "/knowledge/graph":
+                        return self.page("Knowledge graph", graph_views.search_form(self.csrf, {k: v for k, v in form.items() if k in graph_views.FIELDS}, code), status)
                     if path == "/knowledge/search":
                         return self.page("Search current knowledge", query_views.search_form(self.csrf, form, code), status)
                     if path == "/campaigns":
@@ -402,6 +407,15 @@ class ReviewApp:
             answer = self.assistant.read(answer_id, self.actor, include_synthetic=include_synthetic)
             actions = enrichment_views.answer_actions(self.enrichment.context(answer_id, self.actor, include_synthetic=include_synthetic), include_synthetic=include_synthetic) if answer['requested_by']['actor_id'] == self.actor.actor_id else ''
             return self.page("Saved KB answer", answer_views.detail(answer, include_synthetic=include_synthetic) + actions)
+        if path == "/knowledge/graph":
+            return self.page("Knowledge graph", graph_views.search_form(self.csrf))
+        match = re.fullmatch(r"/knowledge/graph/([^/]+)", path)
+        if match:
+            if not query.keys() <= {'entity', 'include_synthetic'} or one(query, 'include_synthetic') not in {'', 'yes'}:
+                raise EvidenceError('invalid_form')
+            synthetic = one(query, 'include_synthetic') == 'yes'
+            return self.page("Knowledge graph", graph_views.detail(self.graph.read(identifier(match[1]), self.actor,
+                entity_id=one(query, 'entity') or None, include_synthetic=synthetic), include_synthetic=synthetic))
         if path == "/knowledge/search":
             return self.page("Search current knowledge", query_views.search_form(self.csrf))
         match = re.fullmatch(r"/knowledge/results/([^/]+)", path)
@@ -588,6 +602,11 @@ class ReviewApp:
                 scope=QueryScope(text=one(form, "text"), limit=20, max_age_seconds=2592000), include_synthetic=include_synthetic)
             suffix = "?include_synthetic=yes" if include_synthetic else ""
             return Response(303, location=f"/knowledge/answers/{answer['answer_id']}{suffix}")
+        if path == "/knowledge/graph":
+            synthetic = one(form, 'include_synthetic') == 'yes'
+            result = self.graph.search(graph_views.scope_from_form(form), self.actor, request_id=request_id, include_synthetic=synthetic)
+            suffix = '?include_synthetic=yes' if synthetic else ''
+            return Response(303, location=f"/knowledge/graph/{result['search_id']}{suffix}")
         if path == "/knowledge/search":
             include_synthetic = one(form, "include_synthetic") == "yes"
             result = self.queries.search(query_views.scope_from_form(form), self.actor, request_id=request_id, include_synthetic=include_synthetic)

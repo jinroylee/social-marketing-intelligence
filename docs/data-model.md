@@ -151,6 +151,7 @@ erDiagram
     evidence_sets ||--o{ knowledge_runs : supports
     knowledge_runs ||--o{ knowledge_assertions : produces
     knowledge_query_results ||--o{ knowledge_query_members : preserves
+    knowledge_query_results ||--o{ knowledge_graph_searches : projects
     knowledge_publications ||--o{ knowledge_query_members : supplies
     source_observations ||--o{ knowledge_query_members : governs
     derivations ||--o{ knowledge_query_members : freezes
@@ -177,6 +178,18 @@ erDiagram
         jsonb coverage
         jsonb unknowns
         timestamptz queried_at
+    }
+    knowledge_graph_searches {
+        uuid id PK
+        text workspace_id
+        text request_id
+        text request_digest
+        uuid query_result_id FK
+        text method_version
+        jsonb scope
+        text producer_id
+        text producer_kind
+        timestamptz created_at
     }
     knowledge_query_members {
         uuid result_id PK, FK
@@ -1236,3 +1249,5 @@ erDiagram
 ```
 
 One workspace/request pins the original answer/requester, fixed gap code, exact human-supplied intent/query/subject/window body and synthetic visibility in its digest. The body contains a source-free template purpose, not copied evidence or model answer prose. A fresh nested request commits before proposal save; nullable `proposal_id` allows recovery after either save boundary. The parent owner resolves that exact proposer-bound request without rebinding saved route files. Approval and submission retain their original request identities and task bounds. No completion copy or source-value/permission cache is added; the application composes exact task/event reads and current-policy answer/publication support. See [the public contract](tasks.md#assistant-knowledge-gap-enrichment).
+
+The implemented `knowledge_graph_searches` table stores human filter input, requester and an exact query-result ID only. Node labels, relationship values and evidence are transient public-reader projections under current policy; no second raw-fact or edge store is introduced. See [the graph contract](knowledge.md#governed-one-hop-entity-graph).

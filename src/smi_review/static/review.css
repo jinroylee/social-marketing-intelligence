@@ -84,3 +84,6 @@ mark { background: #e2edb8; color: var(--ink); padding: 2px 0; }
   .form-grid, .choice-grid, .campaign-grid, .history-grid, .facts, .unknowns { grid-template-columns: 1fr; }
   .catalog-switch { align-items: stretch; flex-direction: column; } .actions { flex-wrap: wrap; }
 }
+
+.graph-edge { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.graph-edge > span { overflow-wrap: anywhere; }

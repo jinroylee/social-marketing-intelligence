@@ -2,7 +2,7 @@
 
 This guide connects the browser workflow, Python modules and database using the repository's Hero Cushion sample. It describes implemented behavior; the linked contracts and SQL define the precise interfaces.
 
-The [target functional requirements](functional-requirements.md) add ranked recommendations that agents can save as shortlists without human review, an enrichment assistant, background acquisition, lightweight X alerts, graph/lineage interfaces and hybrid spending controls. Bounded extractive knowledge answers and explicit gap/proposal/approval/task follow-up are installed; bounded offline X volume and provisional quality-controversy alerts with their local inbox and bounded existing-KB investigations are installed; autonomous research, semantic shift/richer explanation and explorer surfaces remain future work. The browser offers automatic deterministic shortlists and bounded supported model ranking through an explicitly configured route, verified with simulated I/O; the human save/confirmation steps below describe the separate human-selection workflow.
+The [target functional requirements](functional-requirements.md) add ranked recommendations that agents can save as shortlists without human review, an enrichment assistant, background acquisition, lightweight X alerts, graph/lineage interfaces and hybrid spending controls. Bounded extractive knowledge answers and explicit gap/proposal/approval/task follow-up are installed; bounded offline X volume and provisional quality-controversy alerts with their local inbox and bounded existing-KB investigations are installed; autonomous research, semantic shift/richer explanation and multi-hop graph/pipeline surfaces remain future work. A bounded one-hop knowledge graph is installed. The browser offers automatic deterministic shortlists and bounded supported model ranking through an explicitly configured route, verified with simulated I/O; the human save/confirmation steps below describe the separate human-selection workflow.
 
 ## What the application is today
 
@@ -193,9 +193,9 @@ Owner: [`smi_costs`](../src/smi_costs/schema.sql); [public accounting contract](
 | `cost_reconciliations` | Immutable workspace/event identity, exact operation/final measurement and named liability targets, final outcome, operator, report evidence/provenance and time. | A final 0.125 report replaces a named 0.25 reservation; its bill cannot release another portion. |
 | `cost_meter_recoveries` | Immutable workspace/health-check identity, exact operation and already-reconciled failure IDs, operator, health evidence/provenance and time. | Late usage settles accounting while the scope remains blocked until an explicit meter-health recovery. |
 
-### Shared business vocabulary, interpretations, publication and queries — 10 tables
+### Shared business vocabulary, interpretations, publication, queries and graph — 11 tables
 
-Owner: [`smi_knowledge`](../src/smi_knowledge/schema.sql).
+Owner: [`smi_knowledge`](../src/smi_knowledge/schema.sql) and its [graph manifest](../src/smi_knowledge/graph/schema.sql).
 
 | Table | What one row stores | Example |
 | --- | --- | --- |
@@ -207,6 +207,7 @@ Owner: [`smi_knowledge`](../src/smi_knowledge/schema.sql).
 | `knowledge_publications` | One committed bounded selection, with workspace/request identity, method, actual producer, coverage and publication time. | A source-only update can publish an ingested account while profile attributes remain unknown. |
 | `knowledge_publication_support` | One ordered exact observation/derivation and its selected assertion/metric IDs. | Publication member 0 pins O1/D1 without extending its frozen dataset. |
 | `knowledge_publication_interpretations` | One selected existing interpretation ID in publication order. | A provisional caption mention is usable with its exact original source dependency. |
+| `knowledge_graph_searches` | One source-free entity-search manifest: exact query result, human filters, requester and selection method/time. | A saved one-hop graph reopens exact support under current process/display/retention without caching labels or edges. |
 | `knowledge_query_results` | One bounded current query with workspace/request identity, purpose, filters, producer, original coverage and time. | Q1 searches recent committed publications and preserves an explicit incomplete-market limit. |
 | `knowledge_query_members` | One ordered actual source/interpretation selection plus method/publication/freshness versions, with no source-value copy. | Q1 member 0 pins O1/D1 and specific published assertion/interpretation IDs; withdrawal later redacts its values. |
 
