@@ -1,0 +1,3002 @@
+{
+  "base_commit": "dbd4cf9973d7b756adea1da65a29542fda64b1d9",
+  "final_review_base": "6220fff49b5b8e982ef5a8d54b7c788e45b0f648",
+  "runtime_commit": "324ee32a640aba7828fa4d4c2fa1644a42cdc726",
+  "frozen_commit": "bf526f6fa7a8b740fc678b2b084f1a807a2581d5",
+  "files": [
+    {
+      "source": "src/smi_assistant/AGENTS.md",
+      "archive": "smi_assistant/AGENTS.md",
+      "source_identity": {
+        "size": 2504,
+        "sha256": "de14b2921e42f0f25774fefe61c8c9e5a27bd562e8e799e274ccd8f38f555b9a"
+      },
+      "archive_identity": {
+        "size": 2504,
+        "sha256": "de14b2921e42f0f25774fefe61c8c9e5a27bd562e8e799e274ccd8f38f555b9a"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_assistant/CLAUDE.md",
+      "archive": "smi_assistant/CLAUDE.md",
+      "source_identity": {
+        "size": 2504,
+        "sha256": "de14b2921e42f0f25774fefe61c8c9e5a27bd562e8e799e274ccd8f38f555b9a"
+      },
+      "archive_identity": {
+        "size": 2504,
+        "sha256": "de14b2921e42f0f25774fefe61c8c9e5a27bd562e8e799e274ccd8f38f555b9a"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_assistant/schema.sql",
+      "archive": "smi_assistant/schema.sql",
+      "source_identity": {
+        "size": 765,
+        "sha256": "3e71f039b5bf698bda281e554b88517f96c4d217e3bdf103eeaaedd37fc66d04"
+      },
+      "archive_identity": {
+        "size": 765,
+        "sha256": "3e71f039b5bf698bda281e554b88517f96c4d217e3bdf103eeaaedd37fc66d04"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/AGENTS.md",
+      "archive": "smi_campaigns/AGENTS.md",
+      "source_identity": {
+        "size": 8366,
+        "sha256": "da47b1789eecfa42a4c3430febc109386657a98b73cce262b4d6bcbc716ebf19"
+      },
+      "archive_identity": {
+        "size": 8366,
+        "sha256": "da47b1789eecfa42a4c3430febc109386657a98b73cce262b4d6bcbc716ebf19"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/CLAUDE.md",
+      "archive": "smi_campaigns/CLAUDE.md",
+      "source_identity": {
+        "size": 8366,
+        "sha256": "da47b1789eecfa42a4c3430febc109386657a98b73cce262b4d6bcbc716ebf19"
+      },
+      "archive_identity": {
+        "size": 8366,
+        "sha256": "da47b1789eecfa42a4c3430febc109386657a98b73cce262b4d6bcbc716ebf19"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_campaigns/interpretation/AGENTS.md",
+      "archive": "smi_campaigns/interpretation/AGENTS.md",
+      "source_identity": {
+        "size": 2014,
+        "sha256": "997b11f3b6d565f15938470d97be2d383423ff622680d3c3e34013effd93616f"
+      },
+      "archive_identity": {
+        "size": 2014,
+        "sha256": "997b11f3b6d565f15938470d97be2d383423ff622680d3c3e34013effd93616f"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/interpretation/CLAUDE.md",
+      "archive": "smi_campaigns/interpretation/CLAUDE.md",
+      "source_identity": {
+        "size": 2014,
+        "sha256": "997b11f3b6d565f15938470d97be2d383423ff622680d3c3e34013effd93616f"
+      },
+      "archive_identity": {
+        "size": 2014,
+        "sha256": "997b11f3b6d565f15938470d97be2d383423ff622680d3c3e34013effd93616f"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_campaigns/planning/AGENTS.md",
+      "archive": "smi_campaigns/planning/AGENTS.md",
+      "source_identity": {
+        "size": 1635,
+        "sha256": "f898de75703f6652e7cc8700b39f21a5fa9d73cc56abce4b94ed1cb254a503f5"
+      },
+      "archive_identity": {
+        "size": 1635,
+        "sha256": "f898de75703f6652e7cc8700b39f21a5fa9d73cc56abce4b94ed1cb254a503f5"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/planning/CLAUDE.md",
+      "archive": "smi_campaigns/planning/CLAUDE.md",
+      "source_identity": {
+        "size": 1635,
+        "sha256": "f898de75703f6652e7cc8700b39f21a5fa9d73cc56abce4b94ed1cb254a503f5"
+      },
+      "archive_identity": {
+        "size": 1635,
+        "sha256": "f898de75703f6652e7cc8700b39f21a5fa9d73cc56abce4b94ed1cb254a503f5"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_campaigns/planning/schema.sql",
+      "archive": "smi_campaigns/planning/schema.sql",
+      "source_identity": {
+        "size": 1705,
+        "sha256": "ebf7ffe6db470fb9d107af0868846a6f215b9a9326ecc37a35c6f4dc2b37f4a2"
+      },
+      "archive_identity": {
+        "size": 1705,
+        "sha256": "ebf7ffe6db470fb9d107af0868846a6f215b9a9326ecc37a35c6f4dc2b37f4a2"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/ranking/AGENTS.md",
+      "archive": "smi_campaigns/ranking/AGENTS.md",
+      "source_identity": {
+        "size": 1465,
+        "sha256": "4dbf20779a1608835ba9b7124b19ff53179e1b5122962510f62b81bd60a95d06"
+      },
+      "archive_identity": {
+        "size": 1465,
+        "sha256": "4dbf20779a1608835ba9b7124b19ff53179e1b5122962510f62b81bd60a95d06"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/ranking/CLAUDE.md",
+      "archive": "smi_campaigns/ranking/CLAUDE.md",
+      "source_identity": {
+        "size": 1465,
+        "sha256": "4dbf20779a1608835ba9b7124b19ff53179e1b5122962510f62b81bd60a95d06"
+      },
+      "archive_identity": {
+        "size": 1465,
+        "sha256": "4dbf20779a1608835ba9b7124b19ff53179e1b5122962510f62b81bd60a95d06"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_campaigns/responses/AGENTS.md",
+      "archive": "smi_campaigns/responses/AGENTS.md",
+      "source_identity": {
+        "size": 1773,
+        "sha256": "b4830f96130cf58ce6c8cbecf958b053b12454a5a83f47585c97c80bbb8d513f"
+      },
+      "archive_identity": {
+        "size": 1773,
+        "sha256": "b4830f96130cf58ce6c8cbecf958b053b12454a5a83f47585c97c80bbb8d513f"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_campaigns/responses/CLAUDE.md",
+      "archive": "smi_campaigns/responses/CLAUDE.md",
+      "source_identity": {
+        "size": 1773,
+        "sha256": "b4830f96130cf58ce6c8cbecf958b053b12454a5a83f47585c97c80bbb8d513f"
+      },
+      "archive_identity": {
+        "size": 1773,
+        "sha256": "b4830f96130cf58ce6c8cbecf958b053b12454a5a83f47585c97c80bbb8d513f"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_campaigns/schema.sql",
+      "archive": "smi_campaigns/schema.sql",
+      "source_identity": {
+        "size": 7682,
+        "sha256": "4abcc207e0fec794d2e78acc89e1fe167c70749c6526457fd104f90c010e9104"
+      },
+      "archive_identity": {
+        "size": 7682,
+        "sha256": "4abcc207e0fec794d2e78acc89e1fe167c70749c6526457fd104f90c010e9104"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_costs/AGENTS.md",
+      "archive": "smi_costs/AGENTS.md",
+      "source_identity": {
+        "size": 6277,
+        "sha256": "e2264ef4ecd2930bff597443b1a66e999d8ef5b403dfee939280c8ecb3f2e02a"
+      },
+      "archive_identity": {
+        "size": 6277,
+        "sha256": "e2264ef4ecd2930bff597443b1a66e999d8ef5b403dfee939280c8ecb3f2e02a"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_costs/CLAUDE.md",
+      "archive": "smi_costs/CLAUDE.md",
+      "source_identity": {
+        "size": 6277,
+        "sha256": "e2264ef4ecd2930bff597443b1a66e999d8ef5b403dfee939280c8ecb3f2e02a"
+      },
+      "archive_identity": {
+        "size": 6277,
+        "sha256": "e2264ef4ecd2930bff597443b1a66e999d8ef5b403dfee939280c8ecb3f2e02a"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_costs/schema.sql",
+      "archive": "smi_costs/schema.sql",
+      "source_identity": {
+        "size": 3939,
+        "sha256": "794522409d54445e0105930d3f76c6802d30f8154d6cd7dc1c99d8b63b4421f8"
+      },
+      "archive_identity": {
+        "size": 3939,
+        "sha256": "794522409d54445e0105930d3f76c6802d30f8154d6cd7dc1c99d8b63b4421f8"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/AGENTS.md",
+      "archive": "smi_ingestion/AGENTS.md",
+      "source_identity": {
+        "size": 4664,
+        "sha256": "4e29f9f46edc1d354c906fb64dfdcd13c934dee8a9e3e4b23aa686178e61c244"
+      },
+      "archive_identity": {
+        "size": 4664,
+        "sha256": "4e29f9f46edc1d354c906fb64dfdcd13c934dee8a9e3e4b23aa686178e61c244"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/CLAUDE.md",
+      "archive": "smi_ingestion/CLAUDE.md",
+      "source_identity": {
+        "size": 4664,
+        "sha256": "4e29f9f46edc1d354c906fb64dfdcd13c934dee8a9e3e4b23aa686178e61c244"
+      },
+      "archive_identity": {
+        "size": 4664,
+        "sha256": "4e29f9f46edc1d354c906fb64dfdcd13c934dee8a9e3e4b23aa686178e61c244"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_ingestion/adapters/AGENTS.md",
+      "archive": "smi_ingestion/adapters/AGENTS.md",
+      "source_identity": {
+        "size": 2685,
+        "sha256": "20f0569e0b5d94d3c9bf17895988dd41839b08efa7d47142234971ac47a01c7b"
+      },
+      "archive_identity": {
+        "size": 2685,
+        "sha256": "20f0569e0b5d94d3c9bf17895988dd41839b08efa7d47142234971ac47a01c7b"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/adapters/CLAUDE.md",
+      "archive": "smi_ingestion/adapters/CLAUDE.md",
+      "source_identity": {
+        "size": 2685,
+        "sha256": "20f0569e0b5d94d3c9bf17895988dd41839b08efa7d47142234971ac47a01c7b"
+      },
+      "archive_identity": {
+        "size": 2685,
+        "sha256": "20f0569e0b5d94d3c9bf17895988dd41839b08efa7d47142234971ac47a01c7b"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_ingestion/adapters/tiktok_keyword/AGENTS.md",
+      "archive": "smi_ingestion/adapters/tiktok_keyword/AGENTS.md",
+      "source_identity": {
+        "size": 1813,
+        "sha256": "2e683926e773948ee8cb1089b354d78415c5c070dffcaba27e65b5e58e4adc8d"
+      },
+      "archive_identity": {
+        "size": 1813,
+        "sha256": "2e683926e773948ee8cb1089b354d78415c5c070dffcaba27e65b5e58e4adc8d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/adapters/tiktok_keyword/CLAUDE.md",
+      "archive": "smi_ingestion/adapters/tiktok_keyword/CLAUDE.md",
+      "source_identity": {
+        "size": 1813,
+        "sha256": "2e683926e773948ee8cb1089b354d78415c5c070dffcaba27e65b5e58e4adc8d"
+      },
+      "archive_identity": {
+        "size": 1813,
+        "sha256": "2e683926e773948ee8cb1089b354d78415c5c070dffcaba27e65b5e58e4adc8d"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_ingestion/cli.py",
+      "archive": "smi_ingestion/cli.py",
+      "source_identity": {
+        "size": 23373,
+        "sha256": "e42c6f3a51824ad8f2e58122298e4eeda88ba43053bf20cc452673b82e4c916b"
+      },
+      "archive_identity": {
+        "size": 23373,
+        "sha256": "e42c6f3a51824ad8f2e58122298e4eeda88ba43053bf20cc452673b82e4c916b"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/evidence_sets/AGENTS.md",
+      "archive": "smi_ingestion/evidence_sets/AGENTS.md",
+      "source_identity": {
+        "size": 1403,
+        "sha256": "4322864004029d6a209b045879775868aeb445b3ff4f56343d15374cb9aa381d"
+      },
+      "archive_identity": {
+        "size": 1403,
+        "sha256": "4322864004029d6a209b045879775868aeb445b3ff4f56343d15374cb9aa381d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/evidence_sets/CLAUDE.md",
+      "archive": "smi_ingestion/evidence_sets/CLAUDE.md",
+      "source_identity": {
+        "size": 1403,
+        "sha256": "4322864004029d6a209b045879775868aeb445b3ff4f56343d15374cb9aa381d"
+      },
+      "archive_identity": {
+        "size": 1403,
+        "sha256": "4322864004029d6a209b045879775868aeb445b3ff4f56343d15374cb9aa381d"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_ingestion/schema.sql",
+      "archive": "smi_ingestion/schema.sql",
+      "source_identity": {
+        "size": 6147,
+        "sha256": "60ceb5c4dd2cd6e54de6a1372509f875f15651a163b73b80a493a2dabc740899"
+      },
+      "archive_identity": {
+        "size": 6147,
+        "sha256": "60ceb5c4dd2cd6e54de6a1372509f875f15651a163b73b80a493a2dabc740899"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/support/AGENTS.md",
+      "archive": "smi_ingestion/support/AGENTS.md",
+      "source_identity": {
+        "size": 2385,
+        "sha256": "ae206b476367874de4d8949ae94b146646663c269b6b36e1a17dfb91cb6f7cf5"
+      },
+      "archive_identity": {
+        "size": 2385,
+        "sha256": "ae206b476367874de4d8949ae94b146646663c269b6b36e1a17dfb91cb6f7cf5"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_ingestion/support/CLAUDE.md",
+      "archive": "smi_ingestion/support/CLAUDE.md",
+      "source_identity": {
+        "size": 2385,
+        "sha256": "ae206b476367874de4d8949ae94b146646663c269b6b36e1a17dfb91cb6f7cf5"
+      },
+      "archive_identity": {
+        "size": 2385,
+        "sha256": "ae206b476367874de4d8949ae94b146646663c269b6b36e1a17dfb91cb6f7cf5"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_knowledge/AGENTS.md",
+      "archive": "smi_knowledge/AGENTS.md",
+      "source_identity": {
+        "size": 1954,
+        "sha256": "186b9ee1343a3be5ba3c5e92d3b9129bd444900843d8b0639f4e9548e59fb3a7"
+      },
+      "archive_identity": {
+        "size": 1954,
+        "sha256": "186b9ee1343a3be5ba3c5e92d3b9129bd444900843d8b0639f4e9548e59fb3a7"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_knowledge/CLAUDE.md",
+      "archive": "smi_knowledge/CLAUDE.md",
+      "source_identity": {
+        "size": 1954,
+        "sha256": "186b9ee1343a3be5ba3c5e92d3b9129bd444900843d8b0639f4e9548e59fb3a7"
+      },
+      "archive_identity": {
+        "size": 1954,
+        "sha256": "186b9ee1343a3be5ba3c5e92d3b9129bd444900843d8b0639f4e9548e59fb3a7"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_knowledge/graph/AGENTS.md",
+      "archive": "smi_knowledge/graph/AGENTS.md",
+      "source_identity": {
+        "size": 1638,
+        "sha256": "4b7a463a8848fb0bd7db76ec2ff9ed65dfceb74df4da85b5e1f04aa89f2a6467"
+      },
+      "archive_identity": {
+        "size": 1638,
+        "sha256": "4b7a463a8848fb0bd7db76ec2ff9ed65dfceb74df4da85b5e1f04aa89f2a6467"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_knowledge/graph/CLAUDE.md",
+      "archive": "smi_knowledge/graph/CLAUDE.md",
+      "source_identity": {
+        "size": 1638,
+        "sha256": "4b7a463a8848fb0bd7db76ec2ff9ed65dfceb74df4da85b5e1f04aa89f2a6467"
+      },
+      "archive_identity": {
+        "size": 1638,
+        "sha256": "4b7a463a8848fb0bd7db76ec2ff9ed65dfceb74df4da85b5e1f04aa89f2a6467"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_knowledge/graph/__init__.py",
+      "archive": "smi_knowledge/graph/__init__.py",
+      "source_identity": {
+        "size": 171,
+        "sha256": "dc97a9662049a8e871ab2a8dec7a613bddef519f4f147bd86add2c0e4b98e9e3"
+      },
+      "archive_identity": {
+        "size": 171,
+        "sha256": "dc97a9662049a8e871ab2a8dec7a613bddef519f4f147bd86add2c0e4b98e9e3"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_knowledge/graph/schema.sql",
+      "archive": "smi_knowledge/graph/schema.sql",
+      "source_identity": {
+        "size": 514,
+        "sha256": "3dbc9e83ec71e04a754f64b4e54d3a3b4f9b2c9c298ed0e612d11740e326c18d"
+      },
+      "archive_identity": {
+        "size": 514,
+        "sha256": "3dbc9e83ec71e04a754f64b4e54d3a3b4f9b2c9c298ed0e612d11740e326c18d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_knowledge/graph/store.py",
+      "archive": "smi_knowledge/graph/store.py",
+      "source_identity": {
+        "size": 16761,
+        "sha256": "f6403f3bfb5e0897cc336d79570ee43a7c10c4d5aaeca0a0830e74728fbc6265"
+      },
+      "archive_identity": {
+        "size": 16761,
+        "sha256": "f6403f3bfb5e0897cc336d79570ee43a7c10c4d5aaeca0a0830e74728fbc6265"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_knowledge/publications/AGENTS.md",
+      "archive": "smi_knowledge/publications/AGENTS.md",
+      "source_identity": {
+        "size": 3314,
+        "sha256": "6fd6ec27d2a7b1c2d7b9cff2a5e81817f624fd76a1f3a5707e9a266c28d11a55"
+      },
+      "archive_identity": {
+        "size": 3314,
+        "sha256": "6fd6ec27d2a7b1c2d7b9cff2a5e81817f624fd76a1f3a5707e9a266c28d11a55"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_knowledge/publications/CLAUDE.md",
+      "archive": "smi_knowledge/publications/CLAUDE.md",
+      "source_identity": {
+        "size": 3314,
+        "sha256": "6fd6ec27d2a7b1c2d7b9cff2a5e81817f624fd76a1f3a5707e9a266c28d11a55"
+      },
+      "archive_identity": {
+        "size": 3314,
+        "sha256": "6fd6ec27d2a7b1c2d7b9cff2a5e81817f624fd76a1f3a5707e9a266c28d11a55"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_knowledge/queries/AGENTS.md",
+      "archive": "smi_knowledge/queries/AGENTS.md",
+      "source_identity": {
+        "size": 2749,
+        "sha256": "39ebc08c71488f0b6d4b95f23556c5b8b0a24d8d919960488fb546218b87222e"
+      },
+      "archive_identity": {
+        "size": 2749,
+        "sha256": "39ebc08c71488f0b6d4b95f23556c5b8b0a24d8d919960488fb546218b87222e"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_knowledge/queries/CLAUDE.md",
+      "archive": "smi_knowledge/queries/CLAUDE.md",
+      "source_identity": {
+        "size": 2749,
+        "sha256": "39ebc08c71488f0b6d4b95f23556c5b8b0a24d8d919960488fb546218b87222e"
+      },
+      "archive_identity": {
+        "size": 2749,
+        "sha256": "39ebc08c71488f0b6d4b95f23556c5b8b0a24d8d919960488fb546218b87222e"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_knowledge/schema.sql",
+      "archive": "smi_knowledge/schema.sql",
+      "source_identity": {
+        "size": 6081,
+        "sha256": "5319ad64e747f6f827b7b249652fa1a8cfc5329f3d9feea016303b8c0ee56547"
+      },
+      "archive_identity": {
+        "size": 6081,
+        "sha256": "5319ad64e747f6f827b7b249652fa1a8cfc5329f3d9feea016303b8c0ee56547"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_knowledge/store.py",
+      "archive": "smi_knowledge/store.py",
+      "source_identity": {
+        "size": 20782,
+        "sha256": "71c0b03fa806d363a94d9aecf7a491f9eb4e71867d06f5a041f4f9900db05023"
+      },
+      "archive_identity": {
+        "size": 20782,
+        "sha256": "71c0b03fa806d363a94d9aecf7a491f9eb4e71867d06f5a041f4f9900db05023"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/AGENTS.md",
+      "archive": "smi_monitoring/AGENTS.md",
+      "source_identity": {
+        "size": 2927,
+        "sha256": "e7d0e58fd3b94abb641f218859b417a4abf776cd1557c9790e28ab21e450fec3"
+      },
+      "archive_identity": {
+        "size": 2927,
+        "sha256": "e7d0e58fd3b94abb641f218859b417a4abf776cd1557c9790e28ab21e450fec3"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/CLAUDE.md",
+      "archive": "smi_monitoring/CLAUDE.md",
+      "source_identity": {
+        "size": 2927,
+        "sha256": "e7d0e58fd3b94abb641f218859b417a4abf776cd1557c9790e28ab21e450fec3"
+      },
+      "archive_identity": {
+        "size": 2927,
+        "sha256": "e7d0e58fd3b94abb641f218859b417a4abf776cd1557c9790e28ab21e450fec3"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_monitoring/alerts/AGENTS.md",
+      "archive": "smi_monitoring/alerts/AGENTS.md",
+      "source_identity": {
+        "size": 2848,
+        "sha256": "1a7a436817cd1a231e782e763257593da2e2e39537e4d778bb20f50c69b6e22f"
+      },
+      "archive_identity": {
+        "size": 2848,
+        "sha256": "1a7a436817cd1a231e782e763257593da2e2e39537e4d778bb20f50c69b6e22f"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/alerts/CLAUDE.md",
+      "archive": "smi_monitoring/alerts/CLAUDE.md",
+      "source_identity": {
+        "size": 2848,
+        "sha256": "1a7a436817cd1a231e782e763257593da2e2e39537e4d778bb20f50c69b6e22f"
+      },
+      "archive_identity": {
+        "size": 2848,
+        "sha256": "1a7a436817cd1a231e782e763257593da2e2e39537e4d778bb20f50c69b6e22f"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_monitoring/alerts/schema.sql",
+      "archive": "smi_monitoring/alerts/schema.sql",
+      "source_identity": {
+        "size": 1098,
+        "sha256": "85488de55f7420f6eac258146678b6601620c2abe3f28cf562db3acff08049de"
+      },
+      "archive_identity": {
+        "size": 1098,
+        "sha256": "85488de55f7420f6eac258146678b6601620c2abe3f28cf562db3acff08049de"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/context/AGENTS.md",
+      "archive": "smi_monitoring/context/AGENTS.md",
+      "source_identity": {
+        "size": 2105,
+        "sha256": "f82ca49c6af8bc361095cae2a79a8b0041cb58b0901939a85bca85e2a9e0be3d"
+      },
+      "archive_identity": {
+        "size": 2105,
+        "sha256": "f82ca49c6af8bc361095cae2a79a8b0041cb58b0901939a85bca85e2a9e0be3d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/context/CLAUDE.md",
+      "archive": "smi_monitoring/context/CLAUDE.md",
+      "source_identity": {
+        "size": 2105,
+        "sha256": "f82ca49c6af8bc361095cae2a79a8b0041cb58b0901939a85bca85e2a9e0be3d"
+      },
+      "archive_identity": {
+        "size": 2105,
+        "sha256": "f82ca49c6af8bc361095cae2a79a8b0041cb58b0901939a85bca85e2a9e0be3d"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_monitoring/context/schema.sql",
+      "archive": "smi_monitoring/context/schema.sql",
+      "source_identity": {
+        "size": 676,
+        "sha256": "05f2b6d7639de02554a96bac32d2d0e183f9e0ca427771d610090b5c28d4262e"
+      },
+      "archive_identity": {
+        "size": 676,
+        "sha256": "05f2b6d7639de02554a96bac32d2d0e183f9e0ca427771d610090b5c28d4262e"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/polling/AGENTS.md",
+      "archive": "smi_monitoring/polling/AGENTS.md",
+      "source_identity": {
+        "size": 3207,
+        "sha256": "202125c6c71cc2d723144c3295c62e32cee4f80907438047235d54ef5132cd2f"
+      },
+      "archive_identity": {
+        "size": 3207,
+        "sha256": "202125c6c71cc2d723144c3295c62e32cee4f80907438047235d54ef5132cd2f"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/polling/CLAUDE.md",
+      "archive": "smi_monitoring/polling/CLAUDE.md",
+      "source_identity": {
+        "size": 3207,
+        "sha256": "202125c6c71cc2d723144c3295c62e32cee4f80907438047235d54ef5132cd2f"
+      },
+      "archive_identity": {
+        "size": 3207,
+        "sha256": "202125c6c71cc2d723144c3295c62e32cee4f80907438047235d54ef5132cd2f"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_monitoring/polling/schema.sql",
+      "archive": "smi_monitoring/polling/schema.sql",
+      "source_identity": {
+        "size": 1490,
+        "sha256": "531b83125d4199f21c0b4a5c2194b8653a8782caa155e0ee6d54ba97d4c2e367"
+      },
+      "archive_identity": {
+        "size": 1490,
+        "sha256": "531b83125d4199f21c0b4a5c2194b8653a8782caa155e0ee6d54ba97d4c2e367"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/promotion/AGENTS.md",
+      "archive": "smi_monitoring/promotion/AGENTS.md",
+      "source_identity": {
+        "size": 1803,
+        "sha256": "f56c85eec8721e5b7ec97c8ac977f0981e8fc37dd8b134e3fd8893ba0ced1e84"
+      },
+      "archive_identity": {
+        "size": 1803,
+        "sha256": "f56c85eec8721e5b7ec97c8ac977f0981e8fc37dd8b134e3fd8893ba0ced1e84"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/promotion/CLAUDE.md",
+      "archive": "smi_monitoring/promotion/CLAUDE.md",
+      "source_identity": {
+        "size": 1803,
+        "sha256": "f56c85eec8721e5b7ec97c8ac977f0981e8fc37dd8b134e3fd8893ba0ced1e84"
+      },
+      "archive_identity": {
+        "size": 1803,
+        "sha256": "f56c85eec8721e5b7ec97c8ac977f0981e8fc37dd8b134e3fd8893ba0ced1e84"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_monitoring/promotion/schema.sql",
+      "archive": "smi_monitoring/promotion/schema.sql",
+      "source_identity": {
+        "size": 842,
+        "sha256": "520aea348e9fc08c36e5d94d3a47e06cabd7749cc4c52d537cc3b6f240538afd"
+      },
+      "archive_identity": {
+        "size": 842,
+        "sha256": "520aea348e9fc08c36e5d94d3a47e06cabd7749cc4c52d537cc3b6f240538afd"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/recent/AGENTS.md",
+      "archive": "smi_monitoring/recent/AGENTS.md",
+      "source_identity": {
+        "size": 3524,
+        "sha256": "57ee3b9ab4105b7db1f5d5cf6eaccd43bfa03b6d07f9541222f68f13069d708b"
+      },
+      "archive_identity": {
+        "size": 3524,
+        "sha256": "57ee3b9ab4105b7db1f5d5cf6eaccd43bfa03b6d07f9541222f68f13069d708b"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/recent/CLAUDE.md",
+      "archive": "smi_monitoring/recent/CLAUDE.md",
+      "source_identity": {
+        "size": 3524,
+        "sha256": "57ee3b9ab4105b7db1f5d5cf6eaccd43bfa03b6d07f9541222f68f13069d708b"
+      },
+      "archive_identity": {
+        "size": 3524,
+        "sha256": "57ee3b9ab4105b7db1f5d5cf6eaccd43bfa03b6d07f9541222f68f13069d708b"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_monitoring/recent/schema.sql",
+      "archive": "smi_monitoring/recent/schema.sql",
+      "source_identity": {
+        "size": 2557,
+        "sha256": "7b9865e8d78163e176d2f3c32b14fd3e442b26704796547cc7ade1dc20daa8d4"
+      },
+      "archive_identity": {
+        "size": 2557,
+        "sha256": "7b9865e8d78163e176d2f3c32b14fd3e442b26704796547cc7ade1dc20daa8d4"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/schema.sql",
+      "archive": "smi_monitoring/schema.sql",
+      "source_identity": {
+        "size": 2150,
+        "sha256": "f4a35baf59de56f845981b1756685fe2b4ee7b455aec7f348bca2ead714d1382"
+      },
+      "archive_identity": {
+        "size": 2150,
+        "sha256": "f4a35baf59de56f845981b1756685fe2b4ee7b455aec7f348bca2ead714d1382"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/semantic/AGENTS.md",
+      "archive": "smi_monitoring/semantic/AGENTS.md",
+      "source_identity": {
+        "size": 3283,
+        "sha256": "71bca212d4227556e316f6d1c5b22a0e74b3fc1ec4c9ce2d4b69243b0f60f38f"
+      },
+      "archive_identity": {
+        "size": 3283,
+        "sha256": "71bca212d4227556e316f6d1c5b22a0e74b3fc1ec4c9ce2d4b69243b0f60f38f"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_monitoring/semantic/CLAUDE.md",
+      "archive": "smi_monitoring/semantic/CLAUDE.md",
+      "source_identity": {
+        "size": 3283,
+        "sha256": "71bca212d4227556e316f6d1c5b22a0e74b3fc1ec4c9ce2d4b69243b0f60f38f"
+      },
+      "archive_identity": {
+        "size": 3283,
+        "sha256": "71bca212d4227556e316f6d1c5b22a0e74b3fc1ec4c9ce2d4b69243b0f60f38f"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_monitoring/semantic/schema.sql",
+      "archive": "smi_monitoring/semantic/schema.sql",
+      "source_identity": {
+        "size": 1326,
+        "sha256": "70b2ae6b4f769d8e31a61e5cce84965138bd18a1d1a1706a5ba06dc93fc5d9c6"
+      },
+      "archive_identity": {
+        "size": 1326,
+        "sha256": "70b2ae6b4f769d8e31a61e5cce84965138bd18a1d1a1706a5ba06dc93fc5d9c6"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/AGENTS.md",
+      "archive": "smi_review/AGENTS.md",
+      "source_identity": {
+        "size": 17416,
+        "sha256": "021b58ecba8b5077c878478cb9a0f5c6b168bc200951643d03452cfced7a6463"
+      },
+      "archive_identity": {
+        "size": 17416,
+        "sha256": "021b58ecba8b5077c878478cb9a0f5c6b168bc200951643d03452cfced7a6463"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/CLAUDE.md",
+      "archive": "smi_review/CLAUDE.md",
+      "source_identity": {
+        "size": 17416,
+        "sha256": "021b58ecba8b5077c878478cb9a0f5c6b168bc200951643d03452cfced7a6463"
+      },
+      "archive_identity": {
+        "size": 17416,
+        "sha256": "021b58ecba8b5077c878478cb9a0f5c6b168bc200951643d03452cfced7a6463"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_review/app.py",
+      "archive": "smi_review/app.py",
+      "source_identity": {
+        "size": 54581,
+        "sha256": "c5d16335a73c7111c536ac9edaef7ee4a2170e302a216d9144fd2f8dcc2bc693"
+      },
+      "archive_identity": {
+        "size": 54581,
+        "sha256": "c5d16335a73c7111c536ac9edaef7ee4a2170e302a216d9144fd2f8dcc2bc693"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/graph_views.py",
+      "archive": "smi_review/graph_views.py",
+      "source_identity": {
+        "size": 7720,
+        "sha256": "0678c7c3d60aac1965bcc6fcd34ec565ecd654c8c54b8da2afbb88fffd27f41d"
+      },
+      "archive_identity": {
+        "size": 7720,
+        "sha256": "0678c7c3d60aac1965bcc6fcd34ec565ecd654c8c54b8da2afbb88fffd27f41d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/static/review.css",
+      "archive": "smi_review/static/review.css",
+      "source_identity": {
+        "size": 7118,
+        "sha256": "5dafe17a89ba1d8a5bd2b432f2af1e1c9fc58053a7935baf13c541d206c9e60d"
+      },
+      "archive_identity": {
+        "size": 7118,
+        "sha256": "5dafe17a89ba1d8a5bd2b432f2af1e1c9fc58053a7935baf13c541d206c9e60d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/static/review.js",
+      "archive": "smi_review/static/review.js",
+      "source_identity": {
+        "size": 2135,
+        "sha256": "58aa724b6ac9532d6fcf656e15ad20eb71b625dde1967fddd4ab5676cc5ce253"
+      },
+      "archive_identity": {
+        "size": 2135,
+        "sha256": "58aa724b6ac9532d6fcf656e15ad20eb71b625dde1967fddd4ab5676cc5ce253"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_review/views.py",
+      "archive": "smi_review/views.py",
+      "source_identity": {
+        "size": 51067,
+        "sha256": "1aea7e2451cf224263a2729c53fbd04c21626018d0f5187b6d2e83c4efb18c79"
+      },
+      "archive_identity": {
+        "size": 51067,
+        "sha256": "1aea7e2451cf224263a2729c53fbd04c21626018d0f5187b6d2e83c4efb18c79"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/AGENTS.md",
+      "archive": "smi_tasks/AGENTS.md",
+      "source_identity": {
+        "size": 10078,
+        "sha256": "c54913096288bbdfaea10db9a6f7a5909d4d7c5b5de2e24c1c1bf6d4196bb0b8"
+      },
+      "archive_identity": {
+        "size": 10078,
+        "sha256": "c54913096288bbdfaea10db9a6f7a5909d4d7c5b5de2e24c1c1bf6d4196bb0b8"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/CLAUDE.md",
+      "archive": "smi_tasks/CLAUDE.md",
+      "source_identity": {
+        "size": 10078,
+        "sha256": "c54913096288bbdfaea10db9a6f7a5909d4d7c5b5de2e24c1c1bf6d4196bb0b8"
+      },
+      "archive_identity": {
+        "size": 10078,
+        "sha256": "c54913096288bbdfaea10db9a6f7a5909d4d7c5b5de2e24c1c1bf6d4196bb0b8"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/assistant/AGENTS.md",
+      "archive": "smi_tasks/assistant/AGENTS.md",
+      "source_identity": {
+        "size": 2505,
+        "sha256": "9ca316cd70184d573946c2d8fc6834939b7f2c2bc7453d6ba42362bdf627b153"
+      },
+      "archive_identity": {
+        "size": 2505,
+        "sha256": "9ca316cd70184d573946c2d8fc6834939b7f2c2bc7453d6ba42362bdf627b153"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/assistant/CLAUDE.md",
+      "archive": "smi_tasks/assistant/CLAUDE.md",
+      "source_identity": {
+        "size": 2505,
+        "sha256": "9ca316cd70184d573946c2d8fc6834939b7f2c2bc7453d6ba42362bdf627b153"
+      },
+      "archive_identity": {
+        "size": 2505,
+        "sha256": "9ca316cd70184d573946c2d8fc6834939b7f2c2bc7453d6ba42362bdf627b153"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/assistant/schema.sql",
+      "archive": "smi_tasks/assistant/schema.sql",
+      "source_identity": {
+        "size": 574,
+        "sha256": "4a162860c67cfdf57595005881bd05858f64acf70aa012df906a35b86e3a9179"
+      },
+      "archive_identity": {
+        "size": 574,
+        "sha256": "4a162860c67cfdf57595005881bd05858f64acf70aa012df906a35b86e3a9179"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/campaigns/AGENTS.md",
+      "archive": "smi_tasks/campaigns/AGENTS.md",
+      "source_identity": {
+        "size": 2406,
+        "sha256": "f80143db02376895da6f36194982fc2c90747b1bfc17300078eeebc16089b2aa"
+      },
+      "archive_identity": {
+        "size": 2406,
+        "sha256": "f80143db02376895da6f36194982fc2c90747b1bfc17300078eeebc16089b2aa"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/campaigns/CLAUDE.md",
+      "archive": "smi_tasks/campaigns/CLAUDE.md",
+      "source_identity": {
+        "size": 2406,
+        "sha256": "f80143db02376895da6f36194982fc2c90747b1bfc17300078eeebc16089b2aa"
+      },
+      "archive_identity": {
+        "size": 2406,
+        "sha256": "f80143db02376895da6f36194982fc2c90747b1bfc17300078eeebc16089b2aa"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/discovery/AGENTS.md",
+      "archive": "smi_tasks/discovery/AGENTS.md",
+      "source_identity": {
+        "size": 2760,
+        "sha256": "6077351f583f2b8ad03e3df0b0a1cf6a822c9e1e00357c31cbb5f9e676a56641"
+      },
+      "archive_identity": {
+        "size": 2760,
+        "sha256": "6077351f583f2b8ad03e3df0b0a1cf6a822c9e1e00357c31cbb5f9e676a56641"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/discovery/CLAUDE.md",
+      "archive": "smi_tasks/discovery/CLAUDE.md",
+      "source_identity": {
+        "size": 2760,
+        "sha256": "6077351f583f2b8ad03e3df0b0a1cf6a822c9e1e00357c31cbb5f9e676a56641"
+      },
+      "archive_identity": {
+        "size": 2760,
+        "sha256": "6077351f583f2b8ad03e3df0b0a1cf6a822c9e1e00357c31cbb5f9e676a56641"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/discovery/schema.sql",
+      "archive": "smi_tasks/discovery/schema.sql",
+      "source_identity": {
+        "size": 1003,
+        "sha256": "0a4c90a6a47d4045764379e1e1b62aacd24489b0b109c8b03e2739bbdad6489e"
+      },
+      "archive_identity": {
+        "size": 1003,
+        "sha256": "0a4c90a6a47d4045764379e1e1b62aacd24489b0b109c8b03e2739bbdad6489e"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/notifications/AGENTS.md",
+      "archive": "smi_tasks/notifications/AGENTS.md",
+      "source_identity": {
+        "size": 2116,
+        "sha256": "4c3ac15ab13efbe93f6e3244819cd615482bd5d49e4055cc995828f42ca5e58c"
+      },
+      "archive_identity": {
+        "size": 2116,
+        "sha256": "4c3ac15ab13efbe93f6e3244819cd615482bd5d49e4055cc995828f42ca5e58c"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/notifications/CLAUDE.md",
+      "archive": "smi_tasks/notifications/CLAUDE.md",
+      "source_identity": {
+        "size": 2116,
+        "sha256": "4c3ac15ab13efbe93f6e3244819cd615482bd5d49e4055cc995828f42ca5e58c"
+      },
+      "archive_identity": {
+        "size": 2116,
+        "sha256": "4c3ac15ab13efbe93f6e3244819cd615482bd5d49e4055cc995828f42ca5e58c"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/schedules/AGENTS.md",
+      "archive": "smi_tasks/schedules/AGENTS.md",
+      "source_identity": {
+        "size": 4268,
+        "sha256": "e013898bd8e1523c87d0432830690c0608e26624288687d540c6badf42c71bf8"
+      },
+      "archive_identity": {
+        "size": 4268,
+        "sha256": "e013898bd8e1523c87d0432830690c0608e26624288687d540c6badf42c71bf8"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/schedules/CLAUDE.md",
+      "archive": "smi_tasks/schedules/CLAUDE.md",
+      "source_identity": {
+        "size": 4268,
+        "sha256": "e013898bd8e1523c87d0432830690c0608e26624288687d540c6badf42c71bf8"
+      },
+      "archive_identity": {
+        "size": 4268,
+        "sha256": "e013898bd8e1523c87d0432830690c0608e26624288687d540c6badf42c71bf8"
+      },
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "source": "src/smi_tasks/schedules/schema.sql",
+      "archive": "smi_tasks/schedules/schema.sql",
+      "source_identity": {
+        "size": 3826,
+        "sha256": "95da9883ab81d9a7530e2ade939627aa964259150749b8f2a42aee030546db89"
+      },
+      "archive_identity": {
+        "size": 3826,
+        "sha256": "95da9883ab81d9a7530e2ade939627aa964259150749b8f2a42aee030546db89"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/schema.sql",
+      "archive": "smi_tasks/schema.sql",
+      "source_identity": {
+        "size": 7766,
+        "sha256": "9b7282ae9926d3a748f9c2aab78053b01dd02ed9e9c9e2948bfdf5554f76581a"
+      },
+      "archive_identity": {
+        "size": 7766,
+        "sha256": "9b7282ae9926d3a748f9c2aab78053b01dd02ed9e9c9e2948bfdf5554f76581a"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/supplementation/AGENTS.md",
+      "archive": "smi_tasks/supplementation/AGENTS.md",
+      "source_identity": {
+        "size": 2009,
+        "sha256": "e645be5dfea9d7b0233af0bd9f7b5bdceadfee09b60cc0a2f3af146317ccc64d"
+      },
+      "archive_identity": {
+        "size": 2009,
+        "sha256": "e645be5dfea9d7b0233af0bd9f7b5bdceadfee09b60cc0a2f3af146317ccc64d"
+      },
+      "symlink_target": null
+    },
+    {
+      "source": "src/smi_tasks/supplementation/CLAUDE.md",
+      "archive": "smi_tasks/supplementation/CLAUDE.md",
+      "source_identity": {
+        "size": 2009,
+        "sha256": "e645be5dfea9d7b0233af0bd9f7b5bdceadfee09b60cc0a2f3af146317ccc64d"
+      },
+      "archive_identity": {
+        "size": 2009,
+        "sha256": "e645be5dfea9d7b0233af0bd9f7b5bdceadfee09b60cc0a2f3af146317ccc64d"
+      },
+      "symlink_target": "AGENTS.md"
+    }
+  ],
+  "changed_packaged_files": [
+    "src/smi_ingestion/cli.py",
+    "src/smi_knowledge/AGENTS.md",
+    "src/smi_knowledge/graph/AGENTS.md",
+    "src/smi_knowledge/graph/CLAUDE.md",
+    "src/smi_knowledge/graph/__init__.py",
+    "src/smi_knowledge/graph/schema.sql",
+    "src/smi_knowledge/graph/store.py",
+    "src/smi_knowledge/store.py",
+    "src/smi_review/AGENTS.md",
+    "src/smi_review/app.py",
+    "src/smi_review/graph_views.py",
+    "src/smi_review/static/review.css",
+    "src/smi_review/views.py"
+  ],
+  "protected_files": [
+    {
+      "path": "AGENTS.md",
+      "size": 2964,
+      "sha256": "1af0a6894a010d77c1dcc89fc1a28525991a356ef3e8673dc22eda93f6a0525c",
+      "symlink_target": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "size": 2964,
+      "sha256": "1af0a6894a010d77c1dcc89fc1a28525991a356ef3e8673dc22eda93f6a0525c",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "GLOSSARY.md",
+      "size": 15357,
+      "sha256": "80efc9129d45da1d50dfd3dbb327632436dcee45659b7e4799baf25ddaadaf92",
+      "symlink_target": null
+    },
+    {
+      "path": "README.md",
+      "size": 18786,
+      "sha256": "8c4dbcf549ea9dd41b0e38252b76566728e3ffc00ba2890b6e065e140018fafc",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/README.md",
+      "size": 7910,
+      "sha256": "4aa140711abf67f899a99b8f50e1294c8cafd3448b06a13cfea61fd915aded54",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0001-canonical-evidence-ownership.md",
+      "size": 856,
+      "sha256": "ce0eb2b7ae3164608aece173962e2f03f8689710dc86ffb9f4c6a1e545c86a8c",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0002-pinned-support-current-policy.md",
+      "size": 1842,
+      "sha256": "73853e86378ee51572ecd6a6c45e3cbf4cbd234b2d7ec72e3372ad8a274547a1",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0003-automatic-shortlist-persistence.md",
+      "size": 1810,
+      "sha256": "39b489f52b0cc477cef351e0246b45aaa79e1c8ead311d6321900a8a4f224b63",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0004-lightweight-monitoring-evidence.md",
+      "size": 2501,
+      "sha256": "7f48820efd4c56e54327d459d21fcd4c64a4478d320d06a988e9f4ec85278a72",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0005-task-session-effect-ownership.md",
+      "size": 3110,
+      "sha256": "64919ff33c496a75ecfb337b5759dab28e78046d6fc85863120424c2d99d5f0a",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0006-bounded-synthetic-admission.md",
+      "size": 2987,
+      "sha256": "633cdfd21322705dc62512f4efdb0da82dba8e1e2dbd28810b7f1bda4b8688bf",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0007-final-cost-evidence-and-meter-recovery.md",
+      "size": 2966,
+      "sha256": "a286dc07b2228f8f3cf02c83ab3ed0f8a929a38ffb49e8d2fc4c6fd3160a388b",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0008-generated-criteria-preserve-human-constraints.md",
+      "size": 2315,
+      "sha256": "628fca8786a3293a139218b578f585b7041bf1afbadda7317d1712a8dfde141f",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0009-constrained-supported-ranking.md",
+      "size": 2226,
+      "sha256": "c0278ea5ce400da730c13fa9119214bcac1068556326bfd0beabe9d8c9d567a1",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0010-save-before-coverage-discovery-admission.md",
+      "size": 911,
+      "sha256": "48051a3214221edda7a7e52d8fdac442cbd07c260e7eade28b829e9b97be685a",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0011-stable-schedule-accounting-day.md",
+      "size": 2560,
+      "sha256": "89b53cc394cf5fbc884ae0b59b7be850d3b776272ba7e03ef05b1a986b5930aa",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0012-atomic-scheduled-post-admission.md",
+      "size": 3657,
+      "sha256": "0f1a7c087f3476700bdb8d15c8c99d330f1e4b747dd9f52c29bba739e0f094dd",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0013-capture-based-discovery-avoidance.md",
+      "size": 1808,
+      "sha256": "87976e7da46bdf71d5f7a6fd7ea7491c1fdaea9e175a452b8fb882b2bbf7cbf8",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0014-live-discovery-response-and-billing-identity.md",
+      "size": 1902,
+      "sha256": "c643eff00613f631a6bef9e685d453bc359a7bb59d6080d4e3a0291ca2e11a8c",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0015-recorded-live-schedule-authority.md",
+      "size": 1597,
+      "sha256": "c1a63326394bccf2ce9a5bfd3f51de5fc4b273a7b9d6fc54e8a27a816dfea8de",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0016-explicit-bounded-profile-supplementation.md",
+      "size": 1382,
+      "sha256": "5def130243c94e34d23291e0eeaf0912ac1d988005bdc600c09b962cc083fb39",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0017-exact-supported-answers.md",
+      "size": 1407,
+      "sha256": "67f6107298caf7781bcc0fce74bf56257e658d3072777604673caf4769cb0270",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0018-explicit-assistant-gap-scope.md",
+      "size": 1726,
+      "sha256": "7f96ebedd51350cda043cb11ac558839d6b31f62569751ea6795793ea1b36e2d",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0019-source-free-quantitative-alert-history.md",
+      "size": 1867,
+      "sha256": "4a6e185c65563de4a3b35051876568105cc6c2f9bbca9d6434e79706f83e8659",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0020-bounded-semantic-positions-full-input-policy.md",
+      "size": 2877,
+      "sha256": "2f2ad21879bef549f7a05af69d745d5be1e2b9e87a8e8d6152376839eff57351",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0021-pinned-local-alert-context.md",
+      "size": 1799,
+      "sha256": "ddbf542a3dc4f47f82fee4addde93078044b6898eca5df00a17d68ffee127794",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0022-promoted-source-lifecycle-inheritance.md",
+      "size": 1414,
+      "sha256": "8cee544a640d279b339bbc9ebf1e778450c4dd0c92c40f314660bdf85dfd071e",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/adr/0023-bounded-recent-x-poll-authority.md",
+      "size": 2142,
+      "sha256": "0ac6b21424cf92b4887eb5ff50acd8bfe2a5647dbb8aaee48077fe071bff1ed4",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/agents/domain.md",
+      "size": 716,
+      "sha256": "b87f22e95eebcc298708147be61546c201aa13ca2cb4e5865cbbe761036a5a57",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/agents/issue-tracker.md",
+      "size": 2335,
+      "sha256": "4cd7632448ea8d6e5fa760924ed376b29b1cfb1f2501d545ab6b0954af31cc6d",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/agents/triage-labels.md",
+      "size": 519,
+      "sha256": "d3494336c74b15efce373ff390b89b09c2e0a939358554e405932da6daaf8f06",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/architecture.md",
+      "size": 51169,
+      "sha256": "2e7918c2df80ff24c5584f893d93ce4de508b92238eb7472775db210c15df675",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/campaigns.md",
+      "size": 44817,
+      "sha256": "2aba8c9105c6faf090db2a35ea30982b150030fc81239349e15e867a73755d69",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/costs.md",
+      "size": 32979,
+      "sha256": "aaa59e9fbc575d91cec0f488900bded05f6e3b8c82dbc5bb3d3d3edf95926417",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/data-model.md",
+      "size": 71526,
+      "sha256": "e1e2fe2d4e2a88b852516d4203a4ca08151d2510efe788f78ce888ec9ae8a483",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/development.md",
+      "size": 1234,
+      "sha256": "a38516cd81f5d8355065fb81210db964d43aa058d7b072c684494375f3ecb324",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/evaluation.md",
+      "size": 6539,
+      "sha256": "537af745c81df0d7ba3d19ed372029a54b2203610d3b619ca6fd7337f03c53cb",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/evidence-sets.md",
+      "size": 10646,
+      "sha256": "461ca4572cfadb31b079754ae4d1bceb6bdbcba978f775d266222aef6c053522",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/functional-requirements.md",
+      "size": 18291,
+      "sha256": "89bc7ed732329e31afc97a755859c4c55fb7a47ec497d4a4ee6fe2bf2b56bf3c",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/implementation-spec.md",
+      "size": 58917,
+      "sha256": "7d7e90d53aac71fab5ff8dc38005f7e32a608b231c40f35951cbe66746fcf282",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/knowledge.md",
+      "size": 34257,
+      "sha256": "3993960b89fc633bee7fb35a627a82bce714102500feacae4fdbec15fea1b501",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/local-review.md",
+      "size": 56452,
+      "sha256": "9b986a23e6148e1454539e2a3b40a58a562901eacdb59060023389de77e0b8cc",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/monitoring.md",
+      "size": 44956,
+      "sha256": "927da71e58ea75571ad7d0a1ed5c6d41d2c2d4a0d4722fad059811de6015f7c5",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/planning.md",
+      "size": 3754,
+      "sha256": "ab34101470bab972e38a1e41938d5f05c72c7bcaf48b97c01eae3cb65ba066fa",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/reader-guide.md",
+      "size": 47104,
+      "sha256": "f05376853f882585343de8b9affc0b4463656b9f3800fee991fc7b3e6cb2b22a",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/source-integrations.md",
+      "size": 17857,
+      "sha256": "9146ed4b2a33102f0e13d1239854b5d2c9da162c889ebf8cdb23a78d49051f99",
+      "symlink_target": null
+    },
+    {
+      "path": "docs/tasks.md",
+      "size": 64610,
+      "sha256": "e51af739ba7cfa2bb5f6ba471b5633145fcb1d2c6a43a7f58fb79ba972d585d3",
+      "symlink_target": null
+    },
+    {
+      "path": "pyproject.toml",
+      "size": 762,
+      "sha256": "b5e4fa203e48efe22ff81feb226d16d35ba13123b9de36f33341c7fb8147ebbe",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_assistant/AGENTS.md",
+      "size": 2504,
+      "sha256": "de14b2921e42f0f25774fefe61c8c9e5a27bd562e8e799e274ccd8f38f555b9a",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_assistant/CLAUDE.md",
+      "size": 2504,
+      "sha256": "de14b2921e42f0f25774fefe61c8c9e5a27bd562e8e799e274ccd8f38f555b9a",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_assistant/__init__.py",
+      "size": 149,
+      "sha256": "bc0989f9a92873c9812d0cd5992509e867d8f1711255fba65fa7d4bde6335bd3",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_assistant/answers.py",
+      "size": 4728,
+      "sha256": "a41df029758f2f4b8c5406c5ba1f353f8ee00b43b34b0a9131abf9a47b18f4fc",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_assistant/schema.sql",
+      "size": 765,
+      "sha256": "3e71f039b5bf698bda281e554b88517f96c4d217e3bdf103eeaaedd37fc66d04",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_assistant/store.py",
+      "size": 12822,
+      "sha256": "84350272308e969c0b7e005bf198b563160eec8d982f83b2b7a1b8a15f57e49d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/AGENTS.md",
+      "size": 8366,
+      "sha256": "da47b1789eecfa42a4c3430febc109386657a98b73cce262b4d6bcbc716ebf19",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/CLAUDE.md",
+      "size": 8366,
+      "sha256": "da47b1789eecfa42a4c3430febc109386657a98b73cce262b4d6bcbc716ebf19",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_campaigns/__init__.py",
+      "size": 232,
+      "sha256": "6bfa07a757b24243996fbc4612e4fa96a8409d694cbccc2d589b986de3a1a80b",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/comparison.py",
+      "size": 9853,
+      "sha256": "558f3c243d7b0accab5cb76b6acdfc0ca5e91dec0d563f7b49f5d0b9e10cc469",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/contracts.py",
+      "size": 7533,
+      "sha256": "df1bb65e79a3c6acc050429382c1df6617fe85d908e956aeceb0f402b5dd3611",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/coverage.py",
+      "size": 2644,
+      "sha256": "6ba01c6e68b1049e39020af78e4a5cdf45c80b1b45f4a4e5e6d3d9863e4125ed",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/interpretation/AGENTS.md",
+      "size": 2014,
+      "sha256": "997b11f3b6d565f15938470d97be2d383423ff622680d3c3e34013effd93616f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/interpretation/CLAUDE.md",
+      "size": 2014,
+      "sha256": "997b11f3b6d565f15938470d97be2d383423ff622680d3c3e34013effd93616f",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_campaigns/interpretation/__init__.py",
+      "size": 5869,
+      "sha256": "a31966782d76082cb194aae759ec071fbfb4d6db680e734f125ea3048b4ec894",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/interpretation/http.py",
+      "size": 215,
+      "sha256": "707b48b25447dcd08d40ff2f9de2c0d6350d4c3fdf0efad070cc8e1586ccb8d8",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/planning/AGENTS.md",
+      "size": 1635,
+      "sha256": "f898de75703f6652e7cc8700b39f21a5fa9d73cc56abce4b94ed1cb254a503f5",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/planning/CLAUDE.md",
+      "size": 1635,
+      "sha256": "f898de75703f6652e7cc8700b39f21a5fa9d73cc56abce4b94ed1cb254a503f5",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_campaigns/planning/__init__.py",
+      "size": 221,
+      "sha256": "147626da97a263e63d8d904090c0a6aa20f6d224b2aad48a0f802e514dee26b7",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/planning/contracts.py",
+      "size": 3126,
+      "sha256": "f14eefe225ea35d361d931468c77410c8df128282dfe62d497d94f19801e6bc2",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/planning/schema.sql",
+      "size": 1705,
+      "sha256": "ebf7ffe6db470fb9d107af0868846a6f215b9a9326ecc37a35c6f4dc2b37f4a2",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/planning/store.py",
+      "size": 10411,
+      "sha256": "c19b94adcb55b2f60f8be0d1d6475f1741047edf8115a9fba159e64fa098171f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/ranking/AGENTS.md",
+      "size": 1465,
+      "sha256": "4dbf20779a1608835ba9b7124b19ff53179e1b5122962510f62b81bd60a95d06",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/ranking/CLAUDE.md",
+      "size": 1465,
+      "sha256": "4dbf20779a1608835ba9b7124b19ff53179e1b5122962510f62b81bd60a95d06",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_campaigns/ranking/__init__.py",
+      "size": 6614,
+      "sha256": "5c0532e04952c072219f4d97b567c3030a1abd03548e4da6aee5e7bf51ed20e3",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/responses/AGENTS.md",
+      "size": 1773,
+      "sha256": "b4830f96130cf58ce6c8cbecf958b053b12454a5a83f47585c97c80bbb8d513f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/responses/CLAUDE.md",
+      "size": 1773,
+      "sha256": "b4830f96130cf58ce6c8cbecf958b053b12454a5a83f47585c97c80bbb8d513f",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_campaigns/responses/__init__.py",
+      "size": 10620,
+      "sha256": "6b205a2842575f0ebe30a7c07468fea6a4788c591ac5e15298b261c4f4126631",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/responses/http.py",
+      "size": 3225,
+      "sha256": "2d0b0d8feec32614c5890a0d554129ed309f770e118557256049792300c774a3",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/schema.sql",
+      "size": 7682,
+      "sha256": "4abcc207e0fec794d2e78acc89e1fe167c70749c6526457fd104f90c010e9104",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_campaigns/store.py",
+      "size": 71303,
+      "sha256": "ed4a5ebe122607f1d8aacfc5077b416a4070476aa600a41c0f8c015ffc724cd4",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_costs/AGENTS.md",
+      "size": 6277,
+      "sha256": "e2264ef4ecd2930bff597443b1a66e999d8ef5b403dfee939280c8ecb3f2e02a",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_costs/CLAUDE.md",
+      "size": 6277,
+      "sha256": "e2264ef4ecd2930bff597443b1a66e999d8ef5b403dfee939280c8ecb3f2e02a",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_costs/__init__.py",
+      "size": 509,
+      "sha256": "a1057fa54e5b217b805a3801e07c19a5f6b86da50f89e68e0acc045aff9bb185",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_costs/admission.py",
+      "size": 12489,
+      "sha256": "4234c1b0dca0adc1d9dc14eb1a7d6fd56ebf83cc7aabddbd7dba62d627a3dcc7",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_costs/contracts.py",
+      "size": 4182,
+      "sha256": "e123d4ee8a57e0ce3c44e3a75697fc9eb6906832260904dc4395cbded066037b",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_costs/reconciliation.py",
+      "size": 11640,
+      "sha256": "64b4285dd51e1759b87ad615ce52bcacb81a95b9dbe4a2d099eea2a8f8a727af",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_costs/schema.sql",
+      "size": 3939,
+      "sha256": "794522409d54445e0105930d3f76c6802d30f8154d6cd7dc1c99d8b63b4421f8",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_costs/store.py",
+      "size": 29969,
+      "sha256": "731e543f779cf91185b76ba3dca9ad3cb39e5c9e0f81c7a7f7fb8f2306601eef",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/AGENTS.md",
+      "size": 4664,
+      "sha256": "4e29f9f46edc1d354c906fb64dfdcd13c934dee8a9e3e4b23aa686178e61c244",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/CLAUDE.md",
+      "size": 4664,
+      "sha256": "4e29f9f46edc1d354c906fb64dfdcd13c934dee8a9e3e4b23aa686178e61c244",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_ingestion/__init__.py",
+      "size": 39,
+      "sha256": "34a21e50ed9dcb899018d0bc5b856fc469aa7d2151424483346f52eb1c38a66c",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/__main__.py",
+      "size": 48,
+      "sha256": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/AGENTS.md",
+      "size": 2685,
+      "sha256": "20f0569e0b5d94d3c9bf17895988dd41839b08efa7d47142234971ac47a01c7b",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/CLAUDE.md",
+      "size": 2685,
+      "sha256": "20f0569e0b5d94d3c9bf17895988dd41839b08efa7d47142234971ac47a01c7b",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_ingestion/adapters/__init__.py",
+      "size": 62,
+      "sha256": "96e13842498342ad59ecc753ac41a2d37dde9dc80aabf45b65fb63e3e600cbb1",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/bright_data.py",
+      "size": 35314,
+      "sha256": "cd62b2c38c6cd69ad084cb4c77c97d723c3ccb43cecf8664871aa24cb12ee17f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/html_fixture.py",
+      "size": 4408,
+      "sha256": "cc7863c31a1c5366343950476dcec58b2e6e0c44025ba27d6b2a61f6eba5b201",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/http.py",
+      "size": 632,
+      "sha256": "7f31b10f785ca48c79d2a059ee7a8912ae50b746fb74817e3c28b2539289a766",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/json_fixture.py",
+      "size": 4107,
+      "sha256": "cea52c9523ffab6872d3e2b54694093a0d4a3a6dfc508a66a0937d5e32cd3990",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/keyword_fixture.py",
+      "size": 7876,
+      "sha256": "b097e4fdb6ab968e4c08718a6f058de1cdfb5d0c603f0e4505ba78fe1baac50a",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/local.py",
+      "size": 2927,
+      "sha256": "64baecd127ee292e6bad927a1a8aa361366ac2d000f57b17d59428b772b11de6",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/registry.py",
+      "size": 1741,
+      "sha256": "efeb532362969af45afe051c1c9dcb11cfe2060b86bd92c93b02faa712d90723",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/snapshot.py",
+      "size": 1216,
+      "sha256": "960c2b3626af0274dce14d4ae57d84006e17d0eb3de2f6d934526ab5b9f62251",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/tiktok_keyword/AGENTS.md",
+      "size": 1813,
+      "sha256": "2e683926e773948ee8cb1089b354d78415c5c070dffcaba27e65b5e58e4adc8d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/tiktok_keyword/CLAUDE.md",
+      "size": 1813,
+      "sha256": "2e683926e773948ee8cb1089b354d78415c5c070dffcaba27e65b5e58e4adc8d",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_ingestion/adapters/tiktok_keyword/__init__.py",
+      "size": 14995,
+      "sha256": "1a3a88549780f547afad16a49b814188fbf082bbd249345f18b182eabc34ca4e",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/tiktok_oembed.py",
+      "size": 10392,
+      "sha256": "1a6e42b86294561c5e6d71ffda91f8a763a1ad2477effa4c0e16ec76f95ab857",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/adapters/tiktok_web.py",
+      "size": 22215,
+      "sha256": "039bef370bb0423b10a29e99730486aea79bf2f49c5db6c49d35d5470651c361",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/canonical.py",
+      "size": 13937,
+      "sha256": "603e5423244eb580edd3335fa87b56755d4536181d140c4cfbbca29ffcc6c43b",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/cli.py",
+      "size": 23373,
+      "sha256": "e42c6f3a51824ad8f2e58122298e4eeda88ba43053bf20cc452673b82e4c916b",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/contracts.py",
+      "size": 4288,
+      "sha256": "9396f035b87a00294cda77443ee965d08817491bc614d79474908cc41601583c",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/db.py",
+      "size": 722,
+      "sha256": "29ea19b5e2c59d559a5927469e4e1fb8771d271458acae8ab110ccb8e20381e3",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/dependencies.py",
+      "size": 6241,
+      "sha256": "1365b537ecdcae2e22a86d4a4d0ae6557de7be0d17ce58a85de4665bb26244e7",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/evidence.py",
+      "size": 15419,
+      "sha256": "9ddf42d35771e3c82285442b4fffd42a5477df46a40a37715327ad4919c03237",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/evidence_sets/AGENTS.md",
+      "size": 1403,
+      "sha256": "4322864004029d6a209b045879775868aeb445b3ff4f56343d15374cb9aa381d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/evidence_sets/CLAUDE.md",
+      "size": 1403,
+      "sha256": "4322864004029d6a209b045879775868aeb445b3ff4f56343d15374cb9aa381d",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_ingestion/evidence_sets/__init__.py",
+      "size": 249,
+      "sha256": "81ebd7254b2fbcda74f548dd3ded8b5c8a9702cf1c15de1511d3ff499f6b821b",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/evidence_sets/access.py",
+      "size": 946,
+      "sha256": "0ef9b1a5beefa37f501e6a90a9ac88780316774da4f4e5af0656af43ba7e288b",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/evidence_sets/reader.py",
+      "size": 8941,
+      "sha256": "d1607d98969ea10caed627cecf348d8ab599471c6ef6aac52a97df17c4d1215f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/evidence_sets/snapshot.py",
+      "size": 9344,
+      "sha256": "35337f956e65628970d33076128e18c4ea6db87fb5d6a0628e7f541806cc97f3",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/evidence_sets/store.py",
+      "size": 6495,
+      "sha256": "bc6734777c74ae15fada06d7d18fec30d120d1a16cbf654ba505cad34a05d91e",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/references.py",
+      "size": 902,
+      "sha256": "2e7fd11ace145613a0ee059087fddd8c1bbc86d563fdd9bb5b62c1069ff2b5de",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/runner.py",
+      "size": 16564,
+      "sha256": "b779cda6ba90fc8abba1fcdfdbf6cc7fea3865321cb9b87afffcbb0ff722df78",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/schema.sql",
+      "size": 6147,
+      "sha256": "60ceb5c4dd2cd6e54de6a1372509f875f15651a163b73b80a493a2dabc740899",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/support/AGENTS.md",
+      "size": 2385,
+      "sha256": "ae206b476367874de4d8949ae94b146646663c269b6b36e1a17dfb91cb6f7cf5",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/support/CLAUDE.md",
+      "size": 2385,
+      "sha256": "ae206b476367874de4d8949ae94b146646663c269b6b36e1a17dfb91cb6f7cf5",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_ingestion/support/__init__.py",
+      "size": 187,
+      "sha256": "c1ea88c001688b823e014f20a6bbaa52c6a51600b6bb7e112716f0fd3803f537",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_ingestion/support/reader.py",
+      "size": 11549,
+      "sha256": "9ba743c5c893ab940859b5116269ad02da7cc6768edf53045d8158766b077ff1",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/AGENTS.md",
+      "size": 1954,
+      "sha256": "186b9ee1343a3be5ba3c5e92d3b9129bd444900843d8b0639f4e9548e59fb3a7",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/CLAUDE.md",
+      "size": 1954,
+      "sha256": "186b9ee1343a3be5ba3c5e92d3b9129bd444900843d8b0639f4e9548e59fb3a7",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_knowledge/__init__.py",
+      "size": 342,
+      "sha256": "532fd7d36cea147485a651883caa19b996b718a7aa1ee71d6061fb69c7e5b65e",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/catalog.py",
+      "size": 3193,
+      "sha256": "10c6bd03eca0376e6bccca87fdde66deb112d0f5f23fd8b6b57810712eb57619",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/extraction.py",
+      "size": 4754,
+      "sha256": "25f1b6570c300156b9e6df30aafe3d8fc0a0b49a75ac20ac61bae9a965786faa",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/graph/AGENTS.md",
+      "size": 1638,
+      "sha256": "4b7a463a8848fb0bd7db76ec2ff9ed65dfceb74df4da85b5e1f04aa89f2a6467",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/graph/CLAUDE.md",
+      "size": 1638,
+      "sha256": "4b7a463a8848fb0bd7db76ec2ff9ed65dfceb74df4da85b5e1f04aa89f2a6467",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_knowledge/graph/__init__.py",
+      "size": 171,
+      "sha256": "dc97a9662049a8e871ab2a8dec7a613bddef519f4f147bd86add2c0e4b98e9e3",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/graph/schema.sql",
+      "size": 514,
+      "sha256": "3dbc9e83ec71e04a754f64b4e54d3a3b4f9b2c9c298ed0e612d11740e326c18d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/graph/store.py",
+      "size": 16761,
+      "sha256": "f6403f3bfb5e0897cc336d79570ee43a7c10c4d5aaeca0a0830e74728fbc6265",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/publications/AGENTS.md",
+      "size": 3314,
+      "sha256": "6fd6ec27d2a7b1c2d7b9cff2a5e81817f624fd76a1f3a5707e9a266c28d11a55",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/publications/CLAUDE.md",
+      "size": 3314,
+      "sha256": "6fd6ec27d2a7b1c2d7b9cff2a5e81817f624fd76a1f3a5707e9a266c28d11a55",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_knowledge/publications/__init__.py",
+      "size": 143,
+      "sha256": "d0324aff661b31fe13a769fb387d412133fd55fa5865413816137f2e801fd423",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/publications/store.py",
+      "size": 15117,
+      "sha256": "0a4b2eebcd19a82ebfb299d0cdd36af2a972be65c6cdeae6e6729dfb86c57fd6",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/queries/AGENTS.md",
+      "size": 2749,
+      "sha256": "39ebc08c71488f0b6d4b95f23556c5b8b0a24d8d919960488fb546218b87222e",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/queries/CLAUDE.md",
+      "size": 2749,
+      "sha256": "39ebc08c71488f0b6d4b95f23556c5b8b0a24d8d919960488fb546218b87222e",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_knowledge/queries/__init__.py",
+      "size": 174,
+      "sha256": "abe77cd52ffb5ac30bda2fdc28878465f900de3becf6216795b00c5ee7ab73ce",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/queries/store.py",
+      "size": 20012,
+      "sha256": "5a22a6c6bd505b64f4bfb4a3d7ef4ae6a66fc31203b082e8683ee0a3d335a871",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/schema.sql",
+      "size": 6081,
+      "sha256": "5319ad64e747f6f827b7b249652fa1a8cfc5329f3d9feea016303b8c0ee56547",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_knowledge/store.py",
+      "size": 20782,
+      "sha256": "71c0b03fa806d363a94d9aecf7a491f9eb4e71867d06f5a041f4f9900db05023",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/AGENTS.md",
+      "size": 2927,
+      "sha256": "e7d0e58fd3b94abb641f218859b417a4abf776cd1557c9790e28ab21e450fec3",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/CLAUDE.md",
+      "size": 2927,
+      "sha256": "e7d0e58fd3b94abb641f218859b417a4abf776cd1557c9790e28ab21e450fec3",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_monitoring/__init__.py",
+      "size": 197,
+      "sha256": "7c345d6aedd5cc2998e70e9ed73f2ba3033c1a4a30cfdaaf7274862d3afdae8f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/alerts/AGENTS.md",
+      "size": 2848,
+      "sha256": "1a7a436817cd1a231e782e763257593da2e2e39537e4d778bb20f50c69b6e22f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/alerts/CLAUDE.md",
+      "size": 2848,
+      "sha256": "1a7a436817cd1a231e782e763257593da2e2e39537e4d778bb20f50c69b6e22f",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_monitoring/alerts/__init__.py",
+      "size": 189,
+      "sha256": "4b05f9062cfa14b7cb8065941a8efc70a0848c25fce271cf079a9cb457adeddd",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/alerts/schema.sql",
+      "size": 1098,
+      "sha256": "85488de55f7420f6eac258146678b6601620c2abe3f28cf562db3acff08049de",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/alerts/store.py",
+      "size": 13190,
+      "sha256": "4ce7b2ba785b63346f18008860c983fbd76ad779fb1a37749e4b271e39ee28b6",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/context/AGENTS.md",
+      "size": 2105,
+      "sha256": "f82ca49c6af8bc361095cae2a79a8b0041cb58b0901939a85bca85e2a9e0be3d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/context/CLAUDE.md",
+      "size": 2105,
+      "sha256": "f82ca49c6af8bc361095cae2a79a8b0041cb58b0901939a85bca85e2a9e0be3d",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_monitoring/context/__init__.py",
+      "size": 143,
+      "sha256": "e481b59a0326e15e5ee4cf6cbb26c79277114c82f14ee60c6f517d07bfb57c5d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/context/schema.sql",
+      "size": 676,
+      "sha256": "05f2b6d7639de02554a96bac32d2d0e183f9e0ca427771d610090b5c28d4262e",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/context/store.py",
+      "size": 9304,
+      "sha256": "67d7f59d716045a0f582fb0e0ba8838856132416172d71ca3bf78cab7eda0a54",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/contracts.py",
+      "size": 3301,
+      "sha256": "84aefb168ad04179b975952220a78b038afd5906f6bb007834c13f3ee8838521",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/polling/AGENTS.md",
+      "size": 3207,
+      "sha256": "202125c6c71cc2d723144c3295c62e32cee4f80907438047235d54ef5132cd2f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/polling/CLAUDE.md",
+      "size": 3207,
+      "sha256": "202125c6c71cc2d723144c3295c62e32cee4f80907438047235d54ef5132cd2f",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_monitoring/polling/__init__.py",
+      "size": 197,
+      "sha256": "5530bebed385d4649d5a55574a26b64d20dd96bb226b99b136eb74c380bf311c",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/polling/route.py",
+      "size": 8973,
+      "sha256": "79cfff81ce60fa9f78ac170e481d60a138a32a5f3a04bb5a246fcb39ea66325f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/polling/schema.sql",
+      "size": 1490,
+      "sha256": "531b83125d4199f21c0b4a5c2194b8653a8782caa155e0ee6d54ba97d4c2e367",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/polling/store.py",
+      "size": 18500,
+      "sha256": "4b601f6cfd66c9ad1190862ebccf6c784c00ab791f261ae84c89295c8188d01a",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/promotion/AGENTS.md",
+      "size": 1803,
+      "sha256": "f56c85eec8721e5b7ec97c8ac977f0981e8fc37dd8b134e3fd8893ba0ced1e84",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/promotion/CLAUDE.md",
+      "size": 1803,
+      "sha256": "f56c85eec8721e5b7ec97c8ac977f0981e8fc37dd8b134e3fd8893ba0ced1e84",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_monitoring/promotion/__init__.py",
+      "size": 147,
+      "sha256": "988c08f3fb0a0b6fced71a5de2b386022e1bb9bedcebe722ba36cf049c849f94",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/promotion/mapper.py",
+      "size": 1524,
+      "sha256": "5a251c46857b3317128f9047a6d7321cd8392edf5a5edd7d75d9e3cef8a71511",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/promotion/schema.sql",
+      "size": 842,
+      "sha256": "520aea348e9fc08c36e5d94d3a47e06cabd7749cc4c52d537cc3b6f240538afd",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/promotion/store.py",
+      "size": 9338,
+      "sha256": "2ae4a53c0d9e6cb4969c2de2e10bdd9b11a4e7c3b18ee21183232cb39b44d31a",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/recent/AGENTS.md",
+      "size": 3524,
+      "sha256": "57ee3b9ab4105b7db1f5d5cf6eaccd43bfa03b6d07f9541222f68f13069d708b",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/recent/CLAUDE.md",
+      "size": 3524,
+      "sha256": "57ee3b9ab4105b7db1f5d5cf6eaccd43bfa03b6d07f9541222f68f13069d708b",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_monitoring/recent/__init__.py",
+      "size": 211,
+      "sha256": "a750da65e2fe5881d9afa6f7fcc8b5bac90829c88ab71bdea6463e2bdafb9dea",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/recent/route.py",
+      "size": 4955,
+      "sha256": "00f8075b9ad2558190baaaac347e7c4fe250e2ce1ac62f66890f64f45e830bfe",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/recent/schema.sql",
+      "size": 2557,
+      "sha256": "7b9865e8d78163e176d2f3c32b14fd3e442b26704796547cc7ade1dc20daa8d4",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/recent/store.py",
+      "size": 28734,
+      "sha256": "0413901ad1b1306aecee72d6963acc14d74c965986ce2b1112dea4c221f3572d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/schema.sql",
+      "size": 2150,
+      "sha256": "f4a35baf59de56f845981b1756685fe2b4ee7b455aec7f348bca2ead714d1382",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/semantic/AGENTS.md",
+      "size": 3283,
+      "sha256": "71bca212d4227556e316f6d1c5b22a0e74b3fc1ec4c9ce2d4b69243b0f60f38f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/semantic/CLAUDE.md",
+      "size": 3283,
+      "sha256": "71bca212d4227556e316f6d1c5b22a0e74b3fc1ec4c9ce2d4b69243b0f60f38f",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_monitoring/semantic/__init__.py",
+      "size": 212,
+      "sha256": "46a869b736c7b31cbb3c17549c14b393bc89f6161c4600fa72f2bb3ce3fa253d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/semantic/method.py",
+      "size": 7937,
+      "sha256": "3c4364a0d694c9ba0cb6064996d76f1243474280a43d165091c66d7d70b539b0",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/semantic/schema.sql",
+      "size": 1326,
+      "sha256": "70b2ae6b4f769d8e31a61e5cce84965138bd18a1d1a1706a5ba06dc93fc5d9c6",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/semantic/store.py",
+      "size": 16203,
+      "sha256": "0653f655bcda79d36d9dbbc8537b48ea2b0db6beb572791073b5cf32a969690f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/store.py",
+      "size": 17152,
+      "sha256": "c7bfa3974fce7cd6567895e88c0b4054218e97b6c860d763b4caf7f77c2a0ba5",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_monitoring/summary.py",
+      "size": 5058,
+      "sha256": "6691d8e3d54a8e04dcf9577e6c01f03e4963dd602ff8241404210d6606251e36",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/AGENTS.md",
+      "size": 17416,
+      "sha256": "021b58ecba8b5077c878478cb9a0f5c6b168bc200951643d03452cfced7a6463",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/CLAUDE.md",
+      "size": 17416,
+      "sha256": "021b58ecba8b5077c878478cb9a0f5c6b168bc200951643d03452cfced7a6463",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_review/__init__.py",
+      "size": 177,
+      "sha256": "ad6a31c5ba1f4841f6a9a5f78c43fc92e69643a8ffedd92997e99435ec3977be",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/__main__.py",
+      "size": 96,
+      "sha256": "2092db992fd1af4b8a4af1cf73c428aa915484632c47ec758a10b7808b02c0fc",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/alert_views.py",
+      "size": 3316,
+      "sha256": "86145d7f010f1798dd29c2b4aaf9571491dffebe6625b6a03e1415b86112723b",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/answer_views.py",
+      "size": 4700,
+      "sha256": "05aff35886c5e90f8a91c8da086a3aef026c0cfc8f5a1c34978c0527235297c6",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/app.py",
+      "size": 54581,
+      "sha256": "c5d16335a73c7111c536ac9edaef7ee4a2170e302a216d9144fd2f8dcc2bc693",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/context_views.py",
+      "size": 2655,
+      "sha256": "06b67b1059591fe1bdadeb92009dbe2562036faaa61de1905a4a4239023686ed",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/cost_views.py",
+      "size": 4494,
+      "sha256": "97e189ee7c552d515e69b747741e7566e0e96e07ce2829d7382d2d9269563d38",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/enrichment_views.py",
+      "size": 5263,
+      "sha256": "dc53d97740227c2ab78bcc706532191332560410b80a05f9b6047cc78885dee8",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/forms.py",
+      "size": 519,
+      "sha256": "33d6d1816fd146a2ea27e02897100e407e6f73346f676e55be723fbba41eee1f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/graph_views.py",
+      "size": 7720,
+      "sha256": "0678c7c3d60aac1965bcc6fcd34ec565ecd654c8c54b8da2afbb88fffd27f41d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/inbox_views.py",
+      "size": 7494,
+      "sha256": "4381eaf802f8967d514a92f559fa3561611006ae7faaf9f26dbd7f5c119ce57b",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/monitoring_views.py",
+      "size": 10438,
+      "sha256": "10c7d19a5b002bed04d1fd7583cae6694c5cb8705054adf37f2c502d136d2a82",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/planning_views.py",
+      "size": 5601,
+      "sha256": "1444fdc2357181dcf3e0375296f1affa7ea0da5127862bddc945f271c6481df2",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/proposal_views.py",
+      "size": 7370,
+      "sha256": "cbc0febd897c1b57420336b1af4d254efe18d0e39ff313af4d34cc60b932e345",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/publication_views.py",
+      "size": 4135,
+      "sha256": "fb588ff7f989e2046fcfb2f047b8cca97d107343d700b3999fa4754abd1f1257",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/query_views.py",
+      "size": 4387,
+      "sha256": "f1288a70a303af58c9db7b54edf8f1a8a2b474333c45f981799d63d8d314dd8f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/recent_views.py",
+      "size": 9161,
+      "sha256": "608656c7e8db1ac2a46af029b4249cde37239de39136c1772cc68a00cb83b871",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/schedule_views.py",
+      "size": 5141,
+      "sha256": "c713e81f79633473657f9e9b2b4dd9c95f6f78a3c2584341a259238a768a62df",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/semantic_views.py",
+      "size": 4501,
+      "sha256": "edc097dfc34a83c543df97b54ef363d3a1f9607fb72f8b1813510ee8dfc97d05",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/server.py",
+      "size": 7265,
+      "sha256": "6d806f7eda8b0a0ce01724c3dc1fb43c27cb746132cd235137da3b042cbc1490",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/static/review.css",
+      "size": 7118,
+      "sha256": "5dafe17a89ba1d8a5bd2b432f2af1e1c9fc58053a7935baf13c541d206c9e60d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/static/review.js",
+      "size": 2135,
+      "sha256": "58aa724b6ac9532d6fcf656e15ad20eb71b625dde1967fddd4ab5676cc5ce253",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/task_views.py",
+      "size": 5884,
+      "sha256": "e3702603e9f61d4f31ef21a2862a5438041ee97576738438cfb77905362c2a88",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_review/views.py",
+      "size": 51067,
+      "sha256": "1aea7e2451cf224263a2729c53fbd04c21626018d0f5187b6d2e83c4efb18c79",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/AGENTS.md",
+      "size": 10078,
+      "sha256": "c54913096288bbdfaea10db9a6f7a5909d4d7c5b5de2e24c1c1bf6d4196bb0b8",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/CLAUDE.md",
+      "size": 10078,
+      "sha256": "c54913096288bbdfaea10db9a6f7a5909d4d7c5b5de2e24c1c1bf6d4196bb0b8",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_tasks/__init__.py",
+      "size": 815,
+      "sha256": "61c2486a62876d30e32efc0cffdcdb86c5d2301bbc6914d9ad2186407c5685c3",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/assistant/AGENTS.md",
+      "size": 2505,
+      "sha256": "9ca316cd70184d573946c2d8fc6834939b7f2c2bc7453d6ba42362bdf627b153",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/assistant/CLAUDE.md",
+      "size": 2505,
+      "sha256": "9ca316cd70184d573946c2d8fc6834939b7f2c2bc7453d6ba42362bdf627b153",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_tasks/assistant/__init__.py",
+      "size": 9439,
+      "sha256": "17495ce0c86ab36591207b7f46b66f36ca9fa8233819ca4aaab38994295159aa",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/assistant/schema.sql",
+      "size": 574,
+      "sha256": "4a162860c67cfdf57595005881bd05858f64acf70aa012df906a35b86e3a9179",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/campaigns/AGENTS.md",
+      "size": 2406,
+      "sha256": "f80143db02376895da6f36194982fc2c90747b1bfc17300078eeebc16089b2aa",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/campaigns/CLAUDE.md",
+      "size": 2406,
+      "sha256": "f80143db02376895da6f36194982fc2c90747b1bfc17300078eeebc16089b2aa",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_tasks/campaigns/__init__.py",
+      "size": 8654,
+      "sha256": "cf79c2453f47ea1c164ff96fe3ace1d2b953165b6611f6f5fcc4402e59d9bc7c",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/contracts.py",
+      "size": 13466,
+      "sha256": "5b0ebd0ccbff48f51e2827c94faabbb8c4c9de56399657a305734972d33075ef",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/discovery/AGENTS.md",
+      "size": 2760,
+      "sha256": "6077351f583f2b8ad03e3df0b0a1cf6a822c9e1e00357c31cbb5f9e676a56641",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/discovery/CLAUDE.md",
+      "size": 2760,
+      "sha256": "6077351f583f2b8ad03e3df0b0a1cf6a822c9e1e00357c31cbb5f9e676a56641",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_tasks/discovery/__init__.py",
+      "size": 205,
+      "sha256": "03142d4a28b8740b9fb390d02020b8f17eb2a0ac84f6fccfb01b712865513621",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/discovery/history.py",
+      "size": 11712,
+      "sha256": "f389286092ff3e9ca0754e40ae57ff6bb3da0444b9481b8b8f0fc80daae65a9f",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/discovery/policy.py",
+      "size": 981,
+      "sha256": "263601839abab7dee07bef9db45bef5f92e1ea74f3396c76abc96537c116dd8e",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/discovery/schema.sql",
+      "size": 1003,
+      "sha256": "0a4c90a6a47d4045764379e1e1b62aacd24489b0b109c8b03e2739bbdad6489e",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/execution.py",
+      "size": 5781,
+      "sha256": "e6f138976962e488b8fea42af6c142d95ac2c156a2509a824c552619f8b5a025",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/notifications/AGENTS.md",
+      "size": 2116,
+      "sha256": "4c3ac15ab13efbe93f6e3244819cd615482bd5d49e4055cc995828f42ca5e58c",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/notifications/CLAUDE.md",
+      "size": 2116,
+      "sha256": "4c3ac15ab13efbe93f6e3244819cd615482bd5d49e4055cc995828f42ca5e58c",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_tasks/notifications/__init__.py",
+      "size": 124,
+      "sha256": "fb9c7d1424f93915dfaddeb1aa7805c40fe321cb2caadec22e9c0f0e892eeb50",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/notifications/store.py",
+      "size": 5925,
+      "sha256": "50b62ed12d3e0b0fb7a8269f64ae7b74c7ba9ff40717fffe65d76663cf05792b",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/schedules/AGENTS.md",
+      "size": 4268,
+      "sha256": "e013898bd8e1523c87d0432830690c0608e26624288687d540c6badf42c71bf8",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/schedules/CLAUDE.md",
+      "size": 4268,
+      "sha256": "e013898bd8e1523c87d0432830690c0608e26624288687d540c6badf42c71bf8",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_tasks/schedules/__init__.py",
+      "size": 16648,
+      "sha256": "c6ee45bb7364cda5363fb953e45f14c87699d33aa5317fe3686d79b22536a9d4",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/schedules/allowance.py",
+      "size": 9617,
+      "sha256": "c3b16633e3ce81544514e8698590ca474fd950dcfb37b48a0480ed3a201aefee",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/schedules/schema.sql",
+      "size": 3826,
+      "sha256": "95da9883ab81d9a7530e2ade939627aa964259150749b8f2a42aee030546db89",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/schema.sql",
+      "size": 7766,
+      "sha256": "9b7282ae9926d3a748f9c2aab78053b01dd02ed9e9c9e2948bfdf5554f76581a",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/store.py",
+      "size": 38135,
+      "sha256": "49b67a75546381789f1e2d38f0c73ce04d3ba3c47a5abf6b625f5cb52ff98b4d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/supplementation/AGENTS.md",
+      "size": 2009,
+      "sha256": "e645be5dfea9d7b0233af0bd9f7b5bdceadfee09b60cc0a2f3af146317ccc64d",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/supplementation/CLAUDE.md",
+      "size": 2009,
+      "sha256": "e645be5dfea9d7b0233af0bd9f7b5bdceadfee09b60cc0a2f3af146317ccc64d",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "src/smi_tasks/supplementation/__init__.py",
+      "size": 14798,
+      "sha256": "7b7e931be0c7bf31e2673bfcff56437d4772bd2b61f47d147972d87c04965127",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/supplementation/policy.py",
+      "size": 2219,
+      "sha256": "cb89618e77d03ac16351b71527e4d1ec52d349e0f3e28433adecff4ab3435bb3",
+      "symlink_target": null
+    },
+    {
+      "path": "src/smi_tasks/worker.py",
+      "size": 26646,
+      "sha256": "f124bc53e4c28b30a0817442412d07a310a83ca4853a2b97b39569a19ccd3fff",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/conftest.py",
+      "size": 1197,
+      "sha256": "8c4ca783db4171623d7e0be13c762f77cd33593776be42690325ed92acca3db1",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/fixtures/acquisition-v1.sql",
+      "size": 1843,
+      "sha256": "182320735b9dbe2826ba0b01e338733ee122a278db08d22326c033441deba02e",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_alert_investigations.py",
+      "size": 19981,
+      "sha256": "cefe38d420305625a01811ddb598b37c6cdfefcd8e5e7f97372982d44c19d94c",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_assistant.py",
+      "size": 23816,
+      "sha256": "666ab6d22b8354ddc47f401de543ea42eddb770c988a79bedc1747856b8ec009",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_assistant_enrichment.py",
+      "size": 21468,
+      "sha256": "3aaba981788653595e12807cdb6ee7b4b719d57420c342305eaad8d5256d4e1f",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_bright_data.py",
+      "size": 20755,
+      "sha256": "909db7e33e56e9cb91677bd76ec7e7e8c8d7ebf920a72a81dd3907927f9af329",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_campaign_coverage.py",
+      "size": 26830,
+      "sha256": "42bfba8f87a8ae12112ff88f5c94304ff826114eaa975ae186ad3fed37d896e3",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_campaign_regeneration.py",
+      "size": 30230,
+      "sha256": "27867b0af945f2de981eeec93325ca900bc1f9af0e44943f7cfa408642aef1f6",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_campaigns.py",
+      "size": 26824,
+      "sha256": "0c2ea2419151a9412a45c384801baafda4e09921d29d26e800e82fd9ae225c6c",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_cli.py",
+      "size": 2395,
+      "sha256": "0386795c1224a4e860d691761839afb27f62a555d7d12dd7dd441e1b7876a626",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_completion_inbox.py",
+      "size": 15442,
+      "sha256": "fc5002d1307809f69b44c75f5bba4e95d4925d0033dcda3dd36ae10f5f801b07",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_cost_admission.py",
+      "size": 25845,
+      "sha256": "d4f94ffa116eb1151ec24f3cf7aa2bb8a9cad178f817d4949e849a2dd7360559",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_cost_reconciliation.py",
+      "size": 21752,
+      "sha256": "2dfc51c11a177ccf8bfe7b1ce0d3bd0fc8e5684a356f0e80f499376487349125",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_costs.py",
+      "size": 22849,
+      "sha256": "11887a3658e10d6f16cb541a6e7c961abc21209fbebded0b331b4f5c2d842620",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_criteria_interpretation.py",
+      "size": 30660,
+      "sha256": "df8505bb54d96e74b0845209497e1292a9956c121e317b429a04bfd084466aae",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_current_comparisons.py",
+      "size": 20597,
+      "sha256": "52832e8e8325534c248b9393bd68dd68245431c7fcce5f64e93f241dcb75663a",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_discovery_history.py",
+      "size": 26909,
+      "sha256": "256a4783fdaec4534d8369f19e33af7182dfd02b9584d95530fd05389edd6174",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_evidence_sets.py",
+      "size": 15177,
+      "sha256": "bc61e94d83770f1bc691775a145e039c30efc969ad56518bcb9bca4d92ebe7ed",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_graph.py",
+      "size": 21607,
+      "sha256": "ea29f0bfc071c1e83e8b3f571c81f8f276aea0e9db80e7445e77cf6b513b73da",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_http.py",
+      "size": 1296,
+      "sha256": "d76020fc67a9b68d864fdad04d30198aa9d3eb9a32b29d963430bce762de69a2",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_keyword_discovery.py",
+      "size": 23730,
+      "sha256": "2b44f46a65bdbead461061a225e9480e74d0cefe05c4f2e885bebff052f03aa4",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_knowledge.py",
+      "size": 16659,
+      "sha256": "68bba023e4dcefe0c7865e82e4a75e17287e74b2f147afb4e31acaa329df0048",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_knowledge_queries.py",
+      "size": 18025,
+      "sha256": "3674e292ded44edfcfa5f16dc47c13fc9f66f0999df14cd1113e1e28d0618fd4",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_live_discovery.py",
+      "size": 27440,
+      "sha256": "e2745dad1713febcdc3ebf3f852613ad2c068ab2e7cbf0a05f4cb658f02cff4f",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_live_recent.py",
+      "size": 27547,
+      "sha256": "57e801c5c62c93a68b97589327897a8842cee4364427ec4b1be3c4d03d83b047",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_live_schedules.py",
+      "size": 15385,
+      "sha256": "b3fea08a64661d5367e7adedf8d1969ded9e953ce503d65e1e498ed5ebb53902",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_monitoring_planning.py",
+      "size": 24056,
+      "sha256": "01cc7360cb5f16287cb597e8245d22db51d8f95efe1010c38ee0672c7afe0cbd",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_monitoring_promotion.py",
+      "size": 26398,
+      "sha256": "6394ff3cf80f034532e3325ef7d0b75903f82e6854594b27d767a305edb10317",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_pilot_evaluation.py",
+      "size": 4086,
+      "sha256": "e70b6ecd2e07c39a8e74f19ecf6cdb301442042feb9b60f4a820400987cfefd8",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_pipeline.py",
+      "size": 24761,
+      "sha256": "e39f383f8a69a186f0532fcf863ad6f86c3b886d047bef6b45f91c0b7e36e759",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_publications.py",
+      "size": 22744,
+      "sha256": "91112a6dda74439e0f678f347eb096810849d6ea0565ef22c64336bb2420219a",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_quantitative_alerts.py",
+      "size": 21373,
+      "sha256": "c22473f66675738731e14d32d1c72b236cf736b5433c4004ffed93eb7a099b39",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_ranked_recommendations.py",
+      "size": 30880,
+      "sha256": "ddb96d5a5c168b2409c424a1e2533caa43a2ce7bb8e0ff4057962134d3da19c3",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_recent_monitoring.py",
+      "size": 20183,
+      "sha256": "2cd1273e6d6b77872569993ab5d4236d216161973a1d537ce07523e27b9f3262",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_recommendations.py",
+      "size": 21661,
+      "sha256": "39a8d534ae57d78ece5b5da21aede3af6faab16f92e6c06c1e16d15bd4d352d1",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_repository_checks.py",
+      "size": 2022,
+      "sha256": "df2dc006ae86198223273e63fcdad446fb1a5140fae29c585cc5e4c2b01af503",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_review.py",
+      "size": 21121,
+      "sha256": "be56f0e138d6952db152a3ac4a0ad3c069524f8cd837dfa41542970cec4b9f3c",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_schedule_allowance.py",
+      "size": 21261,
+      "sha256": "0d099d7b9337c77f156f1eb84b64f026a5f39d509ab85edd8fb5dd53a0831cf4",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_schedules.py",
+      "size": 21636,
+      "sha256": "f6148f35edde9cf231666b5b462e434223ddb3c5f00cfc4b8e783ce4c427cd6e",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_semantic_alerts.py",
+      "size": 31689,
+      "sha256": "fe69a4d7b947772e2f4dd617ad0231e8ab4517eb940307cc101a217253a9731a",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_shortlist_curation.py",
+      "size": 20345,
+      "sha256": "30b46ce7319d8ba27e007a145b74c3a0f05fe6c1f0a5a937351b18c89aa9b655",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_supplementation.py",
+      "size": 22457,
+      "sha256": "2b9acd5a8bdd0ceec350f26db0d30a7ea33f04cc80453f1a71426192f4e986e8",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_task_concurrency.py",
+      "size": 16859,
+      "sha256": "e4d2306a887754ccab73eba54690fef4af0cdb70b8deb9bfdd6b25f1940b254d",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_tasks.py",
+      "size": 66026,
+      "sha256": "4919140e58995f7dbc6a390e93028bae4067e86f207ab241b41d5846ebeec975",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_tiktok_oembed.py",
+      "size": 9329,
+      "sha256": "36c9b79cb5419d3ebd4f620ccf41a57723fed577bea6c33e7d46fbcf979198bf",
+      "symlink_target": null
+    },
+    {
+      "path": "tests/test_tiktok_web.py",
+      "size": 15982,
+      "sha256": "58607ff5e85c10fd3ce06b964ba1b2d2d7a8cf8704d74bf22826a5a61c08f601",
+      "symlink_target": null
+    },
+    {
+      "path": "tools/AGENTS.md",
+      "size": 640,
+      "sha256": "a5c9a445d7720b95a29dc1bb1b08beeee1aea04e82737eef16ab52e125c07cea",
+      "symlink_target": null
+    },
+    {
+      "path": "tools/CLAUDE.md",
+      "size": 640,
+      "sha256": "a5c9a445d7720b95a29dc1bb1b08beeee1aea04e82737eef16ab52e125c07cea",
+      "symlink_target": "AGENTS.md"
+    },
+    {
+      "path": "tools/check.py",
+      "size": 1738,
+      "sha256": "9bee552a099177e2c2ea8095f0bb2e335b9076506514a8072c5d1ff8a09f6d48",
+      "symlink_target": null
+    },
+    {
+      "path": "tools/check_docs.py",
+      "size": 2345,
+      "sha256": "0330565f454bcdae2362ae9e359457c8a928c269f4cc88bc96cfc9dee14058a5",
+      "symlink_target": null
+    },
+    {
+      "path": "tools/pilot_evaluation.py",
+      "size": 9526,
+      "sha256": "4bea2f306aab967ebdd6696681f249cd70579a0eab7d5df8e642babc4184d7b5",
+      "symlink_target": null
+    },
+    {
+      "path": "uv.lock",
+      "size": 27647,
+      "sha256": "1a983c79663fb016ffbebcbdf77c63e77ed4c394af865fa4d62db69794437e8b",
+      "symlink_target": null
+    }
+  ],
+  "sql_schema_count": 18,
+  "review_asset_count": 2,
+  "packaged_guidance_pair_count": 31,
+  "wheel": {
+    "filename": "smi_ingestion-0.1.0-py3-none-any.whl",
+    "size": 423844,
+    "sha256": "b08c6c523dda3b87fe29aa81de5188de0e0e32294cad53c573a18481a2a1915a",
+    "entry_count": 204
+  },
+  "root_guidance": {
+    "agents": {
+      "size": 2964,
+      "sha256": "1af0a6894a010d77c1dcc89fc1a28525991a356ef3e8673dc22eda93f6a0525c"
+    },
+    "claude": {
+      "size": 2964,
+      "sha256": "1af0a6894a010d77c1dcc89fc1a28525991a356ef3e8673dc22eda93f6a0525c"
+    },
+    "symlink_target": "AGENTS.md"
+  }
+}
