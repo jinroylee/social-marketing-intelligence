@@ -12,7 +12,7 @@ from smi_ingestion.dependencies import SourceDependencies
 from smi_ingestion.evidence import policy_from_json
 from smi_monitoring.contracts import require
 
-from .route import METRICS, OfflineXRoute, capture_fingerprint, capture_identity, fingerprint, instant
+from .route import METRICS, OfflineXRoute, capture_fingerprint, capture_identity, fingerprint, instant, validate_records
 
 
 MAX_TOPICS = 50
@@ -173,87 +173,121 @@ class RecentMonitoring:
         return {'topic_key': key, 'version': row['version'], 'revisions': [{**r, 'id': str(r['id']), 'topic_id': str(r['topic_id']), 'recorded_at': r['recorded_at'].isoformat()} for r in revisions],
                 'source_policy': policy, 'windows': [{**w, 'id': str(w['id']), 'window_start': w['window_start'].isoformat(), 'window_end': w['window_end'].isoformat()} for w in windows]}
 
-    def poll(self, key, window_end, actor):
-        """Collect an explicit UTC cadence boundary once; retries reopen the original window."""
-        self.require_operator(actor)
+    def prepare_collection_in_transaction(self, connection, key, window_end, actor, *, for_activation=False, max_new_records=0):
+        """Pin one explicit logical window while retaining current policy through commit.
+
+        Trusted collectors authorize their dispatcher separately. No network I/O may
+        occur in this transaction; call again immediately before dispatch and save.
+        """
+        actor.require_workspace(self.workspace_id)
+        require(type(max_new_records) is int and 0 <= max_new_records <= 100, 'invalid_recent_x_capacity')
         end = instant(window_end)
+        self._lock(connection)
+        self._reconcile(connection)
+        topic = self._topic(connection, key)
+        prior = connection.execute('SELECT id FROM monitoring_windows WHERE topic_id=%s AND window_end=%s', (topic['id'], end)).fetchone()
+        revision = connection.execute('SELECT * FROM monitoring_topic_revisions WHERE topic_id=%s AND version=%s', (topic['id'], topic['version'])).fetchone()
+        settings = revision['document']
+        policy = self._policy(connection, settings['source_policy_id'])
+        allowed = self._allowed(policy, 'process') and self._allowed(policy, 'retain')
+        now = self._now()
+        require(prior or now - timedelta(days=7) <= end <= now + (timedelta(minutes=settings['cadence_minutes']) if for_activation else timedelta(0)) and int(end.timestamp()) % (settings['cadence_minutes'] * 60) == 0 and end.microsecond == 0, 'invalid_recent_x_window')
+        count = connection.execute('SELECT count(*) AS n FROM monitoring_windows WHERE topic_id=%s', (topic['id'],)).fetchone()['n']
+        require(prior or count < MAX_WINDOWS, 'recent_x_window_limit')
+        if not prior and max_new_records:
+            observations = connection.execute('SELECT count(*) AS n FROM recent_x_observations WHERE workspace_id=%s', (self.workspace_id,)).fetchone()['n']
+            require(observations + min(settings['max_records'], max_new_records) <= MAX_OBSERVATIONS, 'recent_x_observation_limit')
+        policy_version = connection.execute('SELECT version FROM monitoring_source_policies WHERE workspace_id=%s AND context_id=%s', (self.workspace_id, settings['source_policy_id'])).fetchone()['version']
+        return {'topic_id': str(topic['id']), 'revision_id': str(revision['id']), 'version': topic['version'], 'settings': settings,
+                'window_start': (end - timedelta(minutes=settings['window_minutes'])).isoformat(), 'window_end': end.isoformat(),
+                'permitted': allowed, 'policy_version': policy_version, 'existing_window_id': str(prior['id']) if prior else None}
+
+    def poll(self, key, window_end, actor):
+        """Collect one bounded local fixture; retries reopen the original logical window."""
+        self.require_operator(actor)
         with self.db.connect() as connection:
-            self._lock(connection)
-            self._reconcile(connection)
-            topic = self._topic(connection, key)
-            prior = connection.execute('SELECT id FROM monitoring_windows WHERE topic_id=%s AND window_end=%s', (topic['id'], end)).fetchone()
-            if prior:
-                return {'status': 'duplicate', 'window_id': str(prior['id'])}
+            prepared = self.prepare_collection_in_transaction(connection, key, window_end, actor)
+            if prepared['existing_window_id']:
+                return {'status': 'duplicate', 'window_id': prepared['existing_window_id']}
             require(self.route is not None, 'recent_x_route_unavailable')
-            revision = connection.execute('SELECT * FROM monitoring_topic_revisions WHERE topic_id=%s AND version=%s', (topic['id'], topic['version'])).fetchone()
-            settings = revision['document']
-            policy = self._policy(connection, settings['source_policy_id'])
-            require(self._allowed(policy, 'process') and self._allowed(policy, 'retain'), 'recent_x_collection_not_permitted')
-            now = self._now()
-            require(now - timedelta(days=7) <= end <= now and int(end.timestamp()) % (settings['cadence_minutes'] * 60) == 0 and end.microsecond == 0, 'invalid_recent_x_window')
-            count = connection.execute('SELECT count(*) AS n FROM monitoring_windows WHERE topic_id=%s', (topic['id'],)).fetchone()['n']
-            require(count < MAX_WINDOWS, 'recent_x_window_limit')
-            start = end - timedelta(minutes=settings['window_minutes'])
+            require(prepared['permitted'], 'recent_x_collection_not_permitted')
             records, acquisition = self.route.collect()
-            policy_version = connection.execute('SELECT version FROM monitoring_source_policies WHERE workspace_id=%s AND context_id=%s', (self.workspace_id, settings['source_policy_id'])).fetchone()['version']
-            acquisition.update(policy_context_id=settings['source_policy_id'], policy_version=policy_version, max_records=settings['max_records'],
-                               sampling={'method': 'literal-query-capture-order-v1', 'record_schema': 'offline-x-record-v1',
+            acquisition.update(sampling={'method': 'literal-query-capture-order-v1', 'record_schema': 'offline-x-record-v1',
                                          'file_record_limit': 200, 'file_byte_limit': 262144})
-            for record in records:
-                capture = instant(record['captured_at']) if record['captured_at'] else None
-                publication = instant(record['published_at']) if record['published_at'] else None
-                measurement = instant(record['metric_measured_at']) if record['metric_measured_at'] else None
-                require(capture is None or capture <= now and (publication is None or publication <= capture), 'invalid_recent_x_source_time')
-                require(measurement is None or measurement <= now and (capture is None or measurement <= capture), 'invalid_recent_x_source_time')
-            selected, unassessable, withdrawn = [], 0, 0
-            withdrawn_ids = {r['native_id'] for r in connection.execute('SELECT native_id FROM monitoring_x_withdrawals WHERE workspace_id=%s', (self.workspace_id,)).fetchall()}
-            for record in records:
-                if record['native_id'] in withdrawn_ids:
-                    withdrawn += 1
-                elif record['published_at'] is None or record['text'] is None:
-                    unassessable += 1
-                elif start <= instant(record['published_at']) < end and settings['query'].strip().casefold() in record['text'].casefold():
-                    selected.append(record)
-            unique = {}
-            for record in selected:
-                source_key = capture_identity(record)
-                prior_record = unique.get(source_key)
-                require(prior_record is None or capture_fingerprint(prior_record) == capture_fingerprint(record), 'recent_x_capture_conflict')
-                unique.setdefault(source_key, record)
-            duplicates = len(selected) - len(unique)
-            selected = sorted(unique.values(), key=lambda r: (r['native_id'], capture_identity(r)))
-            truncated = len(selected) > settings['max_records']
-            selected = selected[:settings['max_records']]
-            incomplete = withdrawn > 0 or unassessable > 0 or truncated or any(r['captured_at'] is None for r in selected)
-            status = acquisition['declared_coverage']
-            if status == 'complete' and incomplete:
-                status = 'partial'
-            coverage = {'collection_status': status, 'market_coverage': 'unknown', 'scanned_records': len(records), 'unassessable_records': unassessable,
-                        'duplicate_records': duplicates, 'withdrawn_records': withdrawn, 'record_limit_reached': truncated, 'selected_records': len(selected), 'query': settings['query'],
-                        'field_coverage': 'not_assessable' if not selected else 'partial' if any(r['captured_at'] is None or r['metric_measured_at'] is None or set(r['metrics']) != set(METRICS) for r in selected) else 'complete',
-                        'publication_from': start.isoformat(), 'publication_before': end.isoformat(), 'baseline': None,
-                        'limits': 'Only the supplied synthetic fixture; no complete market or trend claim.'}
-            window_id = uuid.uuid4()
-            connection.execute('INSERT INTO monitoring_windows(id,topic_id,revision_id,window_start,window_end,coverage,acquisition,collected_by,imported_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)',
-                               (window_id, topic['id'], revision['id'], start, end, Jsonb(coverage), Jsonb(acquisition), actor.actor_id, now))
-            for record in selected:
-                original = connection.execute('SELECT * FROM recent_x_observations WHERE workspace_id=%s AND capture_key=%s', (self.workspace_id, capture_identity(record))).fetchone()
-                hashed = capture_fingerprint(record)
-                retain_until = min(now, instant(record['captured_at'])) + timedelta(hours=settings['retention_hours']) if record['captured_at'] else now + timedelta(hours=settings['retention_hours'])
-                if original:
-                    require(original['capture_digest'] == hashed and original['policy_context_id'] == settings['source_policy_id'], 'recent_x_capture_conflict')
-                    observation_id = original['id']
-                    connection.execute('UPDATE recent_x_observations SET retain_until=LEAST(retain_until,%s) WHERE id=%s', (retain_until, observation_id))
-                    SourceDependencies().shorten(connection, 'recent-x:' + self.workspace_id, str(observation_id), retain_until, now=now)
-                else:
-                    count = connection.execute('SELECT count(*) AS n FROM recent_x_observations WHERE workspace_id=%s', (self.workspace_id,)).fetchone()['n']
-                    require(count < MAX_OBSERVATIONS, 'recent_x_observation_limit')
-                    observation_id = uuid.uuid4()
-                    body = {'text': record['text'], 'metrics': record['metrics']}
-                    connection.execute('INSERT INTO recent_x_observations(id,workspace_id,capture_id,native_id,source_reference,capture_key,capture_digest,acquisition,missing_fields,policy_context_id,captured_at,published_at,metric_measured_at,imported_at,retain_until,body) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
-                                       (observation_id, self.workspace_id, record['capture_id'], record['native_id'], 'https://x.com/i/status/' + record['native_id'], capture_identity(record), hashed, Jsonb(acquisition), Jsonb([k for k in ('captured_at', 'published_at', 'metric_measured_at') if record[k] is None] + [k for k in METRICS if k not in record['metrics']]), settings['source_policy_id'], record['captured_at'], record['published_at'], record['metric_measured_at'], now, retain_until, Jsonb(body)))
-                connection.execute('INSERT INTO monitoring_window_members(window_id,observation_id) VALUES (%s,%s) ON CONFLICT DO NOTHING', (window_id, observation_id))
-            self._reconcile(connection)
+            return self.save_collection_in_transaction(connection, key, window_end, actor, revision_id=prepared['revision_id'], records=records, acquisition=acquisition)
+
+    def save_collection_in_transaction(self, connection, key, window_end, actor, *, revision_id, records, acquisition):
+        """Save a trusted bounded response under original revision and current permissions.
+
+        The caller owns commit/rollback and uses the prepare port before external
+        dispatch. Acquisition metadata is trusted server input, never HTTP form data.
+        No external I/O occurs here; a stale revision or policy denies all new copies.
+        """
+        prepared = self.prepare_collection_in_transaction(connection, key, window_end, actor)
+        if prepared['existing_window_id']:
+            return {'status': 'duplicate', 'window_id': prepared['existing_window_id']}
+        require(prepared['revision_id'] == revision_id, 'monitoring_topic_version_conflict')
+        require(prepared['permitted'], 'recent_x_collection_not_permitted')
+        records = validate_records(records)
+        end, start, now = instant(prepared['window_end']), instant(prepared['window_start']), self._now()
+        settings = prepared['settings']
+        topic, revision = {'id': prepared['topic_id']}, {'id': revision_id}
+        acquisition = {**acquisition, 'policy_context_id': settings['source_policy_id'], 'policy_version': prepared['policy_version'], 'max_records': settings['max_records']}
+        for record in records:
+            capture = instant(record['captured_at']) if record['captured_at'] else None
+            publication = instant(record['published_at']) if record['published_at'] else None
+            measurement = instant(record['metric_measured_at']) if record['metric_measured_at'] else None
+            require(capture is None or capture <= now and (publication is None or publication <= capture), 'invalid_recent_x_source_time')
+            require(measurement is None or measurement <= now and (capture is None or measurement <= capture), 'invalid_recent_x_source_time')
+        selected, unassessable, withdrawn = [], 0, 0
+        withdrawn_ids = {r['native_id'] for r in connection.execute('SELECT native_id FROM monitoring_x_withdrawals WHERE workspace_id=%s', (self.workspace_id,)).fetchall()}
+        for record in records:
+            if record['native_id'] in withdrawn_ids:
+                withdrawn += 1
+            elif record['published_at'] is None or record['text'] is None:
+                unassessable += 1
+            elif start <= instant(record['published_at']) < end and settings['query'].strip().casefold() in record['text'].casefold():
+                selected.append(record)
+        unique = {}
+        for record in selected:
+            source_key = capture_identity(record, acquisition.get('response_id'))
+            prior_record = unique.get(source_key)
+            require(prior_record is None or capture_fingerprint(prior_record) == capture_fingerprint(record), 'recent_x_capture_conflict')
+            unique.setdefault(source_key, record)
+        duplicates = len(selected) - len(unique)
+        selected = sorted(unique.values(), key=lambda r: (r['native_id'], capture_identity(r, acquisition.get('response_id'))))
+        truncated = len(selected) > settings['max_records']
+        selected = selected[:settings['max_records']]
+        incomplete = withdrawn > 0 or unassessable > 0 or truncated or any(r['captured_at'] is None for r in selected)
+        status = acquisition['declared_coverage']
+        if status == 'complete' and incomplete:
+            status = 'partial'
+        coverage = {'collection_status': status, 'market_coverage': 'unknown', 'scanned_records': len(records), 'unassessable_records': unassessable,
+                    'duplicate_records': duplicates, 'withdrawn_records': withdrawn, 'record_limit_reached': truncated, 'selected_records': len(selected), 'query': settings['query'],
+                    'field_coverage': 'not_assessable' if not selected else 'partial' if any(r['captured_at'] is None or r['metric_measured_at'] is None or set(r['metrics']) != set(METRICS) for r in selected) else 'complete',
+                    'publication_from': start.isoformat(), 'publication_before': end.isoformat(), 'baseline': None,
+                    'limits': 'Only the supplied synthetic fixture; no complete market or trend claim.' if acquisition['synthetic'] else 'One bounded recent-search page; pagination is not followed. Market coverage is unknown.'}
+        window_id = uuid.uuid4()
+        connection.execute('INSERT INTO monitoring_windows(id,topic_id,revision_id,window_start,window_end,coverage,acquisition,collected_by,imported_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                           (window_id, topic['id'], revision['id'], start, end, Jsonb(coverage), Jsonb(acquisition), actor.actor_id, now))
+        for record in selected:
+            original = connection.execute('SELECT * FROM recent_x_observations WHERE workspace_id=%s AND capture_key=%s', (self.workspace_id, capture_identity(record, acquisition.get('response_id')))).fetchone()
+            hashed = capture_fingerprint(record)
+            retain_until = min(now, instant(record['captured_at'])) + timedelta(hours=settings['retention_hours']) if record['captured_at'] else now + timedelta(hours=settings['retention_hours'])
+            if original:
+                require(original['capture_digest'] == hashed and original['policy_context_id'] == settings['source_policy_id'], 'recent_x_capture_conflict')
+                observation_id = original['id']
+                connection.execute('UPDATE recent_x_observations SET retain_until=LEAST(retain_until,%s) WHERE id=%s', (retain_until, observation_id))
+                SourceDependencies().shorten(connection, 'recent-x:' + self.workspace_id, str(observation_id), retain_until, now=now)
+            else:
+                count = connection.execute('SELECT count(*) AS n FROM recent_x_observations WHERE workspace_id=%s', (self.workspace_id,)).fetchone()['n']
+                require(count < MAX_OBSERVATIONS, 'recent_x_observation_limit')
+                observation_id = uuid.uuid4()
+                body = {'text': record['text'], 'metrics': record['metrics']}
+                connection.execute('INSERT INTO recent_x_observations(id,workspace_id,capture_id,native_id,source_reference,capture_key,capture_digest,acquisition,missing_fields,policy_context_id,captured_at,published_at,metric_measured_at,imported_at,retain_until,body) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                                   (observation_id, self.workspace_id, record['capture_id'], record['native_id'], 'https://x.com/i/status/' + record['native_id'], capture_identity(record, acquisition.get('response_id')), hashed, Jsonb(acquisition), Jsonb([k for k in ('captured_at', 'published_at', 'metric_measured_at') if record[k] is None] + [k for k in METRICS if k not in record['metrics']]), settings['source_policy_id'], record['captured_at'], record['published_at'], record['metric_measured_at'], now, retain_until, Jsonb(body)))
+            connection.execute('INSERT INTO monitoring_window_members(window_id,observation_id) VALUES (%s,%s) ON CONFLICT DO NOTHING', (window_id, observation_id))
+        self._reconcile(connection)
         return {'status': 'collected', 'window_id': str(window_id)}
 
     def _observation(self, connection, row, purpose):

@@ -54,7 +54,18 @@ def topic(topic, timeline, csrf, operator, submitted=None, error=None):
         content += '<details class="panel"><summary>Revise settings</summary>' + configuration(csrf, topic, submitted) + '</details>'
         content += f'<form method="post" action="/monitoring/topics/{e(key)}/poll">{hidden("csrf", csrf)}<label>Window end (explicit UTC cadence boundary)<input name="window_end" value="{e(value(submitted, "window_end"))}" placeholder="2026-10-28T12:00:00+00:00" required></label><button type="submit">Collect bounded offline window</button></form>'
     content += '<p><a href="/monitoring/assessments">Assess volume / retained assessment history</a> · <a href="/monitoring/semantic-assessments">Assess possible controversy / semantic history</a></p>'
-    content += '<h2>Original collection windows</h2><p>Latest 100 windows. Empty or partial fixture coverage does not establish market absence.</p>'
+    polling = topic.get('periodic_polling', {})
+    content += '<h2>Periodic X polling</h2><p>Explicit trusted operator activation and a separately authorized worker are required. Runtime defaults disable live calls. Final charges remain unknown until reconciled.</p>'
+    for activation in polling.get('activations', []):
+        content += f'<p>Topic revision {e(activation["topic_version"])} · enabled: {e(activation["enabled"])} · next window: {e(activation["next_window_end"])} · activated by {e(activation["activated_by"])}</p>'
+    for occurrence in polling.get('occurrences', []):
+        content += f'<p>{e(occurrence["window_end"])} · {e(occurrence["state"])} · {e(occurrence["reason"] or "No failure recorded")}'
+        if occurrence['window_id']:
+            content += f' · <a href="/monitoring/windows/{e(occurrence["window_id"])}">Original window</a>'
+        if occurrence['operation_id']:
+            content += f' · <a href="/costs/{e(occurrence["operation_id"])}">Cost / unresolved commitment</a>'
+        content += '</p><details><summary>Bounded attempt receipt</summary><pre>' + e(json.dumps(occurrence['acquisition'], indent=2)) + '</pre></details>'
+    content += '<h2>Original collection windows</h2><p>Latest 100 windows. Empty or partial coverage does not establish market absence.</p>'
     content += ''.join(f'<p><a href="/monitoring/windows/{e(w["id"])}">{e(w["window_start"])} → {e(w["window_end"])}</a></p>' for w in topic['windows'])
     content += '<h2>Retained capture timeline</h2><p>Distinct captures; repeated windows do not refresh source or import times. This is not a trend or alert.</p>'
     content += ''.join(observation(o) for o in timeline['observations']) or '<p>No captures retained.</p>'

@@ -28,6 +28,7 @@ from smi_monitoring import MonitoringStore
 from smi_monitoring.context import AlertInvestigations
 from smi_monitoring.promotion import MonitoringPromotion
 from smi_monitoring.recent import OfflineXRoute, RecentMonitoring
+from smi_monitoring.polling import RecentPolling
 from smi_monitoring.alerts import QuantitativeAlerts, VolumeThreshold
 from smi_monitoring.semantic import ControversyThreshold, SemanticAlerts
 from smi_tasks.schedules import ScheduledDiscovery
@@ -119,6 +120,7 @@ class ReviewApp:
         self.evidence = EvidenceSetReader(db, workspace_id)
         self.monitoring = MonitoringStore(db, workspace_id)
         self.recent = RecentMonitoring(db, workspace_id, route=recent_x_route, operators=frozenset({actor_id}) if monitoring_operator else frozenset(), clock=monitoring_clock)
+        self.recent_polling = RecentPolling(self.recent)
         self.alerts = QuantitativeAlerts(self.recent, threshold=monitoring_threshold, clock=monitoring_clock)
         self.semantic_alerts = SemanticAlerts(self.recent, threshold=monitoring_controversy_threshold, model_route=model_route,
             model_transport=model_transport, model_credential=model_credential, clock=monitoring_clock)
@@ -211,6 +213,7 @@ class ReviewApp:
 
     def _recent_topic_page(self, key, query=None, submitted=None, error=None, status=200):
         topic = self.recent.read_topic(key, self.actor)
+        topic['periodic_polling'] = self.recent_polling.read(key, self.actor)
         timeline = self.recent.timeline(key, self.actor, offset=int(one(query or {}, 'offset', '0')))
         return self.page('Recent X topic', recent_views.topic(topic, timeline, self.csrf, self.monitoring_operator, submitted, error), status)
 

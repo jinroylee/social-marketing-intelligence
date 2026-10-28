@@ -34,8 +34,10 @@ def fingerprint(document):
     return hashlib.sha256(json.dumps(document, sort_keys=True, ensure_ascii=False, allow_nan=False).encode()).hexdigest()
 
 
-def capture_identity(record):
+def capture_identity(record, response_id=None):
     """Pin native post and original capture; an import label grants no new identity."""
+    if response_id is not None:
+        return fingerprint({'source': 'x-api-v2', 'response_id': response_id, 'native_id': record['native_id']})
     basis = {'native_id': record['native_id'], 'captured_at': record['captured_at']}
     if record['captured_at'] is None:
         # Unknown captures cannot establish a refresh; retain the available source times.
@@ -68,19 +70,25 @@ class OfflineXRoute:
         records = document['records']
         require(isinstance(records, list) and len(records) <= MAX_FILE_RECORDS, 'recent_x_file_record_limit')
         require(document['coverage'] != 'missing' or not records, 'invalid_recent_x_coverage')
-        validated = []
-        for record in records:
-            require(isinstance(record, dict) and set(record) == {'capture_id', 'native_id', 'text', 'published_at', 'captured_at', 'metric_measured_at', 'metrics'}, 'invalid_recent_x_record')
-            require(isinstance(record['capture_id'], str) and re.fullmatch(r'[A-Za-z0-9_.:-]{1,100}', record['capture_id']), 'invalid_recent_x_capture_id')
-            require(isinstance(record['native_id'], str) and re.fullmatch(r'[0-9]{1,24}', record['native_id']), 'invalid_recent_x_native_id')
-            require(record['text'] is None or isinstance(record['text'], str) and len(record['text']) <= 4096 and '\x00' not in record['text'], 'invalid_recent_x_text')
-            normalized = dict(record)
-            for key in ('published_at', 'captured_at', 'metric_measured_at'):
-                normalized[key] = instant(record[key]).isoformat() if record[key] is not None else None
-            metrics = record['metrics']
-            require(isinstance(metrics, dict) and metrics.keys() <= METRICS.keys(), 'invalid_recent_x_metrics')
-            require(all(type(v) is int and 0 <= v <= 10**15 for v in metrics.values()), 'invalid_recent_x_metrics')
-            validated.append(normalized)
+        validated = validate_records(records)
         return validated, {'route': 'offline-x-json', 'version': 'offline-x-v1', 'synthetic': True,
                            'fixture_sha256': hashlib.sha256(raw).hexdigest(), 'bytes_read': len(raw), 'requests': 1,
                            'declared_coverage': document['coverage']}
+
+
+def validate_records(records):
+    """Normalize bounded recent captures; source times retain their original meaning."""
+    validated = []
+    for record in records:
+        require(isinstance(record, dict) and set(record) == {'capture_id', 'native_id', 'text', 'published_at', 'captured_at', 'metric_measured_at', 'metrics'}, 'invalid_recent_x_record')
+        require(isinstance(record['capture_id'], str) and re.fullmatch(r'[A-Za-z0-9_.:-]{1,100}', record['capture_id']), 'invalid_recent_x_capture_id')
+        require(isinstance(record['native_id'], str) and re.fullmatch(r'[0-9]{1,24}', record['native_id']), 'invalid_recent_x_native_id')
+        require(record['text'] is None or isinstance(record['text'], str) and len(record['text']) <= 4096 and '\x00' not in record['text'], 'invalid_recent_x_text')
+        normalized = dict(record)
+        for key in ('published_at', 'captured_at', 'metric_measured_at'):
+            normalized[key] = instant(record[key]).isoformat() if record[key] is not None else None
+        metrics = record['metrics']
+        require(isinstance(metrics, dict) and metrics.keys() <= METRICS.keys(), 'invalid_recent_x_metrics')
+        require(all(type(v) is int and 0 <= v <= 10**15 for v in metrics.values()), 'invalid_recent_x_metrics')
+        validated.append(normalized)
+    return validated

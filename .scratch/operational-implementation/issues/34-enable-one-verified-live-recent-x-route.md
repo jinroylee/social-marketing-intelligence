@@ -4,7 +4,7 @@
 
 **Blocked by:** 07: Coordinate competing workers without duplicate effects; 11: Reconcile delayed charges and failed meters; 29: Collect bounded recent X evidence offline.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 

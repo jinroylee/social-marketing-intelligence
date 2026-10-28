@@ -85,3 +85,8 @@ CREATE TABLE IF NOT EXISTS cost_meter_recoveries (
     PRIMARY KEY (workspace_id, recovery_id),
     FOREIGN KEY (workspace_id, operation_id) REFERENCES cost_operations(workspace_id, id)
 );
+
+-- Preserve historical one-unit bindings while admitting the fixed ten-post X page.
+ALTER TABLE cost_route_controls DROP CONSTRAINT IF EXISTS cost_route_controls_max_units_check;
+ALTER TABLE cost_route_controls ADD CONSTRAINT cost_route_controls_max_units_check
+    CHECK ((adapter_id = 'x-recent-search' AND max_units = 10) OR (adapter_id <> 'x-recent-search' AND max_units = 1));

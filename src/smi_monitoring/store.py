@@ -13,6 +13,7 @@ from smi_knowledge import KnowledgeStore
 
 from .contracts import InvestigationScope, require, text
 from .recent import RecentMonitoring
+from .polling import RecentPolling
 from .alerts import QuantitativeAlerts
 from .semantic import SemanticAlerts
 from .context import AlertInvestigations
@@ -42,6 +43,7 @@ class MonitoringStore:
         """Install monitoring tables after ingestion and knowledge migrations."""
         with self.db.connect() as connection:
             connection.execute(Path(__file__).with_name("schema.sql").read_text())
+        RecentPolling(RecentMonitoring(self.db, self.workspace_id)).migrate()
         QuantitativeAlerts(RecentMonitoring(self.db, self.workspace_id)).migrate()
         SemanticAlerts(RecentMonitoring(self.db, self.workspace_id)).migrate()
         AlertInvestigations(RecentMonitoring(self.db, self.workspace_id)).migrate()

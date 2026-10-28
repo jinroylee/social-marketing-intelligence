@@ -62,3 +62,5 @@ Offer an existing-KB investigation form beside both retained alert methods throu
 
 
 Offer unchecked explicit capture selection on original window pages through `MonitoringPromotion`; accept only request/selected IDs/CSRF and preserve permitted retry context on errors. Trusted monitoring operator authority governs POST. Reopen source-free promotion results after restart with exact original lineage and partial/unavailable states; historical receipts grant no current support permission. Ordinary KB pages determine current usability directly. Forms cannot add source/model/policy/actor/campaign authority.
+
+Recent topic pages compose source-free `RecentPolling.read` activation/attempt history with current governed windows and cost links. Read-only restart needs no live credentials. Browser forms retain offline collection; only trusted Python activation and an explicitly gated worker grant periodic source execution. Escape attempt metadata and retain no source response/error body or credentials here.

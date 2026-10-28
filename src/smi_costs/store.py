@@ -52,7 +52,7 @@ class UsageAccounting:
         """Bind an installed route immutably to its trusted one-attempt declared bound."""
         actor.require_workspace(self.workspace_id, importing=True)
         units = decimal(max_units)
-        if adapter_id not in {'fixture-json', 'offline-keyword-json', 'brightdata-tiktok-keyword', 'brightdata-tiktok-profile'} or units != 1:
+        if adapter_id not in {'fixture-json', 'offline-keyword-json', 'brightdata-tiktok-keyword', 'brightdata-tiktok-profile', 'x-recent-search'} or units != (10 if adapter_id == 'x-recent-search' else 1):
             raise EvidenceError('unsupported_cost_route_contract')
         with self.db.connect() as connection:
             self._lock_scope(connection, scope_id)
@@ -60,6 +60,11 @@ class UsageAccounting:
                 scope = self._scope(connection, scope_id)
                 if (scope.get('measurement_basis') != 'provider_reported' or scope['provider'] != 'brightdata'
                         or scope['service'] != 'tiktok-keyword' or scope['unit'] != 'declared-record-bound'):
+                    raise EvidenceError('unsupported_cost_route_contract')
+            if adapter_id == 'x-recent-search':
+                scope = self._scope(connection, scope_id)
+                if (scope.get('measurement_basis') != 'provider_reported' or scope['provider'] != 'x'
+                        or scope['service'] != 'recent-search' or scope['unit'] != 'declared-post-bound'):
                     raise EvidenceError('unsupported_cost_route_contract')
             connection.execute('INSERT INTO cost_route_controls(workspace_id,adapter_id,scope_id,max_units,operator_id) VALUES (%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING',
                                (self.workspace_id, adapter_id, scope_id, units, actor.actor_id))
@@ -372,7 +377,7 @@ class UsageAccounting:
                            else 'final_measurement_recorded' if reconciliations or admission and admission['state'] == 'settled'
                            else 'no_final_report_recorded',
                            'meter_health': 'failed' if unresolved['meter_failure_ids'] else 'recovered' if recoveries else 'no_failure_recorded',
-                           'enforcement_basis': ('declared_source_commitment_only' if scope['service'] == 'tiktok-keyword' and scope['provider'] == 'brightdata' and provider_reported else 'declared_bounded_provider_contract' if provider_reported else 'bounded_synthetic_service_contract_only') if allowance['enforced_monetary_control'] else 'no_enforced_monetary_ceiling',
+                           'enforcement_basis': ('declared_source_commitment_only' if (scope['service'], scope['provider']) in {('tiktok-keyword', 'brightdata'), ('recent-search', 'x')} and provider_reported else 'declared_bounded_provider_contract' if provider_reported else 'bounded_synthetic_service_contract_only') if allowance['enforced_monetary_control'] else 'no_enforced_monetary_ceiling',
                            'zero_overshoot_guaranteed': False},
                 'actuals': {'amount': total, 'synthetic': not provider_reported, 'commercial_charge': None if provider_reported else False},
                 **estimates, 'coverage': {'status': status, 'unknown_cost': status not in {'synthetic_measured', 'provider_reported'}},

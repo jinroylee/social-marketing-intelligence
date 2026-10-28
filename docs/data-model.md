@@ -625,6 +625,56 @@ The [semantic schema](../src/smi_monitoring/semantic/schema.sql) pins one exact 
 
 The [alert-context schema](../src/smi_monitoring/context/schema.sql) retains a logical typed alert reference (the mutually exclusive alert owners remain separate), a foreign key to its exact KB query result, original recent window/capture dependency IDs, method/actor/time and permanent explanation-withheld flag. Workspace/request uniqueness binds alert, actor, method and synthetic scope. Query/context writes share source-owner locks and one transaction; original source and KB facts remain with their owners. No copied source prose or selected numeric explanation is stored. New publications require a new investigation, and dependency loss withholds explanation without replacing original membership. See [the context contract](monitoring.md#existing-kb-alert-investigations).
 
+## Periodic recent X collection tables
+
+The [polling schema](../src/smi_monitoring/polling/schema.sql) owns source-free recurring authority and one-use attempts. It reads no recent or cost SQL privately: public recent transaction ports pin source configuration/permissions and commit the window on the actual ownership session; public accounting owns monetary admission and settlement. The operation reference is an equivalent acquisition identity, independent of KB tasks.
+
+```mermaid
+erDiagram
+    monitoring_topic_revisions ||--o{ monitoring_poll_activations : authorizes
+    monitoring_poll_activations ||--o{ monitoring_poll_occurrences : initiates
+    monitoring_topic_revisions ||--o{ monitoring_poll_occurrences : pins
+    monitoring_windows |o--o{ monitoring_poll_occurrences : records
+    monitoring_source_cooldowns {
+        text route PK
+        timestamptz next_allowed_at
+    }
+    monitoring_poll_activations {
+        uuid id PK
+        text workspace_id
+        text topic_key
+        uuid topic_revision_id FK
+        integer topic_version
+        jsonb configuration
+        text request_id UK
+        text request_digest
+        timestamptz next_window_end
+        text activated_by
+        timestamptz activated_at
+        boolean enabled
+        timestamptz checked_at
+    }
+    monitoring_poll_occurrences {
+        uuid id PK
+        uuid activation_id FK
+        text workspace_id
+        text topic_key
+        timestamptz window_end
+        uuid topic_revision_id FK
+        text state
+        jsonb acquisition
+        text reason
+        uuid operation_id
+        uuid window_id FK
+        text initiated_by
+        text actor_kind
+        text dispatched_by
+        timestamptz recorded_at
+    }
+```
+
+`monitoring_poll_activations` pins exact topic revision and route/version/query-mode/bounds. Workspace/request is unique; a partial unique index permits one enabled activation per workspace/topic. Only next interval, fair-visit time and enabled state change; successor activation preserves prior authority. `monitoring_poll_occurrences` has a unique workspace/topic/end identity across activations, retaining original revision/initiator, source-free bounded acquisition receipt, dispatch state/reason, cost reference and original window. Exact lookup uses the whole retained history rather than the newest-100 presentation. At most 100 activations and 1000 attempts per topic are retained. `monitoring_source_cooldowns` is a single route-keyed lower bound for next admission, shared across workspaces in the installed PostgreSQL schema; admission advances it atomically and source quota responses can only lengthen it. Other installations or external app use are outside this coordination scope. No raw response, caption, pagination token or credential is stored here. The recent observation key additionally pins actual live response identity/native ID while keeping original capture/measurement time unknown; local retrieval time never replaces source time. Existing offline source-time identities are unchanged. See [the collection contract](monitoring.md#gated-periodic-live-recent-x).
+
 ## Monitoring and planning tables
 
 ```mermaid

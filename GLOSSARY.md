@@ -118,6 +118,12 @@ An operator-authorized recurring market question with its own source scope, cade
 **Monitoring collection window**:
 One topic's bounded observation interval with its original configuration, actual acquisition and coverage limits. Retrying the same logical interval does not establish a new collection or a trend baseline.
 
+**Monitoring poll activation**:
+An operator's recorded authority to collect recurring bounded windows for an exact monitoring topic configuration. It is distinct from runtime access, source-use permission and spending admission.
+
+**Monitoring poll attempt**:
+One attributable acquisition of a topic's logical collection interval, retaining its original authority, response uncertainty and resource use. A missing response does not mean that the request was free or that repeating it is authorized.
+
 **Monitoring observation**:
 A recent source observation used for timely monitoring and anomaly detection. It can support an alert without every observed post becoming a fully modeled knowledge-base entity.
 
