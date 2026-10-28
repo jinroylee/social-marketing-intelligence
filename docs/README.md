@@ -10,7 +10,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Architecture](architecture.md) | Product boundaries, module ownership, data flow and current implementation coverage |
 | [Data model and ERD](data-model.md) | Implemented PostgreSQL relationships and the accepted business model |
 | [Evidence sets](evidence-sets.md) | Offline import, provenance, immutable membership, actor context and policy-aware reads |
-| [Shared knowledge](knowledge.md) | Brand/Product references, caption interpretations, one-hop entity graph, dependency cleanup and translation-assisted review packets |
+| [Shared knowledge](knowledge.md) | Brand/Product references, caption interpretations, bounded entity graph, dependency cleanup and translation-assisted review packets |
 | [Source integrations](source-integrations.md) | Implemented route capabilities, retained verification evidence and remaining discovery/readiness work |
 | [Offline acquisition tasks](tasks.md) | Configured daily keyword, campaign and exact approved-proposal submission, bounded synthetic worker and exact outcomes |
 | [Offline cost accounting](costs.md) | Attributable synthetic usage, forecasts, shared bounded admission, final-evidence reconciliation, meter recovery and local cost detail |

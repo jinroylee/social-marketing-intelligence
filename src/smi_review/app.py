@@ -314,6 +314,15 @@ class ReviewApp:
                         return self._planning_page(identifier(match[1]), form, "plan" if match[2] == "plans" else "note", code, status)
                 except (EvidenceError, ValueError, psycopg.Error):
                     pass
+            match = re.fullmatch(r"/knowledge/graph/([^/]+)", path)
+            if method == 'GET' and match and not isinstance(error, psycopg.Error):
+                try:
+                    controls, previous, submitted = graph_views.error_navigation(query)
+                    graph = self.graph.read(identifier(match[1]), self.actor, **controls)
+                    return self.page("Knowledge graph", graph_views.detail(graph,
+                        include_synthetic=controls['include_synthetic'], previous=previous, submitted=submitted, error=code), status)
+                except (EvidenceError, ValueError, psycopg.Error):
+                    pass
             return self.page("Action needs attention", views.error_message(code), status)
 
     def _get(self, path, query):
@@ -411,11 +420,10 @@ class ReviewApp:
             return self.page("Knowledge graph", graph_views.search_form(self.csrf))
         match = re.fullmatch(r"/knowledge/graph/([^/]+)", path)
         if match:
-            if not query.keys() <= {'entity', 'include_synthetic'} or one(query, 'include_synthetic') not in {'', 'yes'}:
-                raise EvidenceError('invalid_form')
-            synthetic = one(query, 'include_synthetic') == 'yes'
-            return self.page("Knowledge graph", graph_views.detail(self.graph.read(identifier(match[1]), self.actor,
-                entity_id=one(query, 'entity') or None, include_synthetic=synthetic), include_synthetic=synthetic))
+            controls, previous = graph_views.navigation_from_query(query)
+            graph = self.graph.read(identifier(match[1]), self.actor, **controls)
+            return self.page("Knowledge graph", graph_views.detail(graph,
+                include_synthetic=controls['include_synthetic'], previous=previous))
         if path == "/knowledge/search":
             return self.page("Search current knowledge", query_views.search_form(self.csrf))
         match = re.fullmatch(r"/knowledge/results/([^/]+)", path)

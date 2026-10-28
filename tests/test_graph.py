@@ -56,7 +56,7 @@ def test_graph_search_and_one_hop_reopen_preserve_native_identity_and_support(st
     assert detail['limitations'] == ['bounded_published_support', 'not_complete_market_coverage', 'adjacency_does_not_establish_identity_equivalence', 'mentions_do_not_establish_use_or_endorsement']
 
 
-def publish_product_mention(stack, *, source_only_first=False):
+def publish_product_mention(stack, *, source_only_first=False, include_brand=False):
     from smi_ingestion.evidence_sets import SnapshotImporter
     from smi_knowledge import KnowledgeStore
     from test_evidence_sets import DATASET, MANIFEST, POLICY
@@ -68,11 +68,21 @@ def publish_product_mention(stack, *, source_only_first=False):
     imported = SnapshotImporter(evidence).import_snapshot(MANIFEST, HUMAN, POLICY)
     store.register_catalog(CATALOG, HUMAN)
     prepared = store.prepare(DATASET, CATALOG_ID, WORKER)
-    claim = next(c for c in store.read(prepared['run_id'], HUMAN)['interpretations'] if c['predicate'] == 'product_mention')
+    interpretations = store.read(prepared['run_id'], HUMAN)['interpretations']
+    brands = {p['id']: p['brand_id'] for p in CATALOG.document['products']}
+    claim = next(c for c in interpretations if c['predicate'] == 'product_mention' and (not include_brand or any(
+        b['subject_id'] == c['subject_id'] and b['predicate'] == 'brand_mention' and b['value']['brand_id'] == brands[c['value']['product_id']]
+        for b in interpretations)))
     support = tuple(r for r in IngestedEvidence(db).select_run(imported['run_id'], HUMAN) if r.observation_id == claim['observation_id'])
     if source_only_first:
         KnowledgePublications(db).publish(support, WORKER, request_id='source-only-before-interpretation')
-    KnowledgePublications(db).publish(support, WORKER, request_id='product-mention', interpretation_ids=(claim['id'],))
+    claims = (claim['id'],)
+    if include_brand:
+        brand_id = next(p['brand_id'] for p in CATALOG.document['products'] if p['id'] == claim['value']['product_id'])
+        brand = next(c for c in store.read(prepared['run_id'], HUMAN)['interpretations']
+                     if c['subject_id'] == claim['subject_id'] and c['predicate'] == 'brand_mention' and c['value']['brand_id'] == brand_id)
+        claims += (brand['id'],)
+    KnowledgePublications(db).publish(support, WORKER, request_id='product-mention', interpretation_ids=claims)
     return store.read_interpretations((claim['id'],), HUMAN)[0]
 
 
@@ -378,3 +388,240 @@ def test_graph_retries_concurrently_and_rejects_unbounded_or_forged_public_input
     unknown = graph.read(results[0]['search_id'], HUMAN, entity_id='0' * 64)
     assert unknown['selection_status'] == 'unavailable'
     assert unknown['selected'] is None
+
+
+def test_explicit_multi_hop_traversal_retains_each_relationship_basis_and_exact_support(stack):
+    from smi_knowledge.graph import GraphScope, GraphTraversal, KnowledgeGraph
+
+    db, _, _, _ = stack
+    claim = publish_product_mention(stack, source_only_first=True)
+    graph = KnowledgeGraph(db)
+    graph.migrate()
+    saved = graph.search(GraphScope(kinds=('brand',)), HUMAN, request_id='brand-traversal')
+    brand = saved['entities'][0]
+    direct = graph.read(saved['search_id'], HUMAN, entity_id=brand['entity_id'])
+    assert {n['identity']['kind'] for n in direct['neighbors']} == {'product'}
+    expanded = graph.read(saved['search_id'], HUMAN, entity_id=brand['entity_id'],
+                          traversal=GraphTraversal(max_hops=2))
+    assert {n['identity']['kind'] for n in expanded['neighbors']} == {'product', 'content'}
+    assert {e['basis'] for e in expanded['relationships']} == {'derived', 'human'}
+    assert expanded['traversal']['max_hops'] == 2
+    assert expanded['traversal_coverage']['depth_reached'] == 2
+    for edge in expanded['relationships']:
+        assert edge['support']['observation_id'] == claim['observation_id']
+        publication = KnowledgePublications(db).read(edge['support']['publication_id'], HUMAN)
+        assert claim['id'] in [c['id'] for c in publication['interpretations']]
+        assert edge['support']['publication_context']['publication_time'] == publication['published_at']
+    assert expanded['manifest'] == direct['manifest']
+
+
+def test_traversal_cycles_and_independent_work_node_edge_and_hop_bounds_are_visible(stack):
+    from smi_knowledge.graph import GraphScope, GraphTraversal, KnowledgeGraph
+
+    db, _, _, _ = stack
+    publish_product_mention(stack, include_brand=True)
+    graph = KnowledgeGraph(db)
+    graph.migrate()
+    saved = graph.search(GraphScope(kinds=('brand',)), HUMAN, request_id='cyclic-traversal')
+    root = saved['entities'][0]['entity_id']
+    cycle = graph.read(saved['search_id'], HUMAN, entity_id=root, traversal=GraphTraversal(max_hops=3))
+    assert {e['predicate'] for e in cycle['relationships']} == {'author_account', 'brand_mention', 'product_mention', 'catalog_brand'}
+    assert len(cycle['neighbors']) == 3
+    assert len({e['relationship_id'] for e in cycle['relationships']}) == 4
+    assert cycle['traversal_coverage']['truncated'] is False
+    for controls, flag in ((GraphTraversal(max_hops=1), 'hop_limit_reached'),
+                           (GraphTraversal(max_hops=3, node_limit=1), 'node_limit_reached'),
+                           (GraphTraversal(max_hops=3, relationship_limit=1), 'relationship_limit_reached'),
+                           (GraphTraversal(max_hops=3, work_limit=1), 'work_limit_reached')):
+        bounded = graph.read(saved['search_id'], HUMAN, entity_id=root, traversal=controls)
+        coverage = bounded['traversal_coverage']
+        assert coverage[flag] is True
+        assert coverage['truncated'] is True
+        assert len(bounded['neighbors']) < controls.node_limit
+        assert len(bounded['relationships']) <= controls.relationship_limit
+        assert coverage['inspected_relationships'] <= controls.work_limit
+
+
+def test_traversal_filters_direction_source_context_and_input_bounds(stack):
+    import pytest
+
+    from smi_ingestion.evidence import EvidenceError
+    from smi_knowledge.graph import GraphScope, GraphTraversal, KnowledgeGraph
+
+    db, _, _, _ = stack
+    claim = publish_product_mention(stack)
+    graph = KnowledgeGraph(db)
+    graph.migrate()
+    saved = graph.search(GraphScope(kinds=('brand',)), HUMAN, request_id='filtered-traversal')
+    root = saved['entities'][0]['entity_id']
+    read = lambda **kw: graph.read(saved['search_id'], HUMAN, entity_id=root, traversal=GraphTraversal(max_hops=3, **kw))
+    incoming = read(direction='incoming')
+    assert {e['predicate'] for e in incoming['relationships']} == {'catalog_brand', 'product_mention'}
+    assert read(direction='outgoing')['relationships'] == []
+    assert {n['identity']['kind'] for n in read(kinds=('product',))['neighbors']} == {'product'}
+    assert len(read(bases=('human',))['relationships']) == 1
+    assert len(read(predicates=('catalog_brand',))['relationships']) == 1
+    assert read(observation_ids=('00000000-0000-0000-0000-000000000000',))['relationships'] == []
+    exact = read(observation_ids=(claim['observation_id'],))
+    assert all(e['support']['observation_id'] == claim['observation_id'] for e in exact['relationships'])
+    assert {e['basis'] for e in exact['relationships']} >= {'human', 'derived'}
+    assert read(namespaces=('unrelated',))['neighbors'] == []
+    assert read(platforms=('unrelated',))['relationships'][0]['basis'] == 'human'
+    for invalid in ({'max_hops': 4}, {'max_hops': True}, {'node_limit': 101}, {'relationship_limit': 51},
+                    {'work_limit': 5001}, {'work_limit': 0}, {'direction': []}, {'kinds': ('creator',)},
+                    {'bases': ('verified',)}, {'predicates': ('same_creator',)}, {'observation_ids': ('not-a-uuid',)},
+                    {'platforms': ('test',) * 11}, {'namespaces': 'public'}):
+        with pytest.raises(EvidenceError, match='invalid_graph_traversal'):
+            GraphTraversal(**invalid)
+    with pytest.raises(EvidenceError, match='invalid_graph_traversal'):
+        graph.read(saved['search_id'], HUMAN, entity_id=root, traversal={})
+
+
+def test_http_multi_hop_filters_back_reopen_errors_and_exact_source_detail(stack):
+    import re
+    from urllib.parse import urlencode
+
+    from smi_knowledge.graph import KnowledgeGraph
+    from smi_review import ReviewApp
+    from test_review import request, running
+
+    db, evidence, _, _ = stack
+    first = publish_post(stack, native_id='first-source', handle='FIRST-SOURCE-LABEL')
+    second = publish_post(stack, native_id='second-source', handle='SECOND-SOURCE-LABEL')
+    KnowledgeGraph(db).migrate()
+    with running(ReviewApp(db)) as url:
+        csrf = re.search(r'name="csrf" value="([^"]+)"', request(url, path='/knowledge/graph')[2])[1]
+        status, headers, _ = request(url, 'POST', '/knowledge/graph', {'csrf': csrf, 'request_id': 'http-traversal', 'kinds': 'account'})
+        assert status == 303
+        base = headers['Location']
+        match_page = request(url, path=base)[2]
+        root = re.search(r'entity=([a-f0-9]{64})', match_page)[1]
+        query = {'entity': root, 'max_hops': '2', 'direction': 'incoming', 'observation_ids': first.id,
+                 'predicates': 'author_account', 'bases': 'observed', 'relationship_limit': '2', 'work_limit': '10'}
+        selected_path = base + '?' + urlencode(query)
+        status, _, page = request(url, path=selected_path)
+        assert status == 200
+        assert 'FIRST-SOURCE-LABEL' in page
+        assert 'SECOND-SOURCE-LABEL' not in page
+        assert first.id in page
+        assert 'Bounded traversal' in page
+        assert 'current exploration' in page
+        assert 'name="max_hops" value="2"' in page
+        neighbor_path = next(p.replace('&amp;', '&') for p in re.findall(r'href="([^"]+)"', page)
+                             if 'entity=' in p and f'entity={root}' not in p and 'previous=' in p)
+        status, _, neighbor = request(url, path=neighbor_path)
+        assert status == 200
+        assert 'Back to previous selection' in neighbor
+        back_path = re.search(r'href="([^"]+)">Back to previous selection', neighbor)[1].replace('&amp;', '&')
+        back = request(url, path=back_path)[2]
+        assert 'FIRST-SOURCE-LABEL' in back
+        assert 'name="max_hops" value="2"' in back
+        assert 'name="direction" value="incoming"' in back
+        assert first.id in neighbor
+        assert 'SECOND-SOURCE-LABEL' not in neighbor
+        bad_path = base + '?' + urlencode({**query, 'max_hops': '99'})
+        status, _, error = request(url, path=bad_path)
+        assert status == 422
+        assert 'invalid_graph_traversal' in error
+        assert 'name="max_hops" value="99"' in error
+        assert 'FIRST-SOURCE-LABEL' in error
+        assert 'SECOND-SOURCE-LABEL' not in error
+        assert request(url, path=selected_path + '&actor_id=forged')[0] == 422
+    with running(ReviewApp(db)) as url:
+        assert 'FIRST-SOURCE-LABEL' in request(url, path=selected_path)[2]
+        evidence.revoke(first.id)
+        status, _, hidden = request(url, path=selected_path)
+        assert status == 200
+        assert 'Selected entity unavailable' in hidden
+        assert 'FIRST-SOURCE-LABEL' not in hidden
+        assert 'SECOND-SOURCE-LABEL' not in hidden
+        assert 'visible caption' not in hidden
+        error = request(url, path=bad_path)[2]
+        assert 'FIRST-SOURCE-LABEL' not in error
+        assert 'SECOND-SOURCE-LABEL' not in error
+        assert 'Selected entity unavailable' in error
+    assert second.id != first.id
+
+
+def test_exact_source_filter_narrows_shared_entity_details_and_policy_counts_on_every_use(stack):
+    from psycopg.types.json import Jsonb
+
+    from smi_knowledge.graph import GraphScope, GraphTraversal, KnowledgeGraph
+
+    db, evidence, _, _ = stack
+    first = publish_post(stack, native_id='one-source', handle='FIRST-OBSERVATION-HANDLE')
+    second = publish_post(stack, native_id='other-source', handle='OTHER-OBSERVATION-HANDLE')
+    graph = KnowledgeGraph(db)
+    graph.migrate()
+    saved = graph.search(GraphScope(kinds=('account',)), HUMAN, request_id='shared-node-sources')
+    root = saved['entities'][0]['entity_id']
+    controls = GraphTraversal(max_hops=3, observation_ids=(first.id,))
+    exact = graph.read(saved['search_id'], HUMAN, entity_id=root, traversal=controls)
+    assert exact['selected']['label'] == 'FIRST-OBSERVATION-HANDLE'
+    assert 'OTHER-OBSERVATION-HANDLE' not in str(exact)
+    assert {s['observation_id'] for s in exact['selected']['support']} == {first.id}
+    assert {a['native_id'] for n in exact['neighbors'] for a in n['attributes']} == {'one-source'}
+    original_policy = asdict(evidence.get(first.id).policy)
+    for permission in ('can_process', 'can_display', 'can_retain'):
+        with db.connect() as connection:
+            connection.execute('UPDATE source_observations SET policy=%s WHERE id=%s', (Jsonb({**original_policy, permission: False}), first.id))
+        reopened = KnowledgeGraph(db).read(saved['search_id'], HUMAN, entity_id=root, traversal=controls)
+        assert reopened['selection_status'] == 'unavailable'
+        assert reopened['selected'] is None
+        assert reopened['entities'] == reopened['neighbors'] == reopened['relationships'] == []
+        assert reopened['current_coverage']['matching_entities'] == 0
+        assert reopened['current_coverage']['immediate_relationships'] == 0
+        assert reopened['traversal_coverage']['inspected_relationships'] == 0
+        assert 'FIRST-OBSERVATION-HANDLE' not in str(reopened)
+        assert 'OTHER-OBSERVATION-HANDLE' not in str(reopened)
+        unfiltered = graph.read(saved['search_id'], HUMAN, entity_id=root, traversal=GraphTraversal(max_hops=3))
+        assert unfiltered['selected']['label'] == 'OTHER-OBSERVATION-HANDLE'
+        assert len(unfiltered['neighbors']) == len(unfiltered['relationships']) == 1
+        assert unfiltered['current_coverage']['immediate_relationships'] == 1
+    with db.connect() as connection:
+        connection.execute('UPDATE source_observations SET policy=%s WHERE id=%s', (Jsonb(original_policy), first.id))
+    key = ExternalKey('test', 'public', 'content', 'one-source')
+    CanonicalWriter(db).apply(first.id, NormalizedBatch((key,), (
+        FieldCandidate(key, 'caption', 'observed', 'NEW-SUPERSEDED-CAPTION', '$.caption'),
+    ), ()), 'corrected-source:v2')
+    stale = graph.read(saved['search_id'], HUMAN, entity_id=root, traversal=controls)
+    assert stale['selection_status'] == 'unavailable'
+    assert 'NEW-SUPERSEDED-CAPTION' not in str(stale)
+    evidence.revoke(second.id)
+    denied = graph.read(saved['search_id'], HUMAN, entity_id=root, traversal=GraphTraversal(max_hops=3))
+    assert denied['relationships'] == []
+    assert denied['current_coverage']['matching_entities'] == 0
+
+
+def test_http_explicit_multi_hop_relationship_basis_and_truncation_survive_navigation(stack):
+    import re
+
+    from smi_knowledge.graph import KnowledgeGraph
+    from smi_review import ReviewApp
+    from test_review import request, running
+
+    db, evidence, _, _ = stack
+    claim = publish_product_mention(stack)
+    KnowledgeGraph(db).migrate()
+    with running(ReviewApp(db)) as url:
+        csrf = re.search(r'name="csrf" value="([^"]+)"', request(url, path='/knowledge/graph')[2])[1]
+        _, headers, _ = request(url, 'POST', '/knowledge/graph', {'csrf': csrf, 'request_id': 'http-product-traversal', 'kinds': 'brand'})
+        base = headers['Location']
+        root = re.search(r'entity=([a-f0-9]{64})', request(url, path=base)[2])[1]
+        path = base + f'?entity={root}&max_hops=2&relationship_limit=2&direction=incoming'
+        status, _, page = request(url, path=path)
+        assert status == 200
+        assert 'Traversed relationships' in page
+        assert 'product_mention' in page and 'catalog_brand' in page
+        assert 'basis derived' in page and 'basis human' in page
+        assert claim['id'] in page
+        assert 'caption-literal-rules-v1' in page
+        truncated = request(url, path=path.replace('relationship_limit=2', 'relationship_limit=1'))[2]
+        assert 'Traversal truncated' in truncated
+        empty = request(url, path=path + '&bases=observed')[2]
+        assert 'No permitted relationships match these traversal filters' in empty
+        evidence.revoke(claim['observation_id'])
+        denied = request(url, path=path)[2]
+        assert 'Selected entity unavailable' in denied
+        assert claim['span']['text'] not in denied
+        assert claim['source_reference'] not in denied

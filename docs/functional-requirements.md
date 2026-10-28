@@ -11,7 +11,7 @@ This is the accepted target contract for the flows in [`FR.md`](../FR.md) and th
 | Acquisition | Bounded adapters for supplied TikTok references, snapshot import, replay/resume, canonical history and durable registered-keyword scheduled, campaign-authorized and exactly human-approved supplied-proposal synthetic offline tasks (including bounded keyword discovery, capture-based retrieval avoidance and shared daily new-post allowance) with per-task competing-worker fencing, recovery, partial outcomes and simulated waiting | Live acquisition, progressive acquisition and cross-route retrieval avoidance |
 | Monitoring | Independent snapshot investigations plus separate bounded offline X evidence, configured comparable-window volume and provisional quality-controversy assessments, retained alerts/local notifications and bounded existing-KB context investigations plus explicit selected promotion | Semantic shift, broader semantic analysis/richer explanation and live X operational readiness |
 | Permissions | Trusted local human/automation actors, purpose-aware evidence reads, exact task-specific human enrichment approval and automated shortlist persistence distinct from human selections | Hosted authentication and richer optional human curation |
-| Visibility | Original-source panels, saved revision history, committed publication/search details, task commit/wait progress, partial outcomes, durable local completion inbox, exact support/lineage, CLI run reports and bounded one-hop graph search/details | Multi-hop graph navigation and pipeline/lineage view |
+| Visibility | Original-source panels, saved revision history, committed publication/search details, task commit/wait progress, partial outcomes, durable local completion inbox, exact support/lineage, CLI run reports and bounded multi-hop graph search/traversal/details | Pipeline/lineage view |
 | Spending | Acquisition bounds and source-free synthetic accounting with forecasts/uncertainty; shared bounded synthetic monetary admission and configured fixture-worker control | Actual-spend derivation, enforceable ceilings for metered costs and forecasts for the remainder |
 
 No A/B/C flow is implemented end to end. The physical tables and current interfaces remain those documented in [architecture](architecture.md), [data model](data-model.md) and the individual module contracts.
@@ -79,7 +79,7 @@ The **knowledge graph explorer** supports searching, filtering and traversing pe
 
 The **pipeline and data-lineage view** exposes acquisition tasks/jobs, status/failures, source provenance, transformations and KB update history. It connects tasks to runs, observations, derivations and publications. Source restrictions apply to displayed payloads/excerpts; secrets and unrestricted provider responses are not UI content.
 
-Bounded graph entity search, filters, immediate neighbors and exact governed evidence details are installed through [the one-hop graph](knowledge.md#governed-one-hop-entity-graph). Multi-hop graph navigation and the pipeline/lineage explorer remain target behavior; current run reports provide supporting lineage foundations.
+Bounded graph entity search, cycle-safe multi-hop traversal, filters and exact governed evidence details are installed through [the graph](knowledge.md#governed-entity-graph). The pipeline/lineage explorer remains target behavior; current run reports provide supporting lineage foundations.
 
 ## Evaluation and delivery boundaries
 
