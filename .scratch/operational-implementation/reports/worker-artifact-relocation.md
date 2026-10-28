@@ -1,6 +1,6 @@
 # Preserved worker verification artifacts
 
-Completed ticket 26–33 artifacts have verified persistent copies in the integration worktree. Original worktrees and historical paths remain intact. No completed gate was rerun, and no worktree was removed. The local verification directory is intentionally excluded from Git; this document records the usable archive locations and identities.
+Completed ticket 26–34 artifacts have verified persistent copies in the integration worktree. Original worktrees and historical paths remain intact. No completed gate was rerun, and no worktree was removed. The local verification directory is intentionally excluded from Git; this document records the usable archive locations and identities.
 
 Each archive contains the complete original ticket verification directory and its own committed report, exact wheel manifest and standalone verifier. Every member was compared with the original file by byte size and SHA-256. The machine-readable `verification/worker-archives/relocation-index.json` records original absolute paths, archive-member paths, worker heads, per-file hashes and current archive locations.
 
@@ -14,5 +14,8 @@ Each archive contains the complete original ticket verification directory and it
 | 31 | `verification/worker-archives/ticket-31-worker-artifacts.tar.gz` | 51 | 718927 | `3ab522ca97efb765ef885fff91e6cdad01dff74c8d1e0018c5a0a5c1a97b006f` |
 | 32 | `verification/worker-archives/ticket-32-worker-artifacts.tar.gz` | 46 | 360589 | `735f3e0c6a5a73de806d0bde40ebb92b7ce94197c58244cdd61d2fb9765eea14` |
 | 33 | `verification/worker-archives/ticket-33-worker-artifacts.tar.gz` | 38 | 369596 | `9b13f15039e674a87cf29bbc9b6e6898a018c3c49a6d75b969b2c714dd97d0d1` |
+| 34 | `verification/worker-archives/ticket-34-worker-artifacts.tar.gz` | 42 | 432887 | `94d98c27a4fb212e2e54a6c949871166ce82fc487f6441a3adea7d40aaccb068` |
 
 Ticket 31’s earlier prepared nested archive is preserved as an unchanged member of its root archive. At final cleanup, verify these identities again before removing clean merged worktrees and update the relocation index. Older missing temporary artifacts remain unavailable as previously documented; no copy has been invented.
+
+Ticket 34 additionally preserves its seven fetched primary documents, exact source-identity index and committed contract research note.
