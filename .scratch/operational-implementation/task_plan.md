@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 36 in its fresh context/worktree: bounded multi-hop navigation and filters over the existing governed graph projection, with visible truncation, cycle safety and current-policy detail. Tickets 11–35 are integrated and resolved; validate and merge before advancing. No new ontology, fact store or source/model execution.
+Dispatch ticket 37 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–36 are integrated and resolved; ticket 37 is pending. Preserve exact provenance/current-policy contracts, verification evidence, archives and the original final-review baseline; human usefulness and complete coverage remain unestablished.
 
 ## Current Phase
 
-Phase 40 — ticket 36 in progress after successful ticket 35 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 41 — ticket 37 pending after successful ticket 36 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -278,9 +278,9 @@ Fast-forward integrated final handoff/root checked `bd5dca9d7e3ba179e0fc1d5fb25c
 
 ### Phase 40 — Implement ticket 36
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final handoff/root checked `4035859588d73dbdf21b02e9484f3926a0e702a8`, runtime/frozen `fcb0b7d33cf6df40ec020b32cc9293b0a94052f3`. Required independent root checks passed all static/preflight stages and **846 tests in 580.41 seconds**, exit 0. Existing wheel/all 86 pairs, all 7 changed packaged paths, eighteen SQL schemas, both assets, 31 guidance pairs/root guidance and all 300 protected identities match root. All six criteria are checked and ticket 36 is resolved. Public RED/GREEN, final focused 48/28.62s (all 17 graph cases) and full 846 verify bounded cycles/direction/filter/budget/navigation/current-policy behavior while preserving ticket 35 provenance. Observation filters narrow the whole transient projection and separate filtered membership from availability counts; work_limit counts edge inspections only after finite projection/adjacency build. No blocking root bug, new ontology/datastore/source/model I/O or total DB-work/coverage/human-quality claim. Coordinator archive 36 identity verified; existing 26–35 relocation report and all worker files remain preserved.
 
 ### Phase 41 — Implement ticket 37
 
