@@ -6,7 +6,7 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Ticket 39 preparation is integrated; obtain the actual named reviewer and permitted existing result schema/workspace/IDs and fixed corpus/window selection, followed by real baseline-before-assisted observations, timing, translations and feedback using reports/ticket-39-handoff.md. Ticket 39 remains claimed/ready-for-human with six unchecked criteria. Phase 44 independent Standards/Spec reviews are active; root coordinates technical findings in one fresh fixer. Software 01–38 is integrated, while the overall objective remains incomplete.
+Resolve final independent review findings in one fresh fixer context: ranking permission at dispatch, monitoring lock order, quantitative alert permission overlay and shared Responses envelope parsing. Ticket39 remains claimed/ready-for-human with actual reviewer and permitted examples absent; the user input request is pending. Preserve all completed gates and original review baseline.
 
 ## Current Phase
 

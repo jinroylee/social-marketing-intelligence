@@ -1,0 +1,38 @@
+{
+  "baseline": "6220fff49b5b8e982ef5a8d54b7c788e45b0f648",
+  "standards": {
+    "documented": 3,
+    "heuristic": 1
+  },
+  "spec": {
+    "actionable": 1,
+    "overlap": "ranking race"
+  },
+  "findings": [
+    {
+      "id": "standards-1/spec-1",
+      "kind": "documented/spec",
+      "summary": "Ranking dispatch must recheck exact prepared input permissions after cost contention",
+      "status": "pending"
+    },
+    {
+      "id": "standards-2",
+      "kind": "documented",
+      "summary": "Consistent frontier-before-recent lock order for alert context/promotion",
+      "status": "pending"
+    },
+    {
+      "id": "standards-3",
+      "kind": "documented",
+      "summary": "Quantitative alert nested source evidence requires process/display/retain overlay",
+      "status": "pending"
+    },
+    {
+      "id": "standards-4",
+      "kind": "heuristic",
+      "summary": "Reuse public Responses generated_document for criteria envelope parsing",
+      "status": "pending"
+    }
+  ],
+  "human_validation": "ticket39 pending actual inputs"
+}

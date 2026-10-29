@@ -1,0 +1,171 @@
+{
+  "baseline": "6220fff49b5b8e982ef5a8d54b7c788e45b0f648",
+  "reviewed_head": "b75b8b6a454ae9abdb5f7f7450837b79d7801753",
+  "review_diff": "git diff 6220fff49b5b8e982ef5a8d54b7c788e45b0f648...b75b8b6a454ae9abdb5f7f7450837b79d7801753",
+  "confirmed_diff": {
+    "files_changed": 425,
+    "insertions": 61549,
+    "deletions": 297
+  },
+  "software_unchanged": true,
+  "broad_gates_rerun": false,
+  "verification": {
+    "public_owner_calls": true,
+    "real_postgresql": true,
+    "isolated_schemas_removed": true,
+    "external_source_provider_model_calls": 0,
+    "private_collaborator_mocks": 0
+  },
+  "findings": [
+    {
+      "id": "ST-01",
+      "classification": "documented_breach",
+      "priority": "P1",
+      "location": {
+        "path": "src/smi_campaigns/ranking/__init__.py",
+        "start": 87,
+        "end": 92
+      },
+      "title": "Ranking dispatches governed inputs after source withdrawal during admission contention",
+      "rules": [
+        {
+          "path": "docs/adr/0002-pinned-support-current-policy.md",
+          "line": 5,
+          "quote": "Source permissions, expiry and withdrawal are evaluated at each use."
+        },
+        {
+          "path": "docs/adr/0009-constrained-supported-ranking.md",
+          "line": 11,
+          "description": "Governed assessed inputs share candidate support dependencies and current-policy support."
+        }
+      ],
+      "repro_command": "uv run --locked python .scratch/operational-implementation/reviews/standards-ranking-verification.py",
+      "observed": {
+        "source_revoked_before_dispatch": true,
+        "simulated_model_calls_after_revocation": 1,
+        "final_status": "stale",
+        "reason": "ranking_support_changed",
+        "actual_cost": {
+          "amount": "0.175",
+          "synthetic": true,
+          "commercial_charge": false
+        }
+      },
+      "fix": "Inject an owner-provided exact governed-input source/derivation guard into shared admission; keep source locks through dispatch commit."
+    },
+    {
+      "id": "ST-02",
+      "classification": "documented_breach",
+      "priority": "P2",
+      "location": {
+        "path": "src/smi_monitoring/context/store.py",
+        "start": 67,
+        "end": 82
+      },
+      "title": "Alert context and monitoring promotion acquire owner locks in opposite order",
+      "rules": [
+        {
+          "path": "docs/monitoring.md",
+          "line": 136,
+          "quote": "The operation holds the public knowledge publication frontier lock, then the recent owner's policy/window lock"
+        },
+        {
+          "path": "src/smi_monitoring/promotion/AGENTS.md",
+          "line": 5,
+          "quote": "Acquire the knowledge frontier before recent policy locks; retain both through all local effects/receipt commit."
+        },
+        {
+          "path": "AGENTS.md",
+          "line": 9,
+          "quote": "Make contracts, invariants, side effects, and failure behavior explicit."
+        },
+        {
+          "path": "AGENTS.md",
+          "line": 16,
+          "quote": "Handle errors at the right boundary with useful context."
+        }
+      ],
+      "related_locations": [
+        {
+          "path": "src/smi_monitoring/promotion/store.py",
+          "start": 49,
+          "end": 51
+        },
+        {
+          "path": "src/smi_knowledge/queries/store.py",
+          "start": 154,
+          "end": 154
+        }
+      ],
+      "repro_command": "uv run --locked python .scratch/operational-implementation/reviews/standards-verification.py",
+      "coordination": "A separate advisory gate pauses investigate after it owns recent policy and before KB search. Promote then owns the frontier and waits for recent. Releasing the gate creates the actual public-operation cycle; PostgreSQL blocking metadata coordinates without business-state SQL assertions.",
+      "observed": {
+        "context": {
+          "status": "succeeded"
+        },
+        "promotion": {
+          "exception_type": "DeadlockDetected",
+          "sqlstate": "40P01",
+          "message": "deadlock detected"
+        }
+      },
+      "fix": "Use one consistent public owner lock order for context selection and promotion; retain existing atomic local commit and no-I/O boundaries."
+    },
+    {
+      "id": "ST-03",
+      "classification": "documented_breach",
+      "priority": "P2",
+      "location": {
+        "path": "src/smi_monitoring/alerts/store.py",
+        "start": 144,
+        "end": 155
+      },
+      "title": "Quantitative alert read returns nested source evidence without process permission",
+      "rules": [
+        {
+          "path": "src/smi_monitoring/alerts/AGENTS.md",
+          "line": 9,
+          "quote": "Display current counts and evidence only from the exact original windows with current process/display/retention permission."
+        },
+        {
+          "path": "docs/architecture.md",
+          "line": 169,
+          "description": "Current numerical claims and evidence use exact windows with current process/display/retention permission."
+        }
+      ],
+      "repro_command": "uv run --locked python .scratch/operational-implementation/reviews/standards-verification.py",
+      "observed": {
+        "current_support": "unavailable",
+        "comparison": null,
+        "returned_source_bodies": 5
+      },
+      "scope_note": "RecentMonitoring purpose-specific display semantics remain valid for independent source views. The documented alert-owner projection is stricter.",
+      "fix": "Apply the alert full-permission overlay to returned nested windows and their alert HTTP rendering."
+    },
+    {
+      "id": "ST-04",
+      "classification": "heuristic_judgment",
+      "smell": "possible Duplicated Code",
+      "priority": "P3",
+      "location": {
+        "path": "src/smi_campaigns/interpretation/__init__.py",
+        "start": 38,
+        "end": 50
+      },
+      "related_locations": [
+        {
+          "path": "src/smi_campaigns/responses/__init__.py",
+          "start": 119,
+          "end": 131
+        }
+      ],
+      "baseline": "The same logic shape appears in more than one hunk or file; extract the shared shape and call it from both.",
+      "hunk_quotes": [
+        "contents = []",
+        "contents.extend(item['content'])"
+      ],
+      "impact": "Strict message/content/refusal/JSON envelope validation has two implementations that must track one contract.",
+      "fix": "Call public responses.generated_document and preserve criteria-specific refusal status mapping."
+    }
+  ]
+}
