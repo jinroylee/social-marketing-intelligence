@@ -1,0 +1,125 @@
+{
+  "status": "closed_after_frozen_shared_gate_and_artifact_replay",
+  "runtime_commit": "7418e5bc0af72d70017b5eb612dcd2c37f265c57",
+  "frozen_commit": "7418e5bc0af72d70017b5eb612dcd2c37f265c57",
+  "original_reviews_preserved": true,
+  "finding_closures": [
+    {
+      "id": "standards-1/spec-1",
+      "status": "closed",
+      "tests": [
+        "tests/test_ranked_recommendations.py::test_changed_prepared_inputs_refuse_ranking_after_cost_contention_without_liability",
+        "tests/test_ranked_recommendations.py::test_ranking_source_guard_locks_last_through_dispatch_commit_and_release_before_model_io"
+      ],
+      "verification": "903-test frozen shared gate passed; public regressions in owning tests; original reviewers code-only recheck closed all findings."
+    },
+    {
+      "id": "standards-2",
+      "status": "closed",
+      "tests": [
+        "tests/test_alert_investigations.py::test_investigation_and_promotion_complete_concurrently_with_atomic_policy_inheritance"
+      ],
+      "verification": "903-test frozen shared gate passed; public regressions in owning tests; original reviewers code-only recheck closed all findings."
+    },
+    {
+      "id": "standards-3",
+      "status": "closed",
+      "tests": [
+        "tests/test_quantitative_alerts.py::test_process_denial_withholds_nested_alert_evidence_and_http_but_preserves_standalone_display",
+        "tests/test_alert_investigations.py::test_recent_dependency_loss_withholds_explanation_permanently_but_keeps_lineage"
+      ],
+      "verification": "903-test frozen shared gate passed; public regressions in owning tests; original reviewers code-only recheck closed all findings."
+    },
+    {
+      "id": "standards-4",
+      "status": "closed",
+      "tests": [
+        "tests/test_criteria_interpretation.py::test_criteria_envelope_contract_preserves_refusal_validation_and_usage"
+      ],
+      "verification": "903-test frozen shared gate passed; public regressions in owning tests; original reviewers code-only recheck closed all findings."
+    }
+  ],
+  "shared_gate": {
+    "command": "UV_OFFLINE=1 uv run --locked python tools/check.py",
+    "head": "7418e5bc0af72d70017b5eb612dcd2c37f265c57",
+    "runtime_commit": "7418e5bc0af72d70017b5eb612dcd2c37f265c57",
+    "started_at": "2026-10-29T09:51:27.625649+00:00",
+    "status": "passed",
+    "log": "shared.log",
+    "exit_code": 0,
+    "finished_at": "2026-10-29T10:01:49.704141+00:00",
+    "elapsed_seconds": 622.06,
+    "session_id": "94217",
+    "pytest_result": "903 passed in 621.51s (0:10:21)"
+  },
+  "human_validation": "Ticket 39 remains pending actual named reviewer, permitted examples, baseline/timing/feedback/translations; no fabricated records.",
+  "historical_review_files": [
+    {
+      "path": ".scratch/operational-implementation/reviews/standards.md",
+      "size": 2945,
+      "sha256": "d3903c936c302e60f45dd75be2e2e3626dd74655dcf7618536a6138109a07583"
+    },
+    {
+      "path": ".scratch/operational-implementation/reviews/spec.md",
+      "size": 2011,
+      "sha256": "099bc2b5b2bb6a193aef93b12df9f95d2405a3204630780fa113437ba908275b"
+    },
+    {
+      "path": ".scratch/operational-implementation/reviews/standards-findings.json",
+      "size": 6522,
+      "sha256": "a277f682158ac28b3d54c13b5f3895b6b4a48ce4124297e7fc9f2f2b068cdc9a"
+    },
+    {
+      "path": ".scratch/operational-implementation/reviews/spec-verification.md",
+      "size": 2236,
+      "sha256": "1660c3db47b409925dfc467b2a4a111a0538e6d8e2c528b27eb4ce3e01b2bf83"
+    },
+    {
+      "path": ".scratch/operational-implementation/reviews/fix-checklist.json",
+      "size": 1046,
+      "sha256": "ca171132f02415724a243a9b0cb99b7af8d8daa2d2bfd4a66c76868951801b92"
+    },
+    {
+      "path": ".scratch/operational-implementation/reviews/standards-ranking-verification.py",
+      "size": 2453,
+      "sha256": "a51c514294a80779552fa3c7acade05a51b2b738cfcf9d77a78dba90f690ea57"
+    },
+    {
+      "path": ".scratch/operational-implementation/reviews/standards-verification.py",
+      "size": 5252,
+      "sha256": "20a83bbbeaa51964785944059a72bdda20795d08ed63da682e785bc643cacdf2"
+    },
+    {
+      "path": ".scratch/operational-implementation/reviews/spec-predispatch-repro.py",
+      "size": 2487,
+      "sha256": "99d18cf06140aaa117743a84174d6b9147e273a2725540d5d995a57129357029"
+    }
+  ],
+  "reviewer_code_only_recheck": {
+    "frozen_commit": "7418e5bc0af72d70017b5eb612dcd2c37f265c57",
+    "standards_documented_closed": 3,
+    "standards_heuristic_closed": 1,
+    "spec_actionable_closed": 1,
+    "remaining_findings": 0,
+    "execution": "No competing test execution; summaries supplied by coordinator from both original reviewers."
+  },
+  "artifact": {
+    "filename": "smi_ingestion-0.1.0-py3-none-any.whl",
+    "size": 450808,
+    "sha256": "de6929ea94473a7c20961f1776d0fed742c02edda62f6c0d37dc2bf64c23fc8a",
+    "entry_count": 215,
+    "path": ".scratch/operational-implementation/verification/final-review-fixes/wheel/smi_ingestion-0.1.0-py3-none-any.whl",
+    "manifest": ".scratch/operational-implementation/reports/final-review-fixes-wheel-manifest.json",
+    "standalone_verifier": ".scratch/operational-implementation/reports/verify-final-review-fixes-wheel.py",
+    "record_exit_code": 0,
+    "independent_replay_exit_code": 0,
+    "source_archive_pairs": 211,
+    "changed_packaged_files": 10,
+    "review_range_changed_packaged_files": 174,
+    "sql_schemas": 19,
+    "review_assets": 2,
+    "packaged_guidance_pairs": 33,
+    "all_guidance_pairs": 35,
+    "protected_files": 344
+  }
+}
