@@ -400,7 +400,7 @@
     "28": "The assistant journey connecting knowledge gaps, proposals, human approval, tasks, completion and later explicit queries is complete and locally validated with real PostgreSQL and simulated source/model HTTP. Live source/model runtime configuration, permissions, keys, enablement, commercial receipts and independent human language/marketer-usefulness validation remain unestablished runtime/quality gates. No actual source/model/paid call occurred; no live-readiness or human-quality claim is made. No new provider or acquisition authority comes from model text.",
     "31": "The bounded provisional product-quality controversy method is complete and validated with real PostgreSQL and controlled simulated model HTTP. Actual model/source keys, configuration, rates, enablement, commercial receipts and human language/usefulness remain unestablished independent runtime/quality gates; absence alone is not a software blocker. Exact label/membership/span validation does not establish semantic entailment, verified controversy, baseline/change, market completeness or human usefulness. No actual source/model/paid call occurred; no live-readiness or human-quality claim is made.",
     "34": "Current official X recent-search primary contract verified on 2026-10-28 with seven cached official documents; concrete bounded coordinated software is complete and validated with simulated external HTTP/real PostgreSQL. Actual approved app/access/credential, explicit live-operation authority, source-use/policy/display/storage/selected-copy clearance, applicable current-state/update/deletion compliance or approved alternative, enablement, current account-specific commercial rates/bounds/currency/period/ceiling and separately authorized bounded live acceptance/receipt remain unmet independent runtime prerequisites. Their absence alone does not block gated software. Current post.fields/repost_count schema is selected; the legacy quickstart tweet.fields discrepancy is retained, and actual provider acceptance remains unverified. Automatic compliance feeds/current-display refresh are not installed. No actual source/model/paid call occurred; live readiness, verified invoice/full provider compliance, market coverage and human quality remain unestablished.",
-    "39": "Named actual human reviewer, permitted reviewed examples and actual feedback; agent output cannot substitute."
+    "39": "UNMET: actual named human reviewer/attestation and prior exposure; existing permitted local database/schema/workspace with exact saved recommendation, KB answer/enrichment and quantitative/semantic alert IDs and fixed corpus/window membership; actual manual baseline before assisted results, task order, observed times/inspected counts, attributable translations/methods and actual campaign/assistant/alert feedback, useful finding and reusable keep/exclude/defer decision (or honest negative result), material errors/corrections. Qualified original-language adjudication is required for any Japanese-original accuracy claim. No reviewer, permitted selection, baseline, translations or feedback has been supplied. Public read-only inventory discovered no selectable examples in its explicit public/local scope only; other schemas/installations were not inspected. Preparation and agent/model/software-fixture output cannot substitute for actual human observations."
   },
   "documentation_authorization": {
     "scope": "Read-only primary-documentation lookups only",
@@ -1246,6 +1246,78 @@
       "human_quality_verified": false,
       "ticket_39_prerequisites": "Named actual human reviewer, permitted reviewed examples and actual feedback; agent output cannot substitute.",
       "live_readiness_established": false
+    }
+  ],
+  "ticket_preparations": [
+    {
+      "ticket": 39,
+      "title": "Conduct one attributable operational marketer review",
+      "preparation_commit": "45e623ea1eb52ed75c30dc438b459c63a28f95c8",
+      "based_on_integration_commit": "3f6ab86e4f19ea248436d44653ff7ffd7f294ec9",
+      "status": "claimed",
+      "triage_label": "ready-for-human",
+      "human_review_status": "pending_external_inputs",
+      "human_acceptance_criteria_checked": 0,
+      "human_acceptance_criteria_total": 6,
+      "actual_human_review_conducted": false,
+      "handoff": "reports/ticket-39-handoff.md",
+      "inventory": "reports/ticket-39-inventory.json",
+      "inventory_checked_at": "2026-10-29T09:26:06.927580+00:00",
+      "inventory_scope": {
+        "host": "127.0.0.1",
+        "port": 6543,
+        "database": "smi",
+        "schema": "public",
+        "workspace": "local"
+      },
+      "inventory_actor": {
+        "actor_id": "ticket-39-read-only-inventory",
+        "kind": "automation",
+        "human_review": false
+      },
+      "inventory_mode": "Public owner list operations only; PostgreSQL default_transaction_read_only=on; no migrate, import, export, collection, model or application write.",
+      "inventory_result": {
+        "unavailable_lists": [
+          "evidence_sets",
+          "campaigns",
+          "investigations",
+          "recent_topics"
+        ],
+        "error_type": "UndefinedTable",
+        "sqlstate": "42P01",
+        "quantitative_alert_notifications": 0,
+        "semantic_alert_notifications": 0,
+        "empty_alert_lists_may_mean_optional_owner_uninstalled": true,
+        "answer_id_not_supplied_and_no_public_list_port": true,
+        "selectable_examples_discovered": false,
+        "other_schemas_or_installations_inspected": false
+      },
+      "missing_human_inputs": [
+        "named actual reviewer/attestation/timezone/prior exposure",
+        "permitted local result schema/workspace and exact recommendation/answer/enrichment/quantitative+semantic alert IDs",
+        "fixed corpus/dataset digest and observation/assertion/window/capture membership",
+        "actual manual baseline before assisted exposure and task order",
+        "observed assisted times/inspected counts and actual feedback for each journey",
+        "attributable translations/methods and qualified adjudication if Japanese-original accuracy is claimed",
+        "useful finding and reusable keep/exclude/defer decision or honest negative result",
+        "material errors/corrections and actual denominators/limitations"
+      ],
+      "japanese_original_accuracy": "not_validated",
+      "human_usefulness_verified": false,
+      "source_unchanged_from_checked_commit": "9ec2a6a6e36562549979b8f28b20488e5d82b781",
+      "preserved_root_gate": {
+        "passed_tests": 890,
+        "seconds": 666.47,
+        "exit": 0,
+        "session": 22406,
+        "rerun": false,
+        "log": ".scratch/operational-implementation/verification/ticket-38-integrated/shared.log"
+      },
+      "metadata_only": true,
+      "overall_objective_complete": false,
+      "technical_review_phase": 44,
+      "technical_review_status": "in_progress",
+      "technical_reviews_are_not_human_validation": true
     }
   ]
 }
