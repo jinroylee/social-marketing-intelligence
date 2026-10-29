@@ -2,7 +2,7 @@
 
 import io
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from urllib.request import OpenerDirector
 
 from smi_monitoring.polling import LiveXConfig, RecentPolling
@@ -41,7 +41,7 @@ def enabled(**changes):
                           'bearer_token': 'dummy-secret', **changes})
 
 
-def setup_polling(stack, tmp_path, *, config=None, ceiling='10', clock=None):
+def setup_polling(stack, tmp_path, *, config=None, ceiling='10', clock=None, window_end=END):
     recent = configured(stack, tmp_path)
     recent.clock = clock or (lambda: NOW + timedelta(minutes=1))
     costs = UsageAccounting(stack[0])
@@ -52,7 +52,7 @@ def setup_polling(stack, tmp_path, *, config=None, ceiling='10', clock=None):
     costs.configure_ceiling('recent-x', OPERATOR, amount=ceiling, currency='USD', period_start=START, period_end=PERIOD_END)
     poller = RecentPolling(recent, config=config, workers=frozenset({WORKER.actor_id}))
     poller.migrate()
-    poller.activate('cushion', OPERATOR, expected_topic_version=1, first_window_end=END, request_id='activate-1')
+    poller.activate('cushion', OPERATOR, expected_topic_version=1, first_window_end=window_end, request_id='activate-1')
     return recent, poller, costs
 
 
@@ -361,8 +361,13 @@ def test_live_selected_copies_inherit_current_recent_lifecycle(stack, tmp_path, 
     from smi_monitoring.promotion import MonitoringPromotion
     from smi_knowledge import KnowledgePublications
     from test_recent_monitoring import POLICY
-    recent, poller, costs = setup_polling(stack, tmp_path, config=enabled())
-    boundary(monkeypatch, [(200, response())])
+    # Promotion crosses into ingestion, whose retention clock is the real wall
+    # clock. Keep the prepared source eligible before exercising its later loss.
+    now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+    recent, poller, costs = setup_polling(stack, tmp_path, config=enabled(),
+        clock=lambda: now + timedelta(minutes=1), window_end=now.isoformat())
+    item = {**response()['data'][0], 'created_at': (now - timedelta(minutes=90)).isoformat()}
+    boundary(monkeypatch, [(200, response(data=[item]))])
     result = poller.run_due(WORKER)
     window = recent.read_window(result['window_id'], READER)
     promotion = MonitoringPromotion(recent, stack[1])
@@ -377,7 +382,7 @@ def test_live_selected_copies_inherit_current_recent_lifecycle(stack, tmp_path, 
     elif change == 'retention':
         recent.set_policy({**POLICY, 'can_retain': False}, OPERATOR, expected_version=1)
     else:
-        recent.clock = lambda: NOW + timedelta(hours=25)
+        recent.clock = lambda: now + timedelta(hours=25)
         assert recent.timeline('cushion', READER)['observations'][0]['body'] is None
     # Direct KB read, without reopening a promotion or window, honors the parent.
     assert KnowledgePublications(stack[0]).read(publication_id, READER)['members'][0]['availability'] == 'unavailable'
