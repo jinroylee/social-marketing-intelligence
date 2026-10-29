@@ -1,0 +1,175 @@
+b75b8b6 chore: prepare actual human review after verified software delivery
+f4fe3e1 chore: resolve integrated operational ticket 38
+9ec2a6a chore: record ticket 38 frozen verification and artifact identity
+0132bce Merge branch 'integration/operational-tickets-11-39' into smi/operational-ticket-38
+b195f28 feat: add governed operational quality review packets
+e830d3a chore: record operational review packet draft findings
+05dcbee chore: start ticket 38 after verified operational lineage
+3e44b9e chore: resolve integrated operational ticket 37
+7b4948b docs: record ticket 37 frozen checks and exact wheel evidence
+815fd97 feat: trace task pipeline and attributable costs through public owners
+4af89d2 chore: start ticket 37 after verified bounded traversal
+66d1785 chore: resolve integrated operational ticket 36
+4035859 docs: record ticket 36 frozen verification and artifact proof
+fcb0b7d feat: add bounded governed graph traversal
+3de24df chore: start ticket 36 after verified graph projection
+8b6ab47 chore: resolve integrated operational ticket 35
+bd5dca9 Record ticket 35 frozen verification and exact wheel handoff
+bf526f6 Merge branch 'integration/operational-tickets-11-39' into smi/operational-ticket-35
+324ee32 Add governed one-hop knowledge graph search and detail
+d5bb24a chore: record graph provenance review findings
+dbd4cf9 chore: start ticket 35 after verified recent X route
+d9a3c91 chore: resolve integrated operational ticket 34
+979201b Record ticket 34 frozen gate and exact wheel evidence
+e94a226 Merge branch 'integration/operational-tickets-11-39' into smi/operational-ticket-34
+94a0e33 Add gated coordinated recent X topic polling
+b87862c chore: record recent source rate review requirement
+7f07aaa chore: record live polling draft review findings
+b4d73b8 chore: start ticket 34 after verified monitoring promotion
+e45709c chore: resolve integrated operational ticket 33
+3f9d105 Record ticket 33 frozen gate and exact wheel evidence
+48cc805 Merge branch 'integration/operational-tickets-11-39' into smi/operational-ticket-33
+67c58b6 Promote selected recent X captures with inherited source lifecycle
+8a519ff chore: preserve completed worker verification archives
+4c3dcf8 Claim selected monitoring promotion ticket 33
+e7a65d3 Start ticket 33 after verified local alert context
+da1fe04 chore: resolve integrated operational ticket 32
+2befbb4 Record ticket 32 frozen verification and artifact handoff
+91d995b Explain retained X alerts with pinned existing KB context
+0ae58b4 Start ticket 32 after verified semantic alerts
+f4c299e chore: resolve integrated operational ticket 31
+c3d85e2 Record ticket 31 frozen verification and claimed handoff
+bd1c085 Detect bounded provisional quality controversy in recent X evidence
+252b9ff Start ticket 31 after verified quantitative alerts
+3df52a5 chore: resolve integrated operational ticket 30
+c9d456f Record ticket 30 frozen validation and exact wheel handoff
+2132df9 Add configured X volume assessments and retained local alerts
+6001848 Start ticket 30 after verified recent X integration
+e435cab chore: resolve integrated operational ticket 29
+80c3329 Record verified recent X evidence handoff and exact wheel
+51ce0ae Merge current integration before ticket 29 verification freeze
+4aa3535 Collect bounded offline recent X monitoring evidence
+2e037cf Record recent X capture identity review and repair
+fd93362 Claim ticket 29 recent X evidence collection
+6277575 Start ticket 29 after verified assistant enrichment
+73f3bd3 chore: resolve integrated operational ticket 28
+379f221 Record ticket 28 frozen verification and exact wheel manifest
+1d0c137 Merge branch 'integration/operational-tickets-11-39' into smi/operational-ticket-28
+d9d3276 Compose assistant knowledge gaps into exact approved enrichment
+ffe8091 Record resumed enrichment recovery review and repair
+d0168ad Claim assistant enrichment journey ticket 28
+1d38a3e Start ticket 28 after verified assistant integration
+22df1c2 chore: resolve integrated operational ticket 27
+c37f76a Record ticket 27 frozen verification and exact wheel manifest
+6110c01 Answer bounded knowledge questions with exact permitted support
+a96bb2a Record assistant dispatch permission review finding
+47ba4be Start ticket 27 after verified supplementation integration
+9ee261f chore: resolve integrated operational ticket 26
+ca4bd0a Record ticket 26 frozen shared gate and exact wheel evidence
+c461a49 Supplement one explicitly approved missing nickname under parent limits
+1ee8d8d Record ticket 26 authority and response review findings
+7459d1a Record resume audit and restore ticket 26 workspace
+6a43ec7 Start ticket 26 after bounded live schedule validation
+b0cc34c chore: resolve integrated operational ticket 25
+1c167a9 Align live route summaries with recorded schedule activation
+f89ad86 Record ticket 25 frozen verification and claimed handoff
+df3b652 Activate explicitly recorded bounded live keyword schedules
+2deb42a Start ticket 25 after verified live route integration
+d000614 chore: resolve integrated operational ticket 24
+9e9b604 Record ticket 24 frozen validation and wheel evidence
+7308c5c Keep malformed retry delays within bounded source uncertainty
+c084df4 Enable explicitly gated bounded TikTok keyword discovery
+54accd5 chore: start verified on-demand discovery route ticket
+4617ad2 chore: resolve integrated operational ticket 23
+74ac599 Record ticket 23 frozen validation and artifact evidence
+195eb27 Avoid redundant offline discovery with capture-based history
+562b1d4 chore: start discovery retrieval history ticket
+ce0decd chore: resolve integrated operational ticket 22
+5cc5aa2 chore: record shared daily post allowance verification
+cfceca2 fix: expose scheduled allowance before first daily tick
+41e10cb feat: atomically enforce shared scheduled new-post allowance
+f058bd7 chore: start shared daily post allowance ticket
+aeb52aa chore: resolve integrated operational ticket 21
+dbadd45 chore: record registered schedule verification
+b027f0f Merge branch 'integration/operational-tickets-11-39' into smi/operational-ticket-21
+de7d012 feat: acknowledge registered offline keyword schedules
+ed08e02 chore: start sequential offline keyword schedules ticket
+2ead234 chore: resolve integrated operational ticket 20
+b22bdf3 docs: record explicit regeneration validation evidence
+44409a4 Merge branch 'integration/operational-tickets-11-39' into smi/operational-ticket-20
+c81b5e0 feat: offer explicit campaign regeneration after discovery
+b31a660 chore: start sequential explicit regeneration ticket
+bb61a6a chore: resolve integrated operational ticket 19
+4c2d844 chore: record ticket 19 frozen checks and wheel evidence
+c1fdf76 Merge branch 'integration/operational-tickets-11-39' into smi/operational-ticket-19
+f715f41 feat: queue bounded discovery for saved campaign coverage needs
+c8b2854 chore: start sequential coverage discovery ticket
+adf83ac chore: resolve integrated operational ticket 18
+6f8668e Record verified offline discovery ticket evidence
+46ac459 Merge branch 'integration/operational-tickets-11-39' into smi/operational-ticket-18
+4255116 Implement bounded approved offline keyword discovery
+7f4f4da chore: start sequential offline discovery ticket
+3335900 chore: resolve integrated operational ticket 17
+4a87984 chore: record optional curation verification
+9fc164f Merge branch 'integration/operational-tickets-11-39' into smi/operational-ticket-17
+f6c0380 feat: allow attributed optional shortlist curation
+f553570 chore: start sequential optional curation ticket
+501a3f7 chore: resolve integrated operational ticket 16
+650950b Record supported ranking validation and completion evidence
+285d7b2 Rank supported campaign candidates through bounded metered assessment
+de8d631 chore: start sequential supported model ranking ticket
+badc560 chore: resolve integrated operational ticket 15
+5672360 docs: record automatic shortlist validation
+a80da4d feat: automatically save attributed ordered shortlists
+7f99264 chore: start sequential automatic shortlist ticket
+d0e71f8 chore: resolve integrated operational ticket 14
+b9f371d feat: compare supported accounts from current knowledge
+f2969b7 chore: start sequential current-knowledge comparison ticket
+d1cab87 chore: resolve integrated operational ticket 13
+2420af1 feat(campaigns): interpret criteria through a bounded metered Responses route
+7a35bb9 chore: track provider adapter gap before ticket completion
+8b0830a chore: start sequential metered criteria ticket
+6cd91e1 chore: resolve integrated operational ticket 12
+7d42792 feat(campaigns): save executable criteria with brief revisions
+e7ef85a chore: start sequential campaign criteria ticket
+b6c78c9 chore: resolve integrated operational ticket 11
+e31e823 feat: reconcile final synthetic charges and recover failed meters
+98fe0e6 docs: record primary-documentation-only authorization
+c78cc3a chore: approve and configure remaining operational tickets
+532e607 chore: finalize validated first ten tickets and review cleanup
+0bb62ae chore: record integrated final review validation
+4575fd0 chore: record validated review repair commit
+0831737 fix: preserve task ownership and recoverable form state
+bf41d05 chore: record independent baseline review findings
+c48ec5d chore: start final baseline review for tickets 01 through 10
+e16459b chore: resolve integrated operational ticket 10
+ce86f8c feat: enforce shared bounded synthetic spending admission
+99a15c2 chore: start ticket 10 after validated usage accounting
+b577e80 chore: resolve integrated operational ticket 09
+02f931f feat: record attributable synthetic usage and cost forecasts
+97ebdc6 chore: start ticket 09 after validated completion inbox
+501984b chore: resolve integrated operational ticket 08
+9675456 feat: deliver durable policy-aware task completion inbox
+6527b5b chore: start ticket 08 after validated worker coordination
+7333c9a chore: resolve integrated operational ticket 07
+b8c2329 feat(tasks): fence competing workers with owned effect transactions
+0cb10a0 chore: start ticket 07 after validated recovery
+a78934e chore: resolve integrated operational ticket 06
+19b6540 feat(tasks): recover bounded acquisition attempts and partial updates
+b996cf9 chore: start ticket 06 after validated approvals
+cc885d0 chore: resolve integrated operational ticket 05
+7ba1c46 feat: approve exact supplied enrichment proposals
+659b151 chore: start ticket 05 after validated offline tasks
+0bb27aa chore: resolve integrated operational ticket 04
+a27b433 feat: run campaign-authorized offline acquisition tasks
+d92a75b chore: start ticket 04 after validated knowledge queries
+c6bf5ac chore: resolve integrated operational ticket 03
+e3e55d3 feat: search published knowledge with exact result manifests
+a28ea0a chore: start ticket 03 after validated publication support
+42d340b chore: resolve integrated operational ticket 02
+09f3d18 feat: publish exact permitted ingested support
+7ba1a79 chore: start ticket 02 after validated ingestion repair
+02752ab chore: resolve integrated operational ticket 01
+11bc6cb fix: persist ingestion completion with compatible evidence saves
+e3711cf chore: start approved sequential ticket execution
+a2187ff docs: approve and configure sequential operational tickets 01-10

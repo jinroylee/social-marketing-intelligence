@@ -10,7 +10,7 @@ Prepare ticket 39 in its fresh validation context: verify available permitted ex
 
 ## Current Phase
 
-Phase 43 — ticket 39 preparation in progress after successful ticket 38 software integration; actual human-review prerequisites remain unmet. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 43 — actual human-review preparation and Phase 44 independent technical reviews in progress; software 01–38 is integrated and human prerequisites remain unmet. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -302,6 +302,6 @@ Fresh implementer context/worktree; public TDD; exact acceptance and external pr
 
 ### Phase 44 — Continuation final standards/spec review and cleanup
 
-**Status:** pending
+**Status:** in_progress
 
 Review against the original starting baseline, address findings in one fresh implementer context, verify integration, and report completed work plus genuine external blockers. Before removing clean merged implementer worktrees, archive retained worker logs, wheels, manifests and verifiers in the root persistent verification directory with identity/hash checks and a relocation index; keep historical original paths truthful and record usable current locations. Then remove clean merged worktrees without discarding verification evidence.
