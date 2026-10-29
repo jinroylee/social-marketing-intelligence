@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Ticket 39 / Phase 43 is pending after tickets 11–38 integration and resolution. It requires a named actual human reviewer, permitted reviewed examples and actual feedback, times, attributable translation/original-language adjudication and usefulness evidence. Agent output or software fixtures cannot substitute. Preserve all completed evidence; the merger has not started ticket 39 or final reviews.
+Prepare ticket 39 in its fresh validation context: verify available permitted examples and create a concrete handoff for actual named-human review. Tickets 11–38 are integrated and resolved. Do not fabricate reviewer input, translations, baseline/times or quality judgments; finish independent technical reviews against the original baseline while real human prerequisites are obtained.
 
 ## Current Phase
 
-Phase 43 — ticket 39 pending after successful ticket 38 software integration; actual human-review prerequisites remain unmet. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 43 — ticket 39 preparation in progress after successful ticket 38 software integration; actual human-review prerequisites remain unmet. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -296,7 +296,7 @@ Fast-forward integrated final handoff/root checked `9ec2a6a6e36562549979b8f28b20
 
 ### Phase 43 — Implement ticket 39
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
