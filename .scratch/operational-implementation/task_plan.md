@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Ticket 38 / Phase 42 is pending and ready for fresh root dispatch: prepare and validate operational quality review packets. Tickets 11–37 are integrated and resolved. Preserve real human-review prerequisites and all completed evidence; the merger has not started ticket 38.
+Implement ticket 38 in its fresh context/worktree: bounded operational review packets, attributed record/reopen and current support checks for recommendation, KB answer and semantic alert. Tickets 11–37 are integrated and resolved. Actual human inputs stay pending; this software ticket cannot establish human quality.
 
 ## Current Phase
 
-Phase 42 — ticket 38 pending after successful ticket 37 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 42 — ticket 38 in progress after successful ticket 37 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -290,7 +290,7 @@ Fast-forward integrated final handoff/root checked `7b4948bdb4b6b8209f650e344ce5
 
 ### Phase 42 — Implement ticket 38
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
