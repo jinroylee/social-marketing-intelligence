@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-All approved source/test corrections are integrated and independently verified (current root 903/635.98s, exit0). Root performs final retained-evidence replay, final active-worker cleanup and reporting. Original source-review closure and all intermediate gates/artifacts remain preserved. Ticket 39 stays claimed/ready-for-human awaiting the existing actual-input request; overall objective remains incomplete. No further fixture audits or source/test work are planned in this run.
+Ticket 39 requires actual named-human review using permitted examples. Software tickets 01–38, final technical reviews, test-fixture corrections, evidence preservation and worktree cleanup are complete. Follow reports/ticket-39-handoff.md when actual inputs arrive; no human-quality result or overall completion is claimed.
 
 ## Current Phase
 
-Phase 43 — pending actual human inputs; Phase 44 all approved technical review/fix and final fixture verification complete, final active-worker cleanup/report pending with root. Software 01–38 and final corrections are integrated; ticket 39 and the overall objective remain incomplete. Original source-review closure and historical evidence are preserved.
+Phase 43 pending actual human inputs; Phase 44 complete. Only the integration worktree remains, with branch refs and available evidence preserved. Overall objective awaits ticket 39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -302,18 +302,10 @@ Preparation-only handoff `45e623ea1eb52ed75c30dc438b459c63a28f95c8` is integrate
 
 ### Phase 44 — Continuation final standards/spec review and cleanup
 
-**Status:** in_progress
+**Status:** complete
 
-**Approved technical review/fix and final fixture verification:** complete.
+Original-baseline Standards review closed 3 documented findings plus 1 heuristic; Spec closed its overlapping ranking finding. Both original reviewers independently closed source runtime `7418e5bc0af72d70017b5eb612dcd2c37f265c57`. Initial source-fix worker/root gates passed 903/621.51s and 903/624.14s and remain preserved. The later expired live-promotion fixture was corrected at a70341a9, with worker/root gates 903/625.37s and 903/641.63s preserved. Shared cost-period and one runtime-meter attestation fixture were corrected at ecc011fd; compatibility 170/124.67s, final worker 903/639.58s and independent final root **903/635.98s**, exit 0/session 88182, passed. Corrected protected freeze is `99539925af5fd6c619e9eec04fc249ecab7a6cc5`, final checked handoff `46321bfa577653104e1868dd76d37f121106b829`; application source is unchanged from the reviewed runtime.
 
-**Cleanup/reporting:** final active worker remains pending with root; prior archives and usable retained copies are preserved.
+All 211 packaged pairs and 344 protected identities match the retained wheel/snapshot. Seventeen archives / 583 retained members are verified, all 15 available clean merged worker worktrees removed without force, 15 known missing registrations pruned, all branch refs retained, and the latest retained verifier replayed successfully after removal. Only the integration worktree remains. See reports/continuation-final.md and reports/worker-artifact-relocation.md for exact commits, gate logs, identities and historical missing-artifact limits.
 
-Original source runtime `7418e5bc0af72d70017b5eb612dcd2c37f265c57` remains independently closed on both axes: Standards 3 documented findings plus 1 heuristic, Spec 1 overlapping ranking finding, four unique work items total. Original reviewer closure, global resolved checklist and historical 903/624.14s review-fix and 903/641.63s temporal root gates remain unchanged. The prior pending cost-fixture assessment is now resolved by this final authorized correction.
-
-Authorized fixture implementation `ecc011fd647c531d78aefdacf966b91eeb2f1578` changes only `tests/test_costs.py` and `tests/test_cost_reconciliation.py`: pin shared END once at current UTC+365 days while retaining historical START/MEASURED and existing boundary/inactive tests; derive stable reconciliation/recovery attestations from the public runtime failure measured_at and reuse them for exact retries. Frozen merge `99539925af5fd6c619e9eec04fc249ecab7a6cc5` includes root metadata `70000cdc32fedca8014bd677f594e0d216819e63`. Source/docs/tools remain exactly `7418e5bc0af72d70017b5eb612dcd2c37f265c57`; the cumulative protected difference from that runtime is only these two tests plus the earlier `tests/test_live_recent.py` correction.
-
-Required independent root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed all static/documentation/preflight stages and **903 tests in 635.98 seconds**, exit **0**, session **88182**, checked `46321bfa577653104e1868dd76d37f121106b829` (started `2026-10-29T15:16:03.760911+00:00`, finished `2026-10-29T15:26:40.512290+00:00`). This is the single required root gate for the final corrected test tree; prior completed passing gates were not rerun. Worker **903/639.58s** and compatibility **170/124.67s** remain preserved.
-
-Retained current wheel is **450808 bytes / 215 unique entries / SHA-256 `de6929ea94473a7c20961f1776d0fed742c02edda62f6c0d37dc2bf64c23fc8a`**. All **211** packaged pairs, zero correction-range packaged changes, all **174** original-review-range changed packaged paths, **19** SQL schemas, **2** assets, **33** packaged/**35** total relative guidance pairs and all **344** new frozen protected identities match integrated root. Packaged runtime and wheel bytes remain identical; corrected test identities are pinned in the new freeze. The final cost-fixture archive is independently verified: **440918 bytes / 26 members / SHA-256 `c3ae3aca48b405ed4393d59257ae8ed9c87c2889e81cd5da0e90ed68fb00496a`**. Every member matches its original and usable retained copy. Current artifact metadata uses `verification/retained-workers/final-cost-fixtures/`; original build paths remain historical provenance. Existing archive/index/relocation records are unchanged by merger work. Root owns removal of the final active worker and final reporting. Exact current execution/artifact/freeze/archive evidence is retained under `.scratch/operational-implementation/verification/final-cost-fixtures-integrated/`. No further source/test correction, compatibility/gate repetition, fixture hunting or independent review is required for this approved work. Root finishes cleanup/reporting.
-
-Ticket 39 remains claimed/ready-for-human with six unchecked criteria and actual named reviewer/permitted result corpus/baseline/timing/translations/feedback still absent. The existing user input request is pending. No human-quality, Japanese-original accuracy, live-readiness or whole-objective completion is established.
+Ticket 39 remains claimed / ready-for-human with six unchecked criteria. Named reviewer, permitted examples, actual baseline/times/translations/feedback and qualified original-language adjudication remain external inputs. Live source/model execution remains disabled; overall objective is incomplete.
