@@ -1,11 +1,15 @@
 """Synthetic accounting through public operations and local cost detail."""
 
+from datetime import datetime, timedelta, timezone
+
 from smi_tasks import OfflineTaskWorker
 from test_tasks import HUMAN, WORKER, setup_task, submit
 
 
 START = '2026-10-01T00:00:00+00:00'
-END = '2026-11-01T00:00:00+00:00'
+# Shared admission uses real time; every scope/ceiling in this process pins the
+# same future boundary while the historical measurement dates remain fixed.
+END = (datetime.now(timezone.utc) + timedelta(days=365)).isoformat()
 MEASURED = '2026-10-20T12:00:00+00:00'
 
 

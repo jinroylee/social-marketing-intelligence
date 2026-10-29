@@ -97,6 +97,8 @@ def recover(costs, oid, *, recovery_id='health-1', failure_ids=(), **changes):
 
 
 def test_failed_meter_requires_final_accounting_and_attributed_recovery_even_over_ceiling(stack, tmp_path):
+    from datetime import datetime, timedelta
+
     tasks, _, _, _ = setup_task(stack, tmp_path)
     costs = accounting(tasks)
     ceiling(costs, '0.25')
@@ -110,10 +112,16 @@ def test_failed_meter_requires_final_accounting_and_attributed_recovery_even_ove
     with pytest.raises(EvidenceError, match='synthetic_service_bound_violated'):
         adapter.execute(WORKER, request_id='broken', method='v1', call=broken)
     oid = costs.list(HUMAN)[0]['operation_id']
-    failure_id = costs.read(oid, HUMAN)['entries'][0]['measurement_id']
+    failure = costs.read(oid, HUMAN)['entries'][0]
+    failure_id = failure['measurement_id']
+    # This entry is generated at dispatch time, unlike the historical reports in
+    # the other cases. Pin later attestations once so exact retries stay exact.
+    failure_at = datetime.fromisoformat(failure['measured_at'])
+    reconciled_at = (failure_at + timedelta(seconds=1)).isoformat()
+    recovered_at = (failure_at + timedelta(seconds=2)).isoformat()
     with pytest.raises(EvidenceError, match='cost_meter_failure_unreconciled'):
-        recover(costs, oid, failure_ids=(failure_id,))
-    final_usage(costs, oid, units='8', uncertainty_ids=(failure_id,), outcome='failed')
+        recover(costs, oid, failure_ids=(failure_id,), recovered_at=recovered_at)
+    final_usage(costs, oid, units='8', uncertainty_ids=(failure_id,), outcome='failed', reconciled_at=reconciled_at)
     view = costs.read(oid, HUMAN)
     assert view['actuals']['amount'] == '1'
     assert view['allowance']['outstanding_amount'] == '0'
@@ -123,9 +131,9 @@ def test_failed_meter_requires_final_accounting_and_attributed_recovery_even_ove
     assert view['limits']['bound_status'] == 'violated'
     assert adapter.execute(WORKER, request_id='blocked', method='v1', call=broken)['reason'] == 'cost_coverage_unavailable'
     all_failures = tuple(view['unresolved']['meter_failure_ids'])
-    assert recover(costs, oid, failure_ids=all_failures)['status'] == 'recorded'
+    assert recover(costs, oid, failure_ids=all_failures, recovered_at=recovered_at)['status'] == 'recorded'
     reopened = UsageAccounting(tasks.db)
-    assert recover(reopened, oid, failure_ids=all_failures)['status'] == 'duplicate'
+    assert recover(reopened, oid, failure_ids=all_failures, recovered_at=recovered_at)['status'] == 'duplicate'
     assert reopened.read(oid, HUMAN)['coverage']['unknown_cost'] is False
     assert adapter.execute(WORKER, request_id='still-exhausted', method='v1', call=broken)['reason'] == 'cost_allowance_exhausted'
     ceiling(costs, '2')
