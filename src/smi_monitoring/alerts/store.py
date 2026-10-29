@@ -148,6 +148,22 @@ class QuantitativeAlerts:
         unavailable = 'source_support_unavailable' in limitations or 'source_support_unavailable' in process_limits
         if unavailable or row['outcome'] == 'not_assessable':
             comparison = None
+        # Alert evidence requires both purposes. Independent recent display reads
+        # retain their own narrower permission contract.
+        for name, window in windows.items():
+            if window is None:
+                continue
+            permitted = all(window['current_permissions'].values())
+            process_records = {o['observation_id']: o for o in processing[name]['observations']}
+            observations = []
+            for observation in window['observations']:
+                processed = process_records[observation['observation_id']]
+                if not permitted or processed['body'] is None:
+                    observation = {**observation, 'body': None,
+                        'state': observation['state'] if observation['body'] is None else
+                            processed['state'] if processed['body'] is None else 'permission_denied'}
+                observations.append(observation)
+            windows[name] = {**window, 'support_permitted': permitted, 'observations': observations}
         return {'assessment_id': str(row['id']), 'alert_id': str(row['alert_id']) if row['alert_id'] else None,
                 'notification_id': str(row['notification_id']) if row['notification_id'] else None,
                 'outcome': row['outcome'], 'current_support': 'unavailable' if unavailable else 'available',

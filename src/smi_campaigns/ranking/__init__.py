@@ -84,9 +84,9 @@ def validate(response: dict, inputs: dict) -> dict:
                 'reason': 'model_refusal' if str(error) == 'model_refusal' else 'ranking_output_invalid_or_unsupported'}
 
 
-def execute(route, transport, credential, accounting, actor, assessment_id, inputs, attach_operation):
+def execute(route, transport, credential, accounting, actor, assessment_id, inputs, attach_operation, *, dispatch_guard):
     """Use the same bounded provider admission and settlement as criteria interpretation."""
     return execute_request(route, transport, credential, accounting, actor,
         operation_request=f'ranking:{assessment_id}', method_version=METHOD_VERSION,
         request=request_document(route, inputs), validate=lambda response: validate(response, inputs),
-        attach_operation=attach_operation)
+        attach_operation=attach_operation, dispatch_guard=dispatch_guard)

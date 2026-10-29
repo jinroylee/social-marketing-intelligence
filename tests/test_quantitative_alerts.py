@@ -98,6 +98,33 @@ def test_empty_window_denied_policy_cannot_be_claimed_as_zero_activity(stack, tm
     assert result['comparison'] is None
 
 
+def test_process_denial_withholds_nested_alert_evidence_and_http_but_preserves_standalone_display(stack, tmp_path, campaigns):
+    from smi_review import ReviewApp
+    from test_recent_monitoring import POLICY
+    from test_review import request, running
+
+    recent, baseline, detection = collect_pair(stack, tmp_path)
+    owner = alerts(recent)
+    saved = owner.detect(detection, baseline, OPERATOR, request_id='process-denial')
+    recent.set_policy({**POLICY, 'can_process': False}, OPERATOR, expected_version=1)
+    for reopened in (owner.read_alert(saved['alert_id'], READER),
+                     owner.read_assessment(saved['assessment_id'], READER), owner.history(READER)[0]):
+        assert reopened['outcome'] == 'significant_change'
+        assert reopened['alert_id'] == saved['alert_id'] and reopened['notification_id'] == saved['notification_id']
+        assert reopened['current_support'] == 'unavailable' and reopened['comparison'] is None
+        assert all(o['body'] is None and o['state'] == 'permission_denied'
+            for w in reopened['windows'].values() for o in w['observations'])
+        assert all(not w['support_permitted'] for w in reopened['windows'].values())
+    assert owner.notifications(READER)[0]['current_support'] == 'unavailable'
+    assert recent.read_window(detection, READER)['observations'][0]['body']['text'] == 'A cushion <sample>'
+    with running(ReviewApp(stack[0], READER.actor_id, monitoring_clock=recent.clock)) as url:
+        for path in ('/monitoring/assessments/' + saved['assessment_id'], '/monitoring/alerts/' + saved['alert_id']):
+            status, _, page = request(url, path=path)
+            assert status == 200 and 'unavailable' in page.lower()
+            assert 'A cushion' not in page and '1 → 4' not in page
+        assert 'A cushion &lt;sample&gt;' in request(url, path='/monitoring/windows/' + detection)[2]
+
+
 def test_http_detection_inbox_restart_and_withdrawal_keep_current_evidence_governed(stack, tmp_path, campaigns):
     from smi_review import ReviewApp
     from test_review import form, request, running

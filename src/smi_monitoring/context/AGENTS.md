@@ -2,7 +2,7 @@
 
 Own `AlertInvestigations`: one immutable bounded KB selection beside a quantitative or provisional semantic alert. Read [the context contract](../../../docs/monitoring.md#existing-kb-alert-investigations) and [ADR 0021](../../../docs/adr/0021-pinned-local-alert-context.md) before changing selection, dependencies or explanation lifecycle.
 
-Compose only public `QuantitativeAlerts.read_alert`, `SemanticAlerts.read_alert` and `KnowledgeQueries` operations in one caller transaction. Each sibling owns its SQL. Recent policy locks and KB source/derivation/publication locks last through dependent local commit. Acquire recent authority before investigation row locks. No transaction spans external I/O.
+Compose only public `QuantitativeAlerts.read_alert`, `SemanticAlerts.read_alert` and `KnowledgeQueries` operations in one caller transaction. Each sibling owns its SQL. Recent policy locks and KB source/derivation/publication locks last through dependent local commit. For `investigate`, acquire the public knowledge frontier before reading alert/recent authority, then investigation locks and query/source locks. Promotion uses the same frontier-before-recent order. Saved reads require recent authority before investigation row locks and reopen only immutable query membership. No transaction spans external I/O.
 
 Use frozen detection-topic wording as one literal cross-platform query, limited to 20 members of the query owner's bounded committed-publication scan. Pin its result ID and all original window/capture IDs. Exact workspace/request identity includes alert kind/ID, actor, method and synthetic selection; new requests alone may select newer publications. Empty results retain an explicit gap.
 

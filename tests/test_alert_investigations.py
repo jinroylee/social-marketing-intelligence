@@ -151,6 +151,8 @@ def test_recent_dependency_loss_withholds_explanation_permanently_but_keeps_line
     assert denied['explanation'] is None and denied['explanation_withheld'] is True
     assert denied['recent_dependencies'] == saved['recent_dependencies']
     assert denied['knowledge_context']['manifest'] == saved['knowledge_context']['manifest']
+    windows = denied['recent_evidence']['windows'].values() if kind == 'quantitative' else [denied['recent_evidence']['window']]
+    assert all(o['body'] is None for window in windows for o in window['observations'])
     recent.set_policy(POLICY, OPERATOR, expected_version=2)
     assert owner.investigate(kind, alert['alert_id'], READER, request_id='saved')['explanation'] is None
 
@@ -343,3 +345,67 @@ def test_source_mutation_waits_for_context_commit_then_withholds_explanation(ale
         assert blocked, 'source mutation escaped dependent context commit'
     assert saved['explanation'] is not None
     assert owner.read(saved['investigation_id'], READER)['explanation'] is None
+
+
+@pytest.mark.parametrize('kind', ['quantitative', 'semantic'])
+def test_investigation_and_promotion_complete_concurrently_with_atomic_policy_inheritance(stack, tmp_path, kind):
+    from concurrent.futures import ThreadPoolExecutor
+    from datetime import timedelta
+    import time
+    from smi_knowledge import KnowledgePublications
+    from smi_monitoring.alerts import QuantitativeAlerts, VolumeThreshold
+    from smi_monitoring.context import AlertInvestigations
+    from test_monitoring_promotion import prepared
+    from test_recent_monitoring import POLICY, fixture_route
+    from test_semantic_alerts import semantic
+
+    recent, promotion, window = prepared(stack, tmp_path)
+    if kind == 'quantitative':
+        end = recent.clock() - timedelta(hours=2)
+        recent.route = fixture_route(tmp_path, [{'capture_id': 'baseline', 'native_id': '1', 'text': 'cushion baseline',
+            'published_at': (end - timedelta(minutes=90)).isoformat(),
+            'captured_at': (end - timedelta(hours=1)).isoformat(), 'metric_measured_at': None, 'metrics': {}}])
+        baseline = recent.poll('cushion', end.isoformat(), OPERATOR)['window_id']
+        detector = QuantitativeAlerts(recent, threshold=VolumeThreshold(1, 1, 2), clock=recent.clock)
+        detector.migrate()
+        alert = detector.detect(window['window_id'], baseline, OPERATOR, request_id='volume')
+    else:
+        detector, _, model = semantic(recent)
+        alert = detector.detect(window['window_id'], OPERATOR, request_id='semantic')
+        model.on_call = lambda: pytest.fail('Context/promotion must not invoke the model')
+    owner = AlertInvestigations(recent)
+    owner.migrate()
+
+    def blocked_by(gate, pid):
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            gate.execute('SELECT pg_stat_clear_snapshot()')
+            row = gate.execute('SELECT pid FROM pg_stat_activity WHERE %s=ANY(pg_blocking_pids(pid))', (pid,)).fetchone()
+            if row:
+                return row['pid']
+            time.sleep(0.01)
+        raise AssertionError('public operation did not reach the coordinated lock wait')
+
+    with stack[0].connect() as gate, ThreadPoolExecutor(max_workers=2) as pool:
+        gate.execute('SELECT pg_advisory_xact_lock(hashtext(%s))', ('alert-context:local',))
+        investigation = pool.submit(owner.investigate, kind, alert['alert_id'], READER, request_id='concurrent')
+        try:
+            context_pid = blocked_by(gate, gate.info.backend_pid)
+            promoted = pool.submit(promotion.promote, window['window_id'],
+                (window['observations'][0]['observation_id'],), OPERATOR, request_id='concurrent')
+            blocked_by(gate, context_pid)
+        finally:
+            gate.commit()
+        context = investigation.result(timeout=8)
+        result = promoted.result(timeout=8)
+    assert result['status'] == 'published'
+    assert context['explanation'] is not None
+    assert owner.read(context['investigation_id'], READER)['knowledge_context']['manifest'] == context['knowledge_context']['manifest']
+    publication_id = result['items'][0]['publication_id']
+    publications = KnowledgePublications(stack[0])
+    assert publications.read(publication_id, READER, include_synthetic=True)['members'][0]['availability'] == 'available'
+    recent.set_policy({**POLICY, 'can_process': False}, OPERATOR, expected_version=1)
+    assert owner.read(context['investigation_id'], READER)['explanation'] is None
+    assert publications.read(publication_id, READER, purpose='process', include_synthetic=True)['members'][0]['availability'] == 'unavailable'
+    assert promotion.promote(window['window_id'], (window['observations'][0]['observation_id'],),
+        OPERATOR, request_id='concurrent') == result

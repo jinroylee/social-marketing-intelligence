@@ -8,7 +8,7 @@ from typing import Literal
 from psycopg.types.json import Jsonb
 
 from smi_ingestion.evidence_sets import ActorContext
-from smi_knowledge import KnowledgeQueries, QueryScope
+from smi_knowledge import KnowledgePublications, KnowledgeQueries, QueryScope
 from smi_monitoring.alerts import QuantitativeAlerts
 from smi_monitoring.contracts import require
 from smi_monitoring.recent import RecentMonitoring
@@ -34,6 +34,7 @@ class AlertInvestigations:
         self.quantitative = QuantitativeAlerts(recent)
         self.semantic = SemanticAlerts(recent)
         self.queries = KnowledgeQueries(self.db, self.workspace_id)
+        self.publications = KnowledgePublications(self.db, self.workspace_id)
 
     def migrate(self) -> None:
         """Install the source-free context manifest after the owning reader schemas."""
@@ -65,6 +66,9 @@ class AlertInvestigations:
         digest = fingerprint({'kind': kind, 'alert': alert_id, 'actor': actor.actor_id,
             'actor_kind': actor.kind, 'synthetic': include_synthetic, 'method': self.method_version})
         with self.db.connect() as connection:
+            # Search and promotion both compose the frontier before recent policy;
+            # acquiring it after the alert read would invert promotion's order.
+            self.publications.lock_current(actor, connection=connection)
             alert = self._alert(connection, kind, alert_id, actor)
             connection.execute('SELECT pg_advisory_xact_lock(hashtext(%s))', (f'alert-context:{self.workspace_id}',))
             row = connection.execute('SELECT * FROM monitoring_alert_investigations WHERE workspace_id=%s AND request_id=%s', (self.workspace_id, request_id)).fetchone()

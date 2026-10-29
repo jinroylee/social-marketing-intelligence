@@ -246,6 +246,110 @@ def test_provider_io_holds_no_database_lock_and_changed_support_or_heads_cannot_
     assert len(transport.calls) == 1
 
 
+@pytest.mark.parametrize('change', ['withdrawal', 'supersession', 'expiry'])
+def test_changed_prepared_inputs_refuse_ranking_after_cost_contention_without_liability(stack, monkeypatch, change):
+    from concurrent.futures import ThreadPoolExecutor
+    from datetime import datetime, timedelta, timezone
+    import time
+    from smi_ingestion.canonical import CanonicalWriter
+    from smi_ingestion.contracts import ExternalKey, FieldCandidate, NormalizedBatch, SourcePolicy
+    from smi_ingestion import evidence as source_time
+
+    store, campaign, costs, transport = configured_current(stack)
+    expiry = datetime.now(timezone.utc) + timedelta(days=1)
+    _, observation = publish_account(stack, 'prepared-input', policy=SourcePolicy('local-test', True, True, True, expires_at=expiry))
+    # Hold only the accounting lock; blocker metadata observes the real admission
+    # wait after the comparison/attempt have committed, without inspecting state.
+    with store.db.connect() as gate, ThreadPoolExecutor(max_workers=1) as pool:
+        gate.execute("SELECT scope_id FROM cost_scopes WHERE workspace_id='local' AND scope_id='synthetic-model' FOR NO KEY UPDATE")
+        pending = pool.submit(rank, store, campaign)
+        try:
+            deadline = time.monotonic() + 5
+            blocked = False
+            while time.monotonic() < deadline:
+                gate.execute('SELECT pg_stat_clear_snapshot()')
+                blocked = gate.execute('SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE %s=ANY(pg_blocking_pids(pid))) AS blocked',
+                                       (gate.info.backend_pid,)).fetchone()['blocked']
+                if blocked:
+                    break
+                time.sleep(0.01)
+            assert blocked, 'ranking did not reach accounting admission'
+            assert transport.calls == []
+            if change == 'withdrawal':
+                stack[1].revoke(observation.id)
+            elif change == 'supersession':
+                key = ExternalKey('test', 'public', 'account', 'account-1')
+                CanonicalWriter(store.db).apply(observation.id, NormalizedBatch((key,), (
+                    FieldCandidate(key, 'handle', 'observed', 'corrected', '$.handle'),), ()), 'corrected:v2')
+            else:
+                class AfterExpiry(datetime):
+                    @classmethod
+                    def now(cls, tz=None):
+                        return expiry + timedelta(seconds=1)
+                monkeypatch.setattr(source_time, 'datetime', AfterExpiry)
+        finally:
+            gate.commit()
+        result = pending.result(timeout=5)
+    assert result['status'] == 'blocked' and result['reason'] == 'ranking_support_changed_before_dispatch'
+    assert result['shortlist_id'] is None and result['usage'] is None
+    assert store.read_campaign(campaign['campaign_id'], HUMAN)['shortlists'] == []
+    cost = costs.read(result['operation_id'], HUMAN)
+    assert cost['admission']['state'] == 'refused'
+    assert cost['actuals']['amount'] is None
+    assert costs.allowance('synthetic-model', HUMAN)['outstanding_amount'] == '0'
+    assert rank(CampaignStore(store.db), campaign) == result
+    assert transport.calls == []
+
+
+def test_ranking_source_guard_locks_last_through_dispatch_commit_and_release_before_model_io(stack):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+    import time
+
+    store, campaign, costs, transport = configured_current(stack)
+    _, observation = publish_account(stack, 'guarded-input')
+    entered, release = Event(), Event()
+
+    def model_wait():
+        entered.set()
+        assert release.wait(10)
+
+    transport.on_call = model_wait
+    with store.db.connect() as setup:
+        setup.execute("CREATE FUNCTION pause_ranking_dispatch() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM pg_advisory_xact_lock(937490); RETURN NEW; END $$")
+        setup.execute('CREATE CONSTRAINT TRIGGER pause_ranking_dispatch AFTER INSERT ON cost_admissions DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION pause_ranking_dispatch()')
+
+    def blocked_by(gate, pid):
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            gate.execute('SELECT pg_stat_clear_snapshot()')
+            row = gate.execute('SELECT pid FROM pg_stat_activity WHERE %s=ANY(pg_blocking_pids(pid))', (pid,)).fetchone()
+            if row:
+                return row['pid']
+            time.sleep(0.01)
+        raise AssertionError('operation did not wait for the guarded dispatch commit')
+
+    with store.db.connect() as gate, ThreadPoolExecutor(max_workers=2) as pool:
+        gate.execute('SELECT pg_advisory_xact_lock(937490)')
+        ranking = pool.submit(rank, store, campaign)
+        try:
+            ranking_pid = blocked_by(gate, gate.info.backend_pid)
+            assert transport.calls == []
+            revocation = pool.submit(stack[1].revoke, observation.id)
+            blocked_by(gate, ranking_pid)
+        finally:
+            gate.commit()
+        try:
+            assert entered.wait(5)
+            revocation.result(timeout=5)
+        finally:
+            release.set()
+        result = ranking.result(timeout=5)
+    assert result['status'] == 'stale' and result['reason'] == 'ranking_support_changed'
+    assert result['shortlist_id'] is None and len(transport.calls) == 1
+    assert costs.read(result['operation_id'], HUMAN)['actuals']['amount'] == '0.175'
+
+
 @pytest.mark.parametrize('failure', ['credential', 'ceiling', 'bounds', 'request_bytes'])
 def test_missing_config_or_shared_admission_stops_dispatch_and_retains_visible_attempt(stack, failure):
     store, campaign, costs, transport = configured_current(stack)

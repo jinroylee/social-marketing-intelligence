@@ -5,7 +5,7 @@ from smi_costs import UsageAccounting
 from smi_ingestion.evidence import EvidenceError
 from ..comparison import structured_profile
 from ..contracts import Criterion, SUPPORTED_KINDS, require
-from ..responses import ResponsesRoute, ResponsesTransport, ResponsesHTTPTransport, decode_json as _json, execute_request
+from ..responses import ResponsesRoute, ResponsesTransport, ResponsesHTTPTransport, generated_document, execute_request
 
 METHOD_VERSION = 'campaign-criteria-responses-v1'
 SCHEMA_VERSION = 'campaign-generated-criteria-v1'
@@ -35,19 +35,7 @@ def _interpret(response: dict, brief: dict, identity: dict) -> dict:
     try:
         if response.get('status') != 'completed':
             return {'status': 'incomplete', 'reason': 'model_response_incomplete'}
-        output = response['output']
-        require(isinstance(output, list) and bool(output), 'model_output_invalid')
-        contents = []
-        for item in output:
-            require(isinstance(item, dict) and item.get('type') in {'message', 'reasoning'}, 'model_output_unsupported')
-            if item['type'] == 'message':
-                require(item.get('role') == 'assistant' and item.get('status') == 'completed', 'model_output_invalid')
-                require(isinstance(item.get('content'), list), 'model_output_invalid')
-                contents.extend(item['content'])
-        if any(isinstance(item, dict) and item.get('type') == 'refusal' for item in contents):
-            return {'status': 'refused', 'reason': 'model_refusal'}
-        require(len(contents) == 1 and isinstance(contents[0], dict) and contents[0].get('type') == 'output_text', 'model_output_unsupported')
-        generated = _json(contents[0]['text'])
+        generated = generated_document(response)
         require(isinstance(generated, dict) and set(generated) == {'criteria'}, 'model_output_unsupported')
         criteria = generated['criteria']
         require(isinstance(criteria, list) and 1 <= len(criteria) <= 20, 'model_output_invalid')
@@ -67,8 +55,9 @@ def _interpret(response: dict, brief: dict, identity: dict) -> dict:
                                  'importance': 'requirement' if c['required'] else 'preference',
                                  'basis': 'model_generated'} for c in criteria]
         return {'status': 'succeeded', 'reason': None, 'executable_profile': profile}
-    except (ValueError, TypeError, KeyError, EvidenceError):
-        return {'status': 'invalid', 'reason': 'model_output_invalid_or_unsupported'}
+    except (ValueError, TypeError, KeyError, EvidenceError) as error:
+        return {'status': 'refused' if str(error) == 'model_refusal' else 'invalid',
+                'reason': 'model_refusal' if str(error) == 'model_refusal' else 'model_output_invalid_or_unsupported'}
 
 
 def execute(route: ResponsesRoute, transport: ResponsesTransport, credential: str, accounting: UsageAccounting,

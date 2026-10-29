@@ -152,6 +152,39 @@ def test_failed_generated_interpretations_remain_visible_and_account_for_consump
     assert len(transport.calls) == 1
 
 
+@pytest.mark.parametrize('shape,expected', [('reasoning', 'succeeded'), ('refusal', 'refused'),
+    ('duplicate_keys', 'invalid'), ('tool', 'invalid'), ('wrong_role', 'invalid'), ('extra_text', 'invalid')])
+def test_criteria_envelope_contract_preserves_refusal_validation_and_usage(campaigns, shape, expected):
+    store, costs, fixture = configured(campaigns)
+    created = store.start(replace(BRIEF, original_input='Prefer skincare'), HUMAN, request_id='envelope')
+
+    class EnvelopeTransport:
+        def create(self, request, **bounds):
+            response = json.loads(fixture.create(request, **bounds))
+            message = response['output'][0]
+            response['output'].insert(0, {'type': 'reasoning', 'summary': []})
+            if shape == 'refusal':
+                message['content'] = [{'type': 'refusal', 'refusal': 'SENSITIVE refusal'}]
+            elif shape == 'duplicate_keys':
+                message['content'][0]['text'] = '{"criteria":[],"criteria":[]}'
+            elif shape == 'tool':
+                response['output'].append({'type': 'function_call', 'name': 'approve', 'arguments': 'SENSITIVE'})
+            elif shape == 'wrong_role':
+                message['role'] = 'user'
+            elif shape == 'extra_text':
+                message['content'].append({'type': 'output_text', 'text': 'SENSITIVE extra output'})
+            return json.dumps(response).encode()
+
+    store.model_transport = EnvelopeTransport()
+    result = interpret(store, created)
+    assert result['status'] == expected
+    assert result['reason'] == (None if expected == 'succeeded' else 'model_refusal' if expected == 'refused' else 'model_output_invalid_or_unsupported')
+    assert (result['executable_profile'] is not None) == (expected == 'succeeded')
+    assert costs.read(result['operation_id'], HUMAN)['actuals']['amount'] == '0.175'
+    assert 'SENSITIVE' not in json.dumps(result)
+    assert interpret(CampaignStore(store.db), created) == result and len(fixture.calls) == 1
+
+
 @pytest.mark.parametrize('usage', [None, {}, {'input_tokens': -1},
     {'input_tokens': 100, 'output_tokens': 40, 'total_tokens': 140,
      'input_tokens_details': {'cached_tokens': 100, 'cache_write_tokens': 20},

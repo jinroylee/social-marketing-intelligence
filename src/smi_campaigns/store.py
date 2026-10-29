@@ -540,7 +540,10 @@ class CampaignStore:
                     with self.db.connect() as connection:
                         connection.execute('UPDATE campaign_ranking_assessments SET operation_id=%s WHERE id=%s', (operation_id, assessment_id))
                 outcome = execute(self.model_route, self.model_transport, self.model_credential,
-                                  UsageAccounting(self.db, self.workspace_id), actor, assessment_id, inputs, attach_operation)
+                                  UsageAccounting(self.db, self.workspace_id), actor, assessment_id, inputs, attach_operation,
+                                  dispatch_guard=lambda connection: None if self._ranking_inputs_permitted(
+                                      comparison_id, inputs, actor, include_synthetic, connection)
+                                  else 'ranking_support_changed_before_dispatch')
             except EvidenceError as error:
                 reason = str(error)
                 outcome = {'status': 'meter_failure' if reason in {'synthetic_service_bound_violated', 'provider_service_bound_or_meter_violated'} else 'blocked', 'reason': reason}
@@ -555,7 +558,8 @@ class CampaignStore:
             if outcome['status'] == 'succeeded':
                 reason = ('brief_version_conflict' if campaign['brief_version'] != expected_brief_version
                           else 'shortlist_version_conflict' if campaign['shortlist_version'] != expected_shortlist_version
-                          else 'ranking_support_changed' if any(not statuses[str(s['observation_id'])]['can_process']
+                          else 'ranking_support_changed' if (candidates and not self._ranking_inputs_permitted(
+                               comparison_id, inputs, actor, include_synthetic, connection)) or any(not statuses[str(s['observation_id'])]['can_process']
                                or not statuses[str(s['observation_id'])]['can_retain'] or not statuses[str(s['observation_id'])]['current'] for s in supports)
                           else None)
                 if reason:
@@ -586,6 +590,22 @@ class CampaignStore:
             connection.execute('UPDATE campaign_ranking_assessments SET status=%s,reason=%s,configuration=%s,usage=%s,finished_at=now() WHERE id=%s',
                                (outcome['status'], outcome.get('reason'), Jsonb(config), Jsonb(outcome.get('usage')), assessment_id))
         return self.read_ranking_assessment(assessment_id, actor, include_synthetic=include_synthetic)
+
+    def _ranking_inputs_permitted(self, comparison_id, inputs, actor, include_synthetic, connection):
+        # Reopen the exact governed copies, never a new query or replacement
+        # derivation. Public readers retain source/interpretation locks through
+        # admission commit; transport I/O begins only after those locks release.
+        comparison = self.read_comparison(comparison_id, actor, purpose='process',
+            include_synthetic=include_synthetic, connection=connection)
+        current = {c['candidate_id']: c for c in comparison['candidates']}
+        draft = self._comparison(connection, comparison_id)
+        statuses = self._statuses(draft, actor, include_synthetic=include_synthetic, connection=connection)
+        ids = {c['candidate_id'] for c in inputs['candidates']}
+        supports = [s for s in self._support(connection, comparison_id) if str(s['candidate_id']) in ids]
+        return (all(c['candidate_id'] in current and current[c['candidate_id']]['support_state'] == 'available'
+                    and current[c['candidate_id']]['ranking_input'] == c for c in inputs['candidates'])
+                and all(all(statuses[str(s['observation_id'])][permission]
+                            for permission in ('can_process', 'can_display', 'can_retain', 'current')) for s in supports))
 
     def _statuses(self, draft, actor, *, include_synthetic, connection):
         if draft['knowledge_query_result_id'] is None:
