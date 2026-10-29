@@ -34,9 +34,9 @@ from smi_monitoring.polling import RecentPolling
 from smi_monitoring.alerts import QuantitativeAlerts, VolumeThreshold
 from smi_monitoring.semantic import ControversyThreshold, SemanticAlerts
 from smi_tasks.schedules import ScheduledDiscovery
-from smi_tasks import AcquisitionTasks, CampaignRecommendations, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority, ProfileSupplement
+from smi_tasks import AcquisitionTasks, TaskLineage, CampaignRecommendations, CompletionInbox, EnrichmentProposal, OfflineRoute, TaskAuthority, ProfileSupplement
 
-from . import context_views, semantic_views, alert_views, recent_views, enrichment_views, answer_views, cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
+from . import lineage_views, context_views, semantic_views, alert_views, recent_views, enrichment_views, answer_views, cost_views, inbox_views, monitoring_views, planning_views, proposal_views, publication_views, query_views, schedule_views, task_views, views
 from .forms import identifier, one
 
 
@@ -138,6 +138,7 @@ class ReviewApp:
         self.schedule_operator = schedule_operator
         self.recommendations = CampaignRecommendations(self.campaigns, self.tasks)
         self.inbox = CompletionInbox(db, workspace_id)
+        self.lineage = TaskLineage(db, workspace_id)
         self.costs = UsageAccounting(db, workspace_id, task_attribution=self.tasks.resolve_cost_attribution)
         self.csrf = secrets.token_urlsafe(32)
 
@@ -370,6 +371,12 @@ class ReviewApp:
         match = re.fullmatch(r"/costs/([^/]+)", path)
         if match:
             return self.page("Cost detail", cost_views.detail(self.costs.read(identifier(match[1]), self.actor)))
+        match = re.fullmatch(r"/tasks/([^/]+)/lineage", path)
+        if match:
+            if not query.keys() <= {'include_synthetic'} or (query and query.get('include_synthetic') != ['yes']):
+                raise EvidenceError('invalid_form')
+            trace = self.lineage.read(identifier(match[1]), self.actor, include_synthetic=one(query, 'include_synthetic') == 'yes')
+            return self.page('Task pipeline lineage', lineage_views.detail(trace))
         match = re.fullmatch(r"/tasks/([^/]+)/costs", path)
         if match:
             task = self.tasks.read(identifier(match[1]), self.actor)

@@ -4,7 +4,7 @@
 
 **Blocked by:** 06: Recover interrupted tasks and expose partial outcomes; 09: Show attributable actual costs and forecasts.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 

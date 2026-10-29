@@ -14,3 +14,5 @@ Denied-support tombstones expose content-free current process/display/retention 
 
 
 Before source support reads, reconcile inherited source expiry through the public ingestion lifecycle port in this reader's workspace. Hold source/derivation policy locks through the caller commit. Reconciliation must not scan/lock unrelated workspaces; direct publications/queries must enforce inheritance without a promotion reader.
+
+`run_lineage` exposes bounded content-free run/observation/derivation history for operational readers. Retain historical IDs/methods and explicit truncation; source dates require current process/display/retention plus explicit synthetic visibility. Keep raw coverage, issue text, checkpoints and provider handles private; installed waiting codes only.

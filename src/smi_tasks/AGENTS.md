@@ -26,3 +26,5 @@ For the single live keyword extension, read [the live task contract](../../docs/
 For the optional nickname extension, follow [the supplementary owner](supplementation/AGENTS.md). Pin exact approved profile URL/native ID and trusted policy; append at most one profile operation to the original run/budgets/receipt. Revalidate current gates after recovery. Recorded schedule authority includes the pinned policy but grants no profile target; missing target keeps primary collection unchanged.
 
 For assistant knowledge-gap proposal composition, exact asker ownership, interrupted proposal linkage or follow-up completion, follow [the journey owner](assistant/AGENTS.md). Keep all proposal/approval/task SQL here and expose original proposer-bound request recovery through `find_proposal`; replaying a saved revision does not rebind it to current route files.
+
+For the read-only pipeline projection, follow [the lineage owner](lineage/AGENTS.md). Keep historical effects and current support/cost coverage separate, and compose public owner reads without files, credentials or acquisition.

@@ -60,6 +60,52 @@ class IngestedEvidence:
         self.db = db
         self.workspace_id = workspace_id
 
+    def run_lineage(self, run_id: str, actor: ActorContext, *, include_synthetic: bool = False) -> dict[str, Any]:
+        """Read bounded, content-free run history without files or collector access.
+
+        Return at most 100 observations and 20 derivations per observation,
+        with explicit truncation. Historical effects survive policy withdrawal;
+        source dates require current process/display/retention permission and
+        explicit synthetic visibility. Checkpoints, raw coverage and issue text
+        stay private to acquisition. This read never advances a run.
+        """
+        actor.require_workspace(self.workspace_id)
+        if type(include_synthetic) is not bool:
+            raise EvidenceError('invalid_synthetic_visibility')
+        with self.db.connect() as connection:
+            SourceDependencies().reconcile(connection, workspace_id=self.workspace_id)
+            run = connection.execute('SELECT id,status,input_complete,created_at,requests_used,bytes_used,records_used,waiting '
+                                     'FROM ingestion_runs WHERE id=%s AND workspace_id=%s', (run_id, self.workspace_id)).fetchone()
+            if run is None:
+                raise EvidenceError('ingestion_run_not_found')
+            counts = connection.execute('SELECT status,count(*) AS n FROM source_observations WHERE run_id=%s GROUP BY status', (run_id,)).fetchall()
+            rows = connection.execute('SELECT id,status,synthetic,policy,captured_at,source_as_of,ingested_at,adapter_id,provider_id,format_version '
+                                      'FROM source_observations WHERE run_id=%s ORDER BY item_index,id LIMIT 101', (run_id,)).fetchall()
+            issue_count = connection.execute('SELECT count(*) AS n FROM ingestion_issues WHERE run_id=%s', (run_id,)).fetchone()['n']
+            observations = []
+            for row in rows[:100]:
+                derivations = connection.execute('SELECT id,mapper_key,policy_version,active,created_at FROM derivations '
+                                                 'WHERE observation_id=%s ORDER BY created_at DESC,id DESC LIMIT 21', (row['id'],)).fetchall()
+                policy = policy_from_json(row['policy'])
+                permitted = all(policy_allows(policy, purpose) for purpose in ('process', 'display', 'retain'))
+                visible = permitted and (include_synthetic or not row['synthetic'])
+                observations.append({'observation_id': str(row['id']), 'status': row['status'], 'synthetic': row['synthetic'],
+                    'source': {'adapter': row['adapter_id'], 'provider': row['provider_id'], 'format_version': row['format_version']},
+                    'availability': 'available' if visible else 'unavailable',
+                    'reason': None if visible else 'synthetic_evidence_excluded' if row['synthetic'] and not include_synthetic else 'source_policy_denied',
+                    'captured_at': row['captured_at'] if visible else None, 'source_as_of': row['source_as_of'] if visible else None,
+                    'ingested_at': row['ingested_at'],
+                    'derivations': [{'derivation_id': str(d['id']), 'mapper_key': d['mapper_key'], 'policy_version': d['policy_version'],
+                                     'support_status': 'current' if d['active'] else 'superseded_review_required', 'derived_at': d['created_at']} for d in derivations[:20]],
+                    'derivations_truncated': len(derivations) > 20})
+        return _json_value({'run_id': str(run['id']), 'status': run['status'], 'input_complete': run['input_complete'],
+                'created_at': run['created_at'], 'requests_used': run['requests_used'], 'bytes_used': run['bytes_used'],
+                'records_used': run['records_used'], 'counts': {r['status']: r['n'] for r in counts}, 'issue_count': issue_count,
+                'waiting': {'code': run['waiting'].get('code') if run['waiting'].get('code') in {'provider_pending', 'provider_operation_ambiguous'} else 'unclassified_wait',
+                            'resumable': run['waiting'].get('code') == 'provider_pending' and run['waiting'].get('resumable') is True} if run['waiting'] else None,
+                'observations': observations, 'observations_truncated': len(rows) > 100,
+                'limits': {'observations': 100, 'derivations_per_observation': 20}})
+
     def select_run(self, run_id: str, actor: ActorContext, *, include_synthetic: bool = False, connection=None) -> tuple[SupportReference, ...]:
         """Select up to 100 applied observations and their current exact assertions."""
         actor.require_workspace(self.workspace_id)

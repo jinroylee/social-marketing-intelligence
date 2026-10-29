@@ -315,6 +315,23 @@ class UsageAccounting:
                                       (self.workspace_id, task_id, task_id)).fetchall()
         return [self.read(str(row['id']), actor) for row in rows]
 
+    def task_operations(self, task_id: str, actor: ActorContext) -> dict:
+        """Read the newest 100 exact task operations with explicit coverage limits.
+
+        Missing attribution is unknown cost, never a measured zero. Immutable
+        task/attempt links need no task import or resolver for this read.
+        """
+        actor.require_workspace(self.workspace_id)
+        try:
+            task_id = str(uuid.UUID(task_id))
+        except (ValueError, TypeError, AttributeError):
+            raise EvidenceError('cost_task_attribution_not_found') from None
+        with self.db.connect() as connection:
+            rows = connection.execute('SELECT id FROM cost_operations WHERE workspace_id=%s AND task_id=%s '
+                                      'ORDER BY created_at DESC,id DESC LIMIT 101', (self.workspace_id, task_id)).fetchall()
+        return {'operations': [self.read(str(row['id']), actor) for row in rows[:100]],
+                'truncated': len(rows) > 100, 'limit': 100, 'coverage': 'recorded_attribution_only' if rows else 'unknown'}
+
     def read(self, operation_id: str, actor: ActorContext) -> dict:
         """Reopen attributed synthetic actuals separately from nonactual cost states."""
         actor.require_workspace(self.workspace_id)

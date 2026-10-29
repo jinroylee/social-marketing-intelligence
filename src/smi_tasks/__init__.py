@@ -7,7 +7,8 @@ from .contracts import EnrichmentProposal, OfflineRoute, TaskAuthority, ProfileS
 from .store import AcquisitionTasks
 from .campaigns import CampaignRecommendations
 from .notifications import CompletionInbox
+from .lineage import TaskLineage
 from .worker import OfflineTaskWorker
 from .execution import TaskExecution, TaskExecutionLost
 
-__all__ = ['ProfileSupplement', 'SupplementationPolicy', 'LiveDiscoveryConfig', 'DiscoveryPolicy', 'CampaignRecommendations', 'AcquisitionTasks', 'CompletionInbox', 'EnrichmentProposal', 'OfflineRoute', 'OfflineTaskWorker', 'TaskAuthority', 'TaskExecution', 'TaskExecutionLost']
+__all__ = ['TaskLineage', 'ProfileSupplement', 'SupplementationPolicy', 'LiveDiscoveryConfig', 'DiscoveryPolicy', 'CampaignRecommendations', 'AcquisitionTasks', 'CompletionInbox', 'EnrichmentProposal', 'OfflineRoute', 'OfflineTaskWorker', 'TaskAuthority', 'TaskExecution', 'TaskExecutionLost']

@@ -178,7 +178,7 @@ Same-origin form/Host checks and CSRF tokens protect local writes; the server co
 
 ## Accepted future extensions
 
-The [functional requirements](functional-requirements.md) extend the installed task/schedule, campaign ranking, bounded knowledge-answer and local completion journeys with broader autonomous research, semantic shift/richer explanation, external notifications, graph/lineage interfaces and broader spending control. The broader A/B/C workflows remain incomplete; the local task and completion inbox interfaces are described above.
+The [functional requirements](functional-requirements.md) extend the installed task/schedule, campaign ranking, bounded knowledge-answer and local completion journeys with broader autonomous research, semantic shift/richer explanation, external notifications and broader spending control. Bounded graph traversal and read-only task pipeline lineage are installed. The broader A/B/C workflows remain incomplete; the local task and completion inbox interfaces are described above.
 
 ```mermaid
 flowchart TD
@@ -242,3 +242,7 @@ The review server explicitly enables live proposal admission; separate process/s
 ## Exact supplementary acquisition
 
 `smi_tasks.supplementation` owns the optional one-field selection and durable stopping result, composing current KB/support/publication reads and deferred cost admission through public owners. Exact approved profile URL/native ID plus primary corroboration constrain the single Bright Data nickname operation; schedules retain primary authority only. The existing runner keeps both routes in the same attempt/run under original cumulative bounds and one exact publication receipt. Source HTTP/schema and nickname-only mapping remain in the existing Bright Data adapter, preserving `tiktok:public` independently from `brightdata:tiktok-posts`. All decision/query/cost/evidence/publication effects join the fenced task session; I/O spans no DB transaction. Current gates reopen after recovery, and unresolved source responses retain liabilities without reissue. [The task contract](tasks.md#one-missing-profile-nickname) describes configured value, capture freshness, current support and honest remaining prerequisites.
+
+## Read-only task pipeline composition
+
+`smi_tasks.lineage` owns the transient `TaskLineage.read` journey and composes only public task metadata, `IngestedEvidence.run_lineage`, `KnowledgePublications.read` and `UsageAccounting.task_operations`. The source owner alone reads run/observation/derivation SQL; costs retain independent task-attribution reads without importing task code. The review application renders this projection at `/tasks/TASK_ID/lineage` without collection/model/file/credential access. Exact authority, original effects/receipts, partial/failure/no-update and actual recovery histories remain separate from current permitted publication support and current accounting limits. Owner reads observe independent committed frontiers, with bounded history and unknown/truncated cost coverage. No schema, graph dependency or duplicate raw-fact/accounting store is added. [The task contract](tasks.md#read-only-task-pipeline-lineage) owns the detailed interface.
