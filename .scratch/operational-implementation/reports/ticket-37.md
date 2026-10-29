@@ -1,6 +1,6 @@
 # Ticket 37 implementer report
 
-Status: **claimed**, pending independent integration verification and resolution. Only approved ticket 37 is implemented.
+Status: **resolved**, after independent root shared-gate and exact artifact verification. Only approved ticket 37 is implemented.
 
 ## Scope and authority
 
@@ -44,8 +44,23 @@ Existing artifact: `verification/ticket-37/wheel/smi_ingestion-0.1.0-py3-none-an
 
 Exact recording passed exit **0** from `2026-10-29T04:29:05.617420+00:00` to `2026-10-29T04:29:05.855475+00:00`, wall **0.250494 seconds**. Independent replay in a separate fresh Python process passed exit **0** from `2026-10-29T04:29:05.868442+00:00` to `2026-10-29T04:29:06.043256+00:00`, wall **0.187412 seconds**. Both results appear in chunk `b139a8`. Durable `wheel-record.{log,exit,json}`, `wheel-replay.{log,exit,json}`, `wheel-verification.json` and `freeze-verification.json` retain exact evidence. Neither verification process rebuilt or modified the wheel.
 
-Only own scratch checklist/report/manifest/verifier metadata follows freeze/PASS. No runtime/test/product-document/guidance edit follows freeze. The final handoff SHA is recorded after commit in excluded `verification/ticket-37/handoff.json` and the final message, avoiding a self-referential report. All persistent artifacts/worktrees remain intact. The ticket remains **claimed** for the independent merger/root full gate and resolution.
+Only own scratch checklist/report/manifest/verifier metadata follows freeze/PASS. No runtime/test/product-document/guidance edit follows freeze. The final handoff SHA is recorded after commit in excluded `verification/ticket-37/handoff.json` and the final message, avoiding a self-referential report. All persistent artifacts/worktrees remain intact. At implementer handoff the ticket remained **claimed** pending the independent root gate; the completed validation and resolution are recorded below.
 
 ## Concrete limits
 
 This is a read-only bounded operational projection, with no new source excerpts or source/error/payload cache. Full source wording stays in existing governed evidence views. It does not establish complete task-event/billing/market coverage, an atomic cross-owner snapshot, guaranteed delayed charge caps, source truth, language accuracy, actual live readiness or marketer usefulness. No historical task success is substituted for current support permission, and final accounting grants no source-response/task authority. The independent merger owns root full checking and ticket resolution. All persistent artifacts/worktrees are retained.
+
+
+## Independent integration validation and local resolution
+
+Fast-forward integrated from clean `4af89d25b5cb5cfa9673a2653a3e2dc6386cc68f` to final handoff/root checked `7b4948bdb4b6b8209f650e344ce5391725d7a720`, runtime/frozen `815fd97f42a23537d5802f971f6d977bb6549872`. The frozen-to-final diff contains exactly the four own scratch issue/report/manifest/verifier files; all **305** protected files and relative targets remain identical.
+
+Required independent root `UV_OFFLINE=1 uv run --locked python tools/check.py` passed all static/documentation/preflight stages and **861 tests in 747.33 seconds**, exit 0 / session 37124. Started `2026-10-29T04:33:43.886852+00:00`; finished `2026-10-29T04:46:12.246930+00:00`. Durable `.scratch/operational-implementation/verification/ticket-37-integrated/shared.{head,runtime,worker-frozen,command,started,session,log,exit,finished}` retains execution identity and result. Existing worker **861/761.28s**, focused **120/108.91s**, final lineage **15/22.75s** and all prior gates remain preserved; no duplicate broad gate/build was run.
+
+Independent existing wheel **437088 bytes**, **208 unique entries**, SHA-256 `2316da6b893d20c78daa2549c4091dd25124208221d934df3938e7eab7f20de2`; all **91** source/archive pairs, all **13** changed packaged paths, **18** SQL schemas, **2** assets, **32** packaged guidance pairs plus root relative guidance, and all **305** frozen protected file bytes/sizes/hashes/relative targets match the integrated root. The standalone verifier passed against integrated root; `.scratch/operational-implementation/verification/ticket-37-integrated/wheel-verifier.log`, `wheel-verification.json` and `freeze-verification.json` record exact results.
+
+Coordinator-created archive 37 is independently identity/member-verified and preserved: **418363 bytes**, **39 members**, SHA-256 `3a2939b26539d6ba25bf2d3f46fbaab9ed4c6ce9fb7738944447ff64325e0b52`. The relocation index retains original paths/member hashes; original worker files and the committed 26–36 relocation report remain untouched. Independent identity/indexed-member/original-byte comparison is recorded in `.scratch/operational-implementation/verification/ticket-37-integrated/worker-archive-verification.json`.
+
+Root public-composition/source-free-field/policy/history/cost review has no remaining blocker. Final fifteen public/HTTP cases plus focused/full checks cover partials, failure/recovery, current policy, proposal/schedule authority, cost truncation and secret redaction. The source-free read-only projection composes independent committed owner frontiers and bounded histories, not an atomic complete event/billing snapshot. Historical completion does not grant current source permission. Recorded actuals/commitments/forecasts retain provenance, lag and unknown coverage without cross-currency/period/scope aggregation, guaranteed ceilings or zero-overshoot claims. Waiting-code allowlisting is defensive hardening: the existing public writer already restricts codes, with no observed public-writer exploit. No actual source/model/paid I/O occurred. Live readiness, source truth, complete market coverage and human usefulness remain unestablished.
+
+Resolved local ticket 37/all six criteria, appended continuation evidence, marked Phase 41 complete and left ticket 38 / Phase 42 pending for fresh root dispatch. Original `6220fff49b5b8e982ef5a8d54b7c788e45b0f648` baseline, historical execution manifest, prior tickets/gates and all artifacts are preserved. Merger changes after PASS are tracker/planning/report metadata only; no runtime/test edit, next-ticket implementation, external call/message, push, PR, deployment or cleanup occurred.

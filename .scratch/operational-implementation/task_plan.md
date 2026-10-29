@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Implement ticket 37 in its fresh context/worktree: read-only task-to-publication-and-cost lineage through public owners, preserving actual attempts, outcomes and current support policy. Tickets 11–36 are integrated and resolved; validate and merge before advancing. No generic observability platform or graph dependency.
+Ticket 38 / Phase 42 is pending and ready for fresh root dispatch: prepare and validate operational quality review packets. Tickets 11–37 are integrated and resolved. Preserve real human-review prerequisites and all completed evidence; the merger has not started ticket 38.
 
 ## Current Phase
 
-Phase 41 — ticket 37 in progress after successful ticket 36 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 42 — ticket 38 pending after successful ticket 37 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -284,9 +284,9 @@ Fast-forward integrated final handoff/root checked `4035859588d73dbdf21b02e9484f
 
 ### Phase 41 — Implement ticket 37
 
-**Status:** in_progress
+**Status:** complete
 
-Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
+Fast-forward integrated final handoff/root checked `7b4948bdb4b6b8209f650e344ce5391725d7a720`, runtime/frozen `815fd97f42a23537d5802f971f6d977bb6549872`. Required independent root checks passed all static/preflight stages and **861 tests in 747.33 seconds**, exit 0. Existing wheel/all 91 pairs, all 13 changed packaged paths, eighteen SQL schemas, both assets, 32 guidance pairs/root guidance and all 305 protected identities match root. All six criteria are checked and ticket 37 is resolved. Final public/HTTP lineage 15/22.75s, focused 120/108.91s and full 861 verify outcomes, recovery, authority, current policy, cost truncation and secret redaction. Read-only owner frontiers/bounded history are not an atomic complete event/billing snapshot; cost unknowns/provenance remain explicit. Waiting-code allowlisting is defensive hardening with no observed public-writer exploit. No source/model I/O or live/human-usefulness claim. Coordinator archive 37 identity/members verified; existing 26–36 relocation report and all worker files remain preserved.
 
 ### Phase 42 — Implement ticket 38
 
