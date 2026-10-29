@@ -1,0 +1,48 @@
+{
+  "checked_at": "2026-10-29T09:26:06.927580+00:00",
+  "scope": {
+    "host": "127.0.0.1",
+    "port": 6543,
+    "database": "smi",
+    "schema": "public",
+    "workspace": "local"
+  },
+  "caller": {
+    "actor_id": "ticket-39-read-only-inventory",
+    "kind": "automation",
+    "human_review": false
+  },
+  "mode": "Public owner list operations only; PostgreSQL default_transaction_read_only=on; no migrate, import, export, collection, model or application write.",
+  "operations": {
+    "evidence_sets": {
+      "status": "unavailable",
+      "error_type": "UndefinedTable",
+      "sqlstate": "42P01"
+    },
+    "campaigns": {
+      "status": "unavailable",
+      "error_type": "UndefinedTable",
+      "sqlstate": "42P01"
+    },
+    "investigations": {
+      "status": "unavailable",
+      "error_type": "UndefinedTable",
+      "sqlstate": "42P01"
+    },
+    "recent_topics": {
+      "status": "unavailable",
+      "error_type": "UndefinedTable",
+      "sqlstate": "42P01"
+    },
+    "quantitative_alert_notifications": {
+      "status": "read",
+      "count": 0,
+      "rows": []
+    },
+    "semantic_alert_notifications": {
+      "status": "read",
+      "count": 0,
+      "rows": []
+    }
+  }
+}
