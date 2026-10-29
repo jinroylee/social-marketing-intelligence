@@ -2,37 +2,101 @@
   "baseline": "6220fff49b5b8e982ef5a8d54b7c788e45b0f648",
   "standards": {
     "documented": 3,
-    "heuristic": 1
+    "heuristic": 1,
+    "status": "resolved",
+    "documented_closed": 3,
+    "documented_remaining": 0,
+    "heuristic_closed": 1,
+    "heuristic_remaining": 0
   },
   "spec": {
     "actionable": 1,
-    "overlap": "ranking race"
+    "overlap": "ranking race",
+    "status": "resolved",
+    "closed": 1,
+    "remaining": 0
   },
   "findings": [
     {
       "id": "standards-1/spec-1",
       "kind": "documented/spec",
       "summary": "Ranking dispatch must recheck exact prepared input permissions after cost contention",
-      "status": "pending"
+      "status": "resolved",
+      "runtime_commit": "7418e5bc0af72d70017b5eb612dcd2c37f265c57",
+      "integration_checked_commit": "64caf807bd23cd0df90134018b3029b4657afccb",
+      "tests": [
+        "tests/test_ranked_recommendations.py::test_changed_prepared_inputs_refuse_ranking_after_cost_contention_without_liability",
+        "tests/test_ranked_recommendations.py::test_ranking_source_guard_locks_last_through_dispatch_commit_and_release_before_model_io"
+      ],
+      "integration_evidence": ".scratch/operational-implementation/verification/final-review-fixes-integrated/shared.json"
     },
     {
       "id": "standards-2",
       "kind": "documented",
       "summary": "Consistent frontier-before-recent lock order for alert context/promotion",
-      "status": "pending"
+      "status": "resolved",
+      "runtime_commit": "7418e5bc0af72d70017b5eb612dcd2c37f265c57",
+      "integration_checked_commit": "64caf807bd23cd0df90134018b3029b4657afccb",
+      "tests": [
+        "tests/test_alert_investigations.py::test_investigation_and_promotion_complete_concurrently_with_atomic_policy_inheritance"
+      ],
+      "integration_evidence": ".scratch/operational-implementation/verification/final-review-fixes-integrated/shared.json"
     },
     {
       "id": "standards-3",
       "kind": "documented",
       "summary": "Quantitative alert nested source evidence requires process/display/retain overlay",
-      "status": "pending"
+      "status": "resolved",
+      "runtime_commit": "7418e5bc0af72d70017b5eb612dcd2c37f265c57",
+      "integration_checked_commit": "64caf807bd23cd0df90134018b3029b4657afccb",
+      "tests": [
+        "tests/test_quantitative_alerts.py::test_process_denial_withholds_nested_alert_evidence_and_http_but_preserves_standalone_display",
+        "tests/test_alert_investigations.py::test_recent_dependency_loss_withholds_explanation_permanently_but_keeps_lineage"
+      ],
+      "integration_evidence": ".scratch/operational-implementation/verification/final-review-fixes-integrated/shared.json"
     },
     {
       "id": "standards-4",
       "kind": "heuristic",
       "summary": "Reuse public Responses generated_document for criteria envelope parsing",
-      "status": "pending"
+      "status": "resolved",
+      "runtime_commit": "7418e5bc0af72d70017b5eb612dcd2c37f265c57",
+      "integration_checked_commit": "64caf807bd23cd0df90134018b3029b4657afccb",
+      "tests": [
+        "tests/test_criteria_interpretation.py::test_criteria_envelope_contract_preserves_refusal_validation_and_usage"
+      ],
+      "integration_evidence": ".scratch/operational-implementation/verification/final-review-fixes-integrated/shared.json"
     }
   ],
-  "human_validation": "ticket39 pending actual inputs"
+  "human_validation": "ticket39 pending actual inputs",
+  "status": "resolved",
+  "unique_findings_resolved": 4,
+  "technical_verification": "complete",
+  "cleanup_status": "pending",
+  "overall_objective_complete": false,
+  "runtime_commit": "7418e5bc0af72d70017b5eb612dcd2c37f265c57",
+  "integration_checked_commit": "64caf807bd23cd0df90134018b3029b4657afccb",
+  "reviewer_closures": ".scratch/operational-implementation/verification/final-review-reviewer-closures.json",
+  "integration_gate": {
+    "checked_commit": "64caf807bd23cd0df90134018b3029b4657afccb",
+    "passed_tests": 903,
+    "seconds": 624.14,
+    "exit": 0,
+    "session": 88650,
+    "log": ".scratch/operational-implementation/verification/final-review-fixes-integrated/shared.log",
+    "started": "2026-10-29T10:06:04.762661+00:00",
+    "finished": "2026-10-29T10:16:29.706200+00:00",
+    "completed_during_usage_interruption": true,
+    "preserved_without_rerun": true
+  },
+  "worker_gate": {
+    "checked_commit": "7418e5bc0af72d70017b5eb612dcd2c37f265c57",
+    "passed_tests": 903,
+    "seconds": 621.51,
+    "exit": 0,
+    "session": 94217
+  },
+  "artifact_verification": ".scratch/operational-implementation/verification/final-review-fixes-integrated/wheel-verification.json",
+  "archive_verification": ".scratch/operational-implementation/verification/final-review-fixes-integrated/worker-archive-verification.json",
+  "original_checklist_snapshot": ".scratch/operational-implementation/verification/final-review-fixes-integrated/original-fix-checklist.json"
 }
