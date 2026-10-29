@@ -3,6 +3,7 @@
 import hashlib
 import json
 import uuid
+from contextlib import nullcontext
 from pathlib import Path
 
 from psycopg.types.json import Jsonb
@@ -129,15 +130,16 @@ class KnowledgeAssistant:
     def _permitted(statuses):
         return all(s['can_process'] and s['can_display'] and s['current'] for s in statuses.values())
 
-    def read(self, answer_id: str, actor: ActorContext, *, include_synthetic: bool = False) -> dict:
+    def read(self, answer_id: str, actor: ActorContext, *, include_synthetic: bool = False, connection=None) -> dict:
         """Reopen immutable model/support context, withholding dependent selection on policy loss.
 
+        An optional caller transaction retains source-policy locks through dependent local saves.
         Source values/dates always come from the exact query's current public read.
         Requiring every input to remain permitted prevents unselected withdrawn text
         from surviving indirectly in a generated selection. No new search or I/O.
         """
         actor.require_workspace(self.workspace_id)
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             row = connection.execute('SELECT * FROM knowledge_answers WHERE id=%s AND workspace_id=%s', (answer_id, self.workspace_id)).fetchone()
             require(row is not None, 'knowledge_answer_not_found')
             require(not row['include_synthetic'] or include_synthetic, 'synthetic_evidence_excluded')

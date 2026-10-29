@@ -162,3 +162,5 @@ Every new route needs real response/schema tests, source-specific identity names
 ## Local data
 
 Raw payloads are stored under `.evidence/`, which is ignored by Git. PostgreSQL data lives in the Compose volume. `.env.example` shows local configuration; do not commit real credentials. Tests create and drop only their own uniquely named PostgreSQL schemas. `docker compose stop postgres` stops the local database while retaining its volume.
+
+For a saved generated current-KB recommendation, KB answer or X semantic alert, the [operational quality-review journey](docs/evaluation.md#operational-result-review-packets) exports exact governed support and an unanswered template, records actual attributed annotations, and reopens current policy. Use `uv run --locked python tools/operational_quality.py --help`. Technical checks and synthetic examples establish no human language/usefulness validation.

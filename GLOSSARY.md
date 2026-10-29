@@ -178,3 +178,9 @@ An attributable final measurement that identifies the outstanding cost portions 
 
 **Meter recovery**:
 An attributable confirmation that an expected cost meter is healthy again, distinct from the final accounting for its failed measurements. Restored meter health does not make an unresolved charge free.
+
+**Operational quality review packet**:
+An exact saved recommendation, knowledge answer or semantic alert selected for attributable language and relevance review, with its reviewed membership, methods, source support and limitations. A packet supplies no human judgment or source-truth validation merely by being prepared.
+
+**Operational quality review record**:
+An attributable review of explicit packet members, retaining the reviewer and translation method, labels, denominator and material errors or corrections. Its recorded translation-assisted judgments, original-language validation and marketer usefulness remain distinct from technical verification and from one another.

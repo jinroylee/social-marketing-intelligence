@@ -4,7 +4,7 @@
 
 **Blocked by:** 16: Rank campaign candidates with supported LLM assessment; 27: Answer free-form questions from permitted knowledge; 31: Detect supported semantic X anomalies.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Size:** M — one bounded user-visible journey or extension in a fresh implementation context.
 

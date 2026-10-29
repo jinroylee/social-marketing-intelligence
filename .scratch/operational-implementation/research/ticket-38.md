@@ -1,0 +1,11 @@
+# Ticket 38 implementation decisions
+
+Baseline: `05dcbeef333110e0e4b66f10bcb6acfed9b9a5ae`; blockers 16/27/31 resolved.
+
+Approved seams: public OperationalReviews export/record/read composed with public CampaignStore, KnowledgeAssistant, SemanticAlerts, KnowledgeQueries and current source-policy ports; real PostgreSQL, simulated model/source/time only. Existing same-corpus pilot records remain unchanged.
+
+A bounded packet pins one exact saved generated current-KB recommendation, extractive answer or semantic alert. Its reviewed membership and full input lineage are source-free. Original source text is freshly projected from owners. Optional caller transactions on campaign/answer reads keep source locks through review writes. Recorded human annotations are source-derived copies: hide on any input loss and permanently purge on retention loss. Denominators retain original membership and separately report currently countable reviewed items. All four quality dimensions stay distinct; no software fixture is a real human quality receipt.
+
+Before freeze, root review corrections bound each interpretation span to its exact publication manifest/source assertion/subject and each original text date to its source subject (unknown for ambiguous aggregate context). Denied record and new-export paths commit retention cleanup even for invalid/conflicting submissions. Per-packet history is capped at 50 serial records, workspace packets at 5,000 and review bodies at 256 KiB; retries remain recoverable at bounds. The public 29-case owner suite includes real-PG source-policy/record-commit races, CLI separate-process export/record/read, all three result types, unavailable unselected/unresolved inputs, original spans/dates, partial denominators, correction/usefulness attribution, invalid visibility/IDs, and cap/retry behavior.
+
+The initial red slices failed for missing quality module, missing record operation, missing CLI/template, incorrect publication-span attribution and unavailable new-export behavior; those failures were corrected before final focused/static checks. No private collaborator mocks or SQL business-outcome assertions were introduced. Fault-only trigger DDL and PostgreSQL blocking diagnostics coordinate the two commit races.

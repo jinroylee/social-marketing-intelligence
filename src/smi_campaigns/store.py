@@ -449,14 +449,17 @@ class CampaignStore:
             connection.execute('UPDATE campaigns SET shortlist_version=%s WHERE id=%s', (version, campaign_id))
         return {'status': 'generated', 'shortlist_id': revision_id, 'version': version}
 
-    def read_ranking_assessment(self, assessment_id: str, actor: ActorContext, *, include_synthetic: bool = False) -> dict:
+    def read_ranking_assessment(self, assessment_id: str, actor: ActorContext, *, include_synthetic: bool = False, connection=None) -> dict:
         """Reopen the exact attempt and permitted assessed inputs; retries never reconstruct them."""
+        if connection is None:
+            with self.db.connect() as connection:
+                return self.read_ranking_assessment(assessment_id, actor, include_synthetic=include_synthetic, connection=connection)
         actor.require_workspace(self.workspace_id)
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             row = connection.execute('SELECT a.* FROM campaign_ranking_assessments a JOIN campaigns c ON c.id=a.campaign_id '
                                      'WHERE a.id=%s AND c.workspace_id=%s', (assessment_id, self.workspace_id)).fetchone()
         require(row is not None, 'ranking_assessment_not_found')
-        comparison = self.read_comparison(str(row['comparison_id']), actor, include_synthetic=include_synthetic)
+        comparison = self.read_comparison(str(row['comparison_id']), actor, include_synthetic=include_synthetic, connection=connection)
         ids = {str(cid) for cid in row['candidate_ids']}
         return {'assessment_id': assessment_id, 'campaign_id': str(row['campaign_id']), 'brief_id': str(row['brief_id']),
                 'comparison_id': str(row['comparison_id']), 'shortlist_id': str(row['shortlist_id']) if row['shortlist_id'] else None,
@@ -610,11 +613,11 @@ class CampaignStore:
             connection.execute("UPDATE shortlist_selections SET reason=NULL,reason_withdrawn=TRUE WHERE candidate_id=ANY(%s::uuid[])",
                                (list(affected),))
 
-    def read_comparison(self, comparison_id: str, actor: ActorContext, *, purpose: str = "display", include_synthetic: bool = False) -> dict[str, Any]:
+    def read_comparison(self, comparison_id: str, actor: ActorContext, *, purpose: str = "display", include_synthetic: bool = False, connection=None) -> dict[str, Any]:
         """Read the pinned draft with current source health; denied bodies never reappear from copied reasons."""
         actor.require_workspace(self.workspace_id)
         require(purpose in {"display", "process"}, "invalid_evidence_purpose")
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             draft = self._comparison(connection, comparison_id)
             query = None
             if draft['knowledge_query_result_id'] is not None:
@@ -768,16 +771,19 @@ class CampaignStore:
                                 'recorded_by': row['recorded_by'], 'recorded_at': row['recorded_at'].isoformat()}],
                     'interpretations': [self.read_interpretation(str(i['id']), actor) for i in interpretations]}}
 
-    def read_shortlist(self, shortlist_id: str, actor: ActorContext, *, include_synthetic: bool = False, purpose: str = "display") -> dict[str, Any]:
+    def read_shortlist(self, shortlist_id: str, actor: ActorContext, *, include_synthetic: bool = False, purpose: str = "display", connection=None) -> dict[str, Any]:
         """Reopen pinned membership/order/producer with a current support-health overlay."""
+        if connection is None:
+            with self.db.connect() as connection:
+                return self.read_shortlist(shortlist_id, actor, include_synthetic=include_synthetic, purpose=purpose, connection=connection)
         actor.require_workspace(self.workspace_id)
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             revision = connection.execute("SELECT r.* FROM shortlist_revisions r JOIN campaigns c ON c.id=r.campaign_id "
                                           "WHERE r.id=%s AND c.workspace_id=%s", (shortlist_id, self.workspace_id)).fetchone()
             require(revision is not None, "shortlist_not_found")
-        comparison = self.read_comparison(str(revision["comparison_id"]), actor, include_synthetic=include_synthetic, purpose=purpose)
+        comparison = self.read_comparison(str(revision["comparison_id"]), actor, include_synthetic=include_synthetic, purpose=purpose, connection=connection)
         candidates = {c["candidate_id"]: c for c in comparison["candidates"]}
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             rows = connection.execute("SELECT * FROM shortlist_selections WHERE revision_id=%s ORDER BY position NULLS LAST,id", (shortlist_id,)).fetchall()
             campaign = self._campaign(connection, str(revision["campaign_id"]))
         selected = []
@@ -793,9 +799,9 @@ class CampaignStore:
                              "support_ids": [str(s) for s in row["support_ids"]], "acknowledged_unknowns": row["acknowledged_unknowns"],
                              "evidence": [c for c in candidate["evidence"] if c["id"] in {str(s) for s in row["support_ids"]} and state == "available"],
                              "review_required": state != "available"})
-        with self.db.connect() as connection:
+        with nullcontext(connection) if connection is not None else self.db.connect() as connection:
             ranking = connection.execute('SELECT id FROM campaign_ranking_assessments WHERE shortlist_id=%s', (shortlist_id,)).fetchone()
-        assessment = self.read_ranking_assessment(str(ranking['id']), actor, include_synthetic=include_synthetic) if ranking else None
+        assessment = self.read_ranking_assessment(str(ranking['id']), actor, include_synthetic=include_synthetic, connection=connection) if ranking else None
         execution_profile = comparison['execution_profile']
         if assessment:
             execution_profile = {**execution_profile, 'method_version': assessment['configuration']['method_version'],

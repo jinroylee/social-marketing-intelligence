@@ -13,3 +13,5 @@ Commit the claim before I/O; exact retries reopen without redispatch, even after
 Verify via public question/read, retrieval, accounting and loopback HTTP operations, with real PostgreSQL and simulated external I/O. Technical checks establish neither language quality nor marketer usefulness. Update knowledge, architecture, physical ERD, local-review and coverage summaries with interface changes.
 
 The separate [task-side journey](../smi_tasks/assistant/AGENTS.md) composes these public answers into explicit gap proposals and human approval. Preserve this dependency direction: the answer owner neither imports tasks nor grants enrichment authority.
+
+`read(..., connection=...)` accepts a caller-owned local transaction so dependent review records share full-input policy locks through commit. The caller performs no external I/O while holding it.

@@ -20,7 +20,7 @@ These documents describe the Social Marketing Intelligence product, its architec
 | [Local review application](local-review.md) | Browser workflow, named local actor, evidence panels, saves and failure behavior |
 | [Development verification](development.md) | The shared local/CI check command and test prerequisites |
 | [Agent workflow configuration](agents/issue-tracker.md) | Local ticket publication, dependency gates, claiming, validation and resolution |
-| [Quality review](evaluation.md) | Separate technical, translation-assisted and marketer-usefulness gates |
+| [Quality review](evaluation.md) | Separate technical, translation-assisted, Japanese-original and marketer-usefulness gates; operational packet export/record/reopen |
 | [Canonical evidence ownership](adr/0001-canonical-evidence-ownership.md) | Why source evidence and business decisions have separate owners |
 | [Explicit assistant gap scope](adr/0018-explicit-assistant-gap-scope.md) | Why explicit keyword bounds and task-side linkage preserve exact approval and answer history |
 | [Pinned support and current policy](adr/0002-pinned-support-current-policy.md) | Why reproducible decisions pin support while permissions remain current |

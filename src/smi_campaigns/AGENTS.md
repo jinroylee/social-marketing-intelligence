@@ -26,3 +26,5 @@ Generated deterministic/model saves atomically pin `coverage_assessment` using t
 
 
 `read_shortlist_context` exposes source-free saved method/ranked identity and current human brief/head plus succeeded interpretation views for explicit regeneration navigation. Keep this read independent of candidate bodies and synthetic/source support exclusion; metadata grants no evidence permission. Assessment/save remain with existing recommendation operations, and task-owned human action/event/retry orchestration remains in `smi_tasks.campaigns`. Never import tasks into campaign core.
+
+`read_shortlist`, `read_comparison` and `read_ranking_assessment` accept an optional caller-owned connection for atomic dependent local review saves. Keep current-KB source locks through that commit, and use one open transaction throughout nested public reads. These ports confer no source/model/acquisition authority.

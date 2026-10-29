@@ -1255,3 +1255,37 @@ The implemented `knowledge_graph_searches` table stores human filter input, requ
 ## Task pipeline projection
 
 `TaskLineage` adds no table or physical relationship. It composes the existing `acquisition_tasks` → `acquisition_attempts` → `ingestion_runs` → `source_observations` → `derivations` identities, exact prepared support and `acquisition_task_publications` receipt → `knowledge_publications`/`knowledge_publication_support`. `cost_operations` retains its existing logical task/attempt references, validated by the task owner's public resolver at creation rather than a cross-owner accounting import or SQL foreign key. Current permissions/derivation health and accounting state are independently reopened; no copied source text or synthetic successful pipeline row is persisted. See [the task lineage contract](tasks.md#read-only-task-pipeline-lineage) for finite history limits and independent committed-frontier semantics.
+
+## Operational quality review records
+
+The [review schema](../src/smi_review/quality/schema.sql) adds two review-owned tables. Result IDs are logical references resolved by public workspace-scoped owners, without cross-owner SQL.
+
+```mermaid
+erDiagram
+    operational_review_packets ||--o{ operational_review_records : receives
+    operational_review_packets {
+        uuid id PK
+        text workspace_id
+        text request_id UK
+        text request_digest
+        text result_kind
+        uuid result_id
+        boolean include_synthetic
+        jsonb manifest
+        text exported_by
+        timestamptz exported_at
+    }
+    operational_review_records {
+        uuid id PK
+        uuid packet_id FK
+        integer version UK
+        text request_id UK
+        text request_digest
+        jsonb attribution
+        jsonb body
+        boolean purged
+        timestamptz recorded_at
+    }
+```
+
+A packet's workspace/request digest pins the result kind/ID, exporter and explicit synthetic visibility. Its immutable manifest contains source-free reviewed membership, complete original input dependencies and method/model/result lineage. Exported text is a fresh public-reader projection and is never stored in this manifest. Record request identities and serial versions are packet-local; the packet lock assigns up to 50 revisions, so latest review does not depend on wall-clock ordering. Workspaces admit at most 5,000 packets, while exact retries remain recoverable at either limit; explicit reviewer/translator/method/time and reviewed IDs remain in attribution. Annotation bodies contain translations, labels, ambiguity, material errors/corrections and optional human usefulness/task measurements. Current-policy reconciliation hides bodies on any input loss and permanently nulls every retained packet annotation on retention loss, leaving `purged` tombstones. These system export/record times do not substitute for actual human review/task times. See [the review contract](evaluation.md#operational-result-review-packets).

@@ -1,0 +1,11 @@
+# Operational quality records
+
+Own `OperationalReviews.export/record/read/migrate` and its two review tables. Read [the quality contract](../../../docs/evaluation.md#operational-result-review-packets) before changing membership, attribution or quality statuses. This is a bounded review-record owner, separate from the unchanged same-corpus pilot evaluation tool.
+
+Compose only public campaign, answer, query and semantic readers. Original source values stay with those owners. Use their caller transactions to hold every actual input's current process/display/retention and derivation checks through local review commits. Keep SQL limited to review packets/records; perform no source/model/file/credential I/O here.
+
+Packet manifests retain exact reviewed result membership, full input IDs, methods/model versions and safe lineage. Resolve original text/spans/dates afresh. Bind interpretations to the exact publication manifest and source assertion; source publication dates belong to their content subject. Do not borrow dates or claims from sibling posts or source-only publications.
+
+Require an actual human actor matching explicit reviewer attribution, supplied review time, explicit translator kind/identity/method/model version, exact subset membership, full denominator, permitted labels and material-error details/corrections. New request IDs append serial revisions under the packet lock; keep the documented packet/history/byte bounds explicit and exact retries recoverable at their limits. Changed retries conflict. Unavailable support returns a governed outcome before validating annotation bodies, so required retention cleanup commits even for invalid/conflicting submissions. Hide annotations on any full-input loss; permanently purge retained copies on retention loss and preserve safe attribution/tombstones.
+
+Technical results, recorded translation-assisted labels, Japanese-original validation and marketer usefulness are separate dimensions. Never supply translations, human times, source truth, original-language accuracy or usefulness automatically. Synthetic software fixtures establish no actual human quality receipt. Keep `tools/operational_quality.py` a thin local adapter and update evaluation, architecture and physical ERD with contract changes.
