@@ -1,6 +1,6 @@
 # Preserved worker verification artifacts
 
-Completed ticket 26–35 artifacts have verified persistent copies in the integration worktree. Original worktrees and historical paths remain intact. No completed gate was rerun, and no worktree was removed. The local verification directory is intentionally excluded from Git; this document records the usable archive locations and identities.
+Completed ticket 26–36 artifacts have verified persistent copies in the integration worktree. Original worktrees and historical paths remain intact. No completed gate was rerun, and no worktree was removed. The local verification directory is intentionally excluded from Git; this document records the usable archive locations and identities.
 
 Each archive contains the complete original ticket verification directory and its own committed report, exact wheel manifest and standalone verifier. Every member was compared with the original file by byte size and SHA-256. The machine-readable `verification/worker-archives/relocation-index.json` records original absolute paths, archive-member paths, worker heads, per-file hashes and current archive locations.
 
@@ -16,6 +16,7 @@ Each archive contains the complete original ticket verification directory and it
 | 33 | `verification/worker-archives/ticket-33-worker-artifacts.tar.gz` | 38 | 369596 | `9b13f15039e674a87cf29bbc9b6e6898a018c3c49a6d75b969b2c714dd97d0d1` |
 | 34 | `verification/worker-archives/ticket-34-worker-artifacts.tar.gz` | 42 | 432887 | `94d98c27a4fb212e2e54a6c949871166ce82fc487f6441a3adea7d40aaccb068` |
 | 35 | `verification/worker-archives/ticket-35-worker-artifacts.tar.gz` | 39 | 406294 | `9bde6094793f7a93527d868350d251bd53f19a8c5a5946792ee6b58ebb9084dd` |
+| 36 | `verification/worker-archives/ticket-36-worker-artifacts.tar.gz` | 37 | 407615 | `fdcb6d3c84cf00b4776091e79a0e8296f27ed8f8a5df54ccbb7d129f2b1b3ffa` |
 
 Ticket 31’s earlier prepared nested archive is preserved as an unchanged member of its root archive. At final cleanup, verify these identities again before removing clean merged worktrees and update the relocation index. Older missing temporary artifacts remain unavailable as previously documented; no copy has been invented.
 

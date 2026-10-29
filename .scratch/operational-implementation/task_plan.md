@@ -6,11 +6,11 @@ Continue approved tickets 11–39 sequentially using fresh implementer worktrees
 
 ## Next Step
 
-Dispatch ticket 37 in a fresh implementer context/worktree based on the verified integration tip. Tickets 11–36 are integrated and resolved; ticket 37 is pending. Preserve exact provenance/current-policy contracts, verification evidence, archives and the original final-review baseline; human usefulness and complete coverage remain unestablished.
+Implement ticket 37 in its fresh context/worktree: read-only task-to-publication-and-cost lineage through public owners, preserving actual attempts, outcomes and current support policy. Tickets 11–36 are integrated and resolved; validate and merge before advancing. No generic observability platform or graph dependency.
 
 ## Current Phase
 
-Phase 41 — ticket 37 pending after successful ticket 36 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
+Phase 41 — ticket 37 in progress after successful ticket 36 integration. The completed first batch and its reviews are preserved; approved continuation remains tickets 11–39.
 
 ### Phase 1 — Read the source and inspect implementation seams
 
@@ -284,7 +284,7 @@ Fast-forward integrated final handoff/root checked `4035859588d73dbdf21b02e9484f
 
 ### Phase 41 — Implement ticket 37
 
-**Status:** pending
+**Status:** in_progress
 
 Fresh implementer context/worktree; public TDD; exact acceptance and external prerequisites; integration shared-check gate before resolution and the next dependent ticket.
 
