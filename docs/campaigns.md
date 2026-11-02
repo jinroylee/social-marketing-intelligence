@@ -32,6 +32,18 @@ The local actor context is supplied by the trusted application boundary. It is n
 
 ## Comparison preparation
 
+### Reading comparison states
+
+
+- **Satisfied:** literal evidence matches an inclusion criterion. Semantic review remains provisional.
+- **Not satisfied on evidence:** literal evidence matches something the criterion excludes.
+- **Unknown:** the selected evidence cannot establish the criterion. Absence of a mention is not proof that an account fails it.
+- **Required:** a confirmation constraint. A required unknown with handling `defer` blocks confirmation; handling `acknowledge` allows an exploratory selection with explicit acknowledgement. A required exclusion contradicted by evidence blocks confirmation.
+- **Marketer known / retrieved / both:** supplied in the brief, obtained from the chosen dataset, or both. “Retrieved” does not mean autonomously discovered online.
+- **Provisional:** an interpretation still needs semantic review. It is separate from a shortlist's draft/confirmed status.
+- **Review required:** supporting evidence is unavailable or superseded; historical identity and permitted audit information can remain while dependent wording is withheld.
+
+
 ```mermaid
 flowchart LR
     Human[Marketer] --> Brief[Exact brief revision]
@@ -173,7 +185,7 @@ The single request uses strict structured text (`text.format`), `service_tier=de
 
 Successful profiles retain requirements/preferences, inclusion/exclusion, acknowledge/defer unknown policies, method `campaign-criteria-responses-v1`, schema `campaign-generated-criteria-v1`, original brief/prose linkage and exact profile revision. Generated IDs are namespaced under the interpretation identity. The profile **appends** independently validated generated criteria to unchanged human structured constraints. Human input and `model_generated` basis remain visible. Generated values are campaign needs, never source facts, task authority or approval; they cannot replace platforms, market, product scope, candidates or external-action limits. Unsupported/extra fields, authority-forging objects and malformed criteria are invalid. Existing caption-method limitations remain unchanged.
 
-`read_interpretation` and campaign history expose input, requester, model automation, configuration, outcome, validated profile, usage and cost-operation link. The browser displays the saved interpretation before offering separate explicit selection in `prepare_comparison(..., interpretation_id=...)`. Selection requires success for that exact campaign/brief. Comparison drafts pin the immutable profile; current-brief checks protect commit/confirmation. A successor racing transport makes the result `stale`, with no executable profile. Historical comparisons remain unchanged. Assessment stays rule-based and unranked; LLM assessment is separate work.
+`read_interpretation` and campaign history expose input, requester, model automation, configuration, outcome, validated profile, usage and cost-operation link. The browser displays the saved interpretation before offering separate explicit selection in `prepare_comparison(..., interpretation_id=...)`. Selection requires success for that exact campaign/brief. Comparison drafts pin the immutable profile; current-brief checks protect commit/confirmation. A successor racing transport makes the result `stale`, with no executable profile. Historical comparisons remain unchanged. A comparison using this interpretation stays rule-based and unranked; the separate installed `recommend_ranked` operation performs bounded model assessment.
 
 Durable outcomes include success, invalid/refused/incomplete, blocked, meter failure, transport uncertainty, stale and interrupted in-progress. Only matching-model `completed` or `incomplete` response envelopes with valid final usage can settle; provider mode also requires the returned standard service tier. Queued/in-progress/unknown statuses, unsupported terminal statuses, model/tier mismatch and missing/invalid usage retain the reservation and fail the expected meter. No partial count releases a full bound. Valid final usage settles even malformed/refused/incomplete/stale interpretations. Raw responses, refusal strings and provider exceptions are not retained. Explicit final operator reconciliation and separate meter-health recovery remain with [the cost owner](costs.md#responses-token-measurement-and-provider-provenance).
 
@@ -191,7 +203,7 @@ For insufficient coverage, one declared derivation (`first_human_product_else_br
 
 `campaign_discovery_requests` owns one immutable disposition per saved shortlist: `not_needed`, `refused` with reason, or `submitted` with the associated task. Task creation and disposition commit together. A fresh server-created nested task request prevents client request collisions; exact concurrent/restarted retries reopen the disposition before inspecting changed clocks, briefs, sources or configuration. If interrupted before admission commits, retry uses the already saved coverage and rechecks the current human brief. A failure of the second transaction leaves the saved recommendation available and its missing disposition explicit until retry. Missing authority raises an authorization error and grants no task. Same-workspace owners and the configured campaign actor are trusted application composition, not user fields.
 
-`CampaignRecommendations.read` joins public shortlist and acquisition views. The saved supported shortlist, including empty, remains available while discovery is queued, running, waiting, failed or refused. Existing worker accounting owns monetary admission: an exhausted configured allowance remains a resumable waiting task with its actual reason; this operation invents no budget, price, free classification or duplicate admission layer. Correcting cost control can resume that same task. A durable source/configuration refusal remains historical; it is never silently retried under different configuration. Task completion/publication does not regenerate or modify any shortlist. Explicit regeneration is implemented below; schedulers remain future work. See [ADR 0010](adr/0010-save-before-coverage-discovery-admission.md).
+`CampaignRecommendations.read` joins public shortlist and acquisition views. The saved supported shortlist, including empty, remains available while discovery is queued, running, waiting, failed or refused. Existing worker accounting owns monetary admission: an exhausted configured allowance remains a resumable waiting task with its actual reason; this operation invents no budget, price, free classification or duplicate admission layer. Correcting cost control can resume that same task. A durable source/configuration refusal remains historical; it is never silently retried under different configuration. Task completion/publication does not regenerate or modify any shortlist. Explicit regeneration and keyword due ticks are installed; continuous scheduler/dispatcher deployment remains future work. See [ADR 0010](adr/0010-save-before-coverage-discovery-admission.md).
 
 
 ## Explicit regeneration after discovery

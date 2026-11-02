@@ -6,7 +6,7 @@ Build a shared intelligence foundation for brand and agency marketers who now as
 
 Beauty in South Korea and Japan is the first domain in which to prove the platform. One multilingual core model and one system serve both markets. Beauty concepts and market-specific labels, channels, taxonomies, and effective-dated policies extend that core without redefining it.
 
-The [functional requirements](FR.md) and [operational contract](docs/functional-requirements.md) define the target workflows below. The current local application implements a fixed-sample evidence and decision foundation; agentic research, ranking, automatic shortlist saving, workers, X alerts and explorer interfaces remain implementation work.
+The [functional requirements](FR.md) and [operational contract](docs/functional-requirements.md) define the target workflows below. The current local application implements frozen and bounded current-KB evidence, supported deterministic/model recommendations and automatic shortlists, approved assistant enrichment, explicit bounded workers, recent X alerts, graph traversal and lineage. Optional model/live routes require trusted configuration and retain unverified live readiness; broader autonomous research, semantic monitoring, hosted operation and actual measurement remain future work. See the [current roadmap](docs/roadmap.md) for the distinction between installed software, live acceptance and human validation.
 
 ## 2. Connected decision loops
 
@@ -84,6 +84,8 @@ Canonical state is authoritative for KB queries, campaign recommendations and as
 Where actual spending can be derived reliably, record attributed usage/charges and enforce configured ceilings across jobs and tools. Costs that cannot be derived remain clearly labeled forecasts. Track meter/rate versions, currency, accounting period and in-flight commitments; reconcile actual charges without double-counting retries. A strict pre-call limit requires bounded charges or a provider-side cap; delayed billing limitations remain visible. Request/record bounds and expected-value stopping are separate from monetary ceilings. Ceiling amounts are configuration, not assumed provider prices, and the approximate all-in operating target is not proof that a particular workload fits it.
 
 ## 6. Starting technologies and growth
+
+This table describes accepted target options and growth criteria, not the current deployment. The installed local runtime is a standard-library Python browser/CLI application, explicit bounded worker operations, PostgreSQL and local payload files; Compose starts PostgreSQL only.
 
 | Capability | Start with | Expand when measured need appears |
 | --- | --- | --- |

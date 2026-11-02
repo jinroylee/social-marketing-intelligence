@@ -1,58 +1,41 @@
 # Product documentation
 
-These documents describe the Social Marketing Intelligence product, its architecture and its data contracts. They are maintained with the code. Accepted design that is not yet implemented is identified explicitly.
+Start with the [complete user and operator guide](user-guide.md) for setup, every implemented workflow, exact execution/recovery steps, IDs and the technical path behind each action. The root [README](../README.md) provides a concise quickstart. Read the [architecture](architecture.md) for the current system, the [requirements](functional-requirements.md) for accepted behavior, and the [roadmap](roadmap.md) for live/human readiness and the larger product destination. The [glossary](../GLOSSARY.md) defines shared domain language.
+
+## Current system and target
 
 | Document | Purpose |
 | --- | --- |
-| [Operational functional requirements](functional-requirements.md) | Target A/B/C flows, automatic shortlist persistence, acquisition/approval, explorer surfaces and hybrid spending; implemented versus missing coverage |
-| [Operational implementation specification](implementation-spec.md) | Consolidated implementation draft: user stories, public contracts, acceptance scenarios and bounded delivery milestones |
-| [Reader guide](reader-guide.md) | Plain-language walkthrough, sample data, UI-to-code map, table dictionary and current automation boundaries |
-| [Architecture](architecture.md) | Product boundaries, module ownership, data flow and current implementation coverage |
-| [Data model and ERD](data-model.md) | Implemented PostgreSQL relationships and the accepted business model |
-| [Evidence sets](evidence-sets.md) | Offline import, provenance, immutable membership, actor context and policy-aware reads |
-| [Shared knowledge](knowledge.md) | Brand/Product references, caption interpretations, bounded entity graph, dependency cleanup and translation-assisted review packets |
-| [Source integrations](source-integrations.md) | Implemented route capabilities, retained verification evidence and remaining discovery/readiness work |
-| [Offline acquisition tasks](tasks.md) | Configured daily keyword, campaign and exact approved-proposal submission, bounded synthetic worker and exact outcomes |
-| [Offline cost accounting](costs.md) | Attributable synthetic usage, forecasts, shared bounded admission, final-evidence reconciliation, meter recovery and local cost detail |
-| [Campaign decisions](campaigns.md) | Versioned campaign workflow, automatic deterministic/model-ordered shortlist persistence, bounded ranking provenance and explicit discovery regeneration |
-| [Independent monitoring](monitoring.md) | Frozen investigations, bounded offline X topics/windows/captures and configured quantitative and provisional semantic alerts with policy-aware history and bounded existing-KB context |
-| [Measurement and feedback](planning.md) | Proposed campaign plans and human decision-note revisions |
-| [Local review application](local-review.md) | Browser workflow, named local actor, evidence panels, saves and failure behavior |
-| [Development verification](development.md) | The shared local/CI check command and test prerequisites |
-| [Agent workflow configuration](agents/issue-tracker.md) | Local ticket publication, dependency gates, claiming, validation and resolution |
-| [Quality review](evaluation.md) | Separate technical, translation-assisted, Japanese-original and marketer-usefulness gates; operational packet export/record/reopen |
-| [Canonical evidence ownership](adr/0001-canonical-evidence-ownership.md) | Why source evidence and business decisions have separate owners |
-| [Explicit assistant gap scope](adr/0018-explicit-assistant-gap-scope.md) | Why explicit keyword bounds and task-side linkage preserve exact approval and answer history |
-| [Pinned support and current policy](adr/0002-pinned-support-current-policy.md) | Why reproducible decisions pin support while permissions remain current |
-| [Exact supplementary profile authority](adr/0016-explicit-bounded-profile-supplementation.md) | Why one approved nickname fill shares parent limits while retaining separate source identity |
-| [Recorded live schedule authority](adr/0015-recorded-live-schedule-authority.md) | Why explicit operator activation pins a route independently of process switches and preserves bounded snapshot recovery |
-| [Live discovery uncertainty](adr/0014-live-discovery-response-and-billing-identity.md) | Why source response recovery and final billing retain separate stable identities |
-| [Capture-based discovery avoidance](adr/0013-capture-based-discovery-avoidance.md) | Why original captures, complete support and current permissions govern reuse without transferring task receipts |
-| [Atomic scheduled post admission](adr/0012-atomic-scheduled-post-admission.md) | Why daily new-post consumption commits with canonical effects while refreshes remain separate |
-| [Stable schedule accounting day](adr/0011-stable-schedule-accounting-day.md) | Why daily keyword history and accounting boundaries survive configuration edits |
-| [Save before discovery admission](adr/0010-save-before-coverage-discovery-admission.md) | Why immutable recommendations survive automatic discovery refusal and admission retries |
-| [Automatic shortlist persistence](adr/0003-automatic-shortlist-persistence.md) | Why saving generated recommendations requires no human review or approval |
-| [Lightweight monitoring evidence](adr/0004-lightweight-monitoring-evidence.md) | Why X detection owns bounded recent evidence separately from full KB publication |
-| [Source-free quantitative alert history](adr/0019-source-free-quantitative-alert-history.md) | Why configured sample-volume assessments and notifications retain exact window lineage without copied source claims |
-| [Bounded semantic positions](adr/0020-bounded-semantic-positions-full-input-policy.md) | Why provisional fixed positions and every actual model input govern semantic alert history |
-| [Pinned local alert context](adr/0021-pinned-local-alert-context.md) | Why one existing-KB query and original recent dependencies govern a deterministic explanation without acquisition authority |
-| [Bounded recent X poll authority](adr/0023-bounded-recent-x-poll-authority.md) | Why recurring source authority and one-use response identity survive worker and billing uncertainty |
-| [Promoted source lifecycle](adr/0022-promoted-source-lifecycle-inheritance.md) | Why parent monitoring mutations and independent KB reads govern selected ingested copies through a one-way source port |
-| [Task session effect ownership](adr/0005-task-session-effect-ownership.md) | Why each task's execution lock and effect transactions share one PostgreSQL session |
-| [Bounded synthetic admission](adr/0006-bounded-synthetic-admission.md) | Why scope decisions and ledger writes share a lock while uncertain dispatches keep their commitments |
-| [Generated criteria preserve human constraints](adr/0008-generated-criteria-preserve-human-constraints.md) | Why generated additions stay separate from human briefs and require exact visible selection |
-| [Final cost evidence and meter recovery](adr/0007-final-cost-evidence-and-meter-recovery.md) | Why named liabilities require final evidence and meter health has separate operator recovery |
-| [Exact supported answers](adr/0017-exact-supported-answers.md) | Why bounded extractive answers retain every model input and render only governed source values |
-| [Constrained supported ranking](adr/0009-constrained-supported-ranking.md) | Why one bounded model order uses constrained candidate-scoped judgments and durable no-reissue claims |
+| [User and operator guide](user-guide.md) | Numbered end-to-end manual, feature coverage matrix, environment/startup, offline smoke walkthrough, explicit workers, configuration, recovery and troubleshooting |
+| [Architecture](architecture.md) | Runtime, module ownership, end-to-end data flow, authority and failure boundaries |
+| [Data model](data-model.md) | All 85 physical tables/ERDs, table dictionary, sample lineage and separately marked conceptual domain |
+| [Functional requirements](functional-requirements.md) | A/B/C workflows, acquisition, spending and explorer requirements with current coverage |
+| [Interface and acceptance contract](implementation-spec.md) | Shared operation semantics, invariants and T01–T30 acceptance obligations |
+| [Roadmap and readiness](roadmap.md) | Outstanding human/live validation and preserved long-term goals |
+| [Product proposal](../POPOSAL.md) / [core flows](../FR.md) | Product thesis, multilingual ontology, measurement ambitions and concise target workflows |
 
-The root [glossary](../GLOSSARY.md) defines domain language; the [README](../README.md) explains local commands.
+## Implemented contracts
 
-## Maintenance
+| Owner / workflow | Contract |
+| --- | --- |
+| Frozen import and exact source support | [Evidence sets](evidence-sets.md) |
+| Catalog, interpretations, publication, queries, answers and graph | [Shared knowledge](knowledge.md) |
+| Briefs, model criteria, comparisons, shortlists, coverage and regeneration | [Campaigns](campaigns.md) |
+| Proposal approval, tasks, schedules, recovery, completion and lineage | [Tasks](tasks.md) |
+| Usage, forecasts, admission, reconciliation and meter recovery | [Costs](costs.md) |
+| Snapshot investigations, recent X, alerts, context, promotion and polling | [Monitoring](monitoring.md) |
+| Proposed measurement and human learning | [Planning](planning.md) |
+| Browser routes, protected forms and configuration | [Local review](local-review.md) |
+| Source capability, provenance and live prerequisites | [Source integrations](source-integrations.md) |
+| Human review rules and exact operational packets | [Evaluation](evaluation.md) |
+| Local/CI checks | [Development](development.md) |
 
-- Update the architecture when responsibilities, dependencies or deployment boundaries change.
-- Update the physical ERD with schema changes. Keep accepted future objects in the separately marked conceptual model until they are implemented.
-- Update interface documentation when inputs, outputs, invariants or failure behavior change.
-- Add ADRs for durable decisions with meaningful alternatives and consequences. Describe the product trade-off; preserve superseded ADR links when a decision changes.
-- Prefer Markdown and Mermaid as reviewable source. Keep one authoritative description of each contract and link to it from other documents.
+## Design decisions
 
-Implementation tickets, experiment results and session chronology live in `.scratch/`.
+[ADRs](adr/) preserve durable rationale, alternatives and consequences. They cover [evidence ownership](adr/0001-canonical-evidence-ownership.md), [pinned support/current policy](adr/0002-pinned-support-current-policy.md), [automatic saves](adr/0003-automatic-shortlist-persistence.md), [lightweight monitoring](adr/0004-lightweight-monitoring-evidence.md), task/session ownership, spending, constrained model outputs, stable schedule accounting, source-response uncertainty, explicit enrichment scope and monitoring lifecycle inheritance. Follow links from the relevant feature contract for the specific decision.
+
+## Agent workflow and maintenance
+
+Use [domain documentation rules](agents/domain.md) before domain/interface changes, [local issue workflow](agents/issue-tracker.md) for active tickets, and [configured labels](agents/triage-labels.md) for triage roles.
+
+Maintain one authoritative description of each contract. Update architecture for responsibility/deployment changes, physical ERDs and the dictionary for schema changes, and owner contracts for interface/invariant changes. Label accepted future design separately from installed software and from live/human validation. Keep durable trade-offs in ADRs; use Git for code/design chronology. Temporary implementation notes may live in `.scratch/` while useful; completed plans, duplicate ticket drafts and session histories need not be retained. Keep genuine outstanding work in the roadmap. Raw source/verification evidence remains subject to its own retention policy.

@@ -1,6 +1,6 @@
 # Evidence and marketer quality review
 
-Technical correctness, translation-assisted language review and marketer usefulness are separate gates. Passing repository checks cannot supply human judgments or validate Japanese-original semantics. Review execution records belong in `.scratch/`; these are the durable review rules.
+Technical correctness, translation-assisted language review and marketer usefulness are separate gates. Passing repository checks cannot supply human judgments or validate Japanese-original semantics. Retain actual review evidence in its permitted review environment; these are the durable review rules. Unanswered templates and obsolete execution narratives need not be retained.
 
 The same-corpus procedure and recording tool below evaluate the implemented local pilot and require actual human evaluation inputs. They do not establish a mandatory runtime human-review gate for every shortlist. The [operational target](functional-requirements.md) permits automatic shortlist persistence; its methods still need quality evaluation and its authority/publication/spending boundaries need technical verification.
 
@@ -37,27 +37,28 @@ Create these execution records when conducting a real review; an unanswered temp
 
 The review JSON/status contains evaluation history, not product architecture. Keep source excerpts/translations within the permitted review environment; operator-managed exports are not automatically purged. Use fresh policy-aware readers when reviewing rather than treating saved copied text as current evidence.
 
-## Accepted future operational checks
+## Current human review readiness
 
-These are required validation scenarios for future implementation, not tests already passed by the current pilot:
+Actual review is **pending**. Packet/export software and simulated test actors are not review receipts. Select or provision actual permitted saved records through their normal public workflows; a curated sample file alone is not an imported, selected, currently permitted review corpus.
 
-| Scenario | Expected behavior |
-| --- | --- |
-| Agent saves a ranked recommendation | Persists an attributed shortlist without a human actor, approval or review; no human confirmation is fabricated. |
-| Eligible account has incomplete profile | Stable identity and permitted ingested support allow recommendation; missing attributes remain explicit. Reference-only unregistered seeds are excluded. |
-| Campaign coverage is insufficient | A bounded discovery task is submitted automatically. Completion notifies/offers regeneration; saved results do not change until explicit regeneration. |
-| Assistant requests external enrichment | Exact approved scope is required server-side; forged task origins or expanded queries cannot bypass approval. |
-| Retrieval succeeds but ingestion/publication fails | No answer uses the un-ingested response and no notification claims usable KB completion. |
-| X anomaly needs context | Uses recorded monitoring evidence and existing KB context, without full ingestion of every post or follow-up external searches. |
-| Metered costs approach a configured ceiling | Competing tasks share admission/accounting, pause further chargeable work at the allowance, and reconcile actual charges without duplicate accounting. Meter lag/charge bounds are visible. |
-| Cost cannot be derived reliably | Remains a labeled forecast; it does not become zero or a claim of enforced monetary control. |
-| Evidence is withdrawn | Generated shortlist, assistant, graph and alert copies respect their source dependencies and expose unavailable support rather than reconstructing denied wording. |
+A real review needs an actual named reviewer/attestation, timezone and prior exposure; identify qualified Japanese-original adjudication separately. Select exact permitted records before showing assisted results:
+
+- A generated current-KB recommendation (model-ranked when assessing rank/rationale), its campaign/brief/comparison/shortlist and regeneration history.
+- A saved KB answer with its exact query/input manifest and enrichment proposal/revision/digest, approval, task, completion and publication history.
+- Quantitative and semantic X alerts, their assessment/topic/revision/window/baseline memberships and saved existing-KB context. X windows retain their own sampling/coverage/retention and do not silently become the TikTok corpus.
+- The frozen dataset ID/digest and exact observations/assertions for the same-corpus investigation/campaign baseline. The legacy evaluator requires actual reviewer attribution on its linked human records; an operational generated shortlist and a human-confirmed shortlist are distinct records.
+
+Record baseline-before-assisted observations honestly, with actual task order/times/counts, translations and translator/method/model attribution, useful finding, reusable candidate decision or deliberate deferral, missing evidence and real campaign/assistant/alert feedback. If prior assistance prevents a valid baseline, disclose it and leave that gate pending. Missing journey states remain limitations; do not reconstruct them as historical evidence. Quantitative-alert/journey feedback goes in the actual review record/session note because the operational packet tool supports recommendation, answer and semantic alert only.
+
+Keep full selected/submitted/currently countable/unavailable denominators, negative/ambiguous/not-assessable judgments and material corrections. No actual human language/usefulness gate has passed. Japanese-original accuracy remains `not_validated` without qualified original-language adjudication; recorded annotations alone establish neither source truth nor generalized accuracy, causal speed or sales.
+
+The [shared acceptance scenarios](implementation-spec.md#acceptance-scenarios) cover authority, eligibility, publication, recovery, costs and policy independently. Technical verification and the four quality dimensions below remain separate.
 
 ## Operational result-review packets
 
 `OperationalReviews` in [`smi_review.quality`](../src/smi_review/quality/__init__.py) supplies a small public Python export/record/reopen contract for a saved generated current-KB recommendation, bounded KB answer or retained X semantic alert. [`tools/operational_quality.py`](../tools/operational_quality.py) exposes the same local journey. Existing `local-marketer-review-v1` same-corpus records and `tools/pilot_evaluation.py` remain unchanged; an operational packet does not replace the manual-before-assisted procedure.
 
-Run the tool against the already migrated local result workspace. The named `--actor` is trusted operator attribution, not hosted identity verification. `SMI_DATABASE_URL`/`SMI_DATABASE_SCHEMA` select the database without being printed. Add `--include-synthetic` before the action only when deliberately reviewing simulated evidence.
+Run the tool against the provisioned local result workspace. Every CLI action currently calls the review owner’s `migrate()`, including `read`; use public read-only owner operations for a strictly no-migration inventory. The named `--actor` is trusted operator attribution, not hosted identity verification. `SMI_DATABASE_URL`/`SMI_DATABASE_SCHEMA` select the database without being printed. Add `--include-synthetic` before the action only when deliberately reviewing simulated evidence.
 
 ```bash
 uv run --locked python tools/operational_quality.py --actor ACTUAL_REVIEWER export answer ANSWER_ID --request-id EXPORT_REQUEST

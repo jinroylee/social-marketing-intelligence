@@ -151,7 +151,7 @@ Installed anomaly investigation uses only existing KB context as described above
 
 ## Gated periodic live recent X
 
-`RecentPolling` in `smi_monitoring.polling` extends the same recent evidence owner with **one official X recent-search route**, independent of KB keywords, publications, alerts and campaigns. `MonitoringStore.migrate` installs its additive schema and shared accounting prerequisites. The installed path is disabled by default; no live-readiness receipt exists. Primary documentation was checked **2026-10-28**; see [the route contract](source-integrations.md#gated-official-x-recent-search) and [the verification note](../.scratch/operational-implementation/research/ticket-34-x-recent-contract.md).
+`RecentPolling` in `smi_monitoring.polling` extends the same recent evidence owner with **one official X recent-search route**, independent of KB keywords, publications, alerts and campaigns. `MonitoringStore.migrate` installs its additive schema and shared accounting prerequisites. The installed path is disabled by default; no live-readiness receipt exists. Primary documentation was checked **2026-10-28**; see [the route contract](source-integrations.md#gated-official-x-recent-search) and [retained primary-contract evidence](source-integrations.md#retained-primary-contract-evidence).
 
 The public trusted-Python operations are:
 

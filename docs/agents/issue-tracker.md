@@ -1,14 +1,10 @@
-# Local Markdown issue tracker
+# Local Markdown issue workflow
 
-Implementation issues live one per file under `.scratch/<feature>/issues/`, numbered in dependency order. The operational source spec remains [the implementation specification](../implementation-spec.md); do not create a second authoritative copy.
+Use one file per active implementation issue under `.scratch/<feature>/issues/`, numbered in dependency order. Link the [accepted requirements](../functional-requirements.md), [interface/acceptance contract](../implementation-spec.md), relevant owner contracts and direct blockers. Keep product truth in those durable documents rather than a second ticket copy.
 
-## Implementation workflow
+1. Read the issue, direct blockers and relevant domain guidance. Begin when blockers are resolved and the integration branch's shared checks pass; document any explicitly authorized exception.
+2. Claim the issue by setting `Status: claimed`. Use an isolated branch/worktree when implementation needs separation. Follow the approved public-operation test boundary, real PostgreSQL and simulated external I/O unless actual execution is separately authorized.
+3. Commit implementation and validation evidence. Integrate and run shared checks before marking `Status: resolved`; record the implementation commit and check result under `## Completion`.
+4. Retain genuine blockers and partial work explicitly. Actual human-validation work requires actual reviewer input; software fixtures cannot resolve it.
 
-1. Read the ticket, its direct blockers, the source spec and relevant domain documentation. A ticket can start after all its blockers are resolved and the integration branch's shared checks pass. Ticket 01 is the approved baseline-repair exception because it fixes the currently failing shared check.
-2. Claim one ticket by setting its `Status` to `claimed`. Implement on a fresh branch/worktree based on the current integration tip. Use the ticket's approved public-operation testing boundaries, real PostgreSQL, and simulated external I/O.
-3. Commit the implementation and validation evidence. Merge into the integration branch, run the shared checks, and only then set the ticket to `resolved` with the implementation commit and check result under `## Completion`.
-4. Resolve test/review failures within the approved scope. Record a genuine external blocker explicitly; preserve partial work and do not claim the ticket complete.
-
-Publishing creates one file per approved ticket with `Status: ready-for-agent`. Blocking edges use ticket numbers and titles. Drafts are historical proposals; the published file is authoritative for execution status. Comments append under `## Comments`.
-
-The completed first run covers tickets 01–10 on `integration/operational-tickets-01-10`. The user approved continuing tickets 11–39 in the same workflow on `integration/operational-tickets-11-39`; see `.scratch/operational-implementation/continuation-manifest.json`. Execute one fresh implementer at a time after its dependencies and shared checks pass. Record genuine external prerequisites without falsely resolving them; continue other dependency-ready work sequentially. Keep execution offline/local with simulated I/O and completion through local commits, without a PR, push, or external tracker update. The user permits read-only primary-documentation lookups for current contract verification; source/model execution remains local and simulated, with live calls disabled. Human-validation tickets require real reviewer input.
+Publishing sets `Status: ready-for-agent` and explicit blocking issue numbers/titles. The published issue owns active execution status; comments append under `## Comments`. Drafts are temporary proposals. After a completed batch, move genuine remaining requirements/readiness into the [roadmap](../roadmap.md), preserve durable trade-offs in ADRs and rely on Git for completed implementation history. Obsolete drafts, completed ticket copies and session narratives need not remain in the working tree. Preserve source/verification artifacts according to their applicable retention requirements.

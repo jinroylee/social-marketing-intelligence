@@ -2,7 +2,7 @@
 
 [`smi_review`](../src/smi_review/__init__.py) provides independent investigation and campaign workflows over public monitoring, campaign/planning, knowledge and frozen-evidence interfaces. PostgreSQL owns saved revisions; browser state is not durable.
 
-This document describes the current local browser, including automatic deterministic and bounded model-ordered shortlist saves and separate human selections. The installed browser also offers bounded extractive KB answers and explicit gap-to-approved-enrichment follow-up; the [target operational UI](functional-requirements.md) will add broader autonomous research, broader X alerts and explorer functionality.
+This document describes the current local browser, including automatic deterministic and bounded model-ordered shortlist saves and separate human selections. The installed browser also offers bounded extractive KB answers and explicit gap-to-approved-enrichment follow-up; bounded X alerts, graph traversal and task lineage are also installed. The [target operational UI](functional-requirements.md) adds broader autonomous research, semantic monitoring and operational exploration.
 
 ## Knowledge search
 
