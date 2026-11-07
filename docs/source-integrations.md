@@ -81,17 +81,17 @@ The installed bounded route uses OpenAI Responses. The **2026-10-20** read-only 
 
 The route sends one HTTPS POST with bearer authentication, strict schema under `text.format`, explicit `store=false`, finite request/response/output bounds, no tools and no automatic retry. All object fields are required with explicit nullable optional values and no extra properties. Refusal, incomplete output and missing usage remain separate outcomes. Input/output/total/cache/reasoning usage is validated; generated output includes reasoning/formatting, and local character counts are not exact full-request tokens. No hidden live token-count request is issued. Exact supported model/input/context/output contracts and explicit rates/weights remain trusted configuration; [campaign interpretation](campaigns.md#bounded-natural-language-interpretation) and [accounting](costs.md#responses-token-measurement-and-provider-provenance) own those details. Schema validity cannot grant authority, weaken human criteria or establish semantic truth/usefulness.
 
-## Retained primary-contract evidence
+## Reviewed primary-contract sources
 
-The following raw fetched provider-document captures survive scratch cleanup because they are verification inputs, rather than implementation narratives. Their dated contents may differ from current provider documentation; reverify when enabling a route. JSON fingerprints/manifests, source receipts, logs, scripts and binary verification artifacts are also retained separately. None is a live-operation or human-review receipt.
+The primary-contract reviews used the provider-document captures below. The raw captures and their manifests, receipts and logs lived in `.scratch/operational-implementation/`, which was deliberately removed on 2026-11-05. Only the recorded sizes and SHA-256 fingerprints remain. Fetch and reverify current provider documentation when enabling a route. None of these captures is a live-operation or human-review receipt.
 
 | Captured primary source | Captured bytes / SHA-256 |
 | --- | --- |
-| [Bright Data synchronous requests](../.scratch/operational-implementation/verification/retained-workers/ticket-26/.scratch/operational-implementation/verification/ticket-26/synchronous-requests.md) | 14929 / `28ba451249656355f994c54ef6f81e422bb9143f79b839a12589222aca245e6b` |
-| [X recent endpoint/OpenAPI](../.scratch/operational-implementation/verification/retained-workers/ticket-34/.scratch/operational-implementation/verification/ticket-34/primary/1.md) | 94599 / `e571ade10bad81f413d8eebdb3d40eb830ccd62e0f625d84f5178994ea6a1a99` |
-| [X quickstart](../.scratch/operational-implementation/verification/retained-workers/ticket-34/.scratch/operational-implementation/verification/ticket-34/primary/2.md) | 6437 / `106dea73e1a90ef8c08e55eb90c480b03946ecee1963653b50d4578de7a14ca9` |
-| [X rate limits](../.scratch/operational-implementation/verification/retained-workers/ticket-34/.scratch/operational-implementation/verification/ticket-34/primary/3.md) | 14277 / `7ed4cdea57b5c83205ff098c62e899e5bd53eb073ce37e2cddf51e844c1d0aaf` |
-| [X pricing](../.scratch/operational-implementation/verification/retained-workers/ticket-34/.scratch/operational-implementation/verification/ticket-34/primary/4.md) | 11495 / `4b5bbde372d273e2001e5ea122bec018e30a7c6b9f45a28ec12fa13771618c58` |
-| [X developer policy](../.scratch/operational-implementation/verification/retained-workers/ticket-34/.scratch/operational-implementation/verification/ticket-34/primary/5.md) | 29747 / `1287c6f859d19daaeb2a9b2e83c9306ebf147a3e945a06b69945b9f845e3fc7e` |
-| [X query syntax](../.scratch/operational-implementation/verification/retained-workers/ticket-34/.scratch/operational-implementation/verification/ticket-34/primary/6.md) | 8436 / `6b78864969548b0870d1b681c629fdf7b796f5405476610b69702de7c0fd60be` |
-| [X pagination](../.scratch/operational-implementation/verification/retained-workers/ticket-34/.scratch/operational-implementation/verification/ticket-34/primary/7.md) | 8794 / `b6c71381127b1bc2f4bc779d07902daa863c8c5d3e447e9bcd19d5575391874d` |
+| Bright Data synchronous requests | 14929 / `28ba451249656355f994c54ef6f81e422bb9143f79b839a12589222aca245e6b` |
+| X recent endpoint/OpenAPI | 94599 / `e571ade10bad81f413d8eebdb3d40eb830ccd62e0f625d84f5178994ea6a1a99` |
+| X quickstart | 6437 / `106dea73e1a90ef8c08e55eb90c480b03946ecee1963653b50d4578de7a14ca9` |
+| X rate limits | 14277 / `7ed4cdea57b5c83205ff098c62e899e5bd53eb073ce37e2cddf51e844c1d0aaf` |
+| X pricing | 11495 / `4b5bbde372d273e2001e5ea122bec018e30a7c6b9f45a28ec12fa13771618c58` |
+| X developer policy | 29747 / `1287c6f859d19daaeb2a9b2e83c9306ebf147a3e945a06b69945b9f845e3fc7e` |
+| X query syntax | 8436 / `6b78864969548b0870d1b681c629fdf7b796f5405476610b69702de7c0fd60be` |
+| X pagination | 8794 / `b6c71381127b1bc2f4bc779d07902daa863c8c5d3e447e9bcd19d5575391874d` |

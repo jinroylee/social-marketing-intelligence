@@ -1,0 +1,5 @@
+PASS 42 local Markdown links including heading targets; fences balanced
+PASS all 99 upstream IDs retained exactly once; all 3 review requests mapped
+PASS 6 EN/KO generated chat/chart/graph markup snapshots have balanced explicit tags and unique IDs
+PASS 11 r1 files unchanged from start-of-dispatch snapshot
+Source and fixture checks only. No browser, rendering, visual approval, or production interaction verification.

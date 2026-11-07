@@ -1,0 +1,20 @@
+PASS: 45 unique specs in dependency order; DAG has 89 direct edges.
+PASS: 99 upstream IDs plus 3 r2 IDs have complete target/foundation/gap/UI/contract/spec/acceptance/owner paths.
+PASS: UD-09 is satisfied upstream evidence and creates no new implementation or approval blocker.
+PASS: all per-spec sections, code paths, acceptance anchors and decision blockers exist.
+PASS: 1598 local links/anchors across 53 Markdown files resolve.
+PASS: one canonical map with only wayfinder:map; 2 open child decision issues with one wayfinder label each and explicit fallback relationships.
+PASS: exact r2 manifest, 13 approved artifact hashes and actual human approval record match the planning input.
+DEPENDENCY-READY FRONTIER: S01. Each spec's environment/config prerequisites still apply.
+DIRECT DECISION-BLOCKED: S39 (W01). Each decision issue names the spec it blocks.
+LIMIT: structure does not prove unbuilt behavior, provider readiness, semantic validation or actual human acceptance.
+DECISION FRONTIER: Set the richer research and synthesis boundary (W01); status open; assignee unassigned; blocks S39.
+DECISION FRONTIER: Decide live X window comparability and receipt-time semantics (W02); status open; assignee unassigned; blocks no spec.
+USER DECISION U1: default if unanswered: Request at plan start with the smallest useful caps. If not granted, the probes and the early marketer check stay blocked, the build continues on fixtures and premise-dependent specs stay provisional.
+USER DECISION W02: default if unanswered: Accept all three as a narrowly scoped amendment, with market coverage still unknown and installed v1 unchanged. If rejected, live windows stay not assessable, there are no live alerts and no live engagement, and monitoring readiness records blocked_by_decision. Blocks no spec.
+USER DECISION U3: default if unanswered: (c)+(d). The probe's X row records the saturation rate and a recommendation, and the coordinator re-asks. Choosing (a) or (b) adds one M spec before monitoring readiness.
+USER DECISION U4: default if unanswered: Bright Data profile/post detail fields; tiktok-web stays unavailable.
+USER DECISION U5: default if unanswered: Keep declining. Stated cost: graph and chart interaction stay human-verified only, at the browser checkpoint and release record, with Node state tests in between.
+USER DECISION U6: default if unanswered: Proceed with the disabled candidate under the recommended 'yes' branches as non-binding working assumptions; enabling stays decision-blocked.
+USER DECISION U7: default if unanswered: Yes, with SMTP submission. If the operator has only an HTTP email API account, inbox-email uses it behind the same delivery-identity model.
+No decision was resolved by planning.

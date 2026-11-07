@@ -1,0 +1,18 @@
+{
+  "revision": "r1",
+  "status": "pending_actual_human_review",
+  "preview": "http://127.0.0.1:8876/prototype.html?variant=A#campaigns",
+  "browser_verification": "blocked_by_declined_preview_permission",
+  "files": {
+    "prototype.html": "6b88caa6074788bf60ee64ad58df4b67cd310fd8a88af80c3f4315a5fc1ef6a3",
+    "design-plan.md": "49f0c6982103fb8a13f4109e2031238eeab6a2c0382e7b302f8bddc522a6d213",
+    "design-spec.md": "eeea12ea5793ab87f42704bde644220c2c848ddc69888764720c0b1303dcc093",
+    "fr-ui-traceability.md": "1a1a3023ede4147ff7bf6d19716f089f7fb3e476672a39f4ab8bb66cf44a553b",
+    "review-guide.md": "118f48b7181d78b6b0016866d7421578636c5487b277797e30fa22187e55fc10",
+    "verification.md": "bc1d35354f5ca8661f0da2ebd7d2d1fe8d37ce082174bf687f9304d8511b247c",
+    "verification-results.txt": "0edfabeb0b32f44a87c3198c808cdfaaa75fc796be41a8f39a960b0b82e29916",
+    "shared-check-results.txt": "08a8fa63d539df8b198cadaa2249d4d8e0aea7192aacfe97e6fb47f376f5bab8",
+    "verify-prototype.cjs": "6d68b0f2188c03607f55c33fd67e12ab2fa0a7b2c4067395da70c2a29dd82762",
+    "build_traceability.py": "b241b7fa94ccc5d974f7fd99c0c875312fea3a967dbc6af5dff117650e92d444"
+  }
+}

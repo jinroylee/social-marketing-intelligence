@@ -1,0 +1,12 @@
+All checks passed!
+Documentation links, physical ERD coverage and instruction symlinks passed.
+...................................................F
+=================================== FAILURES ===================================
+_ test_only_supported_kb_gaps_offer_proposals_not_model_failures_or_generic_unknowns _
+tests/test_assistant_enrichment.py:261: in test_only_supported_kb_gaps_offer_proposals_not_model_failures_or_generic_unknowns
+    assert journey.context(supported['answer_id'], HUMAN)['gap'] is None
+E   AssertionError: assert 'stale_published_information' is None
+=========================== short test summary info ============================
+FAILED tests/test_assistant_enrichment.py::test_only_supported_kb_gaps_offer_proposals_not_model_failures_or_generic_unknowns
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 51 passed in 57.80s

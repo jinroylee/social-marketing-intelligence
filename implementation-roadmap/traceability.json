@@ -1,0 +1,2105 @@
+[
+  {
+    "id": "FR-A01",
+    "target": "Structured campaign criteria with natural-language descriptions, predefined options, or both",
+    "foundation": "Installed bounded. Human briefs and typed criteria; additive model interpretation requires configured route. Language usefulness pending",
+    "capability_gap": "Early, on real discovered data, a marketer and a KR/JP reader judge whether shortlists, mention judgments and extractive answers are useful, so S06 and S07 can change before the campaign and chat UIs are built.",
+    "ui_gap": "Campaigns \u2192 Brief & criteria; original input plus selected versioned interpretation",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1: start/revise_brief + interpretation selection; expected brief head",
+    "specs": [
+      "S08",
+      "S12",
+      "S25",
+      "S30",
+      "S35"
+    ],
+    "checks": [
+      "S08-A01",
+      "S12-A01",
+      "S25-A01",
+      "S30-A01",
+      "S35-A01"
+    ],
+    "owner": "Actual pilot marketer and a KR/JP reader, supported by the campaign, knowledge and assistant maintainers"
+  },
+  {
+    "id": "FR-A02",
+    "target": "Search current KB and filter/rank using rules and LLM assessment",
+    "foundation": "Partial target. Bounded literal current-KB retrieval and constrained candidate ordering installed; richer semantic/objective assessment future",
+    "capability_gap": "Task-discovered posts carry published brand/product interpretations, so campaign criteria and graph mention edges work on real data.",
+    "ui_gap": "Campaigns \u2192 Generate recommendation; account fit, reasons and gaps",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1: prepare_current_comparison, recommend/recommend_ranked; constrained eligible ordering",
+    "specs": [
+      "S06",
+      "S07",
+      "S12",
+      "S36",
+      "S43"
+    ],
+    "checks": [
+      "S06-A01",
+      "S07-A01",
+      "S12-A01",
+      "S36-A01",
+      "S43-A01"
+    ],
+    "owner": "smi_knowledge owns the support-based interpretation port; the smi_tasks worker composes it before publication"
+  },
+  {
+    "id": "FR-A03",
+    "target": "Assess quantity, relevance, and freshness; automatically queue discovery when insufficient",
+    "foundation": "Installed bounded. Versioned coverage, save-first disposition/task or refusal",
+    "capability_gap": "Task-discovered posts carry published brand/product interpretations, so campaign criteria and graph mention edges work on real data.",
+    "ui_gap": "Coverage quantity/relevance/freshness; separate discovery task after save",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1 + T1: saved coverage and campaign-origin acquisition composition",
+    "specs": [
+      "S06",
+      "S09",
+      "S12",
+      "S27"
+    ],
+    "checks": [
+      "S06-A01",
+      "S09-A01",
+      "S12-A01",
+      "S27-A01"
+    ],
+    "owner": "smi_knowledge owns the support-based interpretation port; the smi_tasks worker composes it before publication"
+  },
+  {
+    "id": "FR-A04",
+    "target": "Automatically save the ranked recommendation as a shortlist without review/approval",
+    "foundation": "Installed bounded deterministic encounter-order saves and constrained model-ranked saves. Deterministic order is explicitly unranked",
+    "capability_gap": "A marketer creates a campaign, receives an automatically saved supported shortlist, optionally curates it and deliberately regenerates after new knowledge.",
+    "ui_gap": "Saved shortlist badge identifies automation; no review gate",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1: automatic saved revision with method/inputs/producer",
+    "specs": [
+      "S12"
+    ],
+    "checks": [
+      "S12-A01"
+    ],
+    "owner": "smi_campaigns owns briefs, criteria, comparisons and shortlists; smi_tasks.campaigns owns discovery composition"
+  },
+  {
+    "id": "FR-A05",
+    "target": "Optional human curation",
+    "foundation": "Installed bounded human select/order/reasons successor with separate confirmation",
+    "capability_gap": "A marketer creates a campaign, receives an automatically saved supported shortlist, optionally curates it and deliberately regenerates after new knowledge.",
+    "ui_gap": "Optional curation dialog; selected membership and human reason; successor history",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1: save_shortlist with actual human actor and expected version",
+    "specs": [
+      "S12"
+    ],
+    "checks": [
+      "S12-A01"
+    ],
+    "owner": "smi_campaigns owns briefs, criteria, comparisons and shortlists; smi_tasks.campaigns owns discovery composition"
+  },
+  {
+    "id": "FR-A06",
+    "target": "Stable platform identity plus one permitted ingested supporting observation admits incomplete accounts",
+    "foundation": "Installed bounded. Reference-only handles/URLs remain discovery gaps",
+    "capability_gap": "Operators and planners can distinguish a route's installed capability, actual access/use permission and field/time coverage before work is admitted.",
+    "ui_gap": "Third candidate has incomplete profile and stable native account identity",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1: account_support projection; identity and support, not profile completeness",
+    "specs": [
+      "S11",
+      "S12"
+    ],
+    "checks": [
+      "S11-A01",
+      "S12-A01"
+    ],
+    "owner": "smi_ingestion.adapters owns route capabilities/provenance; smi_tasks owns approved route scope; smi_review exposes D1"
+  },
+  {
+    "id": "FR-A07",
+    "target": "Notify after usable discovery; offer regeneration without changing the saved shortlist",
+    "foundation": "Installed bounded local completion/regeneration journey",
+    "capability_gap": "A marketer creates a campaign, receives an automatically saved supported shortlist, optionally curates it and deliberately regenerates after new knowledge.",
+    "ui_gap": "Inbox completion \u2192 explicit regeneration \u2192 history",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "T1 completion + C1 new assessment/revision; no silent historical replacement",
+    "specs": [
+      "S12",
+      "S13",
+      "S29"
+    ],
+    "checks": [
+      "S12-A01",
+      "S13-A01",
+      "S29-A01"
+    ],
+    "owner": "smi_campaigns owns briefs, criteria, comparisons and shortlists; smi_tasks.campaigns owns discovery composition"
+  },
+  {
+    "id": "FR-B01",
+    "target": "Accept free-form questions/requests",
+    "foundation": "Installed bounded one-question extractive selection, not generalized conversation or autonomous research",
+    "capability_gap": "Chat, campaign comparison and graph seeds select relevant permitted support from a KB much larger than 100 publications, with explicit, reported bounds.",
+    "ui_gap": "Assistant conversation and bottom composer and supported findings; R2-CHAT threads/follow-ups and secondary sources/status",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "K1: ask + exact bounded scope/request identity; future multi-turn/context/turn read contract specified, not installed synthesis",
+    "specs": [
+      "S07",
+      "S08",
+      "S15",
+      "S25",
+      "S36",
+      "S39"
+    ],
+    "checks": [
+      "S07-A01",
+      "S08-A01",
+      "S15-A01",
+      "S25-A01",
+      "S36-A01",
+      "S39-A01"
+    ],
+    "owner": "smi_knowledge.queries owns selection; smi_ingestion owns the governed index columns and migration"
+  },
+  {
+    "id": "FR-B02",
+    "target": "Answer from current permitted KB",
+    "foundation": "Partial target. Exact published fact selection installed; semantic retrieval and richer grounded synthesis future",
+    "capability_gap": "Chat, campaign comparison and graph seeds select relevant permitted support from a KB much larger than 100 publications, with explicit, reported bounds.",
+    "ui_gap": "Supported findings and source/actual-input disclosure; target claim inspector; R2-CHAT threads/follow-ups and secondary sources/status",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "K1: exact query/read + answer; future synthesis validation separate; future multi-turn/context/turn read contract specified, not installed synthesis",
+    "specs": [
+      "S07",
+      "S15",
+      "S36",
+      "S39"
+    ],
+    "checks": [
+      "S07-A01",
+      "S15-A01",
+      "S36-A01",
+      "S39-A01"
+    ],
+    "owner": "smi_knowledge.queries owns selection; smi_ingestion owns the governed index columns and migration"
+  },
+  {
+    "id": "FR-B03",
+    "target": "Propose refresh of outdated information",
+    "foundation": "Installed bounded human-scoped gap proposal",
+    "capability_gap": "A marketer reviews refresh, fill or expansion scope, approves its exact revision and follows one asynchronous task. Agents can inspect and propose through the same contracts.",
+    "ui_gap": "Assistant research-purpose selector \u2192 exact refresh proposal for outdated captures",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "A1: immutable proposal purpose/intent/subject/query/route/limits/digest",
+    "specs": [
+      "S14",
+      "S27",
+      "S39"
+    ],
+    "checks": [
+      "S14-A01",
+      "S27-A01",
+      "S39-A01"
+    ],
+    "owner": "smi_tasks.assistant and AcquisitionTasks own proposal journey and approval; smi_review owns adapter/tool boundary"
+  },
+  {
+    "id": "FR-B04",
+    "target": "Propose filling unknown/incomplete attributes",
+    "foundation": "Partial target. Bounded keyword research and one exact optional nickname fill; arbitrary attribute planner future",
+    "capability_gap": "A marketer reviews refresh, fill or expansion scope, approves its exact revision and follows one asynchronous task. Agents can inspect and propose through the same contracts.",
+    "ui_gap": "Assistant research-purpose selector \u2192 exact fill proposal for missing attributes",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "A1: immutable proposal purpose/intent/subject/query/route/limits/digest",
+    "specs": [
+      "S14",
+      "S27",
+      "S39"
+    ],
+    "checks": [
+      "S14-A01",
+      "S27-A01",
+      "S39-A01"
+    ],
+    "owner": "smi_tasks.assistant and AcquisitionTasks own proposal journey and approval; smi_review owns adapter/tool boundary"
+  },
+  {
+    "id": "FR-B05",
+    "target": "Propose expansion around creators, posts, brands, or topics",
+    "foundation": "Partial target. Explicit subjects/query/window, not automatic inference of executable research scope",
+    "capability_gap": "A marketer reviews refresh, fill or expansion scope, approves its exact revision and follows one asynchronous task. Agents can inspect and propose through the same contracts.",
+    "ui_gap": "Assistant research-purpose selector \u2192 exact expansion proposal for account/post/brand/topic scope",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "A1: immutable proposal purpose/intent/subject/query/route/limits/digest",
+    "specs": [
+      "S14",
+      "S27",
+      "S39",
+      "S42"
+    ],
+    "checks": [
+      "S14-A01",
+      "S27-A01",
+      "S39-A01",
+      "S42-A01"
+    ],
+    "owner": "smi_tasks.assistant and AcquisitionTasks own proposal journey and approval; smi_review owns adapter/tool boundary"
+  },
+  {
+    "id": "FR-B06",
+    "target": "Approved search may exceed scheduled keywords",
+    "foundation": "Installed bounded authority rule",
+    "capability_gap": "A marketer reviews refresh, fill or expansion scope, approves its exact revision and follows one asynchronous task. Agents can inspect and propose through the same contracts.",
+    "ui_gap": "Proposal query can differ from scheduled discovery keywords",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "A1 + D1 independent scope authority; no keyword-list membership requirement",
+    "specs": [
+      "S14"
+    ],
+    "checks": [
+      "S14-A01"
+    ],
+    "owner": "smi_tasks.assistant and AcquisitionTasks own proposal journey and approval; smi_review owns adapter/tool boundary"
+  },
+  {
+    "id": "FR-B07",
+    "target": "Every assistant-origin task requires explicit user approval",
+    "foundation": "Installed bounded exact proposal/workspace/actor approval, at most one logical task",
+    "capability_gap": "A marketer reviews refresh, fill or expansion scope, approves its exact revision and follows one asynchronous task. Agents can inspect and propose through the same contracts.",
+    "ui_gap": "Exact saved proposal review, explicit checkbox and approval action",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "A1: approve exact digest, submit_approved once; actor/server authority; original retry IDs",
+    "specs": [
+      "S14",
+      "S39"
+    ],
+    "checks": [
+      "S14-A01",
+      "S39-A01"
+    ],
+    "owner": "smi_tasks.assistant and AcquisitionTasks own proposal journey and approval; smi_review owns adapter/tool boundary"
+  },
+  {
+    "id": "FR-B08",
+    "target": "Asynchronous enrichment through ingestion/publication; no raw fetch answer",
+    "foundation": "Installed bounded submission and explicit worker; continuous consumer absent",
+    "capability_gap": "The local pilot advances due discovery, executes admitted tasks and monitors topics without manual per-task commands.",
+    "ui_gap": "Async task progression; retrieved is not usable; published completion links back",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "T1: task receipt + normal ingestion/publication; K1 no raw fetch answers",
+    "specs": [
+      "S09",
+      "S13",
+      "S14"
+    ],
+    "checks": [
+      "S09-A01",
+      "S13-A01",
+      "S14-A01"
+    ],
+    "owner": "Proposed smi_runtime composes public task, schedule, monitoring and delivery ports; owners keep locks and SQL"
+  },
+  {
+    "id": "FR-B09",
+    "target": "KB answer/proposal, then acknowledgment/status and completion notification",
+    "foundation": "Installed bounded local journey/inbox",
+    "capability_gap": "A marketer reviews refresh, fill or expansion scope, approves its exact revision and follows one asynchronous task. Agents can inspect and propose through the same contracts.",
+    "ui_gap": "Answer, proposal, queue acknowledgment, task status and inbox/email journey; R2-CHAT threads/follow-ups and secondary sources/status",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "A1/T1: durable approval/task/completion; future email delivery identity; future multi-turn/context/turn read contract specified, not installed synthesis",
+    "specs": [
+      "S14",
+      "S15",
+      "S29"
+    ],
+    "checks": [
+      "S14-A01",
+      "S15-A01",
+      "S29-A01"
+    ],
+    "owner": "smi_tasks.assistant and AcquisitionTasks own proposal journey and approval; smi_review owns adapter/tool boundary"
+  },
+  {
+    "id": "FR-C01",
+    "target": "Periodically fetch recent X for configured topics",
+    "foundation": "Partial target. Gated official polling software and explicit bounded worker installed; live and continuous operation pending",
+    "capability_gap": "An operator can configure spending controls and run bounded live X polling from the shipped tools, so live probes and recurring work have a recorded, attributable path.",
+    "ui_gap": "Monitoring topic configuration, separate activation/pause; cadence and window; R2-STREAM SVG recent windows, red latest, selected-window summary/evidence",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M1: configure + activate + run_due; future continuous pilot service; bounded window/metric/history/current-policy reads",
+    "specs": [
+      "S03",
+      "S05",
+      "S09",
+      "S19",
+      "S20",
+      "S32"
+    ],
+    "checks": [
+      "S03-A01",
+      "S05-A01",
+      "S09-A01",
+      "S19-A01",
+      "S20-A01",
+      "S32-A01"
+    ],
+    "owner": "smi_costs and smi_monitoring.polling keep validation and SQL; the pilot composition module owns argument parsing and the trusted operator identity"
+  },
+  {
+    "id": "FR-C02",
+    "target": "Quantitative anomalies including volume/engagement spikes",
+    "foundation": "Partial target. Configured comparable-window sampled volume installed; engagement method future",
+    "capability_gap": "Live X windows state their saturation and receipt-time bounds truthfully and, under an accepted W02, produce honest live volume and controversy outcomes inside ADR 0023's one-page rule.",
+    "ui_gap": "Method selector: volume and matched-age engagement success; inspect method/evidence; R2-STREAM SVG recent windows, red latest, selected-window summary/evidence",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M1: comparable windows/native metric/age/denominator; engagement method target contract; bounded window/metric/history/current-policy reads",
+    "specs": [
+      "S19",
+      "S20",
+      "S21",
+      "S23",
+      "S32",
+      "S35"
+    ],
+    "checks": [
+      "S19-A01",
+      "S20-A01",
+      "S21-A01",
+      "S23-A01",
+      "S32-A01",
+      "S35-A01"
+    ],
+    "owner": "smi_monitoring.recent owns window projections; smi_monitoring.alerts and smi_monitoring.semantic own the new live-page method versions"
+  },
+  {
+    "id": "FR-C03",
+    "target": "Semantic anomalies including sentiment shifts/emerging controversies",
+    "foundation": "Partial target. Provisional sample product-quality positions installed, with no baseline/change claim. Sentiment/semantic shift future",
+    "capability_gap": "Live X windows state their saturation and receipt-time bounds truthfully and, under an accepted W02, produce honest live volume and controversy outcomes inside ADR 0023's one-page rule.",
+    "ui_gap": "Method selector: semantic shift and controversy success; original evidence and uncertainty; R2-STREAM SVG recent windows, red latest, selected-window summary/evidence",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M1: exact actual inputs/model/method/coding/denominators; shift validation target; bounded window/metric/history/current-policy reads",
+    "specs": [
+      "S19",
+      "S20",
+      "S21",
+      "S24",
+      "S32",
+      "S35"
+    ],
+    "checks": [
+      "S19-A01",
+      "S20-A01",
+      "S21-A01",
+      "S24-A01",
+      "S32-A01",
+      "S35-A01"
+    ],
+    "owner": "smi_monitoring.recent owns window projections; smi_monitoring.alerts and smi_monitoring.semantic own the new live-page method versions"
+  },
+  {
+    "id": "FR-C04",
+    "target": "Investigate with existing KB context only",
+    "foundation": "Installed bounded literal context/template, richer explanation future",
+    "capability_gap": "A marketer investigates an alert using only existing KB context and selectively promotes useful observations through normal ingestion.",
+    "ui_gap": "Investigate with existing knowledge; saved contextual explanation",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M2 investigate/read: exact alert plus selected existing KB support; zero acquisition",
+    "specs": [
+      "S22",
+      "S39"
+    ],
+    "checks": [
+      "S22-A01",
+      "S39-A01"
+    ],
+    "owner": "smi_monitoring context and promotion retain their contracts; smi_review renders M2"
+  },
+  {
+    "id": "FR-C05",
+    "target": "Concise notification, evidence, and relevant alert history",
+    "foundation": "Installed bounded local notifications and governed history",
+    "capability_gap": "A marketer configures and explicitly activates an independent topic and inspects its windows, alert history and original alert evidence.",
+    "ui_gap": "Concise inbox alert \u2192 method/windows/evidence and relevant history; R2-STREAM SVG recent windows, red latest, selected-window summary/evidence",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M1/T1: retained alert/event identity, governed current read, source-free delivery; bounded window/metric/history/current-policy reads",
+    "specs": [
+      "S20",
+      "S21",
+      "S29",
+      "S34"
+    ],
+    "checks": [
+      "S20-A01",
+      "S21-A01",
+      "S29-A01",
+      "S34-A01"
+    ],
+    "owner": "smi_monitoring recent/polling/alerts/semantic retain their separate contracts; smi_review renders M1"
+  },
+  {
+    "id": "FR-C06",
+    "target": "Timely recent-source path without full KB modeling of every post",
+    "foundation": "Installed bounded separate recent-evidence owner",
+    "capability_gap": "A marketer configures and explicitly activates an independent topic and inspects its windows, alert history and original alert evidence.",
+    "ui_gap": "Monitoring evidence timeline independent of canonical KB modeling; R2-STREAM SVG recent windows, red latest, selected-window summary/evidence",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M1: bounded recent collection/windows, metric definitions and distinct times; bounded window/metric/history/current-policy reads",
+    "specs": [
+      "S20",
+      "S21"
+    ],
+    "checks": [
+      "S20-A01",
+      "S21-A01"
+    ],
+    "owner": "smi_monitoring recent/polling/alerts/semantic retain their separate contracts; smi_review renders M1"
+  },
+  {
+    "id": "FR-C07",
+    "target": "Bounded retention and selective promotion to KB",
+    "foundation": "Installed bounded promotion with inherited source lifecycle",
+    "capability_gap": "A marketer investigates an alert using only existing KB context and selectively promotes useful observations through normal ingestion.",
+    "ui_gap": "Select observation \u2192 promotion review; inherited retention and policy",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M2 promote/read + normal ingestion/publication, no new identity association",
+    "specs": [
+      "S22",
+      "S41"
+    ],
+    "checks": [
+      "S22-A01",
+      "S41-A01"
+    ],
+    "owner": "smi_monitoring context and promotion retain their contracts; smi_review renders M2"
+  },
+  {
+    "id": "FR-G01",
+    "target": "Interactive entity search/filter/traversal",
+    "foundation": "Partial target. Bounded entity graph/search/forms and 1\u20133-hop cycle-safe navigation installed; the confirmed Neo4j-style visual experience is design/implementation target",
+    "capability_gap": "Chat, campaign comparison and graph seeds select relevant permitted support from a KB much larger than 100 publications, with explicit, reported bounds.",
+    "ui_gap": "Graph text/kind/basis filters, depth 1\u20133, root traversal, zoom and entity list; R2-GRAPH production pan/zoom/fit/drag/pin/layout/expand/collapse specified",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "G1: GraphScope/GraphTraversal search/read; direction/predicate/platform/namespace/observation drawer specified; bounded branch cursors/generation/policy frontier and keyboard/list alternatives",
+    "specs": [
+      "S07",
+      "S17",
+      "S18",
+      "S25"
+    ],
+    "checks": [
+      "S07-A01",
+      "S17-A01",
+      "S18-A01",
+      "S25-A01"
+    ],
+    "owner": "smi_knowledge.queries owns selection; smi_ingestion owns the governed index columns and migration"
+  },
+  {
+    "id": "FR-G02",
+    "target": "Inspect entity details, relationships, and evidence",
+    "foundation": "Installed account/content/brand/product projection and observed/derived/human edge bases",
+    "capability_gap": "Task-discovered posts carry published brand/product interpretations, so campaign criteria and graph mention edges work on real data.",
+    "ui_gap": "Node/relationship selection \u2192 evidence inspector; alternative button list; R2-GRAPH production pan/zoom/fit/drag/pin/layout/expand/collapse specified",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "G1: exact endpoint/basis/support/method/dates/current policy, no Creator inference; bounded branch cursors/generation/policy frontier and keyboard/list alternatives",
+    "specs": [
+      "S06",
+      "S17",
+      "S18"
+    ],
+    "checks": [
+      "S06-A01",
+      "S17-A01",
+      "S18-A01"
+    ],
+    "owner": "smi_knowledge owns the support-based interpretation port; the smi_tasks worker composes it before publication"
+  },
+  {
+    "id": "FR-L01",
+    "target": "Visualize jobs, status, and failures",
+    "foundation": "Installed bounded read-only one-task lineage, not a full orchestration console",
+    "capability_gap": "The local pilot advances due discovery, executes admitted tasks and monitors topics without manual per-task commands.",
+    "ui_gap": "Pipeline task timeline, execution status, safe recovery and sanitized issues",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "T1: task/attempt/run/phase/ownership and retry disposition",
+    "specs": [
+      "S09",
+      "S13",
+      "S16"
+    ],
+    "checks": [
+      "S09-A01",
+      "S13-A01",
+      "S16-A01"
+    ],
+    "owner": "Proposed smi_runtime composes public task, schedule, monitoring and delivery ports; owners keep locks and SQL"
+  },
+  {
+    "id": "FR-L02",
+    "target": "Source provenance, transformations, and KB history",
+    "foundation": "Installed task \u2192 attempt/run \u2192 observation/derivation \u2192 receipted publication/cost frontiers",
+    "capability_gap": "A marketer can follow an admitted task through retrieval, publication and completion and understand a safe wait or partial failure.",
+    "ui_gap": "Task \u2192 observation \u2192 mapper/derivation \u2192 publication; inspect linked costs",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "T1/G1: public owner lineage read; source-free IDs with governed values",
+    "specs": [
+      "S13"
+    ],
+    "checks": [
+      "S13-A01"
+    ],
+    "owner": "smi_tasks owns source-free progress events and task reads; smi_tasks.lineage composes public owners; smi_review renders T1"
+  },
+  {
+    "id": "FR-P01",
+    "target": "At most ten scheduled keywords per workspace",
+    "foundation": "Installed bounded schedule registrations/authority",
+    "capability_gap": "The local pilot advances due discovery, executes admitted tasks and monitors topics without manual per-task commands.",
+    "ui_gap": "Scheduled discovery count and Register keyword",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "D1: ScheduledDiscovery configuration and registered identities",
+    "specs": [
+      "S09",
+      "S16"
+    ],
+    "checks": [
+      "S09-A01",
+      "S16-A01"
+    ],
+    "owner": "Proposed smi_runtime composes public task, schedule, monitoring and delivery ports; owners keep locks and SQL"
+  },
+  {
+    "id": "FR-P02",
+    "target": "Initial configurable 50 unique eligible new posts/day total across keywords",
+    "foundation": "Installed bounded shared unique-post admission, fixed accounting-day identity",
+    "capability_gap": "The local pilot advances due discovery, executes admitted tasks and monitors topics without manual per-task commands.",
+    "ui_gap": "Shared daily allowance 22/50, remaining 28; new/refresh/excluded counts",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "D1: unique eligible identity admission across all keywords and immutable occurrence config",
+    "specs": [
+      "S09",
+      "S11",
+      "S16",
+      "S27"
+    ],
+    "checks": [
+      "S09-A01",
+      "S11-A01",
+      "S16-A01",
+      "S27-A01"
+    ],
+    "owner": "Proposed smi_runtime composes public task, schedule, monitoring and delivery ports; owners keep locks and SQL"
+  },
+  {
+    "id": "FR-P03",
+    "target": "Prioritize recency, engagement, and trend evidence",
+    "foundation": "Future beyond installed fixture/source-order selection",
+    "capability_gap": "Operators and planners can distinguish a route's installed capability, actual access/use permission and field/time coverage before work is admitted.",
+    "ui_gap": "Pipeline progressive plan shows recency then evidence-dependent engagement/trend priority",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "D1/T1: future versioned prioritization with exact inputs and gaps; installed source-order narrower",
+    "specs": [
+      "S11",
+      "S27"
+    ],
+    "checks": [
+      "S11-A01",
+      "S27-A01"
+    ],
+    "owner": "smi_ingestion.adapters owns route capabilities/provenance; smi_tasks owns approved route scope; smi_review exposes D1"
+  },
+  {
+    "id": "FR-P04",
+    "target": "Broad discovery then selective APIs/oEmbed/permitted web routes",
+    "foundation": "Partial target. Bounded discovery and one exact nickname supplementation; general planner future",
+    "capability_gap": "The premises of S19, S23, S28 and S29 are settled by bounded real evidence, and a bounded real discovery corpus exists for S08, before those specs finish.",
+    "ui_gap": "Progressive acquisition plan; broad discovery \u2192 selective API/oEmbed/permitted web",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "T1: future route capability/field-support/value planner; independent route provenance",
+    "specs": [
+      "S05",
+      "S11",
+      "S28",
+      "S33"
+    ],
+    "checks": [
+      "S05-A01",
+      "S11-A01",
+      "S28-A01",
+      "S33-A01"
+    ],
+    "owner": "Named local operator plus the model, ingestion, monitoring and notification maintainers"
+  },
+  {
+    "id": "FR-P05",
+    "target": "Stop when added information is not worth cost or scope/bounds are reached",
+    "foundation": "Partial target. Pinned one-field value/stop choice and hard bounds installed; general expected-value planning future",
+    "capability_gap": "An authorized operator sees actuals, commitments, forecasts and meter health and can reconcile or recover an exact operation without reissuing acquisition.",
+    "ui_gap": "Progressive plan and stop-reason table; no automatic scope widening",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "T1/S1: supplementation/stop choice with value basis and remaining bounds",
+    "specs": [
+      "S26",
+      "S27"
+    ],
+    "checks": [
+      "S26-A01",
+      "S27-A01"
+    ],
+    "owner": "smi_costs owns accounting/admission/reconciliation/recovery; smi_review owns operator-only S1 forms"
+  },
+  {
+    "id": "FR-P06",
+    "target": "Track identities, freshness, prior retrievals; avoid duplicate/unnecessary work and reconcile KB",
+    "foundation": "Partial target. Exact capture-context avoidance and retry-safe processing installed; broad cross-route avoidance future",
+    "capability_gap": "Operators and planners can distinguish a route's installed capability, actual access/use permission and field/time coverage before work is admitted.",
+    "ui_gap": "Processing decisions expose prior capture reuse, refresh and original timestamps",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "T1: exact-context history, canonical identity and idempotent reconciliation; broader avoidance target",
+    "specs": [
+      "S11",
+      "S27",
+      "S28",
+      "S41"
+    ],
+    "checks": [
+      "S11-A01",
+      "S27-A01",
+      "S28-A01",
+      "S41-A01"
+    ],
+    "owner": "smi_ingestion.adapters owns route capabilities/provenance; smi_tasks owns approved route scope; smi_review exposes D1"
+  },
+  {
+    "id": "FR-P07",
+    "target": "Shared pipeline accepts automatic A discovery and approved B work outside keyword list",
+    "foundation": "Installed bounded origin-specific authority",
+    "capability_gap": "A marketer creates a campaign, receives an automatically saved supported shortlist, optionally curates it and deliberately regenerates after new knowledge.",
+    "ui_gap": "Task origin displayed: configured campaign, scheduled or exact approved assistant",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "A1/D1/T1: server establishes origin; all routes share guarded pipeline",
+    "specs": [
+      "S12",
+      "S14",
+      "S27"
+    ],
+    "checks": [
+      "S12-A01",
+      "S14-A01",
+      "S27-A01"
+    ],
+    "owner": "smi_campaigns owns briefs, criteria, comparisons and shortlists; smi_tasks.campaigns owns discovery composition"
+  },
+  {
+    "id": "FR-P08",
+    "target": "Structured search/submission/status via internal endpoints or MCP-compatible tools",
+    "foundation": "Partial target. Public Python/CLI/browser domain operations installed; generalized MCP/research tools future",
+    "capability_gap": "A marketer reviews refresh, fill or expansion scope, approves its exact revision and follows one asynchronous task. Agents can inspect and propose through the same contracts.",
+    "ui_gap": "Source-free task/status results; research step uses same domain contract",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Future endpoint/MCP adapters over public owners, preserving auth/policy/version/cost; no new bypass",
+    "specs": [
+      "S14",
+      "S17",
+      "S39"
+    ],
+    "checks": [
+      "S14-A01",
+      "S17-A01",
+      "S39-A01"
+    ],
+    "owner": "smi_tasks.assistant and AcquisitionTasks own proposal journey and approval; smi_review owns adapter/tool boundary"
+  },
+  {
+    "id": "FR-P09",
+    "target": "Recent X API/permitted collection remains separate from full KB enrichment",
+    "foundation": "Installed bounded official-X transport; live use unverified",
+    "capability_gap": "The premises of S19, S23, S28 and S29 are settled by bounded real evidence, and a bounded real discovery corpus exists for S08, before those specs finish.",
+    "ui_gap": "Monitoring and KB pipeline have distinct collection/publication paths",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M1 + M2 selective promotion; source runtime gates separate",
+    "specs": [
+      "S05",
+      "S09",
+      "S19",
+      "S20",
+      "S32"
+    ],
+    "checks": [
+      "S05-A01",
+      "S09-A01",
+      "S19-A01",
+      "S20-A01",
+      "S32-A01"
+    ],
+    "owner": "Named local operator plus the model, ingestion, monitoring and notification maintainers"
+  },
+  {
+    "id": "FR-S01",
+    "target": "Derive actual costs and enforce ceilings where reliable",
+    "foundation": "Partial target. Synthetic metering/admission and configured provider-reported/deferred liability software installed; commercial rates/receipts/reconciliation verification pending",
+    "capability_gap": "An operator can configure spending controls and run bounded live X polling from the shipped tools, so live probes and recurring work have a recorded, attributable path.",
+    "ui_gap": "Spending actual/commitment/forecast, period/currency, attributed operation details",
+    "readiness_gap": "S31 requires actual permitted bounded provider/billing/send evidence, not simulated transport.",
+    "contract": "S1: usage/rates/allowance/commitments/reconciliation; commercial receipts remain unverified",
+    "specs": [
+      "S03",
+      "S05",
+      "S26",
+      "S31",
+      "S32",
+      "S33"
+    ],
+    "checks": [
+      "S03-A01",
+      "S05-A01",
+      "S26-A01",
+      "S31-A01",
+      "S32-A01",
+      "S33-A01"
+    ],
+    "owner": "smi_costs and smi_monitoring.polling keep validation and SQL; the pilot composition module owns argument parsing and the trusted operator identity"
+  },
+  {
+    "id": "FR-S02",
+    "target": "Forecast unmeterable portions without claiming monetary enforcement",
+    "foundation": "Installed bounded explicit classification/uncertainty",
+    "capability_gap": "An authorized operator sees actuals, commitments, forecasts and meter health and can reconcile or recover an exact operation without reissuing acquisition.",
+    "ui_gap": "Forecast-only row/range outside enforced scope; Unknown amount remains unknown",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "S1: explicit cost-scope classification, assumptions and unknown coverage",
+    "specs": [
+      "S26"
+    ],
+    "checks": [
+      "S26-A01"
+    ],
+    "owner": "smi_costs owns accounting/admission/reconciliation/recovery; smi_review owns operator-only S1 forms"
+  },
+  {
+    "id": "FR-S03",
+    "target": "Separate spending, approval, resource bounds, and value stopping",
+    "foundation": "Installed bounded control separation; general value planner future",
+    "capability_gap": "An authorized operator sees actuals, commitments, forecasts and meter health and can reconcile or recover an exact operation without reissuing acquisition.",
+    "ui_gap": "Independent-control inspector and blocking states; meter recovery explanation",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "A1/T1/S1: authority, source, resource, value and monetary guards separate",
+    "specs": [
+      "S26",
+      "S27"
+    ],
+    "checks": [
+      "S26-A01",
+      "S27-A01"
+    ],
+    "owner": "smi_costs owns accounting/admission/reconciliation/recovery; smi_review owns operator-only S1 forms"
+  },
+  {
+    "id": "OFR-A01",
+    "target": "Requirements/preferences/unknown policies and limits on effectiveness claims",
+    "foundation": "Installed bounded criteria and constrained judgments; richer fit future",
+    "capability_gap": "A marketer creates a campaign, receives an automatically saved supported shortlist, optionally curates it and deliberately regenerates after new knowledge.",
+    "ui_gap": "Campaign brief/criteria and ranking reasons",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1 original constraints + supported criterion judgments",
+    "specs": [
+      "S12",
+      "S43"
+    ],
+    "checks": [
+      "S12-A01",
+      "S43-A01"
+    ],
+    "owner": "smi_campaigns owns briefs, criteria, comparisons and shortlists; smi_tasks.campaigns owns discovery composition"
+  },
+  {
+    "id": "OFR-A02",
+    "target": "Pin actual inputs, support/assertion versions, profile, and method",
+    "foundation": "Installed bounded",
+    "capability_gap": "A marketer creates a campaign, receives an automatically saved supported shortlist, optionally curates it and deliberately regenerates after new knowledge.",
+    "ui_gap": "Version history \u2192 exact revision details",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1 pinned input/brief/criteria/profile/method/support IDs",
+    "specs": [
+      "S12"
+    ],
+    "checks": [
+      "S12-A01"
+    ],
+    "owner": "smi_campaigns owns briefs, criteria, comparisons and shortlists; smi_tasks.campaigns owns discovery composition"
+  },
+  {
+    "id": "OFR-B01",
+    "target": "Server enforces task-origin authority",
+    "foundation": "Installed bounded",
+    "capability_gap": "A marketer reviews refresh, fill or expansion scope, approves its exact revision and follows one asynchronous task. Agents can inspect and propose through the same contracts.",
+    "ui_gap": "Approval boundary and origin-specific task acknowledgment",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "A1/T1 trusted context; no prompt or form authority",
+    "specs": [
+      "S14",
+      "S40"
+    ],
+    "checks": [
+      "S14-A01",
+      "S40-A01"
+    ],
+    "owner": "smi_tasks.assistant and AcquisitionTasks own proposal journey and approval; smi_review owns adapter/tool boundary"
+  },
+  {
+    "id": "OFR-C01",
+    "target": "Separate topic configuration, explicit cadence/retention/significance",
+    "foundation": "Installed bounded configurations; continuous deployment and broader metrics future",
+    "capability_gap": "Live X windows state their saturation and receipt-time bounds truthfully and, under an accepted W02, produce honest live volume and controversy outcomes inside ADR 0023's one-page rule.",
+    "ui_gap": "Topic config and explicit activation",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M1 immutable configuration and source permission independent",
+    "specs": [
+      "S19",
+      "S20",
+      "S21"
+    ],
+    "checks": [
+      "S19-A01",
+      "S20-A01",
+      "S21-A01"
+    ],
+    "owner": "smi_monitoring.recent owns window projections; smi_monitoring.alerts and smi_monitoring.semantic own the new live-page method versions"
+  },
+  {
+    "id": "OFR-P01",
+    "target": "Persist identity, approval/origin, attempts, partial failure, coverage, and publication",
+    "foundation": "Installed bounded task/session/worker/inbox",
+    "capability_gap": "The local pilot advances due discovery, executes admitted tasks and monitors topics without manual per-task commands.",
+    "ui_gap": "Task timeline, coverage, original authority and recovery",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "T1 fenced ownership, attempt/run/receipt/outcome/event",
+    "specs": [
+      "S09",
+      "S13"
+    ],
+    "checks": [
+      "S09-A01",
+      "S13-A01"
+    ],
+    "owner": "Proposed smi_runtime composes public task, schedule, monitoring and delivery ports; owners keep locks and SQL"
+  },
+  {
+    "id": "OFR-S01",
+    "target": "Units/rates/currency/period/provider/task/attempt/measurement evidence",
+    "foundation": "Installed bounded synthetic/provider-basis records; commercial evidence pending",
+    "capability_gap": "An authorized operator sees actuals, commitments, forecasts and meter health and can reconcile or recover an exact operation without reissuing acquisition.",
+    "ui_gap": "Spending operation table and measurement details",
+    "readiness_gap": "S31 requires actual permitted bounded provider/billing/send evidence, not simulated transport.",
+    "contract": "S1 unit/rate/provider/currency/period/task/attempt/evidence",
+    "specs": [
+      "S26",
+      "S31",
+      "S32",
+      "S33"
+    ],
+    "checks": [
+      "S26-A01",
+      "S31-A01",
+      "S32-A01",
+      "S33-A01"
+    ],
+    "owner": "smi_costs owns accounting/admission/reconciliation/recovery; smi_review owns operator-only S1 forms"
+  },
+  {
+    "id": "OFR-S02",
+    "target": "Coordinate spend plus commitments across competing workers; reconcile once",
+    "foundation": "Installed bounded",
+    "capability_gap": "An authorized operator sees actuals, commitments, forecasts and meter health and can reconcile or recover an exact operation without reissuing acquisition.",
+    "ui_gap": "Allowance includes actuals plus outstanding commitments",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "S1 scope-wide authoritative admission and reconciliation",
+    "specs": [
+      "S26"
+    ],
+    "checks": [
+      "S26-A01"
+    ],
+    "owner": "smi_costs owns accounting/admission/reconciliation/recovery; smi_review owns operator-only S1 forms"
+  },
+  {
+    "id": "OFR-S03",
+    "target": "Defensible pre-call charge bounds or provider cap for strict limits",
+    "foundation": "Software can admit configured bounded commitments; real commercial bounds unverified",
+    "capability_gap": "An operator can configure spending controls and run bounded live X polling from the shipped tools, so live probes and recurring work have a recorded, attributable path.",
+    "ui_gap": "Spending ceiling explanation and unknown-charge state",
+    "readiness_gap": "S31 requires actual permitted bounded provider/billing/send evidence, not simulated transport.",
+    "contract": "S1 defensible pre-call bound or provider-side cap; no all-in guarantee",
+    "specs": [
+      "S03",
+      "S05",
+      "S26",
+      "S31"
+    ],
+    "checks": [
+      "S03-A01",
+      "S05-A01",
+      "S26-A01",
+      "S31-A01"
+    ],
+    "owner": "smi_costs and smi_monitoring.polling keep validation and SQL; the pilot composition module owns argument parsing and the trusted operator identity"
+  },
+  {
+    "id": "OFR-S04",
+    "target": "Expected-meter failure is a control failure",
+    "foundation": "Installed bounded meter failure and separate recovery",
+    "capability_gap": "An authorized operator sees actuals, commitments, forecasts and meter health and can reconcile or recover an exact operation without reissuing acquisition.",
+    "ui_gap": "Meter failure demo state and recovery dialog",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "S1 recover_meter and reconcile_usage with exact failure/liability evidence",
+    "specs": [
+      "S26"
+    ],
+    "checks": [
+      "S26-A01"
+    ],
+    "owner": "smi_costs owns accounting/admission/reconciliation/recovery; smi_review owns operator-only S1 forms"
+  },
+  {
+    "id": "OFR-G01",
+    "target": "Governed projection distinguishes observed/derived/human relationships",
+    "foundation": "Installed bounded",
+    "capability_gap": "A graph client can expand bounded branches without fetching an unrestricted graph or restoring withdrawn support.",
+    "ui_gap": "Graph line styles/basis filters and inspector; R2-GRAPH production pan/zoom/fit/drag/pin/layout/expand/collapse specified",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "G1 governed edges and exact support; no graph DB mandate; bounded branch cursors/generation/policy frontier and keyboard/list alternatives",
+    "specs": [
+      "S17",
+      "S18"
+    ],
+    "checks": [
+      "S17-A01",
+      "S18-A01"
+    ],
+    "owner": "smi_knowledge.graph owns search/traversal/page contracts; smi_review adapts G1"
+  },
+  {
+    "id": "OFR-L01",
+    "target": "Link task/run/observation/derivation/publication with restricted payload visibility",
+    "foundation": "Installed bounded one-task projection",
+    "capability_gap": "A marketer can follow an admitted task through retrieval, publication and completion and understand a safe wait or partial failure.",
+    "ui_gap": "Read-only pipeline lineage and recovery detail",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "T1 public TaskLineage and owner-controlled content reads",
+    "specs": [
+      "S13"
+    ],
+    "checks": [
+      "S13-A01"
+    ],
+    "owner": "smi_tasks owns source-free progress events and task reads; smi_tasks.lineage composes public owners; smi_review renders T1"
+  },
+  {
+    "id": "OFR-E01",
+    "target": "Attributable reviewed ranking/language/monitoring examples",
+    "foundation": "Review tooling installed; actual human review pending",
+    "capability_gap": "Early, on real discovered data, a marketer and a KR/JP reader judge whether shortlists, mention judgments and extractive answers are useful, so S06 and S07 can change before the campaign and chat UIs are built.",
+    "ui_gap": "Learning \u2192 exact review packet preview",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "P1 review packet membership/denominator/actor/method/corrections",
+    "specs": [
+      "S08",
+      "S30",
+      "S35",
+      "S38"
+    ],
+    "checks": [
+      "S08-A01",
+      "S30-A01",
+      "S35-A01",
+      "S38-A01"
+    ],
+    "owner": "Actual pilot marketer and a KR/JP reader, supported by the campaign, knowledge and assistant maintainers"
+  },
+  {
+    "id": "OFR-E02",
+    "target": "Independently test approval, budget, versioning, policy, and publication boundaries",
+    "foundation": "Installed verification contracts; this analysis did not rerun behavioral tests",
+    "capability_gap": "Every implementation worker starts from a complete, attributable test baseline in which no test depends on the real calendar date.",
+    "ui_gap": "Review guide negative scenarios and verification evidence",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Existing acceptance suites plus future adapter behavioral tests",
+    "specs": [
+      "S01",
+      "S04",
+      "S14",
+      "S26",
+      "S35"
+    ],
+    "checks": [
+      "S01-A01",
+      "S04-A01",
+      "S14-A01",
+      "S26-A01",
+      "S35-A01"
+    ],
+    "owner": "Test infrastructure maintainers; owning-module maintainers review fixture conversions in their suites"
+  },
+  {
+    "id": "OFR-E03",
+    "target": "Explicit configurable models/policies/thresholds/costs/retention",
+    "foundation": "Installed per-owner finite bounds and configuration; values not product-wide promises",
+    "capability_gap": "One operator starts the review server, runtime and CLIs against simulated or provider routes from one validated, versioned local configuration.",
+    "ui_gap": "Topic/schedule/proposal bounds and spending scope",
+    "readiness_gap": "S31 requires actual permitted bounded provider/billing/send evidence, not simulated transport.",
+    "contract": "Owner validated configuration; only max-ten and initial fifty are fixed FR numbers",
+    "specs": [
+      "S02",
+      "S03",
+      "S09",
+      "S11",
+      "S16",
+      "S20",
+      "S26",
+      "S31"
+    ],
+    "checks": [
+      "S02-A01",
+      "S03-A01",
+      "S09-A01",
+      "S11-A01",
+      "S16-A01",
+      "S20-A01",
+      "S26-A01",
+      "S31-A01"
+    ],
+    "owner": "smi_review composition root plus a small proposed configuration module; route owners keep their own validation"
+  },
+  {
+    "id": "OFR-X01",
+    "target": "No contact, publishing, media buying, activation, or claimed measured sales lift",
+    "foundation": "Product boundary; planning/notes installed; actual measurement future",
+    "capability_gap": "A marketer records proposed measurement and human learning, while reviewers receive exact bilingual output/evidence packets.",
+    "ui_gap": "Internal campaign planning and measurement proposal",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1/P1 internal-only actions; no external marketing mutation contract",
+    "specs": [
+      "S30",
+      "S44",
+      "S45"
+    ],
+    "checks": [
+      "S30-A01",
+      "S44-A01",
+      "S45-A01"
+    ],
+    "owner": "smi_campaigns.planning owns plans/notes; smi_review.quality owns exact review packets and real review records"
+  },
+  {
+    "id": "OFR-B02",
+    "target": "Free-form bounded extractive selection with complete actual model-input provenance/current-policy reopening",
+    "foundation": "Installed bounded; semantic entailment and usefulness unverified",
+    "capability_gap": "A marketer returns to saved conversations, sends follow-ups and preserves each thread's draft and exact evidence.",
+    "ui_gap": "Extractive findings, full inputs and current-policy reopening; R2-CHAT threads/follow-ups and secondary sources/status",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build. S39 is blocked on W01 actual successor decision and S38 named evidence.",
+    "contract": "K1 exact full-input manifest and policy checks; ADR 0017/0018 retained; future multi-turn/context/turn read contract specified, not installed synthesis",
+    "specs": [
+      "S15",
+      "S37",
+      "S39"
+    ],
+    "checks": [
+      "S15-A01",
+      "S37-A01",
+      "S39-A01"
+    ],
+    "owner": "Proposed smi_assistant.conversations owns threads/turns/drafts; KnowledgeAssistant owns answers; tasks own research"
+  },
+  {
+    "id": "PROP-01",
+    "target": "Shared evidence foundation for brand/agency marketers, market observation/investigation, creator/campaign decisions, measurement, and reused learning",
+    "foundation": "Accepted product direction; only bounded loops installed",
+    "capability_gap": "A marketer opens all saved campaigns and inspects exact permitted evidence through one shared inspector, in EN or KO.",
+    "ui_gap": "Campaigns, independent monitoring, knowledge and learning navigation",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1/K1/M1/P1 shared evidence contract",
+    "specs": [
+      "S10",
+      "S20",
+      "S30",
+      "S44"
+    ],
+    "checks": [
+      "S10-A01",
+      "S20-A01",
+      "S30-A01",
+      "S44-A01"
+    ],
+    "owner": "smi_review owns the campaign index, detail reads and shared governed inspector; domain owners retain decisions"
+  },
+  {
+    "id": "PROP-02",
+    "target": "Internal decision support; no contact, publishing, buying, or changes to connected marketing systems",
+    "foundation": "Accepted boundary",
+    "capability_gap": "A marketer reviews refresh, fill or expansion scope, approves its exact revision and follows one asynchronous task. Agents can inspect and propose through the same contracts.",
+    "ui_gap": "All actions remain internal and globally fixture-labeled",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Internal owner commands only",
+    "specs": [
+      "S14",
+      "S30",
+      "S44"
+    ],
+    "checks": [
+      "S14-A01",
+      "S30-A01",
+      "S44-A01"
+    ],
+    "owner": "smi_tasks.assistant and AcquisitionTasks own proposal journey and approval; smi_review owns adapter/tool boundary"
+  },
+  {
+    "id": "PROP-03",
+    "target": "Beauty in Korea/Japan; one multilingual core with market extensions",
+    "foundation": "Accepted direction; local methods/language review pending",
+    "capability_gap": "Every later UI spec builds on one tested client structure: shell, navigation, theme, EN/KO switch, API client and shared freshness behavior.",
+    "ui_gap": "EN/KO switch; JP captions and separate target market",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Stable IDs, original language/provenance, CJK layout",
+    "specs": [
+      "S04",
+      "S08",
+      "S30",
+      "S35",
+      "S42"
+    ],
+    "checks": [
+      "S04-A01",
+      "S08-A01",
+      "S30-A01",
+      "S35-A01",
+      "S42-A01"
+    ],
+    "owner": "smi_review owns the client foundation, shell and versioned adapter framework; domain owners retain decisions"
+  },
+  {
+    "id": "PROP-04",
+    "target": "Market/brand intelligence; creator/campaign support; measurement/learning",
+    "foundation": "Accepted loops; actual measurement future",
+    "capability_gap": "A marketer creates a campaign, receives an automatically saved supported shortlist, optionally curates it and deliberately regenerates after new knowledge.",
+    "ui_gap": "Campaign-first A with independent monitoring and learning",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1/M1/P1 shared knowledge interfaces",
+    "specs": [
+      "S12",
+      "S22",
+      "S30",
+      "S44"
+    ],
+    "checks": [
+      "S12-A01",
+      "S22-A01",
+      "S30-A01",
+      "S44-A01"
+    ],
+    "owner": "smi_campaigns owns briefs, criteria, comparisons and shortlists; smi_tasks.campaigns owns discovery composition"
+  },
+  {
+    "id": "PROP-05",
+    "target": "Permission-filtered Agentic Research across loops",
+    "foundation": "Partial target; bounded extractive answers and governed operations installed; broad orchestration future",
+    "capability_gap": "A marketer reviews refresh, fill or expansion scope, approves its exact revision and follows one asynchronous task. Agents can inspect and propose through the same contracts.",
+    "ui_gap": "Research step list, supported synthesis and claim inspector",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build. S39 is blocked on W01 actual successor decision and S38 named evidence.",
+    "contract": "Future K1 synthesis/plan contract over current governed owners",
+    "specs": [
+      "S14",
+      "S36",
+      "S37",
+      "S39"
+    ],
+    "checks": [
+      "S14-A01",
+      "S36-A01",
+      "S37-A01",
+      "S39-A01"
+    ],
+    "owner": "smi_tasks.assistant and AcquisitionTasks own proposal journey and approval; smi_review owns adapter/tool boundary"
+  },
+  {
+    "id": "PROP-06",
+    "target": "Campaigns start from marketer briefs, not monitoring signals",
+    "foundation": "Accepted and installed separation",
+    "capability_gap": "A marketer creates a campaign, receives an automatically saved supported shortlist, optionally curates it and deliberately regenerates after new knowledge.",
+    "ui_gap": "New campaign starts from human brief",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1 start independent of M2 investigate",
+    "specs": [
+      "S12",
+      "S20"
+    ],
+    "checks": [
+      "S12-A01",
+      "S20-A01"
+    ],
+    "owner": "smi_campaigns owns briefs, criteria, comparisons and shortlists; smi_tasks.campaigns owns discovery composition"
+  },
+  {
+    "id": "PROP-07",
+    "target": "A/B/C plus graph/lineage, bounded scheduled/on-demand progressive pipeline",
+    "foundation": "Core FR target with bounded partial implementation",
+    "capability_gap": "A marketer creates a campaign, receives an automatically saved supported shortlist, optionally curates it and deliberately regenerates after new knowledge.",
+    "ui_gap": "All major destinations and cross-links",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Owner read models listed in design-spec",
+    "specs": [
+      "S12",
+      "S13",
+      "S14",
+      "S18",
+      "S22",
+      "S27"
+    ],
+    "checks": [
+      "S12-A01",
+      "S13-A01",
+      "S14-A01",
+      "S18-A01",
+      "S22-A01",
+      "S27-A01"
+    ],
+    "owner": "smi_campaigns owns briefs, criteria, comparisons and shortlists; smi_tasks.campaigns owns discovery composition"
+  },
+  {
+    "id": "PROP-08",
+    "target": "Text, image, audio, and video retrieval; resolution; aspect/topic/sentiment/trend investigation",
+    "foundation": "Future beyond bounded text/caption/current sources",
+    "capability_gap": "Marketers inspect supported beauty, creator, topic and event relationships without turning mentions into identity or verified effects.",
+    "ui_gap": "Research future scope; modality support would appear per evidence",
+    "readiness_gap": "Later proposal path. Requires that spec's actual data/rights/evaluation prerequisites; not a first-pilot blocker.",
+    "contract": "Future modality/source contract plus validation, not a new default route",
+    "specs": [
+      "S42"
+    ],
+    "checks": [
+      "S42-A01"
+    ],
+    "owner": "Ingestion owns modality observations; knowledge owns versioned interpretations/catalog/identity decisions; graph remains a projection"
+  },
+  {
+    "id": "PROP-09",
+    "target": "Describe accessible conversation, not public opinion",
+    "foundation": "Accepted measurement boundary",
+    "capability_gap": "A marketer configures and explicitly activates an independent topic and inspects its windows, alert history and original alert evidence.",
+    "ui_gap": "Monitoring summaries state sampled conversation",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M1 coverage and sample denominators",
+    "specs": [
+      "S20",
+      "S23",
+      "S24",
+      "S35"
+    ],
+    "checks": [
+      "S20-A01",
+      "S23-A01",
+      "S24-A01",
+      "S35-A01"
+    ],
+    "owner": "smi_monitoring recent/polling/alerts/semantic retain their separate contracts; smi_review renders M1"
+  },
+  {
+    "id": "PROP-10",
+    "target": "Objective-specific creator evidence for brand/product/content/audience/collaboration/performance/cost/availability/authenticity risk",
+    "foundation": "Future beyond provisional caption criteria and explicit unknowns",
+    "capability_gap": "A marketer compares creators and portfolio scenarios using supported costs, overlap, constraints and uncertainty.",
+    "ui_gap": "Candidate fit/gaps and future factor contract",
+    "readiness_gap": "Later proposal path. Requires that spec's actual data/rights/evaluation prerequisites; not a first-pilot blocker.",
+    "contract": "C1 future per-factor support contracts; current caption criteria bounded",
+    "specs": [
+      "S43"
+    ],
+    "checks": [
+      "S43-A01"
+    ],
+    "owner": "smi_campaigns owns factor/profile/portfolio decisions; source owners own audience/performance/commercial evidence"
+  },
+  {
+    "id": "PROP-11",
+    "target": "Visible versioned natural-language ranking profiles; feasible portfolio scenarios",
+    "foundation": "Profiles partly installed; portfolio scenarios future",
+    "capability_gap": "A marketer creates a campaign, receives an automatically saved supported shortlist, optionally curates it and deliberately regenerates after new knowledge.",
+    "ui_gap": "Visible criteria version and future portfolio scenarios",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1 profiles; future portfolio read model",
+    "specs": [
+      "S12",
+      "S43"
+    ],
+    "checks": [
+      "S12-A01",
+      "S43-A01"
+    ],
+    "owner": "smi_campaigns owns briefs, criteria, comparisons and shortlists; smi_tasks.campaigns owns discovery composition"
+  },
+  {
+    "id": "PROP-12",
+    "target": "Descriptive performance and attribution under a stated rule",
+    "foundation": "Future; current plans/notes are proposed/human input",
+    "capability_gap": "A marketer can inspect observed campaign performance and attribution under an explicit rule with quality and access gaps.",
+    "ui_gap": "Measurement plan and future outcomes explanation",
+    "readiness_gap": "Later proposal path. Requires that spec's actual data/rights/evaluation prerequisites; not a first-pilot blocker.",
+    "contract": "P1 future authorized outcome/matching/rule/version contract",
+    "specs": [
+      "S44"
+    ],
+    "checks": [
+      "S44-A01"
+    ],
+    "owner": "Proposed measurement owner consumes authorized outcome/campaign matching evidence; planning remains separate"
+  },
+  {
+    "id": "PROP-13",
+    "target": "Randomized user/geographic lift where feasible",
+    "foundation": "Future and conditional",
+    "capability_gap": "A marketer can distinguish descriptive attribution from justified incremental effect and inspect assumptions and uncertainty.",
+    "ui_gap": "Future lift disabled with experiment prerequisites",
+    "readiness_gap": "Later proposal path. Requires that spec's actual data/rights/evaluation prerequisites; not a first-pilot blocker.",
+    "contract": "Future experiment/causal inference owner and review",
+    "specs": [
+      "S45"
+    ],
+    "checks": [
+      "S45-A01"
+    ],
+    "owner": "Measurement/causal-method owner plus actual experiment/data/domain owners"
+  },
+  {
+    "id": "PROP-14",
+    "target": "Quasi-experiments or calibrated marketing-mix models when data/assumptions support them",
+    "foundation": "Future and conditional",
+    "capability_gap": "A marketer can distinguish descriptive attribution from justified incremental effect and inspect assumptions and uncertainty.",
+    "ui_gap": "Future measurement explanation",
+    "readiness_gap": "Later proposal path. Requires that spec's actual data/rights/evaluation prerequisites; not a first-pilot blocker.",
+    "contract": "Future data/model/identification and evaluation contract",
+    "specs": [
+      "S45"
+    ],
+    "checks": [
+      "S45-A01"
+    ],
+    "owner": "Measurement/causal-method owner plus actual experiment/data/domain owners"
+  },
+  {
+    "id": "PROP-15",
+    "target": "Every consequential result states decision/population/market/source/time/metric/method/evidence/uncertainty/freshness/limits",
+    "foundation": "Accepted cross-cutting contract; bounded manifests installed",
+    "capability_gap": "Every later UI spec builds on one tested client structure: shell, navigation, theme, EN/KO switch, API client and shared freshness behavior.",
+    "ui_gap": "Evidence inspectors, coverage, dates, method and unknowns",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "All model envelopes retain decision/population/market/source/time/method",
+    "specs": [
+      "S04",
+      "S10",
+      "S13",
+      "S21",
+      "S26",
+      "S30",
+      "S44",
+      "S45"
+    ],
+    "checks": [
+      "S04-A01",
+      "S10-A01",
+      "S13-A01",
+      "S21-A01",
+      "S26-A01",
+      "S30-A01",
+      "S44-A01",
+      "S45-A01"
+    ],
+    "owner": "smi_review owns the client foundation, shell and versioned adapter framework; domain owners retain decisions"
+  },
+  {
+    "id": "PROP-16",
+    "target": "Local Korean/Japanese and beauty-classifier evaluation",
+    "foundation": "Readiness pending; packet tools installed",
+    "capability_gap": "Early, on real discovered data, a marketer and a KR/JP reader judge whether shortlists, mention judgments and extractive answers are useful, so S06 and S07 can change before the campaign and chat UIs are built.",
+    "ui_gap": "Learning review packet with named-review gate",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "P1 exact packet and language reviewer records",
+    "specs": [
+      "S08",
+      "S30",
+      "S35",
+      "S38",
+      "S42"
+    ],
+    "checks": [
+      "S08-A01",
+      "S30-A01",
+      "S35-A01",
+      "S38-A01",
+      "S42-A01"
+    ],
+    "owner": "Actual pilot marketer and a KR/JP reader, supported by the campaign, knowledge and assistant maintainers"
+  },
+  {
+    "id": "PROP-17",
+    "target": "Deterministic services own metrics/joins/constraints; models support bounded analysis; human and automation roles remain attributable",
+    "foundation": "Accepted architecture/authority; richer models future",
+    "capability_gap": "Task-discovered posts carry published brand/product interpretations, so campaign criteria and graph mention edges work on real data.",
+    "ui_gap": "Automated save vs human curation/approval labels",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Deterministic constraints and metrics; bounded model methods",
+    "specs": [
+      "S06",
+      "S12",
+      "S14",
+      "S23",
+      "S24",
+      "S39",
+      "S43"
+    ],
+    "checks": [
+      "S06-A01",
+      "S12-A01",
+      "S14-A01",
+      "S23-A01",
+      "S24-A01",
+      "S39-A01",
+      "S43-A01"
+    ],
+    "owner": "smi_knowledge owns the support-based interpretation port; the smi_tasks worker composes it before publication"
+  },
+  {
+    "id": "PROP-18",
+    "target": "Versioned permission-aware ontology contract with stable objects, relationships, properties, functions, internal actions",
+    "foundation": "Accepted direction; bounded owner APIs/read projections installed",
+    "capability_gap": "A marketer reviews refresh, fill or expansion scope, approves its exact revision and follows one asynchronous task. Agents can inspect and propose through the same contracts.",
+    "ui_gap": "Graph/details and internal actions through owner read models",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Versioned ontology projection and governed command adapters",
+    "specs": [
+      "S14",
+      "S17",
+      "S42"
+    ],
+    "checks": [
+      "S14-A01",
+      "S17-A01",
+      "S42-A01"
+    ],
+    "owner": "smi_tasks.assistant and AcquisitionTasks own proposal journey and approval; smi_review owns adapter/tool boundary"
+  },
+  {
+    "id": "PROP-19",
+    "target": "Illustrative Creator controls Account, creates Content, Collaboration/Brand/Campaign, plus Topic/Audience Segment/Social Event",
+    "foundation": "Illustrative future model; only account/content canonical kinds plus catalogs installed",
+    "capability_gap": "Marketers inspect supported beauty, creator, topic and event relationships without turning mentions into identity or verified effects.",
+    "ui_gap": "Graph excludes uncorroborated Creator/Collaboration/Audience edges",
+    "readiness_gap": "Later proposal path. Requires that spec's actual data/rights/evaluation prerequisites; not a first-pilot blocker.",
+    "contract": "Future Creator identity and association contracts; installed native kinds only",
+    "specs": [
+      "S42"
+    ],
+    "checks": [
+      "S42-A01"
+    ],
+    "owner": "Ingestion owns modality observations; knowledge owns versioned interpretations/catalog/identity decisions; graph remains a projection"
+  },
+  {
+    "id": "PROP-20",
+    "target": "Stable internal identities; evidence/time/roles on relationships; assertion conflicts and reversible identity decisions",
+    "foundation": "Partial target; source identities/assertions/provenance installed; Creator correction future",
+    "capability_gap": "A graph client can expand bounded branches without fetching an unrestricted graph or restoring withdrawn support.",
+    "ui_gap": "Inspector conflicts and native stable IDs",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "G1 assertions/provenance, future reversible identity decision",
+    "specs": [
+      "S17",
+      "S42"
+    ],
+    "checks": [
+      "S17-A01",
+      "S42-A01"
+    ],
+    "owner": "smi_knowledge.graph owns search/traversal/page contracts; smi_review adapts G1"
+  },
+  {
+    "id": "PROP-21",
+    "target": "Beauty categories, ingredients, shades, routines, concerns, sensory aspects, claims, substantiation",
+    "foundation": "Future extensions",
+    "capability_gap": "Marketers inspect supported beauty, creator, topic and event relationships without turning mentions into identity or verified effects.",
+    "ui_gap": "Beauty evidence labels and future aspect extensions",
+    "readiness_gap": "Later proposal path. Requires that spec's actual data/rights/evaluation prerequisites; not a first-pilot blocker.",
+    "contract": "Future catalog/aspect/claim substantiation per actual marketer need",
+    "specs": [
+      "S42"
+    ],
+    "checks": [
+      "S42-A01"
+    ],
+    "owner": "Ingestion owns modality observations; knowledge owns versioned interpretations/catalog/identity decisions; graph remains a projection"
+  },
+  {
+    "id": "PROP-22",
+    "target": "Localized labels and effective-dated policies extend one core; no RDF/OWL/graph database requirement",
+    "foundation": "Accepted target flexibility; broader policies future",
+    "capability_gap": "A hosted user sees and changes only authorized workspace records, while machine workers retain separate service identities.",
+    "ui_gap": "One shared multilingual UI/data model",
+    "readiness_gap": "Later proposal path. Requires that spec's actual data/rights/evaluation prerequisites; not a first-pilot blocker.",
+    "contract": "Effective-dated core extensions, no RDF/OWL prerequisite",
+    "specs": [
+      "S40",
+      "S42"
+    ],
+    "checks": [
+      "S40-A01",
+      "S42-A01"
+    ],
+    "owner": "Proposed application identity/access owner plus every workspace-scoped domain owner"
+  },
+  {
+    "id": "PROP-23",
+    "target": "Independent APIs/authorized accounts/licensed feeds/partners/customer data/permitted web routes with provenance, permissions, coverage, timestamps, retention",
+    "foundation": "Partial target; modular installed adapters with live prerequisites; broader routes future",
+    "capability_gap": "The premises of S19, S23, S28 and S29 are settled by bounded real evidence, and a bounded real discovery corpus exists for S08, before those specs finish.",
+    "ui_gap": "Progressive plan and source capability/lineage",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "T1 modular route contracts with provenance/coverage/time/retention",
+    "specs": [
+      "S05",
+      "S11",
+      "S28",
+      "S33",
+      "S41",
+      "S42"
+    ],
+    "checks": [
+      "S05-A01",
+      "S11-A01",
+      "S28-A01",
+      "S33-A01",
+      "S41-A01",
+      "S42-A01"
+    ],
+    "owner": "Named local operator plus the model, ingestion, monitoring and notification maintainers"
+  },
+  {
+    "id": "PROP-24",
+    "target": "Versioned field/context conflict resolution by authority/freshness/quality; official source priority for authoritative facts",
+    "foundation": "Partial target current canonical rules; richer adjudication future",
+    "capability_gap": "Operators and planners can distinguish a route's installed capability, actual access/use permission and field/time coverage before work is admitted.",
+    "ui_gap": "Graph conflicting values, metric semantics and freshness",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Field/context versioned canonical rules; preferred value retains conflict",
+    "specs": [
+      "S11",
+      "S42",
+      "S43"
+    ],
+    "checks": [
+      "S11-A01",
+      "S42-A01",
+      "S43-A01"
+    ],
+    "owner": "smi_ingestion.adapters owns route capabilities/provenance; smi_tasks owns approved route scope; smi_review exposes D1"
+  },
+  {
+    "id": "PROP-25",
+    "target": "Canonical KB authority plus separate scoped monitoring authority",
+    "foundation": "Accepted and installed bounded separation",
+    "capability_gap": "A marketer configures and explicitly activates an independent topic and inspects its windows, alert history and original alert evidence.",
+    "ui_gap": "Monitoring context and selected promotion",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M1 separate authority; M2 normal inherited publication",
+    "specs": [
+      "S20"
+    ],
+    "checks": [
+      "S20-A01"
+    ],
+    "owner": "smi_monitoring recent/polling/alerts/semantic retain their separate contracts; smi_review renders M1"
+  },
+  {
+    "id": "PROP-26",
+    "target": "Idempotent projection updates, bounded staleness and missed-update/source-correction reconciliation",
+    "foundation": "Accepted future beyond current bounded read projections",
+    "capability_gap": "A graph client can expand bounded branches without fetching an unrestricted graph or restoring withdrawn support.",
+    "ui_gap": "Pipeline publication and current-use summary",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Future frontier/lag/idempotent replay/reconciliation read model",
+    "specs": [
+      "S17",
+      "S36",
+      "S41"
+    ],
+    "checks": [
+      "S17-A01",
+      "S36-A01",
+      "S41-A01"
+    ],
+    "owner": "smi_knowledge.graph owns search/traversal/page contracts; smi_review adapts G1"
+  },
+  {
+    "id": "PROP-27",
+    "target": "Propagate revocation/deletion through all retained copies, indexes/extracts/monitoring/rebuilds, preserving tenant/source rights",
+    "foundation": "Partial target. Installed synchronous governed readers/purge contracts; no universal background deletion or operator-export cleanup guarantee",
+    "capability_gap": "The local pilot advances due discovery, executes admitted tasks and monitors topics without manual per-task commands.",
+    "ui_gap": "Source withdrawal demo, historical unavailable state, source-free email",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Owner lifecycle for every retained copy; broader background/export cleanup future",
+    "specs": [
+      "S09",
+      "S15",
+      "S17",
+      "S21",
+      "S29",
+      "S40",
+      "S41"
+    ],
+    "checks": [
+      "S09-A01",
+      "S15-A01",
+      "S17-A01",
+      "S21-A01",
+      "S29-A01",
+      "S40-A01",
+      "S41-A01"
+    ],
+    "owner": "Proposed smi_runtime composes public task, schedule, monitoring and delivery ports; owners keep locks and SQL"
+  },
+  {
+    "id": "PROP-28",
+    "target": "Hybrid attributed spend/commitments/forecasts; ceilings only where derivable/bounded",
+    "foundation": "Partial target installed software; live commercial validation pending",
+    "capability_gap": "The premises of S19, S23, S28 and S29 are settled by bounded real evidence, and a bounded real discovery corpus exists for S08, before those specs finish.",
+    "ui_gap": "Spending actual/commitment/forecast and independent guards",
+    "readiness_gap": "S31 requires actual permitted bounded provider/billing/send evidence, not simulated transport.",
+    "contract": "S1 exact scopes, admission and evidence reconciliation",
+    "specs": [
+      "S05",
+      "S26",
+      "S31"
+    ],
+    "checks": [
+      "S05-A01",
+      "S26-A01",
+      "S31-A01"
+    ],
+    "owner": "Named local operator plus the model, ingestion, monitoring and notification maintainers"
+  },
+  {
+    "id": "PROP-29",
+    "target": "Python/FastAPI, workers, managed queue/scheduler; durable workflows after need",
+    "foundation": "Target options, not installed deployment",
+    "capability_gap": "The local pilot advances due discovery, executes admitted tasks and monitors topics without manual per-task commands.",
+    "ui_gap": "Local automation health and operational service requirements",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Future worker/scheduler arrangement; no mandatory FastAPI/queue rewrite",
+    "specs": [
+      "S09",
+      "S40"
+    ],
+    "checks": [
+      "S09-A01",
+      "S40-A01"
+    ],
+    "owner": "Proposed smi_runtime composes public task, schedule, monitoring and delivery ports; owners keep locks and SQL"
+  },
+  {
+    "id": "PROP-30",
+    "target": "Managed PostgreSQL/typed tables/selective temporal assertions/transactional outbox; CDC/streaming after measured need",
+    "foundation": "PostgreSQL and typed owner schemas installed; managed operation/outbox/CDC are future target options",
+    "capability_gap": "The local pilot advances due discovery, executes admitted tasks and monitors topics without manual per-task commands.",
+    "ui_gap": "Owner model contracts and lineage",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "PostgreSQL owners retained; managed/outbox/CDC chosen after need",
+    "specs": [
+      "S09",
+      "S41"
+    ],
+    "checks": [
+      "S09-A01",
+      "S41-A01"
+    ],
+    "owner": "Proposed smi_runtime composes public task, schedule, monitoring and delivery ports; owners keep locks and SQL"
+  },
+  {
+    "id": "PROP-31",
+    "target": "Managed encrypted object storage/policy retention; specialized lineage/catalog tooling after operational need",
+    "foundation": "Local payload files installed; managed storage/expanded tooling target options",
+    "capability_gap": "Hosted projections and retained evidence follow policy changes, bounded lag and tested restore without resurrecting forbidden values.",
+    "ui_gap": "Governed evidence inspector and retention",
+    "readiness_gap": "Later proposal path. Requires that spec's actual data/rights/evaluation prerequisites; not a first-pilot blocker.",
+    "contract": "Future encrypted storage/copy ownership before migration",
+    "specs": [
+      "S41"
+    ],
+    "checks": [
+      "S41-A01"
+    ],
+    "owner": "Ingestion/source lifecycle owns dependency truth; projection/storage owners own retained copies and checkpoints; operations owns backup/telemetry"
+  },
+  {
+    "id": "PROP-32",
+    "target": "PostgreSQL keyword/relationship queries plus useful pgvector; dedicated language/vector/graph systems after failed benchmarks",
+    "foundation": "Bounded literal/relationship queries installed; embeddings/specialized stores future options",
+    "capability_gap": "Chat, campaign comparison and graph seeds select relevant permitted support from a KB much larger than 100 publications, with explicit, reported bounds.",
+    "ui_gap": "Bounded graph/search with coverage",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Current keyword/relationship owners; specialized search only after measured need",
+    "specs": [
+      "S07",
+      "S17",
+      "S36",
+      "S41"
+    ],
+    "checks": [
+      "S07-A01",
+      "S17-A01",
+      "S36-A01",
+      "S41-A01"
+    ],
+    "owner": "smi_knowledge.queries owns selection; smi_ingestion owns the governed index columns and migration"
+  },
+  {
+    "id": "PROP-33",
+    "target": "Parquet/DuckDB/versioned Python/SQL/inference; warehouse or serving after measured workload need",
+    "foundation": "Versioned bounded methods installed; broader analytics stack future options",
+    "capability_gap": "A marketer can inspect an engagement spike based on comparable native metric observations rather than a volume proxy.",
+    "ui_gap": "Proposed measurement and future analytics",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Versioned analysis methods; future analytics technology after workload need",
+    "specs": [
+      "S23",
+      "S24",
+      "S44",
+      "S45"
+    ],
+    "checks": [
+      "S23-A01",
+      "S24-A01",
+      "S44-A01",
+      "S45-A01"
+    ],
+    "owner": "smi_monitoring quantitative methods own calculations; ingestion/recent own metric evidence and acquisition capability"
+  },
+  {
+    "id": "PROP-34",
+    "target": "Quality/source/projection health, tenant authorization, secrets/OpenTelemetry; specialized governance after ownership needs",
+    "foundation": "Local checks/roles installed; hosted authorization/telemetry/production operation future",
+    "capability_gap": "One operator starts the review server, runtime and CLIs against simulated or provider routes from one validated, versioned local configuration.",
+    "ui_gap": "Pipeline health, restricted state and review packet",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Future auth/tenant/secrets/telemetry/backup ownership",
+    "specs": [
+      "S02",
+      "S09",
+      "S11",
+      "S16",
+      "S26",
+      "S40",
+      "S41"
+    ],
+    "checks": [
+      "S02-A01",
+      "S09-A01",
+      "S11-A01",
+      "S16-A01",
+      "S26-A01",
+      "S40-A01",
+      "S41-A01"
+    ],
+    "owner": "smi_review composition root plus a small proposed configuration module; route owners keep their own validation"
+  },
+  {
+    "id": "PROP-35",
+    "target": "Specialized stores remain rebuildable; first trusted loop exposes coverage/freshness/evidence/measurement limits",
+    "foundation": "Accepted delivery principle; usefulness still unverified",
+    "capability_gap": "Chat, campaign comparison and graph seeds select relevant permitted support from a KB much larger than 100 publications, with explicit, reported bounds.",
+    "ui_gap": "Campaign/evidence journey before store expansion",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Canonical owners remain authority, specialized stores rebuildable",
+    "specs": [
+      "S07",
+      "S12",
+      "S35",
+      "S36",
+      "S41"
+    ],
+    "checks": [
+      "S07-A01",
+      "S12-A01",
+      "S35-A01",
+      "S36-A01",
+      "S41-A01"
+    ],
+    "owner": "smi_knowledge.queries owns selection; smi_ingestion owns the governed index columns and migration"
+  },
+  {
+    "id": "UD-01",
+    "target": "Campaign-first review journey, with every FR retained",
+    "foundation": "Accepted design direction; no new UI built in Task 1",
+    "capability_gap": "A marketer opens all saved campaigns and inspects exact permitted evidence through one shared inspector, in EN or KO.",
+    "ui_gap": "A starts in campaign shortlist; full brief journey",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1 plus all primary owners",
+    "specs": [
+      "S10",
+      "S12",
+      "S25"
+    ],
+    "checks": [
+      "S10-A01",
+      "S12-A01",
+      "S25-A01"
+    ],
+    "owner": "smi_review owns the campaign index, detail reads and shared governed inspector; domain owners retain decisions"
+  },
+  {
+    "id": "UD-02",
+    "target": "Complete a single-workspace local pilot before hosted multi-user operation",
+    "foundation": "Accepted implementation sequence; current local application is bounded and explicit-worker-only",
+    "capability_gap": "One operator starts the review server, runtime and CLIs against simulated or provider routes from one validated, versioned local configuration.",
+    "ui_gap": "Local workspace and target automatic worker health",
+    "readiness_gap": "S31 requires actual permitted bounded provider/billing/send evidence, not simulated transport.",
+    "contract": "Future supervised local recurrence/restart/health",
+    "specs": [
+      "S02",
+      "S03",
+      "S09",
+      "S31",
+      "S35",
+      "S40"
+    ],
+    "checks": [
+      "S02-A01",
+      "S03-A01",
+      "S09-A01",
+      "S31-A01",
+      "S35-A01",
+      "S40-A01"
+    ],
+    "owner": "smi_review composition root plus a small proposed configuration module; route owners keep their own validation"
+  },
+  {
+    "id": "UD-03",
+    "target": "English and Korean UI with a working switch",
+    "foundation": "Accepted target; repository does not establish a complete bilingual UI",
+    "capability_gap": "Every later UI spec builds on one tested client structure: shell, navigation, theme, EN/KO switch, API client and shared freshness behavior.",
+    "ui_gap": "Working EN/KO switch including errors/status/review chrome",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Stable semantic values and source IDs; complete localization catalogs in implementation",
+    "specs": [
+      "S04",
+      "S10",
+      "S15",
+      "S16",
+      "S18",
+      "S21",
+      "S25",
+      "S35"
+    ],
+    "checks": [
+      "S04-A01",
+      "S10-A01",
+      "S15-A01",
+      "S16-A01",
+      "S18-A01",
+      "S21-A01",
+      "S25-A01",
+      "S35-A01"
+    ],
+    "owner": "smi_review owns the client foundation, shell and versioned adapter framework; domain owners retain decisions"
+  },
+  {
+    "id": "UD-04",
+    "target": "Include richer agent research and grounded synthesis in the target roadmap",
+    "foundation": "Accepted roadmap scope; installed answers are bounded extractive selection",
+    "capability_gap": "A human can review a concrete richer-agent contract and its failures before deciding whether to enable it.",
+    "ui_gap": "Research/synthesis workspace and claim inspector; R2-CHAT threads/follow-ups and secondary sources/status",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build. S39 is blocked on W01 actual successor decision and S38 named evidence.",
+    "contract": "Future plan/claim validation contracts retaining ADR 0017/0018 until superseded; future multi-turn/context/turn read contract specified, not installed synthesis",
+    "specs": [
+      "S37",
+      "S38",
+      "S39"
+    ],
+    "checks": [
+      "S37-A01",
+      "S38-A01",
+      "S39-A01"
+    ],
+    "owner": "smi_assistant candidate planner/validator owns read-only preparation; tasks retain acquisition authority; quality owns evaluation packets"
+  },
+  {
+    "id": "UD-05",
+    "target": "Include email in the first delivery alongside the in-product inbox",
+    "foundation": "Accepted new delivery requirement; only local inbox/alert notifications are installed",
+    "capability_gap": "The premises of S19, S23, S28 and S29 are settled by bounded real evidence, and a bounded real discovery corpus exists for S08, before those specs finish.",
+    "ui_gap": "Inbox + email preferences and transport history",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Future delivery recipient/identity/provider/retry/current-policy contract",
+    "specs": [
+      "S05",
+      "S29",
+      "S34"
+    ],
+    "checks": [
+      "S05-A01",
+      "S29-A01",
+      "S34-A01"
+    ],
+    "owner": "Named local operator plus the model, ingestion, monitoring and notification maintainers"
+  },
+  {
+    "id": "UD-06",
+    "target": "Cover every FR, including a Neo4j-style graph",
+    "foundation": "Accepted full design scope; broader visual exploration remains target",
+    "capability_gap": "A graph client can expand bounded branches without fetching an unrestricted graph or restoring withdrawn support.",
+    "ui_gap": "Every FR row and interactive Neo4j-style graph; R2-GRAPH production pan/zoom/fit/drag/pin/layout/expand/collapse specified",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "All listed owner/read-model/command needs; bounded branch cursors/generation/policy frontier and keyboard/list alternatives",
+    "specs": [
+      "S17",
+      "S18",
+      "S25",
+      "S35"
+    ],
+    "checks": [
+      "S17-A01",
+      "S18-A01",
+      "S25-A01",
+      "S35-A01"
+    ],
+    "owner": "smi_knowledge.graph owns search/traversal/page contracts; smi_review adapts G1"
+  },
+  {
+    "id": "UD-07",
+    "target": "Use #E6002A, #F4ABAF, #3E3A39 and #FFFFFF",
+    "foundation": "Accepted visual constraint; no visual implementation here",
+    "capability_gap": "Every later UI spec builds on one tested client structure: shell, navigation, theme, EN/KO switch, API client and shared freshness behavior.",
+    "ui_gap": "Four-color visual system, visible focus and graph line patterns",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "Design tokens; no live service needed",
+    "specs": [
+      "S04",
+      "S18",
+      "S21",
+      "S25",
+      "S35"
+    ],
+    "checks": [
+      "S04-A01",
+      "S18-A01",
+      "S21-A01",
+      "S25-A01",
+      "S35-A01"
+    ],
+    "owner": "smi_review owns the client foundation, shell and versioned adapter framework; domain owners retain decisions"
+  },
+  {
+    "id": "UD-08",
+    "target": "Preserve automatic saves, explicit regeneration, exact assistant approval, publication-before-answer and KB-only alert investigation",
+    "foundation": "Already accepted durable contracts, explicitly reaffirmed",
+    "capability_gap": "A marketer creates a campaign, receives an automatically saved supported shortlist, optionally curates it and deliberately regenerates after new knowledge.",
+    "ui_gap": "Automatic save, explicit regenerate, exact approval, publication, KB-only context",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "C1/K1/A1/M2/T1/S1 invariants",
+    "specs": [
+      "S12",
+      "S14",
+      "S15",
+      "S22",
+      "S26"
+    ],
+    "checks": [
+      "S12-A01",
+      "S14-A01",
+      "S15-A01",
+      "S22-A01",
+      "S26-A01"
+    ],
+    "owner": "smi_campaigns owns briefs, criteria, comparisons and shortlists; smi_tasks.campaigns owns discovery composition"
+  },
+  {
+    "id": "UD-09",
+    "target": "Actual human review of the exact UI is required before Task 4",
+    "foundation": "Actual r2 human approval recorded; Task 4 gate satisfied.",
+    "capability_gap": "None. This is a completed planning prerequisite.",
+    "ui_gap": "None for the approved design gate. Implemented browser acceptance is a separate S35 obligation.",
+    "readiness_gap": "No unresolved Task 4 start gate.",
+    "contract": "Actual human approval of the exact r2 manifest, recorded by coordinator.",
+    "specs": [],
+    "checks": [],
+    "owner": "Actual user and coordinator",
+    "evidence_status": "satisfied-upstream"
+  },
+  {
+    "id": "R2-CHAT",
+    "target": "Conventional persistent conversation with bounded per-turn context",
+    "foundation": "Single bounded question answer only; no thread/draft owner",
+    "capability_gap": "A marketer returns to saved conversations, sends follow-ups and preserves each thread's draft and exact evidence.",
+    "ui_gap": "Assistant thread rail, turn log, multiline composer and sources/research disclosures",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "K1 conversation IDs, turns/drafts/head/cursor/context and A1/T1 research status",
+    "specs": [
+      "S15",
+      "S25",
+      "S37",
+      "S39"
+    ],
+    "checks": [
+      "S15-A01",
+      "S25-A01",
+      "S37-A01",
+      "S39-A01"
+    ],
+    "owner": "Proposed smi_assistant.conversations owns threads/turns/drafts; KnowledgeAssistant owns answers; tasks own research"
+  },
+  {
+    "id": "R2-STREAM",
+    "target": "Current-highlighted metric stream with exact selected-window support",
+    "foundation": "Recent timeline and volume/controversy reads; no metric history projection",
+    "capability_gap": "Live X windows state their saturation and receipt-time bounds truthfully and, under an accepted W02, produce honest live volume and controversy outcomes inside ADR 0023's one-page rule.",
+    "ui_gap": "Monitoring time-series/chart/table/latest and selected-window evidence",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "M1 bounded windows/status/native metrics/denominators/method/baseline/current policy",
+    "specs": [
+      "S19",
+      "S21",
+      "S23",
+      "S24",
+      "S25"
+    ],
+    "checks": [
+      "S19-A01",
+      "S21-A01",
+      "S23-A01",
+      "S24-A01",
+      "S25-A01"
+    ],
+    "owner": "smi_monitoring.recent owns window projections; smi_monitoring.alerts and smi_monitoring.semantic own the new live-page method versions"
+  },
+  {
+    "id": "R2-GRAPH",
+    "target": "Full interactive graph and bounded incremental read protocol",
+    "foundation": "Bounded whole-sample projection and traversal; no branch continuation/client",
+    "capability_gap": "A graph client can expand bounded branches without fetching an unrestricted graph or restoring withdrawn support.",
+    "ui_gap": "Graph camera/drag/pin/layout/expand/collapse/filter/keyboard/list/inspector",
+    "readiness_gap": "Actual live/provider or named human acceptance remains independent of build.",
+    "contract": "G1 scope/root/branch/generation/cursor/policy frontier/exact support/limits",
+    "specs": [
+      "S17",
+      "S18",
+      "S25"
+    ],
+    "checks": [
+      "S17-A01",
+      "S18-A01",
+      "S25-A01"
+    ],
+    "owner": "smi_knowledge.graph owns search/traversal/page contracts; smi_review adapts G1"
+  }
+]

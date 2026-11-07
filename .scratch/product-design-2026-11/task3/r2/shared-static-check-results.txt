@@ -1,0 +1,2 @@
+All checks passed!
+Documentation links, physical ERD coverage and instruction symlinks passed.

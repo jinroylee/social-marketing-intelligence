@@ -1,0 +1,49 @@
+PASS JavaScript parses and initial campaign renders
+PASS Exact approval cannot submit without explicit checkbox
+PASS Revised scope creates a fresh immutable revision and clears approval
+PASS Saved proposal scope and purpose are immutable snapshots
+PASS Explicit checked approval queues the exact revision
+PASS Closed modal prevents approval replay from becoming another task
+PASS Acquisition remains unusable until publication
+PASS Publication does not regenerate a saved shortlist
+PASS Explicit regeneration appends history without changing previous membership
+PASS Optional curation saves selected membership with human attribution
+PASS Unknown response retains waiting and does not reissue a request
+PASS Context-only investigation changes no campaign revision
+PASS Selective promotion rejects an empty selection
+PASS Graph traversal projects observed and derived edges
+PASS Graph relationship basis filter removes other edge bases
+PASS Graph deeper traversal includes human catalog association
+PASS Graph relationship inspector exposes derived basis and evidence
+PASS Withdrawal removes source node and its dependent relationships
+PASS Bilingual switch preserves text drafts and semantic select values
+PASS Localized state labels retain stable underlying state values
+PASS Restricted state hides source view instead of leaking fixture evidence
+PASS Keyword registration enforces the ten-keyword limit
+PASS Prototype has no external assets or network code
+PASS Responsive, focus, dialog and keyboard source hooks exist
+PASS Monitoring target engagement success shows matched metric age and denominators
+PASS Semantic shift target preserves coded numerator, denominator and provisional meaning
+PASS Insufficient baseline withholds a spike or shift result
+PASS Failed method withholds generated signal without granting acquisition
+PASS New campaign starts empty and requires a saved complete brief
+PASS Chat renders distinct turns, scrollable log, threads and bottom composer
+PASS Enter sends escaped text and deterministic fixture follow-up, clearing only its draft
+PASS Shift+Enter and IME composition do not send
+PASS Send button and plain yes cannot approve or create acquisition
+PASS Threads preserve separate drafts and conversation context across EN/KO and navigation
+PASS Empty composer cannot create a turn
+PASS Retrieved task material is excluded from fixture answer support
+PASS Publication and policy withdrawal preserve pinned turns while withholding content
+PASS Reopening submitted proposal cannot create another approval of same revision
+PASS Monitoring SVG shows latest 24, axes, units, current region and accessible table
+PASS Chronological windows have an explicit missing collection, zero and unscheduled gap
+PASS Point and table selection update corresponding summary and evidence
+PASS All four latest metrics match chart values, denominators and selected summary
+PASS Metric-specific baseline missing and failed states never invent change
+PASS Bounded history and metric controls retain or deliberately reset selected window
+CONTRAST #FFFFFF / #E6002A: 4.77:1
+CONTRAST #FFFFFF / #3E3A39: 11.24:1
+CONTRAST #3E3A39 / #F4ABAF: 6.04:1
+PASS Primary text palette pairs meet normal-text 4.5 contrast
+45 source/fixture-state checks passed. No browser, rendering, screenshots or human review performed.

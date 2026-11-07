@@ -1,0 +1,33 @@
+PASS JavaScript parses and initial campaign renders
+PASS Exact approval cannot submit without explicit checkbox
+PASS Revised scope creates a fresh immutable revision and clears approval
+PASS Explicit checked approval queues the exact revision
+PASS Closed modal prevents approval replay from becoming another task
+PASS Acquisition remains unusable until publication
+PASS Publication does not regenerate a saved shortlist
+PASS Explicit regeneration appends history without changing previous membership
+PASS Optional curation saves selected membership with human attribution
+PASS Unknown response retains waiting and does not reissue a request
+PASS Context-only investigation changes no campaign revision
+PASS Selective promotion rejects an empty selection
+PASS Graph traversal projects observed and derived edges
+PASS Graph relationship basis filter removes other edge bases
+PASS Graph deeper traversal includes human catalog association
+PASS Graph relationship inspector exposes derived basis and evidence
+PASS Withdrawal removes source node and its dependent relationships
+PASS Bilingual switch preserves text drafts and semantic select values
+PASS Localized state labels retain stable underlying state values
+PASS Restricted state hides source view instead of leaking fixture evidence
+PASS Keyword registration enforces the ten-keyword limit
+PASS Prototype has no external assets or network code
+PASS Responsive, focus, dialog and keyboard source hooks exist
+PASS Monitoring target engagement success shows matched metric age and denominators
+PASS Semantic shift target preserves coded numerator, denominator and provisional meaning
+PASS Insufficient baseline withholds a spike or shift result
+PASS Failed method withholds generated signal without granting acquisition
+PASS New campaign starts empty and requires a saved complete brief
+CONTRAST #FFFFFF / #E6002A: 4.77:1
+CONTRAST #FFFFFF / #3E3A39: 11.24:1
+CONTRAST #3E3A39 / #F4ABAF: 6.04:1
+PASS Primary text palette pairs meet normal-text 4.5 contrast
+29 source/fixture-state checks passed. No browser, rendering, screenshots or human review performed.

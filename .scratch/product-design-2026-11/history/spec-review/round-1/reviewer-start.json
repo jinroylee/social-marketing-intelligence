@@ -1,0 +1,85 @@
+{
+  "id": "16921430-489e-4ac0-8263-bc46197aa5d5",
+  "ok": true,
+  "result": {
+    "runId": "run_92e0c40d904a",
+    "taskId": "task_7c60f964553c",
+    "dispatchId": "ctx_e65c95120ea6",
+    "state": "ready",
+    "stage": "input_accepted",
+    "turnStart": "observed",
+    "setup": {
+      "requested": "not_applicable",
+      "effective": "not_applicable",
+      "source": "existing_worktree",
+      "hookFound": false,
+      "startupPolicy": "start-immediately",
+      "state": "not_applicable"
+    },
+    "launch": {
+      "requested": {
+        "agent": null,
+        "model": null,
+        "effort": null
+      },
+      "effective": {
+        "agent": null,
+        "model": null,
+        "effort": null
+      }
+    },
+    "mode": {
+      "mode": "terminal",
+      "preferred": "terminal",
+      "reason": "user_default",
+      "detail": "Started a terminal agent worker, the default for new agent tabs in your settings."
+    },
+    "timeoutMs": 60000,
+    "effects": [
+      {
+        "kind": "worktree",
+        "action": "reused",
+        "id": "e1e2fcad-1ce7-41a4-9d84-acd1bbb41f29::/Users/makinarocks/workspace/personal/social-marketing-intelligence"
+      },
+      {
+        "kind": "setup",
+        "action": "not_applicable",
+        "state": "not_applicable"
+      },
+      {
+        "kind": "terminal",
+        "role": "agent",
+        "action": "reused",
+        "id": "term_cde6b9e6-092e-41ee-9c80-ef759fd3ab15"
+      },
+      {
+        "kind": "dispatch_input",
+        "role": "agent",
+        "id": "term_cde6b9e6-092e-41ee-9c80-ef759fd3ab15",
+        "state": "accepted"
+      }
+    ],
+    "prompt": {
+      "requestId": "aab1fa90-5cba-4565-be27-49f9f73e6fc3",
+      "stages": [
+        "input_accepted",
+        "turn_started"
+      ],
+      "provider": "claude",
+      "observation": "supported",
+      "processIncarnation": "f9a4a3eb-5b99-43ff-8459-581b5119921b",
+      "generation": 47,
+      "baselineWorkingSequence": 0,
+      "baselineExplicitWorkingStartedAt": null,
+      "baselinePermissionSequence": 1
+    },
+    "residualResources": [],
+    "mutation": {
+      "requestId": "aab1fa90-5cba-4565-be27-49f9f73e6fc3",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "b84d52a8-7588-4926-8669-1cb5cf1a742d"
+  }
+}

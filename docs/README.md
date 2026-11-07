@@ -12,6 +12,7 @@ Start with the [complete user and operator guide](user-guide.md) for setup, ever
 | [Functional requirements](functional-requirements.md) | A/B/C workflows, acquisition, spending and explorer requirements with current coverage |
 | [Interface and acceptance contract](implementation-spec.md) | Shared operation semantics, invariants and T01–T30 acceptance obligations |
 | [Roadmap and readiness](roadmap.md) | Outstanding human/live validation and preserved long-term goals |
+| [Implementation roadmap](../implementation-roadmap/README.md) | Proposed, unimplemented 45-spec build order from the installed system to the approved product, with open decisions |
 | [Product proposal](../POPOSAL.md) / [core flows](../FR.md) | Product thesis, multilingual ontology, measurement ambitions and concise target workflows |
 
 ## Implemented contracts

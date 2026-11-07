@@ -1,0 +1,25 @@
+{
+  "revision": "r2",
+  "status": "pending_actual_human_review",
+  "entrypoint": "prototype.html?variant=A#campaigns",
+  "browser_verification": "not_performed_permission_declined_no_workaround",
+  "production_graph_interactions": "specified_not_implemented",
+  "task4": "not_approved_gate_unchanged",
+  "hash_algorithm": "SHA-256",
+  "manifest_scope": "All r2 files except this self-referential manifest",
+  "files": {
+    "artifact-check-results.txt": "24f578363e62d26c2a2ba9663d93145db167ec218ab66787dc2b3d64c6714303",
+    "build_traceability.py": "fc578ba61243e925483e5616a2faaee1103f1876a7f177ab51180b67830b0f08",
+    "changes.md": "1d872c93bd36931f8153a0d707a946e6d580370e80614c9d72e3d3b59dda0878",
+    "design-spec.md": "fdbef3de7b32e9838eb6462853ba086e43992580061e946aeb9bd1db697c85c1",
+    "fr-ui-traceability.md": "beb351b14aad38a72146ca1f3f3ae2a764f4e8559e058000d01d02da89833b7f",
+    "prototype.html": "aaba93c98c65084465a23b3fa210504445a43f29b6e0d8a3508cdb6bfcc2a4c5",
+    "r1-integrity.json": "5a77e4b540850e6db94eaf725d4ce718a462af0105b2365f38a1153db0060f1c",
+    "review-guide.md": "8f16b795c2a8cd1df408213fb67ed897891ff7ca46ef2a92076ffb1b5ecc3fdc",
+    "shared-static-check-results.txt": "292009348de434467c30abdf10457bb674f63d1aba49386cd5e0b303341fed32",
+    "verification-results.txt": "30ceda256bdde882a25f95d7111953cc446ab73a6967fca3939b3d7b1031332b",
+    "verification.md": "e8297f447a9cbf04f90aaab61cf0b7a9668a52dd26fc1f9166acd135a284dd51",
+    "verify-artifacts.py": "b3a484841a423ca9a940e6c973440a4336f91afc871380047abe67b6d04bc40d",
+    "verify-prototype.cjs": "4ab5996aec838e04b69a632e920ec952aee68f5ccc584597b9df390fad7c00fc"
+  }
+}
